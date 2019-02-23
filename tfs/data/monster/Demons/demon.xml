@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<monster name="Demon" nameDescription="a demon" race="fire" experience="6000" speed="280">
-	<health now="8200" max="8200" />
+<monster name="Demon" nameDescription="a demon" race="fire" experience="6000" speed="680">
+	<health now="820000" max="820000" />
 	<look type="35" corpse="5995" />
 	<targetchange interval="4000" chance="20" />
 	<flags>
@@ -17,52 +17,39 @@
 		<flag runonhealth="0" />
 	</flags>
 	<attacks>
-		<attack name="melee" interval="2000" min="0" max="-520" />
-		<attack name="manadrain" interval="2000" chance="10" range="7" min="0" max="-120" />
-		<attack name="fire" interval="2000" chance="20" range="7" radius="7" target="1" min="-150" max="-250">
+		<attack name="melee" interval="200" min="0" max="-520" />
+		<attack name="manadrain" interval="200" chance="90" range="7" min="0" max="-120" />
+		<attack name="fire" interval="200" chance="90" range="7" radius="7" target="1" min="-150" max="-250">
 			<attribute key="shootEffect" value="fire" />
 			<attribute key="areaEffect" value="firearea" />
 		</attack>
-		<attack name="firefield" interval="2000" chance="10" range="7" radius="1" target="1">
-			<attribute key="shootEffect" value="fire" />
-		</attack>
-		<attack name="lifedrain" interval="2000" chance="10" length="8" spread="0" min="-300" max="-490">
+		<attack name="lifedrain" interval="200" chance="90" length="8" spread="0" min="-300" max="-490">
 			<attribute key="areaEffect" value="purpleenergy" />
 		</attack>
-		<attack name="energy" interval="2000" chance="10" range="1" min="-210" max="-300">
+		<attack name="energy" interval="200" chance="90" range="1" min="-210" max="-300">
 			<attribute key="shootEffect" value="energy" />
 		</attack>
-		<attack name="speed" interval="2000" chance="15" radius="1" target="1" speedchange="-700" duration="30000">
+		<attack name="speed" interval="200" chance="95" radius="1" target="1" speedchange="-700" duration="30000">
 			<attribute key="areaEffect" value="redshimmer" />
 		</attack>
 	</attacks>
 	<defenses armor="55" defense="55">
-		<defense name="healing" interval="2000" chance="15" min="180" max="250">
+		<defense name="healing" interval="200" chance="95" min="180" max="250">
 			<attribute key="areaEffect" value="blueshimmer" />
 		</defense>
-		<defense name="speed" interval="2000" chance="15" speedchange="320" duration="5000">
+		<defense name="speed" interval="200" chance="95" speedchange="320" duration="5000">
 			<attribute key="areaEffect" value="redshimmer" />
 		</defense>
 	</defenses>
 	<elements>
-		<element physicalPercent="30" />
-		<element deathPercent="30" />
-		<element energyPercent="50" />
-		<element earthPercent="40" />
-		<element icePercent="-10" />
-		<element holyPercent="-10" />
 	</elements>
 	<immunities>
-		<immunity fire="1" />
-		<immunity drown="1" />
-		<immunity lifedrain="1" />
-		<immunity paralyze="1" />
-		<immunity invisible="1" />
 	</immunities>
-	<summons maxSummons="1">
-		<summon name="fire elemental" interval="2000" chance="10" />
+	<summons maxSummons="16">
+		<summon name="fire elemental" interval="500" chance="90" />
+		<summon name="Monk" interval="100" chance="90" />
 	</summons>
-	<voices interval="5000" chance="10">
+	<voices interval="500" chance="90">
 		<voice sentence="Your soul will be mine!" />
 		<voice sentence="MUHAHAHAHA!" />
 		<voice sentence="CHAMEK ATH UTHUL ARAK!" />

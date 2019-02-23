@@ -22,7 +22,9 @@
 #include "monster.h"
 #include "game.h"
 #include "spells.h"
+#include "configmanager.h"
 
+extern ConfigManager g_config;
 extern Game g_game;
 extern Monsters g_monsters;
 
@@ -434,6 +436,8 @@ bool Monster::isFriend(const Creature* creature) const
 			return true;
 		}
 	} else if (creature->getMonster() && !creature->isSummon()) {
+		if(g_config.getBoolean(ConfigManager::MONSTER_VS_MONSTER))
+			return false;
 		return true;
 	}
 
@@ -447,6 +451,8 @@ bool Monster::isOpponent(const Creature* creature) const
 			return true;
 		}
 	} else {
+		if(g_config.getBoolean(ConfigManager::MONSTER_VS_MONSTER))
+			return true;		
 		if ((creature->getPlayer() && !creature->getPlayer()->hasFlag(PlayerFlag_IgnoredByMonsters)) ||
 		        (creature->getMaster() && creature->getMaster()->getPlayer())) {
 			return true;
@@ -643,7 +649,11 @@ void Monster::setIdle(bool idle)
 	if (isRemoved() || getHealth() <= 0) {
 		return;
 	}
-
+	
+	if(g_config.getBoolean(ConfigManager::MONSTER_VS_MONSTER)) {
+		idle = false;
+	}
+	
 	isIdle = idle;
 
 	if (!isIdle) {
@@ -948,7 +958,7 @@ void Monster::onThinkDefense(uint32_t interval)
 			Monster* summon = Monster::createMonster(summonBlock.name);
 			if (summon) {
 				if (g_game.placeCreature(summon, getPosition(), false, summonBlock.force)) {
-					summon->setDropLoot(false);
+					//summon->setDropLoot(false);
 					summon->setSkillLoss(false);
 					summon->setMaster(this);
 					g_game.addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
@@ -1083,7 +1093,7 @@ void Monster::pushCreatures(Tile* tile)
 				}
 
 				monster->changeHealth(-monster->getHealth());
-				monster->setDropLoot(false);
+				//monster->setDropLoot(false);
 				removeCount++;
 			}
 

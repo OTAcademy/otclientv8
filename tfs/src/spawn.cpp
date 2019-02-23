@@ -200,7 +200,7 @@ bool Spawn::spawnMonster(uint32_t spawnId, MonsterType* mType, const Position& p
 	std::unique_ptr<Monster> monster_ptr(new Monster(mType));
 	if (startup) {
 		//No need to send out events to the surrounding since there is no one out there to listen!
-		if (!g_game.internalPlaceCreature(monster_ptr.get(), pos, true)) {
+		if (!g_game.internalPlaceCreature(monster_ptr.get(), pos, false, true)) {
 			return false;
 		}
 	} else {

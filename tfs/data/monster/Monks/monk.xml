@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<monster name="Monk" nameDescription="a monk" race="blood" experience="200" speed="200" manacost="600">
+<monster name="Monk" nameDescription="a monk" race="blood" experience="200" speed="600" manacost="600">
 	<health now="240" max="240" />
 	<look type="57" corpse="20559" />
 	<targetchange interval="4000" chance="10" />
@@ -20,23 +20,21 @@
 		<flag canwalkonpoison="0" />
 	</flags>
 	<attacks>
-		<attack name="melee" interval="2000" min="0" max="-130" />
+		<attack name="melee" interval="200" min="0" max="-130" />
 	</attacks>
 	<defenses armor="30" defense="30">
-		<defense name="healing" interval="2000" chance="15" min="30" max="50">
+		<defense name="healing" interval="200" chance="95" min="30" max="50">
 			<attribute key="areaEffect" value="blueshimmer" />
 		</defense>
-		<defense name="speed" interval="2000" chance="15" speedchange="300" duration="5000">
+		<defense name="speed" interval="200" chance="95" speedchange="300" duration="5000">
 			<attribute key="areaEffect" value="redshimmer" />
 		</defense>
 	</defenses>
 	<elements>
-		<element holyPercent="50" />
-		<element deathPercent="50" />
-		<element physicalPercent="-10" />
 	</elements>
 	<immunities>
 		<immunity invisible="1" />
+		<immunity fire="1" />
 	</immunities>
 	<voices interval="5000" chance="10">
 		<voice sentence="Repent Heretic!" />

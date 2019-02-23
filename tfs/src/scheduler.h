@@ -26,7 +26,7 @@
 
 #include "thread_holder_base.h"
 
-static constexpr int32_t SCHEDULER_MINTICKS = 50;
+static constexpr int32_t SCHEDULER_MINTICKS = 5;
 
 class SchedulerTask : public Task
 {

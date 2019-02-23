@@ -345,12 +345,13 @@ ReturnValue Combat::canDoCombat(Creature* attacker, Creature* target)
 			}
 		} else if (attacker->getMonster()) {
 			const Creature* targetMaster = target->getMaster();
+			if(!g_config.getBoolean(ConfigManager::MONSTER_VS_MONSTER)) {
+				if (!targetMaster || !targetMaster->getPlayer()) {
+					const Creature* attackerMaster = attacker->getMaster();
 
-			if (!targetMaster || !targetMaster->getPlayer()) {
-				const Creature* attackerMaster = attacker->getMaster();
-
-				if (!attackerMaster || !attackerMaster->getPlayer()) {
-					return RETURNVALUE_YOUMAYNOTATTACKTHISCREATURE;
+					if (!attackerMaster || !attackerMaster->getPlayer()) {
+						return RETURNVALUE_YOUMAYNOTATTACKTHISCREATURE;
+					}
 				}
 			}
 		}

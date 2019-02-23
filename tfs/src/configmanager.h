@@ -41,6 +41,7 @@ class ConfigManager
 			CONVERT_UNSAFE_SCRIPTS,
 			CLASSIC_EQUIPMENT_SLOTS,
 			CLASSIC_ATTACK_SPEED,
+			MONSTER_VS_MONSTER,
 
 			LAST_BOOLEAN_CONFIG /* this must be the last one */
 		};
