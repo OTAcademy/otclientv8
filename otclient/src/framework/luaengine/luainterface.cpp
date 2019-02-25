@@ -412,9 +412,36 @@ std::string LuaInterface::getCurrentSourcePath(int level)
     while(true) {
         getStackFunction(level); // pushes stack function
 
-        // only lua functions is wanted, because only them have a working directory
+                                 // only lua functions is wanted, because only them have a working directory
         if(isLuaFunction()) {
             path = functionSourcePath();
+            break;
+        } else if(isNil()) {
+            pop();
+            break;
+        } else
+            pop();
+
+        // next level
+        level++;
+    }
+
+    return path;
+}
+
+std::string LuaInterface::getCurrentFunction(int level)
+{
+    std::string path = "unknown";
+    if(!L)
+        return path;
+
+    // check all stack functions for script source path
+    while(true) {
+        getStackFunction(level); // pushes stack function
+
+                                 // only lua functions is wanted, because only them have a working directory
+        if(isLuaFunction()) {
+            path = functionSource();
             break;
         } else if(isNil()) {
             pop();
@@ -630,6 +657,9 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 
     int numRets = 0;
 
+    uint64_t executionStart = stdext::micros();
+    auto function = g_lua.getCurrentFunction();
+
     // do the call
     try {
         g_lua.m_cppCallbackDepth++;
@@ -644,6 +674,8 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
         g_lua.pushString(stdext::format("C++ call failed: %s", g_lua.traceback(e.what())));
         g_lua.error();
     }
+
+    g_luaStats.addFromCallback(function, stdext::micros() - executionStart);
 
     return numRets;
 }
@@ -811,6 +843,26 @@ std::string LuaInterface::functionSourcePath()
             path = path.substr(1, path.find_last_of("/") - 1);
             path = path.substr(0, path.find_last_of(":"));
         }
+    }
+
+    return path;
+}
+
+std::string LuaInterface::functionSource()
+{
+    std::string path;
+
+    // gets function source path
+    lua_Debug ar;
+    memset(&ar, 0, sizeof(ar));
+    lua_getinfo(L, ">Sn", &ar);
+    if(ar.source) {
+        // scripts coming from files has source beginning with '@'
+        //if(ar.source[0] == '@') {
+            path = ar.source;
+            //path = path.substr(1, path.find_last_of("/") - 1);
+            //path = path.substr(0, path.find_last_of(":"));
+        //}
     }
 
     return path;

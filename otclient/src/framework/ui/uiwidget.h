@@ -89,6 +89,7 @@ public:
     void lowerChild(UIWidgetPtr child);
     void raiseChild(UIWidgetPtr child);
     void moveChildToIndex(const UIWidgetPtr& child, int index);
+    void reorderChildrens(const std::vector<UIWidgetPtr>& childrens);
     void lockChild(const UIWidgetPtr& child);
     void unlockChild(const UIWidgetPtr& child);
     void mergeStyle(const OTMLNodePtr& styleNode);

@@ -26,6 +26,7 @@
 #include "image.h"
 
 #include <framework/otml/otml.h>
+#include <framework/core/graphicalapplication.h>
 
 void BitmapFont::load(const OTMLNodePtr& fontNode)
 {
@@ -292,6 +293,10 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
 
 std::string BitmapFont::wrapText(const std::string& text, int maxWidth)
 {
+    if (g_app.newTextRendering()) {
+        return newWrapText(text, maxWidth);
+    }
+
     std::string outText;
     std::string line;
     std::vector<std::string> words;
@@ -339,6 +344,69 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth)
 
     outText += line;
     outText = outText.substr(0, outText.length()-1);
+
+    return outText;
+}
+
+std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)
+{
+    std::string outText;
+    outText.reserve(text.size() * 2); // string append optimization
+
+    int outTextPos = 0, lastSeparator = 0, lineLength = 0, wordLength = 0;
+    for (size_t i = 0; i < text.size(); ++i) {
+        if (text[i] == '\n' || text[i] == ' ') {
+            lineLength += wordLength;
+            if (lineLength > maxWidth) { // too long line with this word
+                outText += '\n';
+                lineLength = wordLength;
+                if (text[lastSeparator] == ' ') // ignore space if it's first character in new line
+                    lastSeparator += 1;
+            }
+            for (size_t j = lastSeparator; j < i; ++j) { // copy word
+                outText += text[j];
+            }
+            if (text[i] == '\n') { // if new line was added reset line length
+                outText += '\n';
+                wordLength = 0;
+                lineLength = 0;
+                lastSeparator = i + 1;
+            } else { // space
+                wordLength = m_glyphsSize[text[i]].width() + m_glyphSpacing.width(); // space
+                lastSeparator = i;
+            }
+            continue;
+        }
+
+        if (text[i] < 32 || text[i] > 126) // not ascii character
+            continue; 
+
+        wordLength += m_glyphsSize[text[i]].width() + m_glyphSpacing.width();
+        if (wordLength > maxWidth) { // too long word, split it
+            if(lineLength != 0) // add new line if current one is not empty
+                outText += '\n';
+            if (text[lastSeparator] == ' ') // ignore space if it's first character in new line
+                lastSeparator += 1;
+            for (size_t j = lastSeparator; j < i; ++j) { // copy word
+                outText += text[j];
+            }
+            outText += '-'; // word continuation
+            outText += '\n'; // new line
+
+            wordLength = m_glyphsSize[text[i]].width() + m_glyphSpacing.width();
+            lineLength = 0;
+            lastSeparator = i;
+        }
+    }
+
+    lineLength += wordLength;
+    if (lineLength > maxWidth) { // too long line with this word
+        outText += '\n';
+        lineLength = wordLength;
+    }
+    for (size_t j = lastSeparator; j < text.size(); ++j) { // copy word
+        outText += text[j];
+    }
 
     return outText;
 }

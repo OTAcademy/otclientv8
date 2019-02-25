@@ -24,6 +24,7 @@
 #define LUAINTERFACE_H
 
 #include "declarations.h"
+#include "luastats.h"
 
 struct lua_State;
 typedef int (*LuaCFunction) (lua_State *L);
@@ -169,6 +170,9 @@ public:
     /// Searches for the source of the current running function
     std::string getCurrentSourcePath(int level = 0);
 
+    /// gets current function name
+    std::string getCurrentFunction(int level = 0);
+
     /// @brief Calls a function
     /// The function and arguments must be on top of the stack in order,
     /// results are pushed onto the stack.
@@ -234,6 +238,7 @@ public:
 
     const char* typeName(int index = -1);
     std::string functionSourcePath();
+    std::string functionSource();
 
     void insert(int index);
     void remove(int index);
@@ -433,12 +438,17 @@ T LuaInterface::castValue(int index) {
 template<typename... T>
 int LuaInterface::luaCallGlobalField(const std::string& global, const std::string& field, const T&... args) {
     g_lua.getGlobalField(global, field);
+    int ret = 0;
+
+    auto executionStart = stdext::micros();
+
     if(!g_lua.isNil()) {
         int numArgs = g_lua.polymorphicPush(args...);
-        return g_lua.signalCall(numArgs);
+        ret = g_lua.signalCall(numArgs);
     } else
         g_lua.pop(1);
-    return 0;
+    g_luaStats.add(stdext::format("[%s] %s", global, field), stdext::micros() - executionStart);
+    return ret;
 }
 
 template<typename... T>

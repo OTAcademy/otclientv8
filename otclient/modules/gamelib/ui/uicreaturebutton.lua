@@ -75,6 +75,20 @@ function UICreatureButton:update()
   end
 end
 
+function UICreatureButton:newSetup(creature)
+	if self.creature ~= creature then
+		self.creature = creature
+		local creatureWidget = self:getChildById('creature')
+		creatureWidget:setCreature(creature)	
+		local labelWidget = self:getChildById('label')
+		labelWidget:setText(creature:getName())
+	end
+
+	self:setLifeBarPercent(creature:getHealthPercent())
+	self:updateSkull(creature:getSkull())
+	self:updateEmblem(creature:getEmblem())
+end
+
 function UICreatureButton:updateSkull(skullId)
   if not self.creature then
     return

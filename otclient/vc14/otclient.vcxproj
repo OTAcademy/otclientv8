@@ -111,7 +111,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
@@ -236,6 +236,7 @@
     <ClCompile Include="..\src\framework\luaengine\luaexception.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luainterface.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luaobject.cpp" />
+    <ClCompile Include="..\src\framework\luaengine\luastats.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luavaluecasts.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputDir)\$(IntDir)\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(InputDir)\$(IntDir)\</ObjectFileName>
@@ -394,6 +395,7 @@
     <ClInclude Include="..\src\framework\luaengine\luaexception.h" />
     <ClInclude Include="..\src\framework\luaengine\luainterface.h" />
     <ClInclude Include="..\src\framework\luaengine\luaobject.h" />
+    <ClInclude Include="..\src\framework\luaengine\luastats.h" />
     <ClInclude Include="..\src\framework\luaengine\luavaluecasts.h" />
     <ClInclude Include="..\src\framework\net\connection.h" />
     <ClInclude Include="..\src\framework\net\declarations.h" />

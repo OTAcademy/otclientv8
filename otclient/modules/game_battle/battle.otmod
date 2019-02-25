@@ -4,6 +4,6 @@ Module
   author: andrefaramir, BeniS
   website: https://github.com/edubart/otclient
   sandboxed: true
-  scripts: [ battle ]
+  scripts: [ new_battle ]
   @onLoad: init()
   @onUnload: terminate()

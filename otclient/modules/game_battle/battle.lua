@@ -17,7 +17,7 @@ hideMonstersButton = nil
 hideSkullsButton = nil
 hidePartyButton = nil
 
-function init()
+function init() 
   g_ui.importStyle('battlebutton')
   battleButton = modules.client_topmenu.addRightGameToggleButton('battleButton', tr('Battle') .. ' (Ctrl+B)', '/images/topbuttons/battle', toggle)
   battleButton:setOn(true)
@@ -89,6 +89,9 @@ function init()
 end
 
 function terminate()
+  if battleButton == nil then
+	return
+  end
   g_keyboard.unbindKeyDown('Ctrl+B')
   battleButtonsByCreaturesList = {}
   battleButton:destroy()

@@ -24,6 +24,8 @@
 #include "otmlemitter.h"
 #include "otmldocument.h"
 
+#include <framework/core/graphicalapplication.h>
+
 OTMLNodePtr OTMLNode::create(std::string tag, bool unique)
 {
     OTMLNodePtr node(new OTMLNode);
@@ -43,16 +45,24 @@ OTMLNodePtr OTMLNode::create(std::string tag, std::string value)
 
 bool OTMLNode::hasChildren()
 {
-    int count = 0;
     for(const OTMLNodePtr& child : m_children) {
-        if(!child->isNull())
-            count++;
+        if (!child->isNull())
+            return true;
     }
-    return count > 0;
+    return false;
 }
 
 OTMLNodePtr OTMLNode::get(const std::string& childTag)
 {
+    if (g_app.newQTMLCache()) {
+        if (childTag.size() > 0 && childTag[0] == '!')
+            g_logger.fatal(stdext::format("Invalid childTag %s", childTag));
+        auto it = m_childrenTagCache.find(childTag);
+        if (it != m_childrenTagCache.end() && !it->second->isNull())
+            return it->second;
+        return nullptr;
+    } 
+
     for(const OTMLNodePtr& child : m_children) {
         if(child->tag() == childTag && !child->isNull())
             return child;
@@ -109,6 +119,17 @@ void OTMLNode::addChild(const OTMLNodePtr& newChild)
                 while(it != m_children.end()) {
                     OTMLNodePtr node = (*it);
                     if(node != newChild && node->tag() == newChild->tag()) {
+                        std::string tag = newChild->tag();
+                        if (tag.size() > 0 && tag[0] == '!')
+                            tag = tag.substr(1);
+                        auto cacheIt = m_childrenTagCache.find(tag);
+                        if (cacheIt != m_childrenTagCache.end()) {
+                            if (cacheIt->second != newChild) {
+                                m_childrenTagCache.erase(cacheIt);
+                                m_childrenTagCache[tag] = newChild;
+                                newChild->lockTag();
+                            }
+                        }
                         it = m_children.erase(it);
                     } else
                         ++it;
@@ -119,6 +140,11 @@ void OTMLNode::addChild(const OTMLNodePtr& newChild)
     }
 
     m_children.push_back(newChild);
+    std::string tag = newChild->tag();
+    if (tag.size() > 0 && tag[0] == '!')
+        tag = tag.substr(1);
+    m_childrenTagCache[tag] = newChild;
+    newChild->lockTag();
 }
 
 bool OTMLNode::removeChild(const OTMLNodePtr& oldChild)
@@ -126,6 +152,7 @@ bool OTMLNode::removeChild(const OTMLNodePtr& oldChild)
     auto it = std::find(m_children.begin(), m_children.end(), oldChild);
     if(it != m_children.end()) {
         m_children.erase(it);
+        m_childrenTagCache.erase((*it)->tag());
         return true;
     }
     return false;
@@ -135,8 +162,22 @@ bool OTMLNode::replaceChild(const OTMLNodePtr& oldChild, const OTMLNodePtr& newC
 {
     auto it = std::find(m_children.begin(), m_children.end(), oldChild);
     if(it != m_children.end()) {
+        std::string tag = (*it)->tag();
+        if (tag.size() > 0 && tag[0] == '!')
+            tag = tag.substr(1);
+        auto cacheIt = m_childrenTagCache.find(tag);
+        if (cacheIt != m_childrenTagCache.end()) {
+            if (cacheIt->second == (*it))
+                m_childrenTagCache.erase(cacheIt);
+        }
         it = m_children.erase(it);
+
         m_children.insert(it, newChild);
+        tag = newChild->tag();
+        if (tag.size() > 0 && tag[0] == '!')
+            tag = tag.substr(1);
+        m_childrenTagCache[tag] = newChild;
+        newChild->lockTag();
         return true;
     }
     return false;
@@ -165,6 +206,7 @@ void OTMLNode::merge(const OTMLNodePtr& node)
 void OTMLNode::clear()
 {
     m_children.clear();
+    m_childrenTagCache.clear();
 }
 
 OTMLNodeList OTMLNode::children()
@@ -192,4 +234,15 @@ OTMLNodePtr OTMLNode::clone()
 std::string OTMLNode::emit()
 {
     return OTMLEmitter::emitNode(asOTMLNode(), 0);
+}
+
+void OTMLNode::setTag(const std::string& tag) { 
+    if (m_tagLocked && tag != m_tag) {
+        std::string correct_tag = m_tag;
+        if (correct_tag.size() > 0 && m_tag[0] == '!')
+            correct_tag = correct_tag.substr(1);
+        if(correct_tag != tag)
+            g_logger.fatal(stdext::format("Trying to setTag for locked QTMLNode %s to %s", m_tag, tag));
+    }
+    m_tag = tag; 
 }

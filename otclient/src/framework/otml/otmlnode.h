@@ -47,11 +47,15 @@ public:
     bool hasChildAt(const std::string& childTag) { return !!get(childTag); }
     bool hasChildAtIndex(int childIndex) { return !!getIndex(childIndex); }
 
-    void setTag(const std::string& tag) { m_tag = tag; }
+    void setTag(const std::string& tag);
     void setValue(const std::string& value) { m_value = value; }
     void setNull(bool null) { m_null = null; }
     void setUnique(bool unique) { m_unique = unique; }
     void setSource(const std::string& source) { m_source = source; }
+
+    void lockTag() {
+        m_tagLocked = true;
+    }
 
     OTMLNodePtr get(const std::string& childTag);
     OTMLNodePtr getIndex(int childIndex);
@@ -95,11 +99,13 @@ protected:
     OTMLNode() : m_unique(false), m_null(false) { }
 
     OTMLNodeList m_children;
+    std::unordered_map<std::string, OTMLNodePtr> m_childrenTagCache;
     std::string m_tag;
     std::string m_value;
     std::string m_source;
     bool m_unique;
     bool m_null;
+    bool m_tagLocked = false;
 };
 
 #include "otmlexception.h"

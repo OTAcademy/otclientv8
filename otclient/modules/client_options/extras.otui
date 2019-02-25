@@ -1,0 +1,22 @@
+Panel
+  OptionCheckBox
+    id: newWalking
+    !text: tr('New walking')
+  OptionCheckBox
+    id: newRendering
+    !text: tr('New (adaptive) rendering')
+  OptionCheckBox
+    id: newAutoWalking
+    !text: tr('New auto walking (map click)')
+  OptionCheckBox
+    id: newBotDetection
+    !text: tr('Bot detection system')
+  OptionCheckBox
+    id: newTextRendering
+    !text: tr('New text rendering (fixing very cpu intensive text drawing)')
+  OptionCheckBox
+    id: newQTMLCache
+    !text: tr('New QTMLCache (faster lua scripts)')
+  OptionCheckBox
+    id: newBattleList
+    !text: tr('New Battlelist (client restart required)')

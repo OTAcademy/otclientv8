@@ -144,6 +144,8 @@ void GraphicalApplication::run()
             }
 
             if(redraw) {
+                auto render_start_time = stdext::micros();
+
                 if(cacheForeground) {
                     Rect viewportRect(0, 0, g_painter->getResolution());
 
@@ -179,6 +181,9 @@ void GraphicalApplication::run()
 
                 // update screen pixels
                 g_window.swapBuffers();
+
+                auto render_time = stdext::micros() - render_start_time;
+                //g_logger.debug(stdext::format("Render time: %i", render_time));
             }
 
             // only update the current time once per frame to gain performance

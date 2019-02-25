@@ -54,6 +54,7 @@ public:
     Size calculateTextRectSize(const std::string& text);
 
     std::string wrapText(const std::string& text, int maxWidth);
+    std::string newWrapText(const std::string& text, int maxWidth);
 
     std::string getName() { return m_name; }
     int getGlyphHeight() { return m_glyphHeight; }

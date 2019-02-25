@@ -24,6 +24,7 @@
 #define LUAOBJECT_H
 
 #include "declarations.h"
+#include "luastats.h"
 
 /// LuaObject, all script-able classes have it as base
 // @bindclass
@@ -157,15 +158,20 @@ int LuaObject::luaCallLuaField(const std::string& field, const T&... args) {
     g_lua.pushObject(asLuaObject());
     g_lua.getField(field);
 
+    int ret = 0;
+    uint64_t executionStart = stdext::micros();
+
     if(!g_lua.isNil()) {
         // the first argument is always this object (self)
         g_lua.insert(-2);
         int numArgs = g_lua.polymorphicPush(args...);
-        return g_lua.signalCall(1 + numArgs);
+        ret = g_lua.signalCall(1 + numArgs);
     } else {
         g_lua.pop(2);
     }
-    return 0;
+
+    g_luaStats.add(field, stdext::micros() - executionStart);
+    return ret;
 }
 
 template<typename R, typename... T>

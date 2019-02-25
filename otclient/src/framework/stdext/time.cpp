@@ -37,6 +37,7 @@ ticks_t millis()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startup_time).count();
 }
+
 ticks_t micros() {
     return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startup_time).count();
 }

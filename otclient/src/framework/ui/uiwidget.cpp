@@ -435,6 +435,29 @@ void UIWidget::moveChildToIndex(const UIWidgetPtr& child, int index)
     updateLayout();
 }
 
+void UIWidget::reorderChildrens(const std::vector<UIWidgetPtr>& childrens) {
+    std::vector<size_t> currentOrder;
+    currentOrder.reserve(childrens.size());
+    for (size_t i = 0; i < m_children.size(); ++i) {
+        for (size_t c = 0; c < childrens.size(); ++c) {
+            if (childrens[c] == m_children[i]) {
+                currentOrder.push_back(i);
+            }
+        }
+    }
+
+    if (currentOrder.size() != childrens.size()) {
+        g_logger.error("Invalid parameter for reorderChildren");
+        return;
+    }
+
+    for (size_t i = 0; i < childrens.size(); ++i) {
+        m_children[currentOrder[i]] = childrens[i];
+    }
+    updateChildrenIndexStates();
+    updateLayout();
+}
+
 void UIWidget::lockChild(const UIWidgetPtr& child)
 {
     if(m_destroyed)

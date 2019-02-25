@@ -22,6 +22,7 @@
 
 #include <framework/core/application.h>
 #include <framework/luaengine/luainterface.h>
+#include <framework/luaengine/luastats.h>
 #include <framework/core/eventdispatcher.h>
 #include <framework/core/configmanager.h>
 #include <framework/core/config.h>
@@ -155,6 +156,12 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_logger", "error", &Logger::error, &g_logger);
     g_lua.bindSingletonFunction("g_logger", "fatal", &Logger::fatal, &g_logger);
 
+    // Lua stats
+    g_lua.registerSingletonClass("g_stats");
+    g_lua.bindSingletonFunction("g_stats", "get", &LuaStats::getAsString, &g_luaStats);
+    g_lua.bindSingletonFunction("g_stats", "getCallback", &LuaStats::getCallbackAsString, &g_luaStats);
+    g_lua.bindSingletonFunction("g_stats", "clear", &LuaStats::clear, &g_luaStats);
+    
     // ModuleManager
     g_lua.registerSingletonClass("g_modules");
     g_lua.bindSingletonFunction("g_modules", "discoverModules", &ModuleManager::discoverModules, &g_modules);
@@ -256,6 +263,17 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_app", "getBackgroundPaneFps", &GraphicalApplication::getBackgroundPaneFps, &g_app);
     g_lua.bindSingletonFunction("g_app", "getForegroundPaneMaxFps", &GraphicalApplication::getForegroundPaneMaxFps, &g_app);
     g_lua.bindSingletonFunction("g_app", "getBackgroundPaneMaxFps", &GraphicalApplication::getBackgroundPaneMaxFps, &g_app);
+
+    // New functions
+    g_lua.bindSingletonFunction("g_app", "setNewWalking", &GraphicalApplication::setNewWalking, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setNewRendering", &GraphicalApplication::setNewRendering, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setNewTextRendering", &GraphicalApplication::setNewTextRendering, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setNewAutoWalking", &GraphicalApplication::setNewAutoWalking, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setNewBotDetection", &GraphicalApplication::setNewBotDetection, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setNewQTMLCache", &GraphicalApplication::setNewQTMLCache, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setNewBattleList", &GraphicalApplication::setNewBattleList, &g_app);
+
+    g_lua.bindSingletonFunction("g_app", "newBattleList", &GraphicalApplication::newBattleList, &g_app);
 
     // PlatformWindow
     g_lua.registerSingletonClass("g_window");
@@ -368,6 +386,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("lowerChild", &UIWidget::lowerChild);
     g_lua.bindClassMemberFunction<UIWidget>("raiseChild", &UIWidget::raiseChild);
     g_lua.bindClassMemberFunction<UIWidget>("moveChildToIndex", &UIWidget::moveChildToIndex);
+    g_lua.bindClassMemberFunction<UIWidget>("reorderChildrens", &UIWidget::reorderChildrens);
     g_lua.bindClassMemberFunction<UIWidget>("lockChild", &UIWidget::lockChild);
     g_lua.bindClassMemberFunction<UIWidget>("unlockChild", &UIWidget::unlockChild);
     g_lua.bindClassMemberFunction<UIWidget>("mergeStyle", &UIWidget::mergeStyle);

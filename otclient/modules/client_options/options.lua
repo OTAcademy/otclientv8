@@ -30,6 +30,14 @@ local defaultOptions = {
   dontStretchShrink = false,
   turnDelay = 50,
   hotkeyDelay = 50,
+  -- extras
+  newWalking = true,
+  newRendering = true,
+  newTextRendering = true,
+  newAutoWalking = true,
+  newBotDetection = true,
+  newQTMLCache = true,
+  newBattleList = true
 }
 
 local optionsWindow
@@ -40,6 +48,7 @@ local generalPanel
 local consolePanel
 local graphicsPanel
 local soundPanel
+local extrasPanel
 local audioButton
 
 local function setupGraphicsEngines()
@@ -111,6 +120,9 @@ function init()
 
   audioPanel = g_ui.loadUI('audio')
   optionsTabBar:addTab(tr('Audio'), audioPanel, '/images/optionstab/audio')
+
+  extrasPanel = g_ui.loadUI('extras')
+  optionsTabBar:addTab(tr('Extras'), extrasPanel, '/images/optionstab/extras')
 
   optionsButton = modules.client_topmenu.addLeftButton('optionsButton', tr('Options'), '/images/topbuttons/options', toggle)
   audioButton = modules.client_topmenu.addLeftButton('audioButton', tr('Audio'), '/images/topbuttons/audio', function() toggleOption('enableAudio') end)
@@ -240,6 +252,23 @@ function setOption(key, value, force)
   elseif key == 'hotkeyDelay' then
     generalPanel:getChildById('hotkeyDelayLabel'):setText(tr('Hotkey delay: %sms', value))
   end
+  
+  if key == 'newWalking' then
+	g_app.setNewWalking(value)
+  elseif key == 'newAutoWalking' then
+    g_app.setNewAutoWalking(value)
+  elseif key == 'newRendering' then
+    g_app.setNewRendering(value)
+  elseif key == 'newTextRendering' then
+    g_app.setNewTextRendering(value)
+  elseif key == 'newBotDetection' then
+    g_app.setNewBotDetection(value)
+  elseif key == 'newQTMLCache' then
+    g_app.setNewQTMLCache(value)
+  elseif key == 'newBattleList' then
+    g_app.setNewBattleList(value)
+  end
+  
 
   -- change value for keybind updates
   for _,panel in pairs(optionsTabBar:getTabsPanel()) do
