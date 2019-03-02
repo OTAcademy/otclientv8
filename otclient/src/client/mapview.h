@@ -44,6 +44,7 @@ public:
     MapView();
     ~MapView();
     void draw(const Rect& rect);
+    void newDraw(const Rect & rect);
 
 private:
     void updateGeometry(const Size& visibleDimension, const Size& optimizedSize);

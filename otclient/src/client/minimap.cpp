@@ -33,6 +33,8 @@
 #include <framework/core/filestream.h>
 #include <zlib.h>
 
+#include <framework/util/stats.h>
+
 Minimap g_minimap;
 
 void MinimapBlock::clean()

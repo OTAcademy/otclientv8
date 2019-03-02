@@ -22,6 +22,7 @@
 
 
 #include "graphicalapplication.h"
+#include <framework/core/adaptiverenderer.h>
 #include <framework/core/clock.h>
 #include <framework/core/eventdispatcher.h>
 #include <framework/platform/platformwindow.h>
@@ -31,6 +32,7 @@
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/painter.h>
 #include <framework/input/mouse.h>
+#include <framework/util/extras.h>
 
 #ifdef FW_SOUND
 #include <framework/sound/soundmanager.h>
@@ -183,7 +185,8 @@ void GraphicalApplication::run()
                 g_window.swapBuffers();
 
                 auto render_time = stdext::micros() - render_start_time;
-                //g_logger.debug(stdext::format("Render time: %i", render_time));
+                g_adaptiveRenderer.updateLastRenderTime(render_time);
+                g_extras.addFrameRenderTime(render_time);
             }
 
             // only update the current time once per frame to gain performance

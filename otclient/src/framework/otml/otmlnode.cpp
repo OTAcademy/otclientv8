@@ -24,7 +24,7 @@
 #include "otmlemitter.h"
 #include "otmldocument.h"
 
-#include <framework/core/graphicalapplication.h>
+#include <framework/util/extras.h>
 
 OTMLNodePtr OTMLNode::create(std::string tag, bool unique)
 {
@@ -54,18 +54,25 @@ bool OTMLNode::hasChildren()
 
 OTMLNodePtr OTMLNode::get(const std::string& childTag)
 {
-    if (g_app.newQTMLCache()) {
+    if (g_extras.OTMLChildIdCache) {
         if (childTag.size() > 0 && childTag[0] == '!')
             g_logger.fatal(stdext::format("Invalid childTag %s", childTag));
         auto it = m_childrenTagCache.find(childTag);
         if (it != m_childrenTagCache.end() && !it->second->isNull())
             return it->second;
-        return nullptr;
     } 
 
     for(const OTMLNodePtr& child : m_children) {
-        if(child->tag() == childTag && !child->isNull())
+        if (child->tag() == childTag && !child->isNull()) {
+            if(g_extras.OTMLChildIdCache) {
+                std::string tag = child->tag();
+                if (tag.size() > 0 && tag[0] == '!')
+                    tag = tag.substr(1);
+                m_childrenTagCache[tag] = child;
+                child->lockTag();
+            }
             return child;
+        }
     }
     return nullptr;
 }

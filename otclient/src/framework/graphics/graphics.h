@@ -26,6 +26,8 @@
 #include "declarations.h"
 #include "painter.h"
 
+class PainterOGL;
+
 // @bindsingleton g_graphics
 class Graphics
 {
@@ -96,6 +98,8 @@ private:
     stdext::boolean<true> m_cacheBackbuffer;
     PainterEngine m_prefferedPainterEngine;
     PainterEngine m_selectedPainterEngine;
+
+    PainterOGL* m_painterOGL;
 };
 
 extern Graphics g_graphics;

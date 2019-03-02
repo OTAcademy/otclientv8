@@ -36,10 +36,12 @@
 #include <framework/core/clock.h>
 
 #include <framework/graphics/paintershaderprogram.h>
-#include <framework/graphics/ogl/painterogl2_shadersources.h>
+#include <framework/graphics/ogl/shadersources.h>
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/framebuffermanager.h>
 #include "spritemanager.h"
+
+#include <framework/util/stats.h>
 
 Creature::Creature() : Thing()
 {

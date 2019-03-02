@@ -30,6 +30,13 @@ TopMenuPanel
     anchors.top: fpsLabel.bottom
     anchors.left: fpsLabel.left
 
+  TopMenuFrameCounterLabel
+    id: renderDebugLabel
+    text-auto-resize: true
+    anchors.top: parent.top
+    anchors.left: leftGameButtonsPanel.right
+    margin-left: 80
+
   TopMenuButtonsPanel
     id: rightButtonsPanel
     anchors.top: parent.top

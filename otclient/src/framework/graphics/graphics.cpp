@@ -22,18 +22,7 @@
 
 #include "fontmanager.h"
 
-#if OPENGL_ES==2
-#include "ogl/painterogl2.h"
-#elif OPENGL_ES==1
-#include "ogl/painterogl1.h"
-#else
-#include "ogl/painterogl1.h"
-#include "ogl/painterogl2.h"
-#endif
-
-#if defined(WIN32) && defined(DIRECTX)
-#include "dx/painterdx9.h"
-#endif
+#include "ogl/painterogl.h"
 
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/texture.h>
@@ -54,15 +43,6 @@ void Graphics::init()
     g_logger.info(stdext::format("GPU %s", glGetString(GL_RENDERER)));
     g_logger.info(stdext::format("OpenGL %s", glGetString(GL_VERSION)));
 
-#if defined(WIN32) && defined(DIRECTX)
-    g_painterDX9 = new PainterDX9;
-#endif
-
-#if OPENGL_ES==2
-    g_painterOGL2 = new PainterOGL2;
-#elif OPENGL_ES==1
-    g_painterOGL1 = new PainterOGL1;
-#else
     // init GL extensions
     GLenum err = glewInit();
     if(err != GLEW_OK)
@@ -78,16 +58,17 @@ void Graphics::init()
         glGenerateMipmap = glGenerateMipmapEXT;
     }
 
-    // opengl 1 is always supported
-    g_painterOGL1 = new PainterOGL1;
-
-    // opengl 2 is only supported in newer hardware
-    if(GLEW_VERSION_2_0)
-        g_painterOGL2 = new PainterOGL2;
-#endif
+    m_painterOGL = new PainterOGL;
 
     // blending is always enabled
     glEnable(GL_BLEND);
+
+    // hints, 
+    glHint(GL_FOG_HINT, GL_FASTEST);
+    glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+    glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_FASTEST);
 
     // determine max texture size
     int maxTextureSize = 0;
@@ -115,19 +96,10 @@ void Graphics::terminate()
     g_framebuffers.terminate();
     g_textures.terminate();
 
-#ifdef PAINTER_OGL2
-    if(g_painterOGL2) {
-        delete g_painterOGL2;
-        g_painterOGL2 = nullptr;
+    if(m_painterOGL) {
+        delete m_painterOGL;
+        m_painterOGL = nullptr;
     }
-#endif
-
-#ifdef PAINTER_OGL1
-    if(g_painterOGL1) {
-        delete g_painterOGL1;
-        g_painterOGL1 = nullptr;
-    }
-#endif
 
     g_painter = nullptr;
 
@@ -165,20 +137,9 @@ bool Graphics::parseOption(const std::string& option)
 
 bool Graphics::isPainterEngineAvailable(Graphics::PainterEngine painterEngine)
 {
-#if defined(WIN32) && defined(DIRECTX)
-    if(g_painterDX9 && painterEngine == Painter_DirectX9)
+    if(m_painterOGL && painterEngine == Painter_OpenGL2)
         return true;
-#endif
 
-#ifdef PAINTER_OGL2
-    if(g_painterOGL2 && painterEngine == Painter_OpenGL2)
-        return true;
-#endif
-
-#ifdef PAINTER_OGL1
-    if(g_painterOGL1 && painterEngine == Painter_OpenGL1)
-        return true;
-#endif
     return false;
 }
 
@@ -188,44 +149,14 @@ bool Graphics::selectPainterEngine(PainterEngine painterEngine)
     Painter *fallbackPainter = nullptr;
     PainterEngine fallbackPainterEngine = Painter_Any;
 
-#ifdef PAINTER_DX9
-    // use this to force directx if its enabled (avoid changes in options module, etc, will be removed)
-    painterEngine = Painter_DirectX9;
-
-    // always prefer DirectX9 on Windows
-    if(g_painterDX9) {
-        if(!painter && (painterEngine == Painter_DirectX9 || painterEngine == Painter_Any)) {
-            m_selectedPainterEngine = Painter_DirectX9;
-            painter = g_painterDX9;
-        }
-        fallbackPainter = g_painterDX9;
-        fallbackPainterEngine = Painter_DirectX9;
-    }
-#endif
-
-#ifdef PAINTER_OGL2
-    // always prefer OpenGL 2 over OpenGL 1
-    if(g_painterOGL2) {
+    if(m_painterOGL) {
         if(!painter && (painterEngine == Painter_OpenGL2 || painterEngine == Painter_Any)) {
             m_selectedPainterEngine = Painter_OpenGL2;
-            painter = g_painterOGL2;
+            painter = m_painterOGL;
         }
-        fallbackPainter = g_painterOGL2;
+        fallbackPainter = m_painterOGL;
         fallbackPainterEngine = Painter_OpenGL2;
     }
-#endif
-
-#ifdef PAINTER_OGL1
-    // fallback to OpenGL 1 in older hardwares
-    if(g_painterOGL1) {
-        if(!painter && (painterEngine == Painter_OpenGL1 || painterEngine == Painter_Any)) {
-            m_selectedPainterEngine = Painter_OpenGL1;
-            painter = g_painterOGL1;
-        }
-        fallbackPainter = g_painterOGL1;
-        fallbackPainterEngine = Painter_OpenGL1;
-    }
-#endif
 
     if(!painter) {
         painter = fallbackPainter;
@@ -253,15 +184,8 @@ bool Graphics::selectPainterEngine(PainterEngine painterEngine)
 void Graphics::resize(const Size& size)
 {
     m_viewportSize = size;
-#ifdef PAINTER_OGL1
-    if(g_painterOGL1)
-        g_painterOGL1->setResolution(size);
-#endif
-
-#ifdef PAINTER_OGL2
-    if(g_painterOGL2)
-        g_painterOGL2->setResolution(size);
-#endif
+    if(m_painterOGL)
+        m_painterOGL->setResolution(size);
 }
 
 bool Graphics::canUseDrawArrays()

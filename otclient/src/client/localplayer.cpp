@@ -26,6 +26,7 @@
 #include "tile.h"
 #include <framework/core/eventdispatcher.h>
 #include <framework/graphics/graphics.h>
+#include <framework/util/extras.h>
 
 LocalPlayer::LocalPlayer()
 {
@@ -90,6 +91,34 @@ bool LocalPlayer::canWalk(Otc::Direction direction)
     return true;
 }
 
+bool LocalPlayer::newCanWalk(Otc::Direction direction)
+{
+    // cannot walk while locked
+    if(m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration)
+        return false;
+
+    // paralyzed
+    if(m_speed == 0)
+        return false;
+
+    // last walk is not done yet
+    if((m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
+        return false;
+
+    // prewalk has a timeout, because for some reason that I don't know yet the server sometimes doesn't answer the prewalk
+    bool prewalkTimeouted = m_walking && m_preWalking && m_walkTimer.ticksElapsed() >= getStepDuration() + PREWALK_TIMEOUT;
+
+    // avoid doing more walks than wanted when receiving a lot of walks from server
+    if(!m_lastPrewalkDone && m_preWalking && !prewalkTimeouted)
+        return false;
+
+    // cannot walk while already walking
+    if((m_walking && !isAutoWalking()) && (!prewalkTimeouted))
+        return false;
+
+    return true;
+}
+
 void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
 {
     // a prewalk was going on
@@ -124,6 +153,26 @@ void LocalPlayer::preWalk(Otc::Direction direction)
         m_secondPreWalk = true;
         return;
     }
+
+    m_preWalking = true;
+
+    if(m_serverWalkEndEvent)
+        m_serverWalkEndEvent->cancel();
+
+    // start walking to direction
+    m_lastPrewalkDone = false;
+    m_lastPrewalkDestination = newPos;
+    Creature::walk(m_position, newPos);
+}
+
+void LocalPlayer::newPreWalk(Otc::Direction direction)
+{
+    Position newPos = m_position.translatedToDirection(direction);
+
+    // avoid reanimating prewalks
+    //if(m_preWalking) {
+    //    return;
+    //}
 
     m_preWalking = true;
 
@@ -275,7 +324,7 @@ void LocalPlayer::updateWalk()
     updateWalkingTile();
 
     // terminate walk only when client and server side walk are completed
-    if(m_walking && !m_preWalking && m_walkTimer.ticksElapsed() >= stepDuration)
+    if(m_walking && (!m_preWalking || g_extras.newWalking) && m_walkTimer.ticksElapsed() >= stepDuration)
         terminateWalk();
 }
 

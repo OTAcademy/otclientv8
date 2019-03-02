@@ -25,6 +25,7 @@
 
 #include <framework/core/clock.h>
 #include <framework/core/filestream.h>
+#include <framework/util/extras.h>
 
 Animator::Animator()
 {
@@ -47,10 +48,15 @@ void Animator::unserialize(int animationPhases, const FileStreamPtr& fin)
     m_loopCount = fin->get32();
     m_startPhase = fin->get8();
 
+    int total_minimum = 0;
+    int total_maximum = 0;
     for(int i = 0; i < m_animationPhases; ++i) {
         int minimum = fin->getU32();
         int maximum = fin->getU32();
         m_phaseDurations.push_back(std::make_tuple(minimum, maximum));
+        m_phaseDurationsSummed.push_back(std::make_pair(total_minimum, total_maximum));
+        total_minimum += minimum;
+        total_maximum += maximum;
     }
 
     m_phase = getStartPhase();
@@ -126,9 +132,17 @@ int Animator::getPhase()
 int Animator::getPhaseAt(ticks_t time)
 {
     int index = 0;
+    if (g_extras.fasterAnimations) {
+        for (int i = 0; i < m_animationPhases; ++i) {
+            if (time < m_phaseDurationsSummed[i].first)
+                return i;
+        }
+        return m_animationPhases - 1;
+    }
+
     ticks_t total = 0;
 
-    for(const auto &pair: m_phaseDurations) {
+    for (const auto &pair : m_phaseDurations) {
         total += std::get<1>(pair);
 
         if (time < total) {

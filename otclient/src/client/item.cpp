@@ -37,6 +37,8 @@
 #include <framework/core/filestream.h>
 #include <framework/core/binarytree.h>
 
+#include <framework/util/stats.h>
+
 Item::Item() :
     m_clientId(0),
     m_serverId(0),

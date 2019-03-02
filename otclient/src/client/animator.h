@@ -72,6 +72,7 @@ private:
     int m_loopCount;
     bool m_async;
     std::vector< std::tuple<int, int> > m_phaseDurations;
+    std::vector< std::pair<int, int> > m_phaseDurationsSummed;
 
     int m_currentDuration;
     AnimationDirection m_currentDirection;

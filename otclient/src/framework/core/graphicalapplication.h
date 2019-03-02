@@ -55,22 +55,6 @@ public:
 
     bool isOnInputEvent() { return m_onInputEvent; }
 
-    void setNewWalking(bool value) { m_newWalking = value; };
-    void setNewAutoWalking(bool value) { m_newAutoWalking = value; };
-    void setNewRendering(bool value) { m_newRendering = value; };
-    void setNewTextRendering(bool value) { m_newTextRendering = value; };
-    void setNewBotDetection(bool value) { m_newBotDetection = value; };
-    void setNewQTMLCache(bool value) { m_newQTMLCache = value; }
-    void setNewBattleList(bool value) { m_newBattleList = value; }
-
-    bool newWalking() const { return m_newWalking; }
-    bool newAutoWalking() const { return m_newAutoWalking; }
-    bool newRendering() const { return m_newRendering; }
-    bool newTextRendering() const { return m_newTextRendering; }
-    bool newBotDetection() const { return m_newBotDetection; }
-    bool newQTMLCache() const { return m_newQTMLCache; }
-    bool newBattleList() { return m_newBattleList; }
-
 protected:
     void resize(const Size& size);
     void inputEvent(const InputEvent& event);
@@ -81,15 +65,6 @@ private:
     AdaptativeFrameCounter m_backgroundFrameCounter;
     AdaptativeFrameCounter m_foregroundFrameCounter;
     TexturePtr m_foreground;
-
-    // new
-    stdext::boolean<false> m_newWalking;
-    stdext::boolean<false> m_newAutoWalking;
-    stdext::boolean<false> m_newRendering;
-    stdext::boolean<false> m_newTextRendering;
-    stdext::boolean<false> m_newBotDetection;
-    stdext::boolean<false> m_newQTMLCache;    
-    stdext::boolean<false> m_newBattleList;    
 };
 
 extern GraphicalApplication g_app;

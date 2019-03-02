@@ -24,9 +24,16 @@
 #define STDEXT_PACKEDVECTOR_H
 
 #include <algorithm>
+#include <vector>
 
 namespace stdext {
+    template<class T>
+    class packed_vector : public std::vector<T> {
 
+    };
+};
+
+/*
 // disable memory alignment
 #pragma pack(push,1)
 
@@ -156,6 +163,6 @@ private:
 
 namespace std {
 template<class T, class U> void swap(stdext::packed_vector<T,U>& lhs, stdext::packed_vector<T,U>& rhs) { lhs.swap(rhs); }
-}
+} */
 
 #endif

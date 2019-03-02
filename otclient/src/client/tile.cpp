@@ -30,6 +30,8 @@
 #include "protocolgame.h"
 #include "lightview.h"
 #include <framework/graphics/fontmanager.h>
+#include <framework/util/extras.h>
+#include <framework/core/adaptiverenderer.h>
 
 Tile::Tile(const Position& position) :
     m_position(position),
@@ -41,6 +43,9 @@ Tile::Tile(const Position& position) :
 
 void Tile::draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView)
 {
+    if (g_extras.newMapViewRendering)
+        return newDraw(dest, scaleFactor, drawFlags, lightView);
+
     bool animate = drawFlags & Otc::DrawAnimations;
 
     /* Flags to be checked for.  */
@@ -77,7 +82,7 @@ void Tile::draw(const Point& dest, float scaleFactor, int drawFlags, LightView *
                 g_painter->setColor(Color::teal);
 
             if((thing->isGround() && drawFlags & Otc::DrawGround) ||
-               (thing->isGroundBorder() && drawFlags & Otc::DrawGroundBorders) ||
+                (thing->isGroundBorder() && drawFlags & Otc::DrawGroundBorders) ||
                (thing->isOnBottom() && drawFlags & Otc::DrawOnBottom)) {
                 thing->draw(dest - m_drawElevation*scaleFactor, scaleFactor, animate, lightView);
 
@@ -156,6 +161,186 @@ void Tile::draw(const Point& dest, float scaleFactor, int drawFlags, LightView *
     if(drawFlags & Otc::DrawEffects)
         for(const EffectPtr& effect : m_effects)
             effect->drawEffect(dest - m_drawElevation*scaleFactor, scaleFactor, animate, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, lightView);
+
+    // top items
+    if(drawFlags & Otc::DrawOnTop)
+        for(const ThingPtr& thing : m_things)
+            if(thing->isOnTop())
+                thing->draw(dest, scaleFactor, animate, lightView);
+
+    // draw translucent light (for tiles beneath holes)
+    if(hasTranslucentLight() && lightView) {
+        Light light;
+        light.intensity = 1;
+        lightView->addLightSource(dest + Point(16,16) * scaleFactor, scaleFactor, light);
+    }
+}
+
+void Tile::markTilesToRedrawn() {
+    int redrawPreviousTopW = 0;
+    int redrawPreviousTopH = 0;
+
+    setWillBeRedrawn(false);
+
+    for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+        const ThingPtr& thing = *it;
+        if(!thing->isLyingCorpse()) {
+            continue;
+        }
+
+        redrawPreviousTopW = std::max<int>(thing->getWidth(), redrawPreviousTopW);
+        redrawPreviousTopH = std::max<int>(thing->getHeight(), redrawPreviousTopH);
+    }
+
+    for (int x = -redrawPreviousTopW; x <= 0; ++x) {
+        for (int y = -redrawPreviousTopH; y <= 0; ++y) {
+            if (x == 0 && y == 0)
+                continue;
+            const TilePtr& tile = g_map.getTile(m_position.translated(x,y));
+            if (tile)
+                tile->setWillBeRedrawn(true);
+        }
+    }
+}
+
+void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView)
+{
+    if (g_adaptiveRenderer.ignoreLight())
+        lightView = nullptr;
+
+    bool animate = drawFlags & Otc::DrawAnimations;
+
+    /* Flags to be checked for.  */
+    static const tileflags_t flags[] = {
+        TILESTATE_HOUSE,
+        TILESTATE_PROTECTIONZONE,
+        TILESTATE_OPTIONALZONE,
+        TILESTATE_HARDCOREZONE,
+        TILESTATE_REFRESH,
+        TILESTATE_NOLOGOUT,
+        TILESTATE_LAST
+    };
+
+    // first bottom items
+    if(drawFlags & (Otc::DrawGround | Otc::DrawGroundBorders | Otc::DrawOnBottom)) {
+        m_drawElevation = 0;
+        for(const ThingPtr& thing : m_things) {
+            if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
+                break;
+
+            bool restore = false;
+            if(g_map.showZones() && thing->isGround()) {
+                for(unsigned int i = 0; i < sizeof(flags) / sizeof(tileflags_t); ++i) {
+                    tileflags_t flag = flags[i];
+                    if(hasFlag(flag) && g_map.showZone(flag)) {
+                        g_painter->setOpacity(g_map.getZoneOpacity());
+                        g_painter->setColor(g_map.getZoneColor(flag));
+                        restore = true;
+                        break;
+                    }
+                }
+            }
+            if(m_selected)
+                g_painter->setColor(Color::teal);
+
+            if((thing->isGround() && drawFlags & Otc::DrawGround) ||
+                (thing->isGroundBorder() && drawFlags & Otc::DrawGroundBorders) ||
+               (thing->isOnBottom() && drawFlags & Otc::DrawOnBottom)) {
+                thing->draw(dest - m_drawElevation*scaleFactor, scaleFactor, animate, lightView);
+
+                if(restore) {
+                    g_painter->resetOpacity();
+                    g_painter->resetColor();
+                }
+            }
+            if(m_selected)
+                g_painter->resetColor();
+
+            m_drawElevation += thing->getElevation();
+            if(m_drawElevation > Otc::MAX_ELEVATION)
+                m_drawElevation = Otc::MAX_ELEVATION;
+        }
+    }
+
+    int redrawPreviousTopW = 0;
+    int redrawPreviousTopH = 0;
+
+    if(drawFlags & Otc::DrawItems) {
+        // now common items in reverse order
+        std::vector<ThingPtr> toDraw;
+        for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+            const ThingPtr& thing = *it;
+            if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
+                break;
+            toDraw.push_back(thing);
+
+            if(thing->isLyingCorpse()) {
+                redrawPreviousTopW = std::max<int>(thing->getWidth(), redrawPreviousTopW);
+                redrawPreviousTopH = std::max<int>(thing->getHeight(), redrawPreviousTopH);
+            }
+
+            m_drawElevation += thing->getElevation();
+            if(m_drawElevation > Otc::MAX_ELEVATION)
+                m_drawElevation = Otc::MAX_ELEVATION;
+        }
+
+        int limit = g_adaptiveRenderer.itemsLimit();
+        for (int i = toDraw.size() > limit ? toDraw.size() - limit : 0; i != toDraw.size(); ++i)
+            toDraw[i]->draw(dest - m_drawElevation * scaleFactor, scaleFactor, animate, lightView);
+    }
+
+    // after we render 2x2 lying corpses, we must redraw previous creatures/ontop above them
+    if(redrawPreviousTopH > 0 || redrawPreviousTopW > 0) {
+        int topRedrawFlags = drawFlags & (Otc::DrawCreatures | Otc::DrawEffects | Otc::DrawOnTop | Otc::DrawAnimations);
+        if(topRedrawFlags) {
+            for(int x=-redrawPreviousTopW;x<=0;++x) {
+                for(int y=-redrawPreviousTopH;y<=0;++y) {
+                    if(x == 0 && y == 0)
+                        continue;
+                    const TilePtr& tile = g_map.getTile(m_position.translated(x,y));
+                    if (tile) {
+                        tile->draw(dest + Point(x*Otc::TILE_PIXELS, y*Otc::TILE_PIXELS)*scaleFactor, scaleFactor, topRedrawFlags);
+                    }
+                }
+            }
+        }
+    }
+
+    if (m_willBeRedrawn && (drawFlags & Otc::DrawItems))
+        return;
+
+    // creatures
+    if(drawFlags & Otc::DrawCreatures) {
+        if(animate) {
+            for(const CreaturePtr& creature : m_walkingCreatures) {
+                creature->draw(Point(dest.x + ((creature->getPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
+                                     dest.y + ((creature->getPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, animate, lightView);
+            }
+        }
+
+
+        std::vector<CreaturePtr> toDraw;
+        for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+            const ThingPtr& thing = *it;
+            if(!thing->isCreature())
+                continue;
+            CreaturePtr creature = thing->static_self_cast<Creature>();
+            if (creature && (!creature->isWalking() || !animate))
+                toDraw.push_back(creature);
+        }
+
+        int limit = g_adaptiveRenderer.creaturesLimit();
+        for (auto i = toDraw.size() > limit ? toDraw.size() - limit : 0; i < toDraw.size(); ++i) {
+            toDraw[i]->draw(dest - m_drawElevation * scaleFactor, scaleFactor, animate, lightView);
+        }
+    }
+
+    // effects
+    if (drawFlags & Otc::DrawEffects) {
+        int limit = g_adaptiveRenderer.effetsLimit();
+        for (auto i = m_effects.size() > limit ?  m_effects.size() - limit : 0; i < m_effects.size(); ++i)
+            m_effects[i]->drawEffect(dest - m_drawElevation * scaleFactor, scaleFactor, animate, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, lightView);
+    }
 
     // top items
     if(drawFlags & Otc::DrawOnTop)

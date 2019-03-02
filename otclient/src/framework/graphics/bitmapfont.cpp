@@ -26,7 +26,7 @@
 #include "image.h"
 
 #include <framework/otml/otml.h>
-#include <framework/core/graphicalapplication.h>
+#include <framework/util/extras.h>
 
 void BitmapFont::load(const OTMLNodePtr& fontNode)
 {
@@ -293,7 +293,7 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
 
 std::string BitmapFont::wrapText(const std::string& text, int maxWidth)
 {
-    if (g_app.newTextRendering()) {
+    if (g_extras.fastOTMLTextRendering) {
         return newWrapText(text, maxWidth);
     }
 

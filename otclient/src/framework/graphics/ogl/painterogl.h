@@ -44,13 +44,13 @@ public:
     };
 
     PainterOGL();
-    virtual ~PainterOGL() { }
+    ~PainterOGL() { }
 
-    virtual void bind() { refreshState(); }
-    virtual void unbind() { }
+    void bind();
+    void unbind();
 
     void resetState();
-    virtual void refreshState();
+    void refreshState();
     void saveState();
     void saveAndResetState();
     void restoreSavedState();
@@ -58,15 +58,15 @@ public:
     void clear(const Color& color);
     void clearRect(const Color& color, const Rect& rect);
 
-    virtual void setTransformMatrix(const Matrix3& transformMatrix) { m_transformMatrix = transformMatrix; }
-    virtual void setProjectionMatrix(const Matrix3& projectionMatrix) { m_projectionMatrix = projectionMatrix; }
-    virtual void setTextureMatrix(const Matrix3& textureMatrix) { m_textureMatrix = textureMatrix; }
-    virtual void setCompositionMode(CompositionMode compositionMode);
-    virtual void setBlendEquation(BlendEquation blendEquation);
-    virtual void setClipRect(const Rect& clipRect);
-    virtual void setShaderProgram(PainterShaderProgram *shaderProgram) { m_shaderProgram = shaderProgram; }
-    virtual void setTexture(Texture *texture);
-    virtual void setAlphaWriting(bool enable);
+    void setTransformMatrix(const Matrix3& transformMatrix) { m_transformMatrix = transformMatrix; }
+    void setProjectionMatrix(const Matrix3& projectionMatrix) { m_projectionMatrix = projectionMatrix; }
+    void setTextureMatrix(const Matrix3& textureMatrix) { m_textureMatrix = textureMatrix; }
+    void setCompositionMode(CompositionMode compositionMode);
+    void setBlendEquation(BlendEquation blendEquation);
+    void setClipRect(const Rect& clipRect);
+    void setShaderProgram(PainterShaderProgram *shaderProgram) { m_shaderProgram = shaderProgram; }
+    void setTexture(Texture *texture);
+    void setAlphaWriting(bool enable);
 
     void setTexture(const TexturePtr& texture) { setTexture(texture.get()); }
     void setResolution(const Size& resolution);
@@ -91,6 +91,20 @@ public:
     void resetAlphaWriting() { setAlphaWriting(false); }
     void resetTransformMatrix() { setTransformMatrix(Matrix3()); }
 
+    /* org */
+    void drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode = Triangles);
+    void drawFillCoords(CoordsBuffer& coordsBuffer);
+    void drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture);
+    void drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
+    void drawUpsideDownTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
+    void drawRepeatedTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
+    void drawFilledRect(const Rect& dest);
+    void drawFilledTriangle(const Point& a, const Point& b, const Point& c);
+    void drawBoundingRect(const Rect& dest, int innerLineWidth = 1);
+
+    void setDrawProgram(PainterShaderProgram *drawProgram) { m_drawProgram = drawProgram; }
+    bool hasShaders() { return true; }
+
 protected:
     void updateGlTexture();
     void updateGlCompositionMode();
@@ -114,6 +128,11 @@ protected:
     int m_oldStateIndex;
 
     uint m_glTextureId;
+
+private:
+    PainterShaderProgram *m_drawProgram;
+    PainterShaderProgramPtr m_drawTexturedProgram;
+    PainterShaderProgramPtr m_drawSolidColorProgram;
 };
 
 #endif

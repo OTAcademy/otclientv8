@@ -4,6 +4,7 @@ local leftButtonsPanel
 local rightButtonsPanel
 local leftGameButtonsPanel
 local rightGameButtonsPanel
+local renderDebugLabel
 
 -- private functions
 local function addButton(id, description, icon, callback, panel, toggle, front)
@@ -50,6 +51,7 @@ function init()
   rightGameButtonsPanel = topMenu:getChildById('rightGameButtonsPanel')
   pingLabel = topMenu:getChildById('pingLabel')
   fpsLabel = topMenu:getChildById('fpsLabel')
+  renderDebugLabel = topMenu:getChildById('renderDebugLabel')
 
   g_keyboard.bindKeyDown('Ctrl+Shift+T', toggle)
 
@@ -86,6 +88,10 @@ end
 
 function updateFps(fps)
   text = 'FPS: ' .. fps
+  if(g_extras.getTestMode() > 0) then
+    text = text .. " (" .. g_extras.getTestMode() .. ")"
+  end
+  renderDebugLabel:setText(g_extras.getFrameRenderDebufInfo())
   fpsLabel:setText(text)
 end
 
@@ -115,6 +121,7 @@ end
 
 function setFpsVisible(enable)
   fpsLabel:setVisible(enable)
+  renderDebugLabel:setVisible(enable)
 end
 
 function addLeftButton(id, description, icon, callback, front)

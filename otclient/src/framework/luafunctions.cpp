@@ -34,6 +34,7 @@
 #include <framework/graphics/texturemanager.h>
 #include <framework/stdext/net.h>
 #include <framework/platform/platform.h>
+#include <framework/util/stats.h>
 
 #ifdef FW_SOUND
 #include <framework/sound/soundmanager.h>
@@ -61,6 +62,8 @@
 #ifdef FW_SQL
 #include <framework/sql/mysql.h>
 #endif
+
+#include <framework/util/extras.h>
 
 void Application::registerLuaFunctions()
 {
@@ -161,7 +164,17 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_stats", "get", &LuaStats::getAsString, &g_luaStats);
     g_lua.bindSingletonFunction("g_stats", "getCallback", &LuaStats::getCallbackAsString, &g_luaStats);
     g_lua.bindSingletonFunction("g_stats", "clear", &LuaStats::clear, &g_luaStats);
-    
+    g_lua.bindSingletonFunction("g_stats", "special", &Stats::getSpecial, &g_stats);
+
+    g_lua.registerSingletonClass("g_extras");
+    g_lua.bindSingletonFunction("g_extras", "set", &Extras::set, &g_extras);
+    g_lua.bindSingletonFunction("g_extras", "get", &Extras::get, &g_extras);
+    g_lua.bindSingletonFunction("g_extras", "getDescription", &Extras::getDescription, &g_extras);
+    g_lua.bindSingletonFunction("g_extras", "getAll", &Extras::getAll, &g_extras);
+    g_lua.bindSingletonFunction("g_extras", "setTestMode", &Extras::setTestMode, &g_extras);
+    g_lua.bindSingletonFunction("g_extras", "getTestMode", &Extras::getTestMode, &g_extras);
+    g_lua.bindSingletonFunction("g_extras", "getFrameRenderDebufInfo", &Extras::getFrameRenderDebufInfo, &g_extras);
+
     // ModuleManager
     g_lua.registerSingletonClass("g_modules");
     g_lua.bindSingletonFunction("g_modules", "discoverModules", &ModuleManager::discoverModules, &g_modules);
@@ -263,17 +276,6 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_app", "getBackgroundPaneFps", &GraphicalApplication::getBackgroundPaneFps, &g_app);
     g_lua.bindSingletonFunction("g_app", "getForegroundPaneMaxFps", &GraphicalApplication::getForegroundPaneMaxFps, &g_app);
     g_lua.bindSingletonFunction("g_app", "getBackgroundPaneMaxFps", &GraphicalApplication::getBackgroundPaneMaxFps, &g_app);
-
-    // New functions
-    g_lua.bindSingletonFunction("g_app", "setNewWalking", &GraphicalApplication::setNewWalking, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setNewRendering", &GraphicalApplication::setNewRendering, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setNewTextRendering", &GraphicalApplication::setNewTextRendering, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setNewAutoWalking", &GraphicalApplication::setNewAutoWalking, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setNewBotDetection", &GraphicalApplication::setNewBotDetection, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setNewQTMLCache", &GraphicalApplication::setNewQTMLCache, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setNewBattleList", &GraphicalApplication::setNewBattleList, &g_app);
-
-    g_lua.bindSingletonFunction("g_app", "newBattleList", &GraphicalApplication::newBattleList, &g_app);
 
     // PlatformWindow
     g_lua.registerSingletonClass("g_window");

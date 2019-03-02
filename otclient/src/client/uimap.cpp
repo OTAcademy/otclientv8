@@ -26,6 +26,7 @@
 #include "mapview.h"
 #include <framework/otml/otml.h>
 #include <framework/graphics/graphics.h>
+#include <framework/util/extras.h>
 #include "localplayer.h"
 
 UIMap::UIMap()

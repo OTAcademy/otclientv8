@@ -68,7 +68,7 @@ private:
     ticks_t m_bestFrameDelay;
     ticks_t m_lastFpsUpdate;
     ticks_t m_lastPartialFpsUpdate;
-    float m_sleepMicros;
+    float m_sleepMicros;    
 };
 
 #endif

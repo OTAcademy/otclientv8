@@ -24,6 +24,10 @@
 #include <framework/graphics/graphics.h>
 #include <framework/platform/platformwindow.h>
 
+#include "shadersources.h"
+#include <framework/platform/platformwindow.h>
+#include <framework/util/extras.h>
+
 PainterOGL::PainterOGL()
 {
     m_glTextureId = 0;
@@ -36,6 +40,40 @@ PainterOGL::PainterOGL()
     m_texture = nullptr;
     m_alphaWriting = false;
     setResolution(g_window.getSize());
+
+    m_drawProgram = nullptr;
+    resetState();
+
+    m_drawTexturedProgram = PainterShaderProgramPtr(new PainterShaderProgram);
+    assert(m_drawTexturedProgram);
+    m_drawTexturedProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader);
+    m_drawTexturedProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslTextureSrcFragmentShader);
+    m_drawTexturedProgram->link();
+
+    m_drawSolidColorProgram = PainterShaderProgramPtr(new PainterShaderProgram);
+    assert(m_drawSolidColorProgram);
+    m_drawSolidColorProgram->addShaderFromSourceCode(Shader::Vertex, glslMainVertexShader + glslPositionOnlyVertexShader);
+    m_drawSolidColorProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslSolidColorFragmentShader);
+    m_drawSolidColorProgram->link();
+
+    PainterShaderProgram::release();
+}
+
+void PainterOGL::bind()
+{
+    refreshState();
+
+    // vertex and texture coord attributes are always enabled
+    // to avoid massive enable/disables, thus improving frame rate
+    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::VERTEX_ATTR);
+    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+}
+
+void PainterOGL::unbind()
+{
+    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::VERTEX_ATTR);
+    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+    PainterShaderProgram::release();
 }
 
 void PainterOGL::resetState()
@@ -314,4 +352,153 @@ void PainterOGL::updateGlAlphaWriting()
 void PainterOGL::updateGlViewport()
 {
     glViewport(0, 0, m_resolution.width(), m_resolution.height());
+}
+
+void PainterOGL::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode)
+{
+    int vertexCount = coordsBuffer.getVertexCount();
+    if(vertexCount == 0)
+        return;
+
+    bool textured = coordsBuffer.getTextureCoordCount() > 0 && m_texture;
+
+    // skip drawing of empty textures
+    if(textured && m_texture->isEmpty())
+        return;
+
+    // update shader with the current painter state
+    m_drawProgram->bind();
+    m_drawProgram->setTransformMatrix(m_transformMatrix);
+    m_drawProgram->setProjectionMatrix(m_projectionMatrix);
+    if(textured) {
+        m_drawProgram->setTextureMatrix(m_textureMatrix);
+        m_drawProgram->bindMultiTextures();
+    }
+
+    m_drawProgram->setOpacity(m_opacity);
+    m_drawProgram->setColor(m_color);
+    m_drawProgram->setResolution(m_resolution);
+    m_drawProgram->updateTime();
+
+    // update coords buffer hardware caches if enabled
+    coordsBuffer.updateCaches();
+    bool hardwareCached = coordsBuffer.isHardwareCached();
+
+    // only set texture coords arrays when needed
+    if(textured) {
+        if(hardwareCached) {
+            coordsBuffer.getHardwareTextureCoordArray()->bind();
+            m_drawProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, nullptr, 2);
+        } else
+            m_drawProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, coordsBuffer.getTextureCoordArray(), 2);
+    } else
+        PainterShaderProgram::disableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+
+    // set vertex array
+    if(hardwareCached) {
+        coordsBuffer.getHardwareVertexArray()->bind();
+        m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, nullptr, 2);
+        HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
+    } else
+        m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
+
+    if(drawMode == Triangles)
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    else if(drawMode == TriangleStrip)
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+
+    if(!textured)
+        PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+}
+
+void PainterOGL::drawFillCoords(CoordsBuffer& coordsBuffer)
+{
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
+    setTexture(nullptr);
+    drawCoords(coordsBuffer);
+}
+
+void PainterOGL::drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture)
+{
+    if(texture && texture->isEmpty())
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
+    setTexture(texture);
+    drawCoords(coordsBuffer);
+}
+
+void PainterOGL::drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
+{
+    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
+    setTexture(texture);
+
+    m_coordsBuffer.clear();
+    m_coordsBuffer.addQuad(dest, src);
+    drawCoords(m_coordsBuffer, TriangleStrip);
+}
+
+void PainterOGL::drawUpsideDownTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
+{
+    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
+    setTexture(texture);
+
+    m_coordsBuffer.clear();
+    m_coordsBuffer.addUpsideDownQuad(dest, src);
+    drawCoords(m_coordsBuffer, TriangleStrip);
+}
+
+void PainterOGL::drawRepeatedTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
+{
+    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
+    setTexture(texture);
+
+    m_coordsBuffer.clear();
+    m_coordsBuffer.addRepeatedRects(dest, src);
+    drawCoords(m_coordsBuffer);
+}
+
+void PainterOGL::drawFilledRect(const Rect& dest)
+{
+    if(dest.isEmpty())
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
+
+    m_coordsBuffer.clear();
+    m_coordsBuffer.addRect(dest);
+    drawCoords(m_coordsBuffer);
+}
+
+void PainterOGL::drawFilledTriangle(const Point& a, const Point& b, const Point& c)
+{
+    if(a == b || a == c || b == c)
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
+
+    m_coordsBuffer.clear();
+    m_coordsBuffer.addTriangle(a, b, c);
+    drawCoords(m_coordsBuffer);
+}
+
+void PainterOGL::drawBoundingRect(const Rect& dest, int innerLineWidth)
+{
+    if(dest.isEmpty() || innerLineWidth == 0)
+        return;
+
+    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
+
+    m_coordsBuffer.clear();
+    m_coordsBuffer.addBoudingRect(dest, innerLineWidth);
+    drawCoords(m_coordsBuffer);
 }

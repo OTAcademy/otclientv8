@@ -29,21 +29,14 @@ local defaultOptions = {
   displayText = true,
   dontStretchShrink = false,
   turnDelay = 50,
-  hotkeyDelay = 50,
-  -- extras
-  newWalking = true,
-  newRendering = true,
-  newTextRendering = true,
-  newAutoWalking = true,
-  newBotDetection = true,
-  newQTMLCache = true,
-  newBattleList = true
+  hotkeyDelay = 50
 }
 
 local optionsWindow
 local optionsButton
 local optionsTabBar
 local options = {}
+local extraOptions = {}
 local generalPanel
 local consolePanel
 local graphicsPanel
@@ -51,53 +44,14 @@ local soundPanel
 local extrasPanel
 local audioButton
 
-local function setupGraphicsEngines()
-  local enginesRadioGroup = UIRadioGroup.create()
-  local ogl1 = graphicsPanel:getChildById('opengl1')
-  local ogl2 = graphicsPanel:getChildById('opengl2')
-  local dx9 = graphicsPanel:getChildById('directx9')
-  enginesRadioGroup:addWidget(ogl1)
-  enginesRadioGroup:addWidget(ogl2)
-  enginesRadioGroup:addWidget(dx9)
-
-  if g_window.getPlatformType() == 'WIN32-EGL' then
-    enginesRadioGroup:selectWidget(dx9)
-    ogl1:setEnabled(false)
-    ogl2:setEnabled(false)
-    dx9:setEnabled(true)
-  else
-    ogl1:setEnabled(g_graphics.isPainterEngineAvailable(1))
-    ogl2:setEnabled(g_graphics.isPainterEngineAvailable(2))
-    dx9:setEnabled(false)
-    if g_graphics.getPainterEngine() == 2 then
-      enginesRadioGroup:selectWidget(ogl2)
-    else
-      enginesRadioGroup:selectWidget(ogl1)
-    end
-
-    if g_app.getOs() ~= 'windows' then
-      dx9:hide()
-    end
-  end
-
-  enginesRadioGroup.onSelectionChange = function(self, selected)
-    if selected == ogl1 then
-      setOption('painterEngine', 1)
-    elseif selected == ogl2 then
-      setOption('painterEngine', 2)
-    end
-  end
-
-  if not g_graphics.canCacheBackbuffer() then
-    graphicsPanel:getChildById('foregroundFrameRate'):disable()
-    graphicsPanel:getChildById('foregroundFrameRateLabel'):disable()
-  end
-end
-
 function init()
   for k,v in pairs(defaultOptions) do
     g_settings.setDefault(k, v)
     options[k] = v
+  end
+  for _, v in ipairs(g_extras.getAll()) do
+	extraOptions[v] = g_extras.get(v)
+    g_settings.setDefault("extras_" .. v, extraOptions[v])
   end
 
   optionsWindow = g_ui.displayUI('options')
@@ -121,7 +75,13 @@ function init()
   audioPanel = g_ui.loadUI('audio')
   optionsTabBar:addTab(tr('Audio'), audioPanel, '/images/optionstab/audio')
 
-  extrasPanel = g_ui.loadUI('extras')
+  extrasPanel = g_ui.createWidget('Panel')
+  for _, v in ipairs(g_extras.getAll()) do
+	local extrasButton = g_ui.createWidget('OptionCheckBox')
+	extrasButton:setId(v)
+	extrasButton:setText(g_extras.getDescription(v))
+	extrasPanel:addChild(extrasButton)
+  end	
   optionsTabBar:addTab(tr('Extras'), extrasPanel, '/images/optionstab/extras')
 
   optionsButton = modules.client_topmenu.addLeftButton('optionsButton', tr('Options'), '/images/topbuttons/options', toggle)
@@ -139,8 +99,6 @@ function terminate()
 end
 
 function setup()
-  setupGraphicsEngines()
-
   -- load options
   for k,v in pairs(defaultOptions) do
     if type(v) == 'boolean' then
@@ -149,6 +107,15 @@ function setup()
       setOption(k, g_settings.getNumber(k), true)
     end
   end
+  
+  for _, v in ipairs(g_extras.getAll()) do
+	g_extras.set(v, g_settings.getBoolean("extras_" .. v))
+	local widget = extrasPanel:recursiveGetChildById(v)
+	if widget then
+        widget:setChecked(g_extras.get(v))
+    end
+  end
+  
 end
 
 function toggle()
@@ -185,11 +152,17 @@ function toggleDisplays()
   end
 end
 
-function toggleOption(key)
+function toggleOption(key) 
   setOption(key, not getOption(key))
 end
 
 function setOption(key, value, force)
+  if extraOptions[key] ~= nil then
+	g_extras.set(key, value)
+	g_settings.set("extras_" .. key, value)
+	return
+  end
+  
   if not force and options[key] == value then return end
   local gameMapPanel = modules.game_interface.getMapPanel()
 

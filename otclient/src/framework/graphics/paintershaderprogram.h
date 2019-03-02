@@ -46,7 +46,7 @@ protected:
         TRANSFORM_MATRIX_UNIFORM = 10
     };
 
-    friend class PainterOGL2;
+    friend class PainterOGL;
 
     virtual void setupUniforms();
 

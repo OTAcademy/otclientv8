@@ -231,12 +231,6 @@
     <ClCompile Include="..\src\framework\graphics\ogl\painterogl.cpp">
       <Filter>Source Files\framework\graphics\ogl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\ogl\painterogl1.cpp">
-      <Filter>Source Files\framework\graphics\ogl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\ogl\painterogl2.cpp">
-      <Filter>Source Files\framework\graphics\ogl</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\input\mouse.cpp">
       <Filter>Source Files\framework\input</Filter>
     </ClCompile>
@@ -534,6 +528,15 @@
     <ClCompile Include="..\src\framework\luaengine\luastats.cpp">
       <Filter>Source Files\framework\luaengine</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\framework\util\stats.cpp">
+      <Filter>Source Files\framework\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\util\extras.cpp">
+      <Filter>Source Files\framework\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\core\adaptiverenderer.cpp">
+      <Filter>Source Files\framework\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework\const.h">
@@ -681,15 +684,6 @@
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\ogl\painterogl.h">
-      <Filter>Header Files\framework\graphics\ogl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\ogl\painterogl1.h">
-      <Filter>Header Files\framework\graphics\ogl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\ogl\painterogl2.h">
-      <Filter>Header Files\framework\graphics\ogl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\ogl\painterogl2_shadersources.h">
       <Filter>Header Files\framework\graphics\ogl</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\input\mouse.h">
@@ -1060,6 +1054,15 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\luaengine\luastats.h">
       <Filter>Header Files\framework\luaengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\util\stats.h">
+      <Filter>Header Files\framework\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\core\adaptiverenderer.h">
+      <Filter>Header Files\framework\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\ogl\shadersources.h">
+      <Filter>Header Files\framework\graphics\ogl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

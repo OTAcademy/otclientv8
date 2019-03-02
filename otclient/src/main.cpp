@@ -37,6 +37,7 @@ int main(int argc, const char* argv[])
     // initialize application framework and otclient
     g_app.init(args);
     g_client.init(args);
+    //g_stats.
 
     // find script init.lua and run it
     if(!g_resources.discoverWorkDir("init.lua"))

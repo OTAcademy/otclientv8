@@ -20,6 +20,9 @@
  * THE SOFTWARE.
  */
 
+#include <algorithm>
+#include <numeric>
+
 #include "adaptativeframecounter.h"
 #include "clock.h"
 
@@ -64,6 +67,7 @@ bool AdaptativeFrameCounter::update()
 {
     ticks_t now = g_clock.micros();
     ticks_t delta = now - m_lastPartialFpsUpdate;
+
     if(delta > 41000 && m_partialFrames > 0) {
         m_partialFps = m_partialFrames / (delta / 1000000.0f);
         m_lastPartialFpsUpdate = now;
@@ -71,8 +75,8 @@ bool AdaptativeFrameCounter::update()
     }
 
     delta =  now - m_lastFpsUpdate;
-    if(delta >= 1000000) {
-        m_lastFps = m_frames;
+    if(delta >= 250000) {
+        m_lastFps = m_frames / (delta / 1000000.0f);
         if(m_frames > 0)
             m_mediumFrameDelay = m_frameDelaySum / m_frames;
         else

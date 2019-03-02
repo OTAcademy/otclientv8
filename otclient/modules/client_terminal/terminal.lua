@@ -324,7 +324,7 @@ function executeCommand(command)
   -- add new command to history
   if #commandHistory == 0 or commandHistory[#commandHistory] ~= command then
     table.insert(commandHistory, command)
-    if #commandHistory > MaxHistory then
+    while #commandHistory > MaxHistory do
       table.remove(commandHistory, 1)
     end
   end

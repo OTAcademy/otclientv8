@@ -41,6 +41,8 @@ public:
     bool autoWalk(const Position& destination);
     bool canWalk(Otc::Direction direction);
 
+    bool newCanWalk(Otc::Direction direction);
+
     void setStates(int states);
     void setSkill(Otc::Skill skill, int level, int levelPercent);
     void setBaseSkill(Otc::Skill skill, int baseLevel);
@@ -106,6 +108,7 @@ public:
 protected:
     void walk(const Position& oldPos, const Position& newPos);
     void preWalk(Otc::Direction direction);
+    void newPreWalk(Otc::Direction direction);
     void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);
     void stopWalk();
 

@@ -347,7 +347,7 @@ function smartWalk(dir)
       end
     end
     local dire = smartWalkDir or dir
-    func(dire)
+	func(dire)
     return true
   end
   return false

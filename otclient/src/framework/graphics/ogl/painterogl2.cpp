@@ -23,6 +23,7 @@
 #include "painterogl2.h"
 #include "painterogl2_shadersources.h"
 #include <framework/platform/platformwindow.h>
+#include <framework/util/extras.h>
 
 PainterOGL2 *g_painterOGL2 = nullptr;
 
@@ -48,7 +49,7 @@ PainterOGL2::PainterOGL2()
 
 void PainterOGL2::bind()
 {
-    PainterOGL::bind();
+    refreshState();
 
     // vertex and texture coord attributes are always enabled
     // to avoid massive enable/disables, thus improving frame rate
@@ -63,8 +64,10 @@ void PainterOGL2::unbind()
     PainterShaderProgram::release();
 }
 
+extern int currentDraws[];
 void PainterOGL2::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode)
 {
+    currentDraws[0] += 1;
     int vertexCount = coordsBuffer.getVertexCount();
     if(vertexCount == 0)
         return;
@@ -83,6 +86,7 @@ void PainterOGL2::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode)
         m_drawProgram->setTextureMatrix(m_textureMatrix);
         m_drawProgram->bindMultiTextures();
     }
+
     m_drawProgram->setOpacity(m_opacity);
     m_drawProgram->setColor(m_color);
     m_drawProgram->setResolution(m_resolution);
@@ -110,7 +114,6 @@ void PainterOGL2::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode)
     } else
         m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
 
-    // draw the element in coords buffers
     if(drawMode == Triangles)
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     else if(drawMode == TriangleStrip)

@@ -64,6 +64,8 @@ public:
 
     void draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView = nullptr);
 
+    void newDraw(const Point & dest, float scaleFactor, int drawFlags, LightView * lightView);
+
 public:
     void clean();
 
@@ -129,6 +131,11 @@ public:
 
     TilePtr asTile() { return static_self_cast<Tile>(); }
 
+    void markTilesToRedrawn();
+    void setWillBeRedrawn(bool value) {
+        m_willBeRedrawn = value;
+    }
+
 private:
     void checkTranslucentLight();
 
@@ -139,6 +146,7 @@ private:
     uint8 m_drawElevation;
     uint8 m_minimapColor;
     uint32 m_flags, m_houseId;
+    bool m_willBeRedrawn = false;
 
     stdext::boolean<false> m_selected;
 };
