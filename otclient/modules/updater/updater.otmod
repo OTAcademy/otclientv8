@@ -3,6 +3,7 @@ Module
   description: Updates client
   author: bbarwik@gmail.com
   website: https://github.com/bbarwik/otclient
+  reloadable: false
 
   dependencies:
     - client_entergame

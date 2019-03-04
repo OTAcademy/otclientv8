@@ -391,8 +391,8 @@ void Crypt::bencrypt(uint8_t* buffer, int len, uint64_t k) {
     uint32_t const key[4] = { (uint32_t)(k >> 32), (uint32_t)(k & 0xFFFFFFFF), 0xDEADDEAD, 0xB00BEEEF };
     uint32_t y, z, sum;
     uint32_t *v = (uint32_t*)buffer;
-    unsigned p, rounds, e;
-    int n = (len - len % 4) / 4;
+    unsigned rounds, e;
+    int p, n = (len - len % 4) / 4;
     if (n < 2)
         return;
     rounds = 6 + 52 / n;

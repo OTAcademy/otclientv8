@@ -27,11 +27,11 @@ end
 
 function startup()
   -- Play startup music (The Silver Tree, by Mattias Westlund)
-  musicChannel:enqueue(musicFilename, 3)
+  --musicChannel:enqueue(musicFilename, 3)
   connect(g_game, { onGameStart = function() musicChannel:stop(3) end })
   connect(g_game, { onGameEnd = function()
       g_sounds.stopAll()
-      musicChannel:enqueue(musicFilename, 3)
+      --musicChannel:enqueue(musicFilename, 3)
   end })
 
   -- Check for startup errors
@@ -48,8 +48,6 @@ function startup()
     if errmsg or errtitle then
       local msgbox = displayErrorBox(errtitle, errmsg)
       msgbox.onOk = function() Updater.show() end
-    else
-      Updater.show()
     end
   else 
     if errmsg or errtitle then
@@ -66,7 +64,7 @@ function init()
                    onExit = exit })
 
   g_window.setMinimumSize({ width = 600, height = 480 })
-  g_sounds.preload(musicFilename)
+  -- g_sounds.preload(musicFilename)
 
   -- initialize in fullscreen mode on mobile devices
   if g_window.getPlatformType() == "X11-EGL" then

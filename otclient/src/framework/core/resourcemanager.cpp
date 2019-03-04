@@ -34,6 +34,7 @@
 
 #include <physfs.h>
 #include <zip.h>
+#include <zlib.h>
 
 ResourceManager g_resources;
 
@@ -74,11 +75,15 @@ bool ResourceManager::launchCorrect(const std::string& app) { // curently works 
         if (entry.path().extension() == ".exe") {
             if (binary == entry.path())
                 continue;
-            boost::filesystem::remove(entry.path());
+            boost::system::error_code ec;
+            boost::filesystem::remove(entry.path(), ec);
         }
     }
-    if(lastWrite != 0) {
-        boost::process::spawn(binary);
+    if(lastWrite != 0 && lastWrite != boost::filesystem::last_write_time(m_binaryPath)) {
+        boost::process::child c(binary);
+        stdext::millisleep(5000);
+        if (c.joinable())
+            return false;
         return true;
     }
     return false;
@@ -153,12 +158,13 @@ bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
     if (buffer.size() < 1024 * 1024) // less then 1 MB
         return false;
 
-    std::string toFind = { 0x50, 0x4b, 0x03, 0x04 }; // zip header
-    size_t pos = toFind.rfind(toFind);
+    std::string toFind = { 0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x01 }; // zip header
+    toFind[toFind.size() - 1] = 0; // otherwhise toFind would find toFind in buffer
+    size_t pos = buffer.find(toFind);
     if (pos == std::string::npos)
         return false;
 
-    size_t m_memoryDataBufferSize = buffer.size() - pos;
+    m_memoryDataBufferSize = buffer.size() - pos;
     if (m_memoryDataBufferSize < 128 || m_memoryDataBufferSize > 512 * 1024 * 1024) // max 512MB
         return false;
 
@@ -170,6 +176,7 @@ bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
             return true;
         }
         PHYSFS_unmount("data.zip");
+        return false;
     }
     
     delete[] m_memoryDataBuffer;
@@ -387,6 +394,8 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
     auto downloads = g_http.downloads();
     
     if (!m_loadedFromMemory) {
+        g_logger.info("Updating client, loading data.zip");
+
         if(!PHYSFS_mount(m_dataDir.c_str(), NULL, 0))
             return g_logger.fatal(stdext::format("Can't mount dir with data: %s", m_dataDir));
 
@@ -402,6 +411,8 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
 
     if(!m_memoryDataBuffer || m_memoryDataBufferSize < 1024)
         return g_logger.fatal(stdext::format("Invalid buffer of memory data.zip"));
+
+    g_logger.info(stdext::format("Updating client, buffer size %i", m_memoryDataBufferSize));
 
     zip_source_t *src;
     zip_t *za;
@@ -490,6 +501,9 @@ void ResourceManager::encrypt() {
     const std::string dirsToCheck[] = { "data", "modules", "mods" };
     const std::string luaExtension = ".lua";
 
+    g_logger.setLogFile("encryption.log");
+    g_logger.info("----------------------");
+
     std::queue<boost::filesystem::path> toEncrypt;
     for (auto& dir : dirsToCheck) {
         for(auto&& entry : boost::filesystem::recursive_directory_iterator(boost::filesystem::path(dir))) {
@@ -507,52 +521,71 @@ void ResourceManager::encrypt() {
             continue;
         std::string buffer(std::istreambuf_iterator<char>(in_file), {});
         in_file.close();
-        if (!encryptBuffer(buffer)) // already encrypted
+        if (!encryptBuffer(buffer)) {// already encrypted
+            g_logger.info(stdext::format("%s - already encrypted", it.string()));
             continue;
+        }
         boost::filesystem::ofstream out_file(it, std::ios::binary);
         if (!out_file.is_open())
             continue;
         out_file.write(buffer.data(), buffer.size());
         out_file.close();
+        g_logger.info(stdext::format("%s - encrypted", it.string()));
     }
 }
 
 bool ResourceManager::decryptBuffer(std::string& buffer) {
-    if (buffer.size() < 5 || buffer.substr(0, 4).compare("ENC2") != 0)
+    if (buffer.size() < 5 || buffer.substr(0, 4).compare("ENC3") != 0)
         return true;
 
     uint64_t key = *(uint64_t*)&buffer[4];
-    uint32_t size = *(uint32_t*)&buffer[12];
-    uint32_t adler = *(uint32_t*)&buffer[16];
+    uint32_t compressed_size = *(uint32_t*)&buffer[12];
+    uint32_t size = *(uint32_t*)&buffer[16];
+    uint32_t adler = *(uint32_t*)&buffer[20];
 
-    g_crypt.bdecrypt((uint8_t*)&buffer[20], size, key);
+    if (compressed_size < buffer.size() - 24)
+        return false;
 
-    buffer = buffer.substr(20, size);
-    uint32_t addlerCheck = stdext::adler32((const uint8_t*)&buffer[0], size);
+    g_crypt.bdecrypt((uint8_t*)&buffer[24], compressed_size, key);
+    std::string new_buffer;
+    new_buffer.resize(size);
+    unsigned long new_buffer_size = new_buffer.size();
+    if (uncompress((uint8_t*)new_buffer.data(), &new_buffer_size, (uint8_t*)&buffer[24], compressed_size) != Z_OK)
+        return false;
+
+    uint32_t addlerCheck = stdext::adler32((const uint8_t*)&new_buffer[0], size);
     if (adler != addlerCheck)
         return false;
 
+    buffer = new_buffer;
     return true;
 }
 
 bool ResourceManager::encryptBuffer(std::string& buffer) {
-    if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC2") == 0)
+    if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
         return false; // already encrypted
 
     uint64_t key = rand() << 32 + rand() << 16 + rand();
 
-    std::string new_buffer(20, '0');
+    std::string new_buffer(24 + buffer.size() * 2, '0');
     new_buffer[0] = 'E';
     new_buffer[1] = 'N';
     new_buffer[2] = 'C';
-    new_buffer[3] = '2';
+    new_buffer[3] = '3';
+
+    unsigned long dstLen = new_buffer.size() - 24;
+    if (compress((uint8_t*)&new_buffer[24], &dstLen, (const uint8_t*)buffer.data(), buffer.size()) != Z_OK) {
+        g_logger.error("Error while compressing");
+        return false;
+    }
+    new_buffer.resize(24 + dstLen);
+
     *(uint64_t*)&new_buffer[4] = key;
-    *(uint32_t*)&new_buffer[12] = (uint32_t)buffer.size();
-    *(uint32_t*)&new_buffer[16] = (uint32_t)stdext::adler32((const uint8_t*)&buffer[0], buffer.size());
+    *(uint32_t*)&new_buffer[12] = (uint32_t)dstLen;
+    *(uint32_t*)&new_buffer[16] = (uint32_t)buffer.size();
+    *(uint32_t*)&new_buffer[20] = (uint32_t)stdext::adler32((const uint8_t*)&buffer[0], buffer.size());
 
-    new_buffer += buffer;
-
-    g_crypt.bencrypt((uint8_t*)&new_buffer[0] + 20, buffer.size(), key);
+    g_crypt.bencrypt((uint8_t*)&new_buffer[0] + 24, new_buffer.size() - 24, key);
     buffer = new_buffer;
     return true;
 }

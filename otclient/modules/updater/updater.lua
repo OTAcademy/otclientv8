@@ -86,6 +86,8 @@ function Updater.init()
 
   updatePanel:hide()
   
+  scheduleEvent(Updater.show, 50)
+  
   connect(g_http, {
     onGet = onGet,
     onGetProgess = onGetProgress,
@@ -127,7 +129,7 @@ function Updater.show()
   getStatusId = g_http.get(Updater.url)  
   if generateChecksumsEvent == nil then
 	  generateChecksumsEvent = scheduleEvent(generateChecksum, 5)
-  end    
+  end
 end
 
 function Updater.hide()
@@ -235,12 +237,16 @@ function downloadNextFile(retry)
   if aborted then
     return
   end
+  
+  updaterWindow:show() -- fix window hide bug
+  EnterGame.hide()
+  
   if downloadIter == #toUpdate then    
     return downloadingFinished()
   end
   
   if retry then
-    retry = " (retry)"
+    retry = " (" .. downloadRetries .. " retry)"
   else
     retry = ""
   end    

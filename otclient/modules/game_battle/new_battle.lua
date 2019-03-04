@@ -199,9 +199,7 @@ end
 -- functions
 function updateBattleList() 
 	updateEvent = scheduleEvent(updateBattleList, 200)
-	if battleWindow:isVisible() then
-		checkCreatures()
-	end
+  checkCreatures()
 end
 
 function checkCreatures()

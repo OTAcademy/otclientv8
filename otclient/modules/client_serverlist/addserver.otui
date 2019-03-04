@@ -53,7 +53,9 @@ MainWindow
     menu-scroll-step: 25
     @onSetup: |
       for _, proto in pairs(g_game.getSupportedClients()) do
-        self:addOption(proto)
+        if g_resources.directoryExists("/data/things/" .. proto) then
+          self:addOption(proto)
+        end
       end
 
   Button

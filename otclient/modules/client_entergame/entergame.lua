@@ -9,6 +9,7 @@ local enterGameButton
 local clientBox
 local protocolLogin
 local motdEnabled = true
+local versionsFound = false
 
 -- private functions
 local function onError(protocol, message, errorCode)
@@ -119,7 +120,7 @@ function EnterGame.init()
   local stayLogged = g_settings.getBoolean('staylogged')
   local autologin = g_settings.getBoolean('autologin')
   local clientVersion = g_settings.getInteger('client-version')
-  if clientVersion == 0 then clientVersion = 1074 end
+  if clientVersion == 0 then clientVersion = 1099 end
 
   if port == nil or port == 0 then port = 7171 end
 
@@ -133,7 +134,10 @@ function EnterGame.init()
 
   clientBox = enterGame:getChildById('clientComboBox')
   for _, proto in pairs(g_game.getSupportedClients()) do
-    clientBox:addOption(proto)
+    if g_resources.directoryExists("/data/things/" .. proto) then
+      clientBox:addOption(proto)
+      versionsFound = true
+    end
   end
   clientBox:setCurrentOption(clientVersion)
 
@@ -150,6 +154,11 @@ end
 
 function EnterGame.firstShow()
   EnterGame.show()
+  
+  if not versionsFound then
+      local msgbox = displayErrorBox("This is updater only version", "This version of client works only as updater.\nPlease restart your client and do update or report error.")
+      msgbox.onOk = function() g_app.exit() end  
+  end
 
   local account = g_crypt.decrypt(g_settings.get('account'))
   local password = g_crypt.decrypt(g_settings.get('password'))

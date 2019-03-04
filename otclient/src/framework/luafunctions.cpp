@@ -215,6 +215,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_resources", "deleteFile", &ResourceManager::deleteFile, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "resolvePath", &ResourceManager::resolvePath, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "isLoadedFromMemory", &ResourceManager::isLoadedFromMemory, &g_resources);    
+    g_lua.bindSingletonFunction("g_resources", "isLoadedFromArchive", &ResourceManager::isLoadedFromArchive, &g_resources);    
     g_lua.bindSingletonFunction("g_resources", "listUpdateableFiles", &ResourceManager::listUpdateableFiles, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "fileChecksum", &ResourceManager::fileChecksum, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "selfChecksum", &ResourceManager::selfChecksum, &g_resources);
