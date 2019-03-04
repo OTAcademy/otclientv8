@@ -27,6 +27,7 @@
 #include "application.h"
 #include <framework/graphics/declarations.h>
 #include <framework/core/inputevent.h>
+#include <framework/core/adaptiverenderer.h>
 
 class GraphicalApplication : public Application
 {
@@ -52,6 +53,9 @@ public:
     int getBackgroundPaneFps() { return m_backgroundFrameCounter.getLastFps(); }
     int getForegroundPaneMaxFps() { return m_foregroundFrameCounter.getMaxFps(); }
     int getBackgroundPaneMaxFps() { return m_backgroundFrameCounter.getMaxFps(); }
+
+    int getAdaptiveRendererLevel() { return g_adaptiveRenderer.getLevel();  }
+    int getAdaptiveRendererAvg() { return g_adaptiveRenderer.getAvg();  }
 
     bool isOnInputEvent() { return m_onInputEvent; }
 

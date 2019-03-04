@@ -154,6 +154,14 @@ void ProtocolGame::sendPingBack()
     send(msg);
 }
 
+void ProtocolGame::sendNewPing(uint32_t pingId)
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientNewPing);
+    msg->addU32(pingId);
+    send(msg);
+}
+
 void ProtocolGame::sendAutoWalk(const std::vector<Otc::Direction>& path)
 {
     OutputMessagePtr msg(new OutputMessage);

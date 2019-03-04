@@ -55,6 +55,7 @@ namespace Proto {
         GameServerPingBack                  = 29,
         GameServerPing                      = 30,
         GameServerChallenge                 = 31,
+        GameServerNewPing                   = 33,
         GameServerDeath                     = 40,
 
         // all in game opcodes must be greater than 50
@@ -173,6 +174,7 @@ namespace Proto {
         ClientLeaveGame                     = 20,
         ClientPing                          = 29,
         ClientPingBack                      = 30,
+        ClientNewPing                       = 33,
 
         // all in game opcodes must be equal or greater than 50
         ClientFirstGameOpcode               = 50,

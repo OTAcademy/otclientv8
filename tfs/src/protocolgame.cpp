@@ -419,6 +419,7 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 		case 0x14: g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::logout, getThis(), true, false))); break;
 		case 0x1D: addGameTask(&Game::playerReceivePingBack, player->getID()); break;
 		case 0x1E: addGameTask(&Game::playerReceivePing, player->getID()); break;
+		case 0x21: g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::sendNewPingBack, getThis(), msg.get<uint32_t>()))); break;
 		case 0x32: parseExtendedOpcode(msg); break; //otclient extended opcode
 		case 0x64: parseAutoWalk(msg); break;
 		case 0x65: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTH); break;
@@ -2247,6 +2248,13 @@ void ProtocolGame::sendPingBack()
 	NetworkMessage msg;
 	msg.addByte(0x1E);
 	writeToOutputBuffer(msg);
+}
+
+void ProtocolGame::sendNewPingBack(uint32_t pingId) {
+	NetworkMessage msg;
+	msg.addByte(0x21);
+	msg.add<uint32_t>(pingId);
+	writeToOutputBuffer(msg);	
 }
 
 void ProtocolGame::sendDistanceShoot(const Position& from, const Position& to, uint8_t type)

@@ -23,10 +23,10 @@
 #include <framework/core/application.h>
 #include <framework/core/resourcemanager.h>
 #include <framework/luaengine/luainterface.h>
+#include <framework/http/http.h>
 #include <client/client.h>
 
-int main(int argc, const char* argv[])
-{
+int main(int argc, const char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
 
     // setup application name and version
@@ -34,14 +34,25 @@ int main(int argc, const char* argv[])
     g_app.setCompactName("otclient");
     g_app.setVersion(VERSION);
 
+    // initialize resources
+    g_resources.init(args[0].c_str());
+
+    if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
+        g_resources.encrypt();
+        return 0;
+    }
+    if (g_resources.launchCorrect(g_app.getCompactName())) {
+        return 0;
+    }
+
     // initialize application framework and otclient
     g_app.init(args);
     g_client.init(args);
-    //g_stats.
+    g_http.init();
+    //g_stats.init();
 
     // find script init.lua and run it
-    if(!g_resources.discoverWorkDir("init.lua"))
-        g_logger.fatal("Unable to find work directory, the application cannot be initialized.");
+    g_resources.setup(g_app.getCompactName(), "init.lua");
 
     if(!g_lua.safeRunScript("init.lua"))
         g_logger.fatal("Unable to run script init.lua!");
@@ -53,6 +64,7 @@ int main(int argc, const char* argv[])
     g_app.deinit();
 
     // terminate everything and free memory
+    g_http.terminate();
     g_client.terminate();
     g_app.terminate();
     return 0;

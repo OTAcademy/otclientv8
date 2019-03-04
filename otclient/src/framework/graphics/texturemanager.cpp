@@ -39,10 +39,6 @@ void TextureManager::init()
 
 void TextureManager::terminate()
 {
-    if(m_liveReloadEvent) {
-        m_liveReloadEvent->cancel();
-        m_liveReloadEvent = nullptr;
-    }
     m_textures.clear();
     m_animatedTextures.clear();
     m_emptyTexture = nullptr;
@@ -67,24 +63,18 @@ void TextureManager::clearCache()
     m_textures.clear();
 }
 
-void TextureManager::liveReload()
+void TextureManager::reload()
 {
-    if(m_liveReloadEvent)
-        return;
-    m_liveReloadEvent = g_dispatcher.cycleEvent([this] {
-        for(auto& it : m_textures) {
-            const std::string& path = g_resources.guessFilePath(it.first, "png");
-            const TexturePtr& tex = it.second;
-            if(tex->getTime() >= g_resources.getFileTime(path))
-                continue;
+    for(auto& it : m_textures) {
+        const std::string& path = g_resources.guessFilePath(it.first, "png");
+        const TexturePtr& tex = it.second;
 
-            ImagePtr image = Image::load(path);
-            if(!image)
-                continue;
-            tex->uploadPixels(image, tex->hasMipmaps());
-            tex->setTime(stdext::time());
-        }
-    }, 1000);
+        ImagePtr image = Image::load(path);
+        if(!image)
+            continue;
+        tex->uploadPixels(image, tex->hasMipmaps());
+        tex->setTime(stdext::time());
+    }
 }
 
 TexturePtr TextureManager::getTexture(const std::string& fileName)

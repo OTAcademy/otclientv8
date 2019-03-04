@@ -1,0 +1,61 @@
+DebugText < Label
+  font: terminus-10px
+  text-wrap: false
+  text-auto-resize: true
+  text-align: topleft
+  anchors.right: parent.right
+  anchors.left: parent.left
+  anchors.top: prev.bottom
+  
+DebugLabel < Label
+  text-wrap: false
+  text-auto-resize: false
+  text-align: center
+  anchors.right: parent.right
+  anchors.left: parent.left
+  anchors.top: prev.bottom
+  
+MiniWindow
+  id: debugWindow
+  !text: tr('Debug Info')
+  icon: /images/topbuttons/debug
+  @onClose: modules.game_debug.onMiniWindowClose()
+  &save: true
+  
+  MiniWindowContents  
+    anchors.right: parent.right
+    anchors.left: parent.left
+    anchors.top: parent.top
+    padding-left: 5
+    padding-right: 5
+          
+    DebugLabel
+      anchors.top: parent.top
+      !text: tr('Render')
+  
+    DebugText
+      id: adaptiveRender
+      text: -
+
+    DebugText
+      id: render
+      text: -
+
+    DebugLabel
+      !text: tr('Lua')
+
+    DebugText
+      id: luaStats
+      text: -
+
+    DebugLabel
+      !text: tr('Lua by callback')
+
+    DebugText
+      id: luaCallback
+      text: -
+
+  ResizeBorder
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom

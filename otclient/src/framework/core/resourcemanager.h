@@ -38,13 +38,10 @@ public:
     // @dontbind
     void terminate();
 
-    bool discoverWorkDir(const std::string& existentFile);
-    bool setupUserWriteDir(const std::string& appWriteDirName);
-    bool setWriteDir(const std::string& writeDir, bool create = false);
+    bool launchCorrect(const std::string& app);
+    bool setup(const std::string& app, const std::string& existentFile);
 
-    bool addSearchPath(const std::string& path, bool pushFront = false);
-    bool removeSearchPath(const std::string& path);
-    void searchAndAddPackages(const std::string& packagesDir, const std::string& packagesExt);
+    bool loadDataFromSelf(const std::string & existentFile);
 
     bool fileExists(const std::string& fileName);
     bool directoryExists(const std::string& directoryName);
@@ -64,29 +61,38 @@ public:
     bool deleteFile(const std::string& fileName);
 
     bool makeDir(const std::string directory);
-    std::list<std::string> listDirectoryFiles(const std::string& directoryPath = "");
-    std::vector<std::string> getDirectoryFiles(const std::string& path, bool filenameOnly, bool recursive);
+    std::list<std::string> listDirectoryFiles(const std::string & directoryPath = "", bool fullPath = false, bool raw = false);
 
-    std::string resolvePath(const std::string& path);
-    std::string getRealDir(const std::string& path);
-    std::string getRealPath(const std::string& path);
-    std::string getBaseDir();
-    std::string getUserDir();
-    std::string getWriteDir() { return m_writeDir; }
-    std::string getWorkDir() { return m_workDir; }
-    std::deque<std::string> getSearchPaths() { return m_searchPaths; }
+    std::string resolvePath(std::string path);
+    std::string getWriteDir() { return "/"; }
+    std::string getWorkDir() { return "/"; }
+    std::string getBinaryName() { return m_binaryPath.filename().string(); }
 
     std::string guessFilePath(const std::string& filename, const std::string& type);
     bool isFileType(const std::string& filename, const std::string& type);
-    ticks_t getFileTime(const std::string& filename);
 
-protected:
-    std::vector<std::string> discoverPath(const fs::path& path, bool filenameOnly, bool recursive);
+    bool isLoadedFromArchive() { return m_loadedFromArchive; }
+    bool isLoadedFromMemory() { return m_loadedFromMemory; }
+
+    std::list<std::string> listUpdateableFiles();
+    std::string fileChecksum(const std::string& path);
+
+    std::string selfChecksum();
+
+    void updateClient(const std::vector<std::string>& files, const std::string& binaryName);
+    void encrypt();
+
+    bool decryptBuffer(std::string & buffer);
+
+    bool encryptBuffer(std::string & buffer);
 
 private:
-    std::string m_workDir;
-    std::string m_writeDir;
-    std::deque<std::string> m_searchPaths;
+    boost::filesystem::path m_binaryPath;
+    bool m_loadedFromMemory = false;
+    bool m_loadedFromArchive = false;
+    char* m_memoryDataBuffer = nullptr;
+    size_t m_memoryDataBufferSize = 0;
+    std::string m_dataDir;
 };
 
 extern ResourceManager g_resources;

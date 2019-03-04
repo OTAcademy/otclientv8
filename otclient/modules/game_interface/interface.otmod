@@ -31,5 +31,6 @@ Module
     - game_cooldown
     - game_modaldialog
     - game_unjustifiedpoints
+    - game_debug
   @onLoad: init()
   @onUnload: terminate()

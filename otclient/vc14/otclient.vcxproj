@@ -239,6 +239,8 @@
     <ClCompile Include="..\src\framework\graphics\shaderprogram.cpp" />
     <ClCompile Include="..\src\framework\graphics\texture.cpp" />
     <ClCompile Include="..\src\framework\graphics\texturemanager.cpp" />
+    <ClCompile Include="..\src\framework\http\http.cpp" />
+    <ClCompile Include="..\src\framework\http\session.cpp" />
     <ClCompile Include="..\src\framework\input\mouse.cpp" />
     <ClCompile Include="..\src\framework\luaengine\lbitlib.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luaexception.cpp" />
@@ -397,6 +399,9 @@
     <ClInclude Include="..\src\framework\graphics\texture.h" />
     <ClInclude Include="..\src\framework\graphics\texturemanager.h" />
     <ClInclude Include="..\src\framework\graphics\vertexarray.h" />
+    <ClInclude Include="..\src\framework\http\http.h" />
+    <ClInclude Include="..\src\framework\http\result.h" />
+    <ClInclude Include="..\src\framework\http\session.h" />
     <ClInclude Include="..\src\framework\input\mouse.h" />
     <ClInclude Include="..\src\framework\luaengine\declarations.h" />
     <ClInclude Include="..\src\framework\luaengine\lbitlib.h" />
@@ -456,6 +461,7 @@
     <ClInclude Include="..\src\framework\stdext\time.h" />
     <ClInclude Include="..\src\framework\stdext\traits.h" />
     <ClInclude Include="..\src\framework\stdext\types.h" />
+    <ClInclude Include="..\src\framework\stdext\uri.h" />
     <ClInclude Include="..\src\framework\ui\declarations.h" />
     <ClInclude Include="..\src\framework\ui\ui.h" />
     <ClInclude Include="..\src\framework\ui\uianchorlayout.h" />

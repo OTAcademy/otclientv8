@@ -34,7 +34,7 @@ public:
     void poll();
 
     void clearCache();
-    void liveReload();
+    void reload();
 
     void preload(const std::string& fileName) { getTexture(fileName); }
     TexturePtr getTexture(const std::string& fileName);

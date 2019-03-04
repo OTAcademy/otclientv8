@@ -285,7 +285,7 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
         }
 
         int limit = g_adaptiveRenderer.itemsLimit();
-        for (int i = toDraw.size() > limit ? toDraw.size() - limit : 0; i != toDraw.size(); ++i)
+        for (int i = (int)toDraw.size() > limit ? toDraw.size() - limit : 0; i != toDraw.size(); ++i)
             toDraw[i]->draw(dest - m_drawElevation * scaleFactor, scaleFactor, animate, lightView);
     }
 
@@ -330,7 +330,7 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
         }
 
         int limit = g_adaptiveRenderer.creaturesLimit();
-        for (auto i = toDraw.size() > limit ? toDraw.size() - limit : 0; i < toDraw.size(); ++i) {
+        for (auto i = (int)toDraw.size() > limit ? toDraw.size() - limit : 0; i < toDraw.size(); ++i) {
             toDraw[i]->draw(dest - m_drawElevation * scaleFactor, scaleFactor, animate, lightView);
         }
     }
@@ -338,7 +338,7 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
     // effects
     if (drawFlags & Otc::DrawEffects) {
         int limit = g_adaptiveRenderer.effetsLimit();
-        for (auto i = m_effects.size() > limit ?  m_effects.size() - limit : 0; i < m_effects.size(); ++i)
+        for (auto i = (int)m_effects.size() > limit ?  m_effects.size() - limit : 0; i < m_effects.size(); ++i)
             m_effects[i]->drawEffect(dest - m_drawElevation * scaleFactor, scaleFactor, animate, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, lightView);
     }
 

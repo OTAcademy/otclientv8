@@ -50,6 +50,7 @@ Game::Game()
     m_seq = 0;
     m_ping = -1;
     m_pingDelay = 1000;
+    m_newPingDelay = 100;
     m_canReportBugs = false;
     m_fightMode = Otc::FightBalanced;
     m_chaseMode = Otc::DontChase;
@@ -86,6 +87,7 @@ void Game::resetGameStates()
     m_localPlayer = nullptr;
     m_pingSent = 0;
     m_pingReceived = 0;
+    m_newPingIds.clear();
     m_unjustifiedPoints = UnjustifiedPoints();
 
     for(auto& it : m_containers) {
@@ -97,6 +99,11 @@ void Game::resetGameStates()
     if(m_pingEvent) {
         m_pingEvent->cancel();
         m_pingEvent = nullptr;
+    }
+
+    if (m_newPingEvent) {
+        m_newPingEvent->cancel();
+        m_newPingEvent = nullptr;
     }
 
     if(m_walkEvent) {
@@ -198,6 +205,11 @@ void Game::processGameStart()
             g_game.ping();
         }, m_pingDelay);
     }
+    if (g_extras.newPing) {
+        m_newPingEvent = g_dispatcher.scheduleEvent([this] {
+            g_game.newPing();
+        }, m_newPingDelay);
+    }
 
     m_checkConnectionEvent = g_dispatcher.cycleEvent([this] {
         if(!g_game.isConnectionOk() && !m_connectionFailWarned) {
@@ -274,16 +286,29 @@ void Game::processPingBack()
 {
     m_pingReceived++;
 
-    if(m_pingReceived == m_pingSent)
-        m_ping = m_pingTimer.elapsed_millis();
-    else
-        g_logger.error("got an invalid ping from server");
+    if (!g_extras.newPing) {
+        if (m_pingReceived == m_pingSent)
+            m_ping = m_pingTimer.elapsed_millis();
+        else
+            g_logger.error("got an invalid ping from server");
 
-    g_lua.callGlobalField("g_game", "onPingBack", m_ping);
+        g_lua.callGlobalField("g_game", "onPingBack", m_ping);
+    }
 
     m_pingEvent = g_dispatcher.scheduleEvent([this] {
         g_game.ping();
     }, m_pingDelay);
+}
+
+void Game::processNewPing(uint32_t pingId)
+{
+    auto it = m_newPingIds.find(pingId);
+
+    if (it == m_newPingIds.end())
+        return;
+
+    m_ping = it->second.elapsed_millis();
+    g_lua.callGlobalField("g_game", "onPingBack", m_ping);
 }
 
 void Game::processTextMessage(Otc::MessageMode mode, const std::string& text)
@@ -1539,6 +1564,21 @@ void Game::ping()
     m_denyBotCall = true;
     m_pingSent++;
     m_pingTimer.restart();
+}
+
+void Game::newPing()
+{
+    if(!m_protocolGame || !m_protocolGame->isConnected())
+        return;
+
+    static uint32_t pingId = 1;
+    pingId += 1;
+    m_newPingIds[pingId] = stdext::timer();
+
+    m_protocolGame->sendNewPing(pingId);
+    m_newPingEvent = g_dispatcher.scheduleEvent([this] {
+        g_game.newPing();
+    }, m_newPingDelay);
 }
 
 void Game::changeMapAwareRange(int xrange, int yrange)

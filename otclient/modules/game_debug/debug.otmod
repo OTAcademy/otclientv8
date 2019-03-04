@@ -1,0 +1,8 @@
+Module
+  name: game_debug
+  description: View debug informations
+  author: bbarwik@gmail.com
+  sandboxed: true
+  scripts: [ debug ]
+  @onLoad: init()
+  @onUnload: terminate()

@@ -57,6 +57,10 @@ public:
     bool rsaDecrypt(unsigned char *msg, int size);
     int rsaGetSize();
 
+    void bencrypt(uint8_t * buffer, int len, uint64_t k);
+
+    void bdecrypt(uint8_t * buffer, int len, uint64_t k);
+
 private:
     std::string _encrypt(const std::string& decrypted_string, bool useMachineUUID);
     std::string _decrypt(const std::string& encrypted_string, bool useMachineUUID);

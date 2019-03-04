@@ -11,21 +11,20 @@ void AdaptiveRenderer::updateLastRenderTime(size_t microseconds) {
         speed = 0;
         return;
     }
+
+    avg = (microseconds + avg * 59) / 60;
+
     if (speed == RenderSpeeds - 1) {
         // nothing to be done
     } else if (microseconds > 30000) {
-        speed = min(speed + 2, RenderSpeeds - 1);
-        g_logger.debug(stdext::format("Set render speed to %i", speed));
-    } else if (microseconds > 15000) {
         speed = min(speed + 1, RenderSpeeds - 1);
-        g_logger.debug(stdext::format("Set render speed to %i", speed));
+    } else if (avg > 12000) { // >12ms for frame
+        speed = min(speed + 1, RenderSpeeds - 1);
     }
 
-    avg = (microseconds + avg * 59) / 60;
-    if (avg < 8000 && speed != 0) {
-        avg += 5000;
+    if (avg < 8000 && speed != 0) { // <8ms for frame
+        avg += 4000;
         speed -= 1;
-        g_logger.debug(stdext::format("Set render speed to %i", speed));
     }
 }
 

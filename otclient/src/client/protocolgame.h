@@ -40,6 +40,7 @@ public:
     void sendLogout();
     void sendPing();
     void sendPingBack();
+    void sendNewPing(uint32_t pingId);
     void sendAutoWalk(const std::vector<Otc::Direction>& path);
     void sendWalkNorth();
     void sendWalkEast();
@@ -162,6 +163,7 @@ private:
     void parseLoginToken(const InputMessagePtr& msg);
     void parsePing(const InputMessagePtr& msg);
     void parsePingBack(const InputMessagePtr& msg);
+    void parseNewPing(const InputMessagePtr& msg);
     void parseChallenge(const InputMessagePtr& msg);
     void parseDeath(const InputMessagePtr& msg);
     void parseMapDescription(const InputMessagePtr& msg);

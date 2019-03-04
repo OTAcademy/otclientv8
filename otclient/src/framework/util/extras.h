@@ -6,7 +6,7 @@
 #include <framework/core/logger.h>
 #include <deque>
 
-constexpr bool default_value = false;
+constexpr bool default_value = true;
 
 #define DEFINE_OPTION(option, description) m_options[#option] = std::make_pair(description, &(this->option##));
 
@@ -22,6 +22,7 @@ public:
         DEFINE_OPTION(OTMLChildIdCache, "OTML child id cache");
         DEFINE_OPTION(fasterAnimations, "Faster animations");    
         DEFINE_OPTION(newWalking, "New walking");    
+        DEFINE_OPTION(newPing, "New ping (needs restart and change in tfs)");    
 
     }
 
@@ -35,6 +36,7 @@ public:
     bool newWalking = default_value;
     bool adaptiveRendering = default_value;
     bool fasterAnimations = default_value;
+    bool newPing = default_value;
 
     int testMode = 0;
 

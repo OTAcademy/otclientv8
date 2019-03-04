@@ -20,3 +20,4 @@ Module
     - client_modulemanager
     - client_serverlist
     - client_stats
+    - updater

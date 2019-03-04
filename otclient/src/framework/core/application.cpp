@@ -31,6 +31,7 @@
 #include <framework/luaengine/luainterface.h>
 #include <framework/platform/crashhandler.h>
 #include <framework/platform/platform.h>
+#include <framework/http/http.h>
 
 #include <locale>
 
@@ -93,9 +94,6 @@ void Application::init(std::vector<std::string>& args)
     // initialize configs
     g_configs.init();
 
-    // initialize resources
-    g_resources.init(args[0].c_str());
-
     // initialize lua
     g_lua.init();
     registerLuaFunctions();
@@ -150,6 +148,7 @@ void Application::poll()
 #endif
 
     g_dispatcher.poll();
+    g_http.poll();
 
     // poll connection again to flush pending write
 #ifdef FW_NET

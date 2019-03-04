@@ -103,6 +103,12 @@
     <Filter Include="Header Files\framework\graphics\ogl">
       <UniqueIdentifier>{8b96ee09-99f1-4c70-90c1-d99505de6264}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\framework\http">
+      <UniqueIdentifier>{c3bd7dca-bac4-49e4-929b-b56b91bc51cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\framework\http">
+      <UniqueIdentifier>{67a00e24-c036-48ed-9f50-23ed60b336b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\framework\luafunctions.cpp">
@@ -536,6 +542,12 @@
     </ClCompile>
     <ClCompile Include="..\src\framework\core\adaptiverenderer.cpp">
       <Filter>Source Files\framework\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\http\http.cpp">
+      <Filter>Source Files\framework\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\http\session.cpp">
+      <Filter>Source Files\framework\http</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1063,6 +1075,18 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\ogl\shadersources.h">
       <Filter>Header Files\framework\graphics\ogl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\http\http.h">
+      <Filter>Header Files\framework\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\http\session.h">
+      <Filter>Header Files\framework\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\http\result.h">
+      <Filter>Header Files\framework\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\stdext\uri.h">
+      <Filter>Header Files\framework\stdext</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

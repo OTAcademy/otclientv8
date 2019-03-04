@@ -14,6 +14,14 @@ public:
 
     bool ignoreLight() const;
 
+    int getLevel() const {
+        return speed;
+    }
+
+    int getAvg() const {
+        return avg;
+    }
+
 private:
     int speed = 0;
     int avg = 0; 

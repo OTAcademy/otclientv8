@@ -1,0 +1,15 @@
+Module
+  name: updater
+  description: Updates client
+  author: bbarwik@gmail.com
+  website: https://github.com/bbarwik/otclient
+
+  dependencies:
+    - client_entergame
+
+  @onLoad: |
+    dofile 'updater'
+    Updater.init()
+
+  @onUnload: |
+    Updater.terminate()

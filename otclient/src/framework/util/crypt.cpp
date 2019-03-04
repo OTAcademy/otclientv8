@@ -190,7 +190,7 @@ std::string Crypt::getCryptKey(bool useMachineUUID)
         uuid = nilgen();
     }
     boost::uuids::name_generator namegen(uuid);
-    boost::uuids::uuid u = namegen(g_app.getCompactName() + g_platform.getCPUName() + g_platform.getOSName() + g_resources.getUserDir());
+    boost::uuids::uuid u = namegen(g_app.getCompactName() + g_platform.getCPUName() + g_platform.getOSName());
     std::size_t hash = uuid_hasher(u);
     std::string key;
     key.assign((const char *)&hash, sizeof(hash));
@@ -384,3 +384,51 @@ int Crypt::rsaGetSize()
     return RSA_size(m_rsa);
 }
 
+#define DELTA 0x9e3779b9
+#define MX (((z>>5^y<<2) + (y>>3^z<<4)) ^ ((sum^y) + (key[(p&3)^e] ^ z)))
+
+void Crypt::bencrypt(uint8_t* buffer, int len, uint64_t k) {
+    uint32_t const key[4] = { (uint32_t)(k >> 32), (uint32_t)(k & 0xFFFFFFFF), 0xDEADDEAD, 0xB00BEEEF };
+    uint32_t y, z, sum;
+    uint32_t *v = (uint32_t*)buffer;
+    unsigned p, rounds, e;
+    int n = (len - len % 4) / 4;
+    if (n < 2)
+        return;
+    rounds = 6 + 52 / n;
+    sum = 0;
+    z = v[n - 1];
+    do {
+        sum += DELTA;
+        e = (sum >> 2) & 3;
+        for (p = 0; p < n - 1; p++) {
+            y = v[p + 1];
+            z = v[p] += MX;
+        }
+        y = v[0];
+        z = v[n - 1] += MX;
+    } while (--rounds);
+}
+
+void Crypt::bdecrypt(uint8_t* buffer, int len, uint64_t k) {
+    uint32_t const key[4] = { (uint32_t)(k >> 32), (uint32_t)(k & 0xFFFFFFFF), 0xDEADDEAD, 0xB00BEEEF };
+    uint32_t y, z, sum;
+    uint32_t *v = (uint32_t*)buffer;
+    unsigned p, rounds, e;
+    int n = (len - len % 4) / 4;
+    if (n < 2)
+        return;
+    rounds = 6 + 52 / n;
+    sum = rounds * DELTA;
+    y = v[0];
+    do {
+        e = (sum >> 2) & 3;
+        for (p = n - 1; p > 0; p--) {
+            z = v[p - 1];
+            y = v[p] -= MX;
+        }
+        z = v[n - 1];
+        y = v[0] -= MX;
+        sum -= DELTA;
+    } while (--rounds);
+}

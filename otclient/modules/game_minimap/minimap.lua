@@ -101,7 +101,7 @@ function loadMap(clean)
   if clean then
     g_minimap.clean()
   end
-
+    
   if otmm then
     local minimapFile = '/minimap.otmm'
     if g_resources.fileExists(minimapFile) then

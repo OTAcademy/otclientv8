@@ -738,7 +738,7 @@ function processChannelTabMenu(tab, mousePos, mouseButton)
       end
 
       local filename = worldName .. ' - ' .. characterName .. ' - ' .. channelName .. '.txt'
-      local filepath = '/' .. filename
+      local filepath = '/user_dir/' .. filename
 
       -- extra information at the beginning
       table.insert(lines, 1, os.date('\nChannel saved at %a %b %d %H:%M:%S %Y'))

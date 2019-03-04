@@ -93,6 +93,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerChallenge:
                 parseChallenge(msg);
                 break;
+            case Proto::GameServerNewPing:
+                parseNewPing(msg);
+                break;
             case Proto::GameServerDeath:
                 parseDeath(msg);
                 break;
@@ -713,6 +716,13 @@ void ProtocolGame::parsePing(const InputMessagePtr& msg)
 void ProtocolGame::parsePingBack(const InputMessagePtr& msg)
 {
     g_game.processPingBack();
+}
+
+void ProtocolGame::parseNewPing(const InputMessagePtr& msg)
+{
+    uint32 pingId = msg->getU32();
+
+    g_game.processNewPing(pingId);
 }
 
 void ProtocolGame::parseChallenge(const InputMessagePtr& msg)

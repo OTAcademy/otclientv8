@@ -74,6 +74,7 @@ protected:
     void processDisconnect();
     void processPing();
     void processPingBack();
+    void processNewPing(uint32_t pingId);
 
     void processUpdateNeeded(const std::string& signature);
     void processLoginError(const std::string& error);
@@ -299,6 +300,7 @@ public:
 
     //void reportRuleViolation2();
     void ping();
+    void newPing();
     void setPingDelay(int delay) { m_pingDelay = delay; }
 
     // otclient only
@@ -377,8 +379,10 @@ private:
     uint m_pingReceived;
     stdext::timer m_pingTimer;
     Timer m_dashTimer;
+    std::map<uint32_t, stdext::timer> m_newPingIds;
     uint m_seq;
     int m_pingDelay;
+    int m_newPingDelay;
     Otc::FightModes m_fightMode;
     Otc::ChaseModes m_chaseMode;
     Otc::PVPModes m_pvpMode;
@@ -392,6 +396,7 @@ private:
     std::string m_worldName;
     std::bitset<Otc::LastGameFeature> m_features;
     ScheduledEventPtr m_pingEvent;
+    ScheduledEventPtr m_newPingEvent;
     ScheduledEventPtr m_walkEvent;
     ScheduledEventPtr m_checkConnectionEvent;
     bool m_connectionFailWarned;

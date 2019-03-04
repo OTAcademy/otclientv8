@@ -198,11 +198,10 @@ void GraphicalApplication::run()
 
             int sleepMicros = m_backgroundFrameCounter.getMaximumSleepMicros();
             if(sleepMicros >= AdaptativeFrameCounter::MINIMUM_MICROS_SLEEP)
-                stdext::microsleep(sleepMicros);
-
+                stdext::millisleep(1);
         } else {
             // sleeps until next poll to avoid massive cpu usage
-            stdext::millisleep(POLL_CYCLE_DELAY+1);
+            stdext::millisleep(1);
             g_clock.update();
         }
     }

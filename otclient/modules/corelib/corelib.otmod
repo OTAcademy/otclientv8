@@ -26,3 +26,4 @@ Module
 
     dofile 'inputmessage'
     dofile 'outputmessage'
+    dofile 'json'

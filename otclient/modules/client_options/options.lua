@@ -50,7 +50,7 @@ function init()
     options[k] = v
   end
   for _, v in ipairs(g_extras.getAll()) do
-	extraOptions[v] = g_extras.get(v)
+	  extraOptions[v] = g_extras.get(v)
     g_settings.setDefault("extras_" .. v, extraOptions[v])
   end
 
