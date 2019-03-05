@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #ifndef STREAMSOUNDSOURCE_H
 #define STREAMSOUNDSOURCE_H
 
@@ -63,5 +65,7 @@ private:
     stdext::boolean<false> m_eof;
     stdext::boolean<false> m_waitingFile;
 };
+
+#endif
 
 #endif

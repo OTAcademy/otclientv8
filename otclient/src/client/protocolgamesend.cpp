@@ -154,11 +154,13 @@ void ProtocolGame::sendPingBack()
     send(msg);
 }
 
-void ProtocolGame::sendNewPing(uint32_t pingId)
+void ProtocolGame::sendNewPing(uint32_t pingId, uint16_t localPing, uint16_t fps)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientNewPing);
     msg->addU32(pingId);
+    msg->addU16(localPing);
+    msg->addU16(fps);
     send(msg);
 }
 
@@ -203,31 +205,35 @@ void ProtocolGame::sendAutoWalk(const std::vector<Otc::Direction>& path)
     send(msg);
 }
 
-void ProtocolGame::sendWalkNorth()
+void ProtocolGame::sendWalkNorth(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkNorth);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkEast()
+void ProtocolGame::sendWalkEast(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkEast);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkSouth()
+void ProtocolGame::sendWalkSouth(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkSouth);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkWest()
+void ProtocolGame::sendWalkWest(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkWest);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
@@ -238,31 +244,35 @@ void ProtocolGame::sendStop()
     send(msg);
 }
 
-void ProtocolGame::sendWalkNorthEast()
+void ProtocolGame::sendWalkNorthEast(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkNorthEast);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkSouthEast()
+void ProtocolGame::sendWalkSouthEast(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkSouthEast);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkSouthWest()
+void ProtocolGame::sendWalkSouthWest(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkSouthWest);
+    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkNorthWest()
+void ProtocolGame::sendWalkNorthWest(const Position& currentPos)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkNorthWest);
+    addPosition(msg, currentPos);
     send(msg);
 }
 

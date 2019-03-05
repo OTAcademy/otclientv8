@@ -34,7 +34,6 @@ neededTranslations = {
   "All",
   "All modules and scripts were reloaded.",
   "Allow auto chase override",
-  "Also known as dash in tibia community, recommended\nfor playing characters with high speed",
   "Ambient light: %s%%",
   "Amount:",
   "Amount",

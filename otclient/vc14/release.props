@@ -6,6 +6,10 @@
     <OutDir>$(ProjectDir)../</OutDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Label="Globals">
+	 <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+	 <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>  
   <ItemDefinitionGroup>
     <ClCompile>
       <Optimization>Full</Optimization>

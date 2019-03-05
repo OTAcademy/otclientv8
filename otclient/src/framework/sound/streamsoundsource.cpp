@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "streamsoundsource.h"
 #include "soundbuffer.h"
 #include "soundfile.h"
@@ -187,3 +189,5 @@ void StreamSoundSource::downMix(StreamSoundSource::DownMix downMix)
 {
     m_downMix = downMix;
 }
+
+#endif

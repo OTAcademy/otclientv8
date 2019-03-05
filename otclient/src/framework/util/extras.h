@@ -33,7 +33,7 @@ public:
 
     bool newBattleList = default_value;
     bool newMapViewRendering = default_value;
-    bool newWalking = false;
+    bool newWalking = default_value;
     bool adaptiveRendering = default_value;
     bool fasterAnimations = default_value;
     bool newPing = default_value;

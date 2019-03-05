@@ -62,7 +62,7 @@ end
 function about_version()
   pcolored(g_app.getName() .. ' ' .. g_app.getVersion() .. '\n' ..
         'Rev  ' .. g_app.getBuildRevision() .. ' ('.. g_app.getBuildCommit() .. ')\n' ..
-        'Built on ' .. g_app.getBuildDate())
+        'Made by kondrah\nDiscord: kondrah#7945')
 end
 
 function about_graphics()

@@ -243,6 +243,8 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	}
 
 	OperatingSystem_t operatingSystem = static_cast<OperatingSystem_t>(msg.get<uint16_t>());
+	if(operatingSystem >= 10)
+		otclient = true;
 	version = msg.get<uint16_t>();
 
 	msg.skipBytes(7); // U32 client version, U8 client type, U16 dat revision
@@ -419,18 +421,18 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 		case 0x14: g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::logout, getThis(), true, false))); break;
 		case 0x1D: addGameTask(&Game::playerReceivePingBack, player->getID()); break;
 		case 0x1E: addGameTask(&Game::playerReceivePing, player->getID()); break;
-		case 0x21: g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::sendNewPingBack, getThis(), msg.get<uint32_t>()))); break;
+		case 0x21: parseNewPing(msg); break;
 		case 0x32: parseExtendedOpcode(msg); break; //otclient extended opcode
 		case 0x64: parseAutoWalk(msg); break;
-		case 0x65: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTH); break;
-		case 0x66: addGameTask(&Game::playerMove, player->getID(), DIRECTION_EAST); break;
-		case 0x67: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTH); break;
-		case 0x68: addGameTask(&Game::playerMove, player->getID(), DIRECTION_WEST); break;
+		case 0x65: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTH, otclient ? msg.getPosition() : Position()); break;
+		case 0x66: addGameTask(&Game::playerMove, player->getID(), DIRECTION_EAST, otclient ? msg.getPosition() : Position()); break;
+		case 0x67: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTH, otclient ? msg.getPosition() : Position()); break;
+		case 0x68: addGameTask(&Game::playerMove, player->getID(), DIRECTION_WEST, otclient ? msg.getPosition() : Position()); break;
 		case 0x69: addGameTask(&Game::playerStopAutoWalk, player->getID()); break;
-		case 0x6A: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHEAST); break;
-		case 0x6B: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHEAST); break;
-		case 0x6C: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHWEST); break;
-		case 0x6D: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHWEST); break;
+		case 0x6A: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHEAST, otclient ? msg.getPosition() : Position()); break;
+		case 0x6B: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHEAST, otclient ? msg.getPosition() : Position()); break;
+		case 0x6C: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHWEST, otclient ? msg.getPosition() : Position()); break;
+		case 0x6D: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHWEST, otclient ? msg.getPosition() : Position()); break;
 		case 0x6F: addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), DIRECTION_NORTH); break;
 		case 0x70: addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), DIRECTION_EAST); break;
 		case 0x71: addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), DIRECTION_SOUTH); break;
@@ -505,6 +507,7 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 	}
 
 	if (msg.isOverrun()) {
+		std::cout << "Message overrun" << std::endl;
 		disconnect();
 	}
 }
@@ -512,9 +515,19 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 {
 	msg.add<uint16_t>(0x00); //environmental effects
+	
+	Item* ground = tile->getGround();
+	uint16_t groundSpeed = 150;
+	if (ground) {
+		groundSpeed = (uint16_t)Item::items[ground->getID()].speed;
+		if (groundSpeed == 0) {
+			groundSpeed = 150;
+		}
+	}
+	if(otclient)
+		msg.add<uint16_t>(groundSpeed);
 
 	int32_t count;
-	Item* ground = tile->getGround();
 	if (ground) {
 		msg.addItem(ground);
 		count = 1;
@@ -706,6 +719,16 @@ bool ProtocolGame::canSee(int32_t x, int32_t y, int32_t z) const
 }
 
 // Parse methods
+void ProtocolGame::parseNewPing(NetworkMessage& msg)
+{
+	uint32_t pingId = msg.get<uint32_t>();
+	uint16_t localPing = msg.get<uint16_t>();
+	uint16_t fps = msg.get<uint16_t>();
+	
+	g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::sendNewPingBack, getThis(), pingId)));
+	addGameTask(&Game::playerRecivedNewPing, player->getID(), localPing, fps);
+}
+
 void ProtocolGame::parseChannelInvite(NetworkMessage& msg)
 {
 	const std::string name = msg.getString();
@@ -2226,6 +2249,8 @@ void ProtocolGame::sendCancelWalk()
 	NetworkMessage msg;
 	msg.addByte(0xB5);
 	msg.addByte(player->getDirection());
+	if(otclient)
+		msg.addPosition(player->getPosition());
 	writeToOutputBuffer(msg);
 }
 
@@ -2499,6 +2524,8 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 				RemoveTileThing(msg, oldPos, oldStackPos);
 			} else {
 				msg.addByte(0x6D);
+				if(otclient)
+					msg.addByte(0x01);
 				msg.addPosition(oldPos);
 				msg.addByte(oldStackPos);
 				msg.addPosition(newPos);
@@ -2534,6 +2561,8 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 		} else {
 			NetworkMessage msg;
 			msg.addByte(0x6D);
+			if(otclient)
+				msg.addByte(0x00);				
 			msg.addPosition(oldPos);
 			msg.addByte(oldStackPos);
 			msg.addPosition(creature->getPosition());

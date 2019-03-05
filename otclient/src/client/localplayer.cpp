@@ -63,57 +63,31 @@ void LocalPlayer::lockWalk(int millis)
     m_walkLockExpiration = std::max<int>(m_walkLockExpiration, (ticks_t) g_clock.millis() + millis);
 }
 
-bool LocalPlayer::canWalk(Otc::Direction direction)
-{
+bool LocalPlayer::canWalk(Otc::Direction direction) {
     // cannot walk while locked
-    if(m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration)
+    if (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration)
         return false;
 
     // paralyzed
-    if(m_speed == 0)
+    if (m_speed == 0)
         return false;
 
     // last walk is not done yet
-    if((m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
+    if ((m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
         return false;
 
     // prewalk has a timeout, because for some reason that I don't know yet the server sometimes doesn't answer the prewalk
     bool prewalkTimeouted = m_walking && m_preWalking && m_walkTimer.ticksElapsed() >= getStepDuration() + PREWALK_TIMEOUT;
 
     // avoid doing more walks than wanted when receiving a lot of walks from server
-    if(!m_lastPrewalkDone && m_preWalking && !prewalkTimeouted)
+    if (!m_lastPrewalkDone && m_preWalking && !prewalkTimeouted)
         return false;
 
     // cannot walk while already walking
-    if((m_walking && !isAutoWalking()) && (!prewalkTimeouted || m_secondPreWalk))
+    if ((m_walking && !isAutoWalking()) && (!prewalkTimeouted || m_secondPreWalk))
         return false;
 
-    return true;
-}
-
-bool LocalPlayer::newCanWalk(Otc::Direction direction)
-{
-    // cannot walk while locked
-    if(m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration)
-        return false;
-
-    // paralyzed
-    if(m_speed == 0)
-        return false;
-
-    // last walk is not done yet
-    if((m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
-        return false;
-
-    // prewalk has a timeout, because for some reason that I don't know yet the server sometimes doesn't answer the prewalk
-    bool prewalkTimeouted = m_walking && m_preWalking && m_walkTimer.ticksElapsed() >= getStepDuration() + PREWALK_TIMEOUT;
-
-    // avoid doing more walks than wanted when receiving a lot of walks from server
-    if(!m_lastPrewalkDone && m_preWalking && !prewalkTimeouted)
-        return false;
-
-    // cannot walk while already walking
-    if((m_walking && !isAutoWalking()) && (!prewalkTimeouted))
+    if (m_newPreWalkingPositions.size() >= 4)
         return false;
 
     return true;
@@ -169,23 +143,28 @@ void LocalPlayer::newPreWalk(Otc::Direction direction)
 {
     Position newPos = m_position.translatedToDirection(direction);
 
-    // avoid reanimating prewalks
-    //if(m_preWalking) {
-    //    return;
-    //}
+    if(!g_map.removeThing(asLocalPlayer())) {
+        g_logger.traceError("unable to remove local player from map");
+        return;
+    }
 
-    m_preWalking = true;
+    allowAppearWalk();
+    g_map.addThing(asLocalPlayer(), newPos, -1);
 
-    if(m_serverWalkEndEvent)
-        m_serverWalkEndEvent->cancel();
-
-    // start walking to direction
-    m_lastPrewalkDone = false;
-    m_lastPrewalkDestination = newPos;
-    Creature::walk(m_position, newPos);
+    m_newPreWalkingPositions.push_back(newPos);
 }
 
-void LocalPlayer::cancelWalk(Otc::Direction direction)
+bool LocalPlayer::isNewPreWalkingPosition(const Position& pos) {
+    for (auto it = m_newPreWalkingPositions.begin(); it != m_newPreWalkingPositions.end(); ++it) {
+        if (*it == pos) {
+            m_newPreWalkingPositions.erase(m_newPreWalkingPositions.begin(), ++it);
+            return true;
+        }
+    }
+    return false;
+}
+
+void LocalPlayer::cancelWalk(Otc::Direction direction, Position pos)
 {
     // only cancel client side walks
     if(m_walking && m_preWalking)
@@ -204,6 +183,29 @@ void LocalPlayer::cancelWalk(Otc::Direction direction)
             if(self->m_autoWalkDestination.isValid())
                 self->autoWalk(self->m_autoWalkDestination);
         }, 500);
+    }
+
+    if (g_extras.newWalking && pos.isValid()) {
+        if(!g_map.removeThing(asLocalPlayer())) {
+            g_logger.traceError("unable to remove local player from map");
+            return;
+        }
+        g_map.addThing(asLocalPlayer(), pos, -1);
+        auto it = m_newPreWalkingPositions.begin();
+        for (; it != m_newPreWalkingPositions.end(); ++it) {
+            if (*it == pos) {
+                it++;
+                break;
+            }
+        }
+        m_newPreWalkingPositions.erase(m_newPreWalkingPositions.begin(), it);
+    } else if (!m_newPreWalkingPositions.empty()) {
+        if(!g_map.removeThing(asLocalPlayer())) {
+            g_logger.traceError("unable to remove local player from map");
+            return;
+        }
+        g_map.addThing(asLocalPlayer(), m_newPreWalkingPositions.front(), -1);
+        m_newPreWalkingPositions.clear();
     }
 
     // turn to the cancel direction
@@ -324,7 +326,7 @@ void LocalPlayer::updateWalk()
     updateWalkingTile();
 
     // terminate walk only when client and server side walk are completed
-    if(m_walking && (!m_preWalking || g_extras.newWalking) && m_walkTimer.ticksElapsed() >= stepDuration)
+    if(m_walking && !m_preWalking && m_walkTimer.ticksElapsed() >= stepDuration)
         terminateWalk();
 }
 

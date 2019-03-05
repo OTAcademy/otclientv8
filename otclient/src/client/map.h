@@ -172,6 +172,7 @@ public:
 
     // thing related
     void addThing(const ThingPtr& thing, const Position& pos, int stackPos = -1);
+    void setTileSpeed(const Position & pos, uint16_t speed);
     ThingPtr getThing(const Position& pos, int stackPos);
     bool removeThing(const ThingPtr& thing);
     bool removeThingByPos(const Position& pos, int stackPos);

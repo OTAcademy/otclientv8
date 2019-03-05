@@ -1,11 +1,10 @@
 local defaultOptions = {
   vsync = false,
-  showFps = false,
-  showPing = false,
+  showFps = true,
+  showPing = true,
   fullscreen = false,
-  classicControl = false,
+  classicControl = true,
   smartWalk = false,
-  dashWalk = false,
   autoChaseOverride = true,
   showStatusMessagesInConsole = true,
   showEventMessagesInConsole = true,
@@ -15,11 +14,11 @@ local defaultOptions = {
   showPrivateMessagesInConsole = true,
   showPrivateMessagesOnScreen = true,
   showLeftPanel = false,
-  foregroundFrameRate = 61,
-  backgroundFrameRate = 201,
+  foregroundFrameRate = 30,
+  backgroundFrameRate = 60,
   painterEngine = 0,
-  enableAudio = true,
-  enableMusicSound = true,
+  enableAudio = false,
+  enableMusicSound = false,
   musicSoundVolume = 100,
   enableLights = true,
   ambientLight = 25,
@@ -175,16 +174,22 @@ function setOption(key, value, force)
   elseif key == 'fullscreen' then
     g_window.setFullscreen(value)
   elseif key == 'enableAudio' then
-    g_sounds.setAudioEnabled(value)
+    if g_sounds ~= nil then
+      g_sounds.setAudioEnabled(value)
+    end
     if value then
       audioButton:setIcon('/images/topbuttons/audio')
     else
       audioButton:setIcon('/images/topbuttons/audio_mute')
     end
   elseif key == 'enableMusicSound' then
-    g_sounds.getChannel(SoundChannels.Music):setEnabled(value)
+    if g_sounds ~= nil then
+      g_sounds.getChannel(SoundChannels.Music):setEnabled(value)
+    end
   elseif key == 'musicSoundVolume' then
-    g_sounds.getChannel(SoundChannels.Music):setGain(value/100)
+    if g_sounds ~= nil then
+      g_sounds.getChannel(SoundChannels.Music):setGain(value/100)
+    end
     audioPanel:getChildById('musicSoundVolumeLabel'):setText(tr('Music volume: %d', value))
   elseif key == 'showLeftPanel' then
     modules.game_interface.getLeftPanel():setOn(value)

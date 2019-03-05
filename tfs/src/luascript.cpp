@@ -2205,6 +2205,8 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Player", "getAccountId", LuaScriptInterface::luaPlayerGetAccountId);
 	registerMethod("Player", "getLastLoginSaved", LuaScriptInterface::luaPlayerGetLastLoginSaved);
 	registerMethod("Player", "getLastLogout", LuaScriptInterface::luaPlayerGetLastLogout);
+	registerMethod("Player", "getLocalPing", LuaScriptInterface::luaPlayerGetLocalPing);
+	registerMethod("Player", "getFPS", LuaScriptInterface::luaPlayerGetFPS);
 
 	registerMethod("Player", "getAccountType", LuaScriptInterface::luaPlayerGetAccountType);
 	registerMethod("Player", "setAccountType", LuaScriptInterface::luaPlayerSetAccountType);
@@ -7660,6 +7662,30 @@ int LuaScriptInterface::luaPlayerGetLastLogout(lua_State* L)
 	return 1;
 }
 
+int LuaScriptInterface::luaPlayerGetLocalPing(lua_State* L)
+{
+	// player:getLocalPing()
+	Player* player = getUserdata<Player>(L, 1);
+	if (player) {
+		lua_pushnumber(L, player->getLocalPing());
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;	
+}
+
+int LuaScriptInterface::luaPlayerGetFPS(lua_State* L)
+{
+	// player:getFPS()
+	Player* player = getUserdata<Player>(L, 1);
+	if (player) {
+		lua_pushnumber(L, player->getFPS());
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;		
+}
+		
 int LuaScriptInterface::luaPlayerGetAccountType(lua_State* L)
 {
 	// player:getAccountType()

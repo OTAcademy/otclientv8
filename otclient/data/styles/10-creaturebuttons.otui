@@ -33,6 +33,7 @@ CreatureButton < UICreatureButton
   Label
     id: label
     anchors.left: emblem.right
+    anchors.right: parent.right
     anchors.top: creature.top
     color: #888888
     margin-left: 2

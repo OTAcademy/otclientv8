@@ -483,7 +483,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
 
         boost::filesystem::path path(binaryName);
         auto newBinary = path.stem().string() + std::to_string(time(nullptr)) + path.extension().string();
-        file = PHYSFS_openWrite(path.string().c_str());
+        file = PHYSFS_openWrite(newBinary.c_str());
         if (!file)
             return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getLastError()));
         PHYSFS_write(file, it->second->response.data(), it->second->response.size(), 1);
@@ -565,7 +565,10 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
     if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
         return false; // already encrypted
 
-    uint64_t key = rand() << 32 + rand() << 16 + rand();
+    // not random beacause it would require to update to new files each time
+    int64_t key = stdext::adler32((const uint8_t*)&buffer[0], buffer.size());
+    key <<= 32;
+    key += stdext::adler32((const uint8_t*)&buffer[0], buffer.size() / 2);;
 
     std::string new_buffer(24 + buffer.size() * 2, '0');
     new_buffer[0] = 'E';
@@ -580,7 +583,7 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
     }
     new_buffer.resize(24 + dstLen);
 
-    *(uint64_t*)&new_buffer[4] = key;
+    *(int64_t*)&new_buffer[4] = key;
     *(uint32_t*)&new_buffer[12] = (uint32_t)dstLen;
     *(uint32_t*)&new_buffer[16] = (uint32_t)buffer.size();
     *(uint32_t*)&new_buffer[20] = (uint32_t)stdext::adler32((const uint8_t*)&buffer[0], buffer.size());

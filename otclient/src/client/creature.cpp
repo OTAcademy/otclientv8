@@ -42,6 +42,7 @@
 #include "spritemanager.h"
 
 #include <framework/util/stats.h>
+#include <framework/util/extras.h>
 
 Creature::Creature() : Thing()
 {
@@ -895,8 +896,12 @@ int Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
     else
         interval /= speed;
 
-    if(g_game.getClientVersion() >= 900)
-        interval = (interval / g_game.getServerBeat()) * g_game.getServerBeat();
+    if (g_game.getClientVersion() >= 900) {
+        if(g_extras.newWalking)
+            interval = std::ceil((float)interval / (float)g_game.getServerBeat()) * g_game.getServerBeat();
+        else
+            interval = (interval / g_game.getServerBeat()) * g_game.getServerBeat();
+    }
 
     float factor = 3;
     if(g_game.getClientVersion() <= 810)

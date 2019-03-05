@@ -95,6 +95,8 @@ class ProtocolGame final : public Protocol
 		void onConnect() override;
 
 		//Parse methods
+		void parseNewPing(NetworkMessage& msg);
+		
 		void parseAutoWalk(NetworkMessage& msg);
 		void parseSetOutfit(NetworkMessage& msg);
 		void parseSay(NetworkMessage& msg);
@@ -326,6 +328,7 @@ class ProtocolGame final : public Protocol
 
 		bool debugAssertSent = false;
 		bool acceptPackets = false;
+		bool otclient = false;
 };
 
 #endif

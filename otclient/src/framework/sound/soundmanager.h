@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #ifndef SOUNDMANAGER_H
 #define SOUNDMANAGER_H
 
@@ -65,5 +67,7 @@ private:
 };
 
 extern SoundManager g_sounds;
+
+#endif
 
 #endif

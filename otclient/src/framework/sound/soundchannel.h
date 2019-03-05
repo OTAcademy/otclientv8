@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #ifndef SHOUNDCHANNEL_H
 #define SHOUNDCHANNEL_H
 
@@ -61,5 +63,7 @@ private:
     int m_id;
     float m_gain;
 };
+
+#endif
 
 #endif

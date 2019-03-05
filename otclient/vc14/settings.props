@@ -5,19 +5,19 @@
     <PREPROCESSOR_DEFS>
         WIN32;
         _CRT_SECURE_NO_WARNINGS;
-        _WIN32_WINNT=0x0501;
+        _WIN32_WINNT=0x0600;
+		WINVER=0x0600;
         BOT_PROTECTION;
         OTCLIENT;
         CRASH_HANDLER;
         FW_GRAPHICS;
         FW_NET;
-        FW_SOUND;
         FW_XML;
         BUILD_TYPE="RelWithDebInfo";
         BUILD_COMMIT="devel";
         BUILD_REVISION="0";
         VERSION="0.6.6";
-        AB
+        AB;
     </PREPROCESSOR_DEFS>
     
     <OTCLIENT_LIBDEPS>
@@ -25,12 +25,8 @@
         zlib.lib;
         libeay32.lib;
         physfs-static.lib;
-        openal32.lib;
-		winmm.lib;
+        winmm.lib;
         lua51.lib;
-        ogg.lib;
-        vorbisfile.lib;
-        vorbis.lib;
         opengl32.lib;
         dbghelp.lib;
         kernel32.lib;
@@ -39,19 +35,18 @@
         gdi32.lib;
         advapi32.lib;
 		Ole32.lib;
+		bcrypt.lib;		
+		ucrt.lib;
+		vcruntime.lib;
+		msvcrt.lib;
     </OTCLIENT_LIBDEPS>
     
     <OTCLIENT_LIBDEPS_D>
         glew32d.lib;
-        zlibd.lib;
+		zlib.lib;
         libeay32.lib;
-        physfs-static.lib;
-        openal32.lib;
-		winmm.lib;
+        physfs.lib;
         lua51.lib;
-        ogg.lib;
-        vorbisfile.lib;
-        vorbis.lib;
         opengl32.lib;
         dbghelp.lib;
         kernel32.lib;
@@ -60,15 +55,15 @@
         gdi32.lib;
         advapi32.lib;
 		Ole32.lib;
+		bcrypt.lib;
+		ucrt.lib;
+		vcruntime.lib;
+		msvcrt.lib;
 	</OTCLIENT_LIBDEPS_D>
     
   </PropertyGroup>
   <PropertyGroup>
     <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Label="Globals">
-	 <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
-	 <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

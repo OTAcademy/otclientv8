@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "soundfile.h"
 #include "oggsoundfile.h"
 #include <framework/core/resourcemanager.h>
@@ -69,3 +71,5 @@ ALenum SoundFile::getSampleFormat()
     }
     return AL_UNDETERMINED;
 }
+
+#endif

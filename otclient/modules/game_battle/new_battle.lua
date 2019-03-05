@@ -213,10 +213,10 @@ function checkCreatures()
   creatures = {}
   for _, creature in ipairs(spectators) do
     if doCreatureFitFilters(creature) then
-	  table.insert(creatures, creature)	
-	  if creatureAgeList[creature] == nil then
-		creatureAgeList[creature] = os.time()
-	  end
+      table.insert(creatures, creature)	
+      if creatureAgeList[creature] == nil then
+        creatureAgeList[creature] = os.time()
+      end
     end
   end
   
@@ -231,17 +231,16 @@ function checkCreatures()
 	  local battleButton = battleButtonsList[creature_i]
 	  if battleButton == nil then
 	    battleButton = g_ui.createWidget('BattleButton')
-        battleButton.onHoverChange = onBattleButtonHoverChange
-        battleButton.onMouseRelease = onBattleButtonMouseRelease
-		table.insert(battleButtonsList, battleButton)
-		battlePanel:addChild(battleButton)
+      battleButton.onHoverChange = onBattleButtonHoverChange
+      battleButton.onMouseRelease = onBattleButtonMouseRelease
+      table.insert(battleButtonsList, battleButton)
+      battlePanel:addChild(battleButton)
  	  end
 	  
 	  local creature = creatures[creature_i]
 	  if isSortAsc() then
-		creature = creatures[#creatures - creature_i + 1]
+      creature = creatures[#creatures - creature_i + 1]
 	  end
-	  
 	  battleButton:newSetup(creature)
 	  
 	  local isTarget = creature == attacking
@@ -254,9 +253,10 @@ function checkCreatures()
 	  
 	  battleButton:setVisible(player:hasSight(creature:getPosition()) and creature:canBeSeen())
   end
+  creature_i = creature_i + 1
   while creature_i <= #battleButtonsList do
-	battleButtonsList[creature_i]:setVisible(false)
-	creature_i = creature_i + 1
+    battleButtonsList[creature_i]:setVisible(false)
+    creature_i = creature_i + 1
   end
 end
 

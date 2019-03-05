@@ -625,6 +625,19 @@ class Player final : public Creature, public Cylinder
 		BlockType_t getLastAttackBlockType() const {
 			return lastAttackBlockType;
 		}
+		uint16_t getLocalPing() const {
+			return localPing;
+		}
+		void setLocalPing(uint16_t ping) {
+			localPing = ping;
+		}
+		uint16_t getFPS() const {
+			return fps;
+		}
+		void setFPS(uint16_t value) {
+			fps = value;
+		}
+		
 
 		Item* getWeapon(slots_t slot, bool ignoreAmmo) const;
 		Item* getWeapon(bool ignoreAmmo = false) const;
@@ -1229,6 +1242,8 @@ class Player final : public Creature, public Cylinder
 		int64_t lastToggleMount = 0;
 		int64_t lastPing;
 		int64_t lastPong;
+		int16_t localPing = 0;
+		int16_t fps = 0;
 		int64_t nextAction = 0;
 
 		BedItem* bedItem = nullptr;

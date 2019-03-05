@@ -92,7 +92,7 @@ protected:
     void processGMActions(const std::vector<uint8>& actions);
     void processInventoryChange(int slot, const ItemPtr& item);
     void processAttackCancel(uint seq);
-    void processWalkCancel(Otc::Direction direction);
+    void processWalkCancel(Otc::Direction direction, const Position & pos);
 
     void processPlayerHelpers(int helpers);
     void processPlayerModes(Otc::FightModes fightMode, Otc::ChaseModes chaseMode, bool safeMode, Otc::PVPModes pvpMode);
@@ -166,9 +166,7 @@ public:
     void safeLogout();
 
     // walk related
-    bool walk(Otc::Direction direction, bool dash = false);
-    bool dashWalk(Otc::Direction direction);
-    bool newWalk(Otc::Direction direction);
+    bool walk(Otc::Direction direction);
     void autoWalk(std::vector<Otc::Direction> dirs);
     void forceWalk(Otc::Direction direction);
     void turn(Otc::Direction direction);
@@ -378,7 +376,6 @@ private:
     uint m_pingSent;
     uint m_pingReceived;
     stdext::timer m_pingTimer;
-    Timer m_dashTimer;
     std::map<uint32_t, stdext::timer> m_newPingIds;
     uint m_seq;
     int m_pingDelay;

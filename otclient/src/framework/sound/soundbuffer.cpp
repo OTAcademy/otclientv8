@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "soundbuffer.h"
 #include "soundfile.h"
 
@@ -64,3 +66,5 @@ bool SoundBuffer::fillBuffer(ALenum sampleFormat, const DataBuffer<char>& data, 
     }
     return true;
 }
+
+#endif

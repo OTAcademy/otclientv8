@@ -167,6 +167,12 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
     notificateTileUpdate(pos);
 }
 
+void Map::setTileSpeed(const Position& pos, uint16_t speed) {
+    const TilePtr& tile = getOrCreateTile(pos);
+    if (tile)
+        tile->setSpeed(speed);
+}
+
 ThingPtr Map::getThing(const Position& pos, int stackPos)
 {
     if(TilePtr tile = getTile(pos))

@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "soundsource.h"
 #include "soundbuffer.h"
 
@@ -159,3 +161,5 @@ void SoundSource::update()
         }
     }
 }
+
+#endif

@@ -32,6 +32,7 @@
 #include "tile.h"
 #include "luavaluecasts.h"
 #include <framework/core/eventdispatcher.h>
+#include <framework/util/extras.h>
 
 void ProtocolGame::parseMessage(const InputMessagePtr& msg)
 {
@@ -876,8 +877,16 @@ void ProtocolGame::parseTileRemoveThing(const InputMessagePtr& msg)
 
 void ProtocolGame::parseCreatureMove(const InputMessagePtr& msg)
 {
+    bool isLocalPlayer = msg->getU8() != 0x00;
     ThingPtr thing = getMappedThing(msg);
     Position newPos = getPosition(msg);
+
+    if (isLocalPlayer && g_extras.newWalking) {
+        auto player = g_game.getLocalPlayer();
+        if (player->isNewPreWalkingPosition(newPos))
+            return;
+        thing = player;
+    }
 
     if(!thing || !thing->isCreature()) {
         g_logger.traceError("no creature found to move");
@@ -1727,8 +1736,8 @@ void ProtocolGame::parseTextMessage(const InputMessagePtr& msg)
 void ProtocolGame::parseCancelWalk(const InputMessagePtr& msg)
 {
     Otc::Direction direction = (Otc::Direction)msg->getU8();
-
-    g_game.processWalkCancel(direction);
+    Position pos = getPosition(msg);
+    g_game.processWalkCancel(direction, pos);
 }
 
 void ProtocolGame::parseWalkWait(const InputMessagePtr& msg)
@@ -2090,17 +2099,18 @@ int ProtocolGame::setFloorDescription(const InputMessagePtr& msg, int x, int y, 
 int ProtocolGame::setTileDescription(const InputMessagePtr& msg, Position position)
 {
     g_map.cleanTile(position);
+    if(msg->peekU16() >= 0xff00)
+        return msg->getU16() & 0xff;
 
-    bool gotEffect = false;
+    if(g_game.getFeature(Otc::GameEnvironmentEffect)) {
+        msg->getU16();
+    }
+    uint16_t groundSpeed = msg->getU16();
+    g_map.setTileSpeed(position, groundSpeed);
+
     for(int stackPos=0;stackPos<256;stackPos++) {
         if(msg->peekU16()  >= 0xff00)
             return msg->getU16() & 0xff;
-
-        if(g_game.getFeature(Otc::GameEnvironmentEffect) && !gotEffect) {
-            msg->getU16(); // environment effect
-            gotEffect = true;
-            continue;
-        }
 
         if(stackPos > 10)
             g_logger.traceError(stdext::format("too many things, pos=%s, stackpos=%d", stdext::to_string(position), stackPos));
@@ -2111,6 +2121,7 @@ int ProtocolGame::setTileDescription(const InputMessagePtr& msg, Position positi
 
     return 0;
 }
+
 Outfit ProtocolGame::getOutfit(const InputMessagePtr& msg)
 {
     Outfit outfit;

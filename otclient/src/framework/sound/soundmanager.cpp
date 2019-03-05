@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "soundmanager.h"
 #include "soundsource.h"
 #include "soundbuffer.h"
@@ -297,3 +299,5 @@ void SoundManager::ensureContext()
     if(m_context)
         alcMakeContextCurrent(m_context);
 }
+
+#endif

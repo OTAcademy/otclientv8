@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #ifndef SOUNDSOURCE_H
 #define SOUNDSOURCE_H
 
@@ -76,5 +78,7 @@ protected:
     float m_fadeGain;
     float m_gain;
 };
+
+#endif
 
 #endif

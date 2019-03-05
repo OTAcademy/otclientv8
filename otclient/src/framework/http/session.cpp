@@ -114,7 +114,8 @@ void HttpSession::on_read(const boost::system::error_code& ec, size_t bytes_tran
             m_result->progress = 100;
             auto buffer = m_response.get().body();
             m_result->response.reserve(buffer.size());
-            for (auto& b : buffer.data()) {
+            auto buffers = buffer.data();
+            for (auto b : buffers) {
                 m_result->response.insert(m_result->response.end(), static_cast<const uint8_t*>(b.data()), static_cast<const uint8_t*>(b.data()) + b.size());
             }
             m_callback(m_result);

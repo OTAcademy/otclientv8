@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #ifndef FRAMEWORK_SOUND_DECLARATIONS_H
 #define FRAMEWORK_SOUND_DECLARATIONS_H
 
@@ -46,5 +48,7 @@ typedef stdext::shared_object_ptr<SoundChannel> SoundChannelPtr;
 typedef stdext::shared_object_ptr<StreamSoundSource> StreamSoundSourcePtr;
 typedef stdext::shared_object_ptr<CombinedSoundSource> CombinedSoundSourcePtr;
 typedef stdext::shared_object_ptr<OggSoundFile> OggSoundFilePtr;
+
+#endif
 
 #endif

@@ -340,14 +340,10 @@ function smartWalk(dir)
   if g_keyboard.getModifiers() == KeyboardNoModifier then
     local func = walkFunction
     if not func then
-      if modules.client_options.getOption('dashWalk') then
-        func = g_game.dashWalk
-      else
         func = g_game.walk
-      end
     end
     local dire = smartWalkDir or dir
-	func(dire)
+    func(dire)
     return true
   end
   return false

@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "soundchannel.h"
 #include "streamsoundsource.h"
 #include "soundmanager.h"
@@ -95,3 +97,5 @@ void SoundChannel::setGain(float gain)
         m_currentSource->setGain(gain);
     m_gain = gain;
 }
+
+#endif

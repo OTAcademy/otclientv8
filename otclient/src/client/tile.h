@@ -136,6 +136,10 @@ public:
         m_willBeRedrawn = value;
     }
 
+    void setSpeed(uint16_t speed) {
+        m_speed = speed;
+    }
+
 private:
     void checkTranslucentLight();
 
@@ -147,6 +151,7 @@ private:
     uint8 m_minimapColor;
     uint32 m_flags, m_houseId;
     bool m_willBeRedrawn = false;
+    uint16 m_speed = 150;
 
     stdext::boolean<false> m_selected;
 };

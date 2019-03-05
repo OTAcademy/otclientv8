@@ -828,6 +828,8 @@ class LuaScriptInterface
 		static int luaPlayerGetAccountId(lua_State* L);
 		static int luaPlayerGetLastLoginSaved(lua_State* L);
 		static int luaPlayerGetLastLogout(lua_State* L);
+		static int luaPlayerGetLocalPing(lua_State* L);
+		static int luaPlayerGetFPS(lua_State* L);
 
 		static int luaPlayerGetAccountType(lua_State* L);
 		static int luaPlayerSetAccountType(lua_State* L);

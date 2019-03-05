@@ -1763,12 +1763,15 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t spriteId)
 	}
 }
 
-void Game::playerMove(uint32_t playerId, Direction direction)
+void Game::playerMove(uint32_t playerId, Direction direction, Position localPlayerPos)
 {
 	Player* player = getPlayerByID(playerId);
 	if (!player) {
 		return;
 	}
+	
+	if(localPlayerPos.x != 0 && player->getPosition() != localPlayerPos)
+		return player->sendCancelWalk();
 
 	player->resetIdleTime();
 	player->setNextWalkActionTask(nullptr);
@@ -1953,6 +1956,16 @@ void Game::playerReceivePingBack(uint32_t playerId)
 	player->sendPingBack();
 }
 
+void Game::playerRecivedNewPing(uint32_t playerId, uint16_t ping, uint16_t fps) {
+	Player* player = getPlayerByID(playerId);
+	if (!player) {
+		return;
+	}
+	
+	player->setLocalPing(ping);
+	player->setFPS(fps);
+}
+	
 void Game::playerAutoWalk(uint32_t playerId, const std::forward_list<Direction>& listDir)
 {
 	Player* player = getPlayerByID(playerId);

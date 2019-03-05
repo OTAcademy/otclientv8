@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SOUND
+
 #include "combinedsoundsource.h"
 
 CombinedSoundSource::CombinedSoundSource() : SoundSource(0)
@@ -114,3 +116,5 @@ void CombinedSoundSource::update()
     for(const SoundSourcePtr& source : m_sources)
         source->update();
 }
+
+#endif

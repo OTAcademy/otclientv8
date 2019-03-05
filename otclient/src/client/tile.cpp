@@ -544,6 +544,8 @@ ItemPtr Tile::getGround()
 
 int Tile::getGroundSpeed()
 {
+    if (g_extras.newWalking)
+        return m_speed;
     int groundSpeed = 100;
     if(ItemPtr ground = getGround())
         groundSpeed = ground->getGroundSpeed();

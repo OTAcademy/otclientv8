@@ -41,8 +41,6 @@ public:
     bool autoWalk(const Position& destination);
     bool canWalk(Otc::Direction direction);
 
-    bool newCanWalk(Otc::Direction direction);
-
     void setStates(int states);
     void setSkill(Otc::Skill skill, int level, int levelPercent);
     void setBaseSkill(Otc::Skill skill, int baseLevel);
@@ -105,11 +103,14 @@ public:
     virtual void onAppear();
     virtual void onPositionChange(const Position& newPos, const Position& oldPos);
 
+    // new walking
+    bool isNewPreWalkingPosition(const Position& pos);
+
 protected:
     void walk(const Position& oldPos, const Position& newPos);
     void preWalk(Otc::Direction direction);
     void newPreWalk(Otc::Direction direction);
-    void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);
+    void cancelWalk(Otc::Direction direction = Otc::InvalidDirection, Position pos = Position());
     void stopWalk();
 
     friend class Game;
@@ -132,6 +133,8 @@ private:
     stdext::boolean<false> m_secondPreWalk;
     stdext::boolean<false> m_serverWalking;
     stdext::boolean<false> m_knownCompletePath;
+
+    std::list<Position> m_newPreWalkingPositions;
 
     stdext::boolean<false> m_premium;
     stdext::boolean<false> m_known;

@@ -48,7 +48,7 @@ function Player:onLook(thing, position, distance)
 
 		if thing:isCreature() then
 			if thing:isPlayer() then
-				description = string.format("%s\nIP: %s.", description, Game.convertIpToString(thing:getIp()))
+				description = string.format("%s\nIP: %s.\nPing: %i FPS: %i", description, Game.convertIpToString(thing:getIp()), thing:getLocalPing(), thing:getFPS())
 			end
 		end
 	end
