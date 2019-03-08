@@ -3,9 +3,8 @@ battleButton = nil
 battlePanel = nil
 filterPanel = nil
 toggleFilterButton = nil
-lastBattleButtonSwitched = nil
-battleButtonsByCreaturesList = {}
 creatureAgeList = {}
+battleButtonsList = {}
 
 mouseWidget = nil
 
@@ -17,7 +16,9 @@ hideMonstersButton = nil
 hideSkullsButton = nil
 hidePartyButton = nil
 
-function init() 
+updateEvent = nil
+
+function init()  
   g_ui.importStyle('battlebutton')
   battleButton = modules.client_topmenu.addRightGameToggleButton('battleButton', tr('Battle') .. ' (Ctrl+B)', '/images/topbuttons/battle', toggle)
   battleButton:setOn(true)
@@ -64,59 +65,33 @@ function init()
   sortOrderBox:setCurrentOptionByData(getSortOrder())
   sortOrderBox.onOptionChange = onChangeSortOrder
 
-  connect(Creature, {
-    onSkullChange = updateCreatureSkull,
-    onEmblemChange = updateCreatureEmblem,
-    onOutfitChange = onCreatureOutfitChange,
-    onHealthPercentChange = onCreatureHealthPercentChange,
-    onPositionChange = onCreaturePositionChange,
-    onAppear = onCreatureAppear,
-    onDisappear = onCreatureDisappear
-  })
-
+  updateBattleList()
+  battleWindow:setup()
+  
   connect(LocalPlayer, {
     onPositionChange = onCreaturePositionChange
   })
-
-  connect(g_game, {
-    onAttackingCreatureChange = onAttack,
-    onFollowingCreatureChange = onFollow,
-    onGameEnd = removeAllCreatures
-  })
-
-  checkCreatures()
-  battleWindow:setup()
 end
 
 function terminate()
   if battleButton == nil then
 	return
   end
+  
   g_keyboard.unbindKeyDown('Ctrl+B')
   battleButtonsByCreaturesList = {}
   battleButton:destroy()
   battleWindow:destroy()
   mouseWidget:destroy()
-
-  disconnect(Creature, {
-    onSkullChange = updateCreatureSkull,
-    onEmblemChange = updateCreatureEmblem,
-    onOutfitChange = onCreatureOutfitChange,
-    onHealthPercentChange = onCreatureHealthPercentChange,
-    onPositionChange = onCreaturePositionChange,
-    onAppear = onCreatureAppear,
-    onDisappear = onCreatureDisappear
-  })
-
+	
   disconnect(LocalPlayer, {
     onPositionChange = onCreaturePositionChange
   })
 
-  disconnect(g_game, {
-    onAttackingCreatureChange = onAttack,
-    onFollowingCreatureChange = onFollow,
-    onGameEnd = removeAllCreatures
-  })
+  if updateEvent ~= nil then
+	  removeEvent(updateEvent)
+	  updateEvent = nil
+  end
 end
 
 function toggle()
@@ -221,19 +196,67 @@ function onChangeSortOrder(comboBox, option)
   setSortOrder(option:lower():gsub('[.]', ''))
 end
 
-function checkCreatures()
-  removeAllCreatures()
+-- functions
+function updateBattleList() 
+	updateEvent = scheduleEvent(updateBattleList, 200)
+  checkCreatures()
+end
 
+function checkCreatures()
   if not g_game.isOnline() then
     return
   end
 
   local player = g_game.getLocalPlayer()
   local spectators = g_map.getSpectators(player:getPosition(), false)
+  
+  creatures = {}
   for _, creature in ipairs(spectators) do
     if doCreatureFitFilters(creature) then
-      addCreature(creature)
+      table.insert(creatures, creature)	
+      if creatureAgeList[creature] == nil then
+        creatureAgeList[creature] = os.time()
+      end
     end
+  end
+  
+  local following = g_game.getAttackingCreature()
+  local attacking = g_game.getAttackingCreature()
+  
+  -- sorting
+  local creature_i = 0
+  sortCreatures(creatures)
+  for i=1, #creatures do
+	  creature_i = i
+	  local battleButton = battleButtonsList[creature_i]
+	  if battleButton == nil then
+	    battleButton = g_ui.createWidget('BattleButton')
+      battleButton.onHoverChange = onBattleButtonHoverChange
+      battleButton.onMouseRelease = onBattleButtonMouseRelease
+      table.insert(battleButtonsList, battleButton)
+      battlePanel:addChild(battleButton)
+ 	  end
+	  
+	  local creature = creatures[creature_i]
+	  if isSortAsc() then
+      creature = creatures[#creatures - creature_i + 1]
+	  end
+	  battleButton:newSetup(creature)
+	  
+	  local isTarget = creature == attacking
+	  local isFollowed = creature == following
+	  if isTarget ~= battleButton.isTarget or isFollowed ~= battleButton.isFollowed then
+		  battleButton.isTarget = isTarget
+		  battleButton.isFollowed = isFollowed
+		  battleButton:update(creature)
+	  end
+	  
+	  battleButton:setVisible(player:hasSight(creature:getPosition()) and creature:canBeSeen())
+  end
+  creature_i = creature_i + 1
+  while creature_i <= #battleButtonsList do
+    battleButtonsList[creature_i]:setVisible(false)
+    creature_i = creature_i + 1
   end
 end
 
@@ -269,216 +292,26 @@ function doCreatureFitFilters(creature)
   return true
 end
 
-function onCreatureHealthPercentChange(creature, health)
-  local battleButton = battleButtonsByCreaturesList[creature:getId()]
-  if battleButton then
-    if getSortType() == 'health' then
-      removeCreature(creature)
-      addCreature(creature)
-      return
-    end
-    battleButton:setLifeBarPercent(creature:getHealthPercent())
-  end
-end
-
 local function getDistanceBetween(p1, p2)
     return math.max(math.abs(p1.x - p2.x), math.abs(p1.y - p2.y))
 end
 
-function onCreaturePositionChange(creature, newPos, oldPos)
-  if creature:isLocalPlayer() then
-    if oldPos and newPos and newPos.z ~= oldPos.z then
-      checkCreatures()
-    else
-      -- Distance will change when moving, recalculate and move to correct index
-      if getSortType() == 'distance' then
-        local distanceList = {}
-        for _, battleButton in pairs(battleButtonsByCreaturesList) do
-          table.insert(distanceList, {distance = getDistanceBetween(newPos, battleButton.creature:getPosition()), widget = battleButton})
-        end
-
-        if isSortAsc() then
-          table.sort(distanceList, function(a, b) return a.distance < b.distance end)
-        else
-          table.sort(distanceList, function(a, b) return a.distance > b.distance end)
-        end
-
-        for i = 1, #distanceList do
-          battlePanel:moveChildToIndex(distanceList[i].widget, i)
-        end
-      end
-
-      for _, battleButton in pairs(battleButtonsByCreaturesList) do
-        addCreature(battleButton.creature)
-      end
-    end
-  else
-    local has = hasCreature(creature)
-    local fit = doCreatureFitFilters(creature)
-    if has and not fit then
-      removeCreature(creature)
-    elseif fit then
-      if has and getSortType() == 'distance' then
-        removeCreature(creature)
-      end
-      addCreature(creature)
-    end
+function sortCreatures(creatures)
+  local player = g_game.getLocalPlayer()
+  
+  if getSortType() == 'distance' then
+	local playerPos = player:getPosition()
+    table.sort(creatures, function(a, b) return getDistanceBetween(playerPos, a:getPosition()) > getDistanceBetween(playerPos, b:getPosition()) end)
+  elseif getSortType() == 'name' then
+    table.sort(creatures, function(a, b) return a:getName():lower() > b:getName():lower() end)
+  elseif getSortType() == 'health' then
+    table.sort(creatures, function(a, b) return a:getHealthPercent() > b:getHealthPercent() end)
+  elseif getSortType() == 'age' then
+    table.sort(creatures, function(a, b) return creatureAgeList[a] > creatureAgeList[b] end)
   end
 end
 
-function onCreatureOutfitChange(creature, outfit, oldOutfit)
-  if doCreatureFitFilters(creature) then
-    addCreature(creature)
-  else
-    removeCreature(creature)
-  end
-end
-
-function onCreatureAppear(creature)
-  if creature:isLocalPlayer() then
-    addEvent(function()
-      updateStaticSquare()
-    end)
-  end
-
-  if doCreatureFitFilters(creature) then
-    addCreature(creature)
-  end
-end
-
-function onCreatureDisappear(creature)
-  removeCreature(creature)
-end
-
-function hasCreature(creature)
-  return battleButtonsByCreaturesList[creature:getId()] ~= nil
-end
-
-function addCreature(creature)
-  local creatureId = creature:getId()
-  local battleButton = battleButtonsByCreaturesList[creatureId]
-
-  -- Register when creature is added to battlelist for the first time
-  if not creatureAgeList[creatureId] then
-    creatureAgeList[creatureId] = os.time()
-  end
-
-  if not battleButton then
-    battleButton = g_ui.createWidget('BattleButton')
-    battleButton:setup(creature)
-
-    battleButton.onHoverChange = onBattleButtonHoverChange
-    battleButton.onMouseRelease = onBattleButtonMouseRelease
-
-    battleButtonsByCreaturesList[creatureId] = battleButton
-
-    if creature == g_game.getAttackingCreature() then
-      onAttack(creature)
-    end
-
-    if creature == g_game.getFollowingCreature() then
-      onFollow(creature)
-    end
-
-    local inserted = false
-    local nameLower = creature:getName():lower()
-    local healthPercent = creature:getHealthPercent()
-    local playerPosition = g_game.getLocalPlayer():getPosition()
-    local distance = getDistanceBetween(playerPosition, creature:getPosition())
-    local age = creatureAgeList[creatureId]
-
-    local childCount = battlePanel:getChildCount()
-    for i = 1, childCount do
-      local child = battlePanel:getChildByIndex(i)
-      local childName = child:getCreature():getName():lower()
-      local equal = false
-      if getSortType() == 'age' then
-        local childAge = creatureAgeList[child:getCreature():getId()]
-        if (age < childAge and isSortAsc()) or (age > childAge and isSortDesc()) then
-          battlePanel:insertChild(i, battleButton)
-          inserted = true
-          break
-        elseif age == childAge then
-          equal = true
-        end
-      elseif getSortType() == 'distance' then
-        local childDistance = getDistanceBetween(child:getCreature():getPosition(), playerPosition)
-        if (distance < childDistance and isSortAsc()) or (distance > childDistance and isSortDesc()) then
-          battlePanel:insertChild(i, battleButton)
-          inserted = true
-          break
-        elseif childDistance == distance then
-          equal = true
-        end
-      elseif getSortType() == 'health' then
-          local childHealth = child:getCreature():getHealthPercent()
-          if (healthPercent < childHealth and isSortAsc()) or (healthPercent > childHealth and isSortDesc()) then
-            battlePanel:insertChild(i, battleButton)
-            inserted = true
-            break
-          elseif healthPercent == childHealth then
-            equal = true
-          end
-      end
-
-      -- If any other sort type is selected and values are equal, sort it by name also
-      if getSortType() == 'name' or equal then
-          local length = math.min(childName:len(), nameLower:len())
-          for j=1,length do
-            if (nameLower:byte(j) < childName:byte(j) and isSortAsc()) or (nameLower:byte(j) > childName:byte(j) and isSortDesc()) then
-              battlePanel:insertChild(i, battleButton)
-              inserted = true
-              break
-            elseif (nameLower:byte(j) > childName:byte(j) and isSortAsc()) or (nameLower:byte(j) < childName:byte(j) and isSortDesc()) then
-              break
-            elseif j == nameLower:len() and isSortAsc() then
-              battlePanel:insertChild(i, battleButton)
-              inserted = true
-            elseif j == childName:len() and isSortDesc() then
-              battlePanel:insertChild(i, battleButton)
-              inserted = true
-            end
-          end
-      end
-
-      if inserted then
-        break
-      end
-    end
-
-    -- Insert at the end if no other place is found
-    if not inserted then
-      battlePanel:insertChild(childCount + 1, battleButton)
-    end
-  else
-    battleButton:setLifeBarPercent(creature:getHealthPercent())
-  end
-
-  local localPlayer = g_game.getLocalPlayer()
-  battleButton:setVisible(localPlayer:hasSight(creature:getPosition()) and creature:canBeSeen())
-end
-
-function removeAllCreatures()
-  creatureAgeList = {}
-  for _, battleButton in pairs(battleButtonsByCreaturesList) do
-    removeCreature(battleButton.creature)
-  end
-end
-
-function removeCreature(creature)
-  if hasCreature(creature) then
-    local creatureId = creature:getId()
-
-    if lastBattleButtonSwitched == battleButtonsByCreaturesList[creatureId] then
-      lastBattleButtonSwitched = nil
-    end
-
-    battleButtonsByCreaturesList[creatureId].creature:hideStaticSquare()
-    battleButtonsByCreaturesList[creatureId]:destroy()
-    battleButtonsByCreaturesList[creatureId] = nil
-  end
-end
-
+-- other functions
 function onBattleButtonMouseRelease(self, mousePosition, mouseButton)
   if mouseWidget.cancelNextRelease then
     mouseWidget.cancelNextRelease = false
@@ -507,59 +340,16 @@ function onBattleButtonMouseRelease(self, mousePosition, mouseButton)
 end
 
 function onBattleButtonHoverChange(battleButton, hovered)
-  if battleButton.isBattleButton then
+  if battleButton.isHovered ~= hovered then
     battleButton.isHovered = hovered
-    updateBattleButton(battleButton)
+    battleButton:update()
   end
 end
 
-function onAttack(creature)
-  local battleButton = creature and battleButtonsByCreaturesList[creature:getId()] or lastBattleButtonSwitched
-  if battleButton then
-    battleButton.isTarget = creature and true or false
-    updateBattleButton(battleButton)
-  end
-end
-
-function onFollow(creature)
-  local battleButton = creature and battleButtonsByCreaturesList[creature:getId()] or lastBattleButtonSwitched
-  if battleButton then
-    battleButton.isFollowed = creature and true or false
-    updateBattleButton(battleButton)
-  end
-end
-
-function updateStaticSquare()
-  for _, battleButton in pairs(battleButtonsByCreaturesList) do
-    if battleButton.isTarget then
-      battleButton:update()
+function onCreaturePositionChange(creature, newPos, oldPos)
+  if creature:isLocalPlayer() then
+    if oldPos and newPos and newPos.z ~= oldPos.z then
+      checkCreatures()
     end
-  end
-end
-
-function updateCreatureSkull(creature, skullId)
-  local battleButton = battleButtonsByCreaturesList[creature:getId()]
-  if battleButton then
-    battleButton:updateSkull(skullId)
-  end
-end
-
-function updateCreatureEmblem(creature, emblemId)
-  local battleButton = battleButtonsByCreaturesList[creature:getId()]
-  if battleButton then
-    battleButton:updateSkull(emblemId)
-  end
-end
-
-function updateBattleButton(battleButton)
-  battleButton:update()
-  if battleButton.isTarget or battleButton.isFollowed then
-    -- set new last battle button switched
-    if lastBattleButtonSwitched and lastBattleButtonSwitched ~= battleButton then
-      lastBattleButtonSwitched.isTarget = false
-      lastBattleButtonSwitched.isFollowed = false
-      updateBattleButton(lastBattleButtonSwitched)
-    end
-    lastBattleButtonSwitched = battleButton
   end
 end

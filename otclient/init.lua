@@ -6,7 +6,7 @@ g_logger.setLogFile(g_app.getCompactName() .. ".log")
 g_logger.info(os.date("== application started at %b %d %Y %X"))
 
 -- print first terminal message
-g_logger.info(g_app.getName() .. ' ' .. g_app.getVersion() .. ' rev ' .. g_app.getBuildRevision() .. ' (' .. g_app.getBuildCommit() .. ') built on ' .. g_app.getBuildDate() .. ' for arch ' .. g_app.getBuildArch())
+g_logger.info(g_app.getName() .. ' ' .. g_app.getVersion() .. ' rev ' .. g_app.getBuildRevision() .. ' (' .. g_app.getBuildCommit() .. ') made by ' .. g_app.getAuthor() .. ' built on ' .. g_app.getBuildDate() .. ' for arch ' .. g_app.getBuildArch())
 
 -- add data directory to the search path
 if not g_resources.directoryExists("/data") then
@@ -17,6 +17,12 @@ end
 if not g_resources.directoryExists("/modules") then
   g_logger.fatal("Modules dir doesn't exist.")
 end
+
+StaticConfig = {
+  url = "http://otclient.ovh",
+  updater = "http://otclient.ovh/updater.php",
+  news = "http://otclient.ovh/news.php",
+}
 
 -- settings
 g_configs.loadSettings("/config.otml")
@@ -39,9 +45,3 @@ g_modules.ensureModuleLoaded("game_interface")
 
 -- mods 1000-9999
 g_modules.autoLoadModules(9999)
-
-local script = '/' .. g_app.getCompactName() .. 'rc.lua'
-
-if g_resources.fileExists(script) then
-  dofile(script)
-end

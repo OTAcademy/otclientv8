@@ -92,7 +92,7 @@ protected:
     void processGMActions(const std::vector<uint8>& actions);
     void processInventoryChange(int slot, const ItemPtr& item);
     void processAttackCancel(uint seq);
-    void processWalkCancel(Otc::Direction direction, const Position & pos);
+    void processWalkCancel(Otc::Direction direction, const Position & pos, uint8_t stackpos);
 
     void processPlayerHelpers(int helpers);
     void processPlayerModes(Otc::FightModes fightMode, Otc::ChaseModes chaseMode, bool safeMode, Otc::PVPModes pvpMode);

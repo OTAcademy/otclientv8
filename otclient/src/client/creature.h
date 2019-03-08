@@ -134,6 +134,9 @@ public:
     virtual void onDisappear();
     virtual void onDeath();
 
+    virtual bool isNewPreWalking() { return false; }
+    virtual Position getNewPreWalkingPosition(bool beforePrewalk = false) { return m_position; }
+
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
     virtual void updateWalkOffset(int totalPixelsWalked);

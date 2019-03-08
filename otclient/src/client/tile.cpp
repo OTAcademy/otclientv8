@@ -142,8 +142,8 @@ void Tile::draw(const Point& dest, float scaleFactor, int drawFlags, LightView *
     if(drawFlags & Otc::DrawCreatures) {
         if(animate) {
             for(const CreaturePtr& creature : m_walkingCreatures) {
-                creature->draw(Point(dest.x + ((creature->getPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
-                                     dest.y + ((creature->getPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, animate, lightView);
+                creature->draw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
+                                     dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, animate, lightView);
             }
         }
 
@@ -313,8 +313,8 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
     if(drawFlags & Otc::DrawCreatures) {
         if(animate) {
             for(const CreaturePtr& creature : m_walkingCreatures) {
-                creature->draw(Point(dest.x + ((creature->getPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
-                                     dest.y + ((creature->getPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, animate, lightView);
+                creature->draw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
+                                     dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, animate, lightView);
             }
         }
 
@@ -703,7 +703,7 @@ bool Tile::isWalkable(bool ignoreCreatures)
         if(!ignoreCreatures) {
             if(thing->isCreature()) {
                 CreaturePtr creature = thing->static_self_cast<Creature>();
-                if(!creature->isPassable() && creature->canBeSeen())
+                if(!creature->isPassable() && creature->canBeSeen() && !creature->isLocalPlayer())
                     return false;
             }
         }

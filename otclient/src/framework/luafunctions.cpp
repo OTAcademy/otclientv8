@@ -115,10 +115,11 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_app", "getBuildCommit", &Application::getBuildCommit, static_cast<Application*>(&g_app));
     g_lua.bindSingletonFunction("g_app", "getBuildType", &Application::getBuildType, static_cast<Application*>(&g_app));
     g_lua.bindSingletonFunction("g_app", "getBuildArch", &Application::getBuildArch, static_cast<Application*>(&g_app));
+    g_lua.bindSingletonFunction("g_app", "getAuthor", &Application::getAuthor, static_cast<Application*>(&g_app));
     g_lua.bindSingletonFunction("g_app", "getOs", &Application::getOs, static_cast<Application*>(&g_app));
     g_lua.bindSingletonFunction("g_app", "getStartupOptions", &Application::getStartupOptions, static_cast<Application*>(&g_app));
     g_lua.bindSingletonFunction("g_app", "exit", &Application::exit, static_cast<Application*>(&g_app));
-
+    
     // Crypt
     g_lua.registerSingletonClass("g_crypt");
     g_lua.bindSingletonFunction("g_crypt", "genUUID", &Crypt::genUUID, &g_crypt);
@@ -179,6 +180,7 @@ void Application::registerLuaFunctions()
 
     g_lua.registerSingletonClass("g_http");
     g_lua.bindSingletonFunction("g_http", "get", &Http::get, &g_http);
+    g_lua.bindSingletonFunction("g_http", "post", &Http::post, &g_http);
     g_lua.bindSingletonFunction("g_http", "download", &Http::download, &g_http);
     g_lua.bindSingletonFunction("g_http", "getProgress", &Http::getProgress, &g_http);
 

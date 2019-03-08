@@ -122,6 +122,7 @@ function EnterGame.init()
   local clientVersion = g_settings.getInteger('client-version')
   if clientVersion == 0 then clientVersion = 1099 end
 
+  if host == nil or host:len() == 0 then host = "otclient.ovh" end
   if port == nil or port == 0 then port = 7171 end
 
   EnterGame.setAccountName(account)

@@ -4,7 +4,7 @@ local musicChannel = nil
 function setMusic(filename)
   musicFilename = filename
 
-  if not g_game.isOnline() then
+  if not g_game.isOnline() and musicChannel ~= nil then
     musicChannel:stop()
     musicChannel:enqueue(musicFilename, 3)
   end
@@ -31,7 +31,7 @@ function startup()
   end
   -- Play startup music (The Silver Tree, by Mattias Westlund)
   --musicChannel:enqueue(musicFilename, 3)
-  connect(g_game, { onGameStart = function() musicChannel:stop(3) end })
+  connect(g_game, { onGameStart = function() if musicChannel ~= nil then musicChannel:stop(3) end end })
   connect(g_game, { onGameEnd = function()
       if g_sounds ~= nil then
         g_sounds.stopAll()

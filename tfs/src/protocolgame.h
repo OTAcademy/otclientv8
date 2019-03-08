@@ -328,7 +328,8 @@ class ProtocolGame final : public Protocol
 
 		bool debugAssertSent = false;
 		bool acceptPackets = false;
-		bool otclient = false;
+		bool otclientV8 = false;
+		int extraFOV = 0;
 };
 
 #endif

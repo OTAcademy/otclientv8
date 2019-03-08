@@ -550,9 +550,9 @@ void Game::processAttackCancel(uint seq)
         cancelAttack();
 }
 
-void Game::processWalkCancel(Otc::Direction direction, const Position& pos)
+void Game::processWalkCancel(Otc::Direction direction, const Position& pos, uint8_t stackpos)
 {
-    m_localPlayer->cancelWalk(direction, pos);
+    m_localPlayer->cancelWalk(direction, pos, stackpos);
 }
 
 void Game::loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey)
@@ -636,11 +636,14 @@ bool Game::walk(Otc::Direction direction)
     }
 
 
-    Position toPos = m_localPlayer->getPosition().translatedToDirection(direction);
+    Position toPos = m_localPlayer->getNewPreWalkingPosition(true).translatedToDirection(direction);
     TilePtr toTile = g_map.getTile(toPos);
     // only do prewalks to walkable tiles (like grounds and not walls)
     if(toTile && toTile->isWalkable()) {
-        m_localPlayer->preWalk(direction);
+        if(g_extras.newWalking)
+            m_localPlayer->newPreWalk(direction);
+        else
+            m_localPlayer->preWalk(direction);
         // check walk to another floor (e.g: when above 3 parcels)
     } else {
         // check if can walk to a lower floor
@@ -678,7 +681,7 @@ bool Game::walk(Otc::Direction direction)
     m_localPlayer->stopAutoWalk();
 
     if(getClientVersion() <= 740) {
-        const TilePtr& fromTile = g_map.getTile(m_localPlayer->getPosition());
+        const TilePtr& fromTile = g_map.getTile(m_localPlayer->getNewPreWalkingPosition());
         if (fromTile && toTile && (toTile->getElevation() - 1 > fromTile->getElevation()))
             return false;
     }
@@ -711,14 +714,17 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs)
 
     auto it = dirs.begin();
     Otc::Direction direction = *it;
-    if(!m_localPlayer->canWalk(direction))
+    if(!m_localPlayer->canWalk(direction) && !g_extras.newAutoWalking)
         return;
 
-    TilePtr toTile = g_map.getTile(m_localPlayer->getPosition().translatedToDirection(direction));
+    TilePtr toTile = g_map.getTile(m_localPlayer->getNewPreWalkingPosition(true).translatedToDirection(direction));
     if(toTile && toTile->isWalkable() && !m_localPlayer->isServerWalking()) {
-        m_localPlayer->preWalk(direction);
+        if (g_extras.newWalking)
+            m_localPlayer->newPreWalk(direction);
+        else
+            m_localPlayer->preWalk(direction);
 
-        if(getFeature(Otc::GameForceFirstAutoWalkStep)) {
+        if(getFeature(Otc::GameForceFirstAutoWalkStep) && !g_extras.newAutoWalking) {
             forceWalk(direction);
             dirs.erase(it);
         }
@@ -734,7 +740,7 @@ void Game::forceWalk(Otc::Direction direction)
     if(!canPerformGameAction())
         return;
 
-    auto pos = m_localPlayer->getPosition();
+    auto pos = m_localPlayer->getNewPreWalkingPosition();
 
     switch(direction) {
     case Otc::North:
@@ -766,9 +772,6 @@ void Game::forceWalk(Otc::Direction direction)
     }
 
     g_lua.callGlobalField("g_game", "onForceWalk", direction);
-
-    if (g_extras.newWalking)
-        m_localPlayer->newPreWalk(direction);
 }
 
 void Game::turn(Otc::Direction direction)
@@ -1778,9 +1781,9 @@ int Game::getOs()
         return m_clientCustomOs;
 
     if(g_app.getOs() == "windows")
-        return 10;
+        return 20;
     else if(g_app.getOs() == "mac")
-        return 12;
+        return 22;
     else // linux
-        return 11;
+        return 21;
 }

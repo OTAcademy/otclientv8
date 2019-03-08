@@ -44,6 +44,7 @@ void Graphics::init()
     g_logger.info(stdext::format("OpenGL %s", glGetString(GL_VERSION)));
 
     // init GL extensions
+#ifndef OPENGL_ES
     GLenum err = glewInit();
     if(err != GLEW_OK)
         g_logger.fatal(stdext::format("Unable to init GLEW: %s", glewGetErrorString(err)));
@@ -57,19 +58,20 @@ void Graphics::init()
         glCheckFramebufferStatus = glCheckFramebufferStatusEXT;
         glGenerateMipmap = glGenerateMipmapEXT;
     }
-
+#endif
     m_painterOGL = new PainterOGL;
 
     // blending is always enabled
     glEnable(GL_BLEND);
 
     // hints, 
+#ifndef OPENGL_ES
     glHint(GL_FOG_HINT, GL_FASTEST);
     glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
     glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_FASTEST);
-
+#endif
     // determine max texture size
     int maxTextureSize = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);

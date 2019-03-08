@@ -14,16 +14,16 @@ class Extras {
 public:
     Extras() {
         DEFINE_OPTION(botDetection, "Bot detection");
-        DEFINE_OPTION(newBattleList, "New battle list");
         DEFINE_OPTION(fastOTMLTextRendering, "Fast QTML text rendering");
         DEFINE_OPTION(newMapViewRendering, "New map view (and tile) rendering");
         DEFINE_OPTION(adaptiveRendering, "Adaptive rendering");
 
         DEFINE_OPTION(OTMLChildIdCache, "OTML child id cache");
         DEFINE_OPTION(fasterAnimations, "Faster animations");    
-        DEFINE_OPTION(newWalking, "New walking");    
         DEFINE_OPTION(newPing, "New ping (needs restart and change in tfs)");    
 
+        DEFINE_OPTION(newWalking, "New walking");
+        DEFINE_OPTION(newAutoWalking, "New auto walking (requries new walknig)");
     }
 
     bool botDetection = default_value;
@@ -31,9 +31,9 @@ public:
     bool fastOTMLTextRendering = default_value;
     bool OTMLChildIdCache = default_value;
 
-    bool newBattleList = default_value;
     bool newMapViewRendering = default_value;
     bool newWalking = default_value;
+    bool newAutoWalking = default_value;
     bool adaptiveRendering = default_value;
     bool fasterAnimations = default_value;
     bool newPing = default_value;

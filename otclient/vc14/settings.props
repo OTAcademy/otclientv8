@@ -14,9 +14,8 @@
         FW_NET;
         FW_XML;
         BUILD_TYPE="RelWithDebInfo";
-        BUILD_COMMIT="devel";
+        BUILD_COMMIT="alpha";
         BUILD_REVISION="0";
-        VERSION="0.6.6";
         AB;
     </PREPROCESSOR_DEFS>
     
@@ -75,7 +74,7 @@
     <Link>
       <AdditionalDependencies>$(OTCLIENT_LIBDEPS)</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-      <!-- <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries> -->
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
       <LargeAddressAware>true</LargeAddressAware>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>

@@ -778,7 +778,7 @@ void ProtocolGame::parseMapMoveNorth(const InputMessagePtr& msg)
     pos.y--;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), 1);
+    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), 1 + range.extra);
     g_map.setCentralPosition(pos);
 }
 
@@ -792,7 +792,7 @@ void ProtocolGame::parseMapMoveEast(const InputMessagePtr& msg)
     pos.x++;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x + range.right, pos.y - range.top, pos.z, 1, range.vertical());
+    setMapDescription(msg, pos.x + range.right, pos.y - range.top, pos.z, 1 + range.extra, range.vertical());
     g_map.setCentralPosition(pos);
 }
 
@@ -806,7 +806,7 @@ void ProtocolGame::parseMapMoveSouth(const InputMessagePtr& msg)
     pos.y++;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x - range.left, pos.y + range.bottom, pos.z, range.horizontal(), 1);
+    setMapDescription(msg, pos.x - range.left, pos.y + range.bottom, pos.z, range.horizontal(), 1 + range.extra);
     g_map.setCentralPosition(pos);
 }
 
@@ -820,7 +820,7 @@ void ProtocolGame::parseMapMoveWest(const InputMessagePtr& msg)
     pos.x--;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, 1, range.vertical());
+    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, 1 + range.extra, range.vertical());
     g_map.setCentralPosition(pos);
 }
 
@@ -877,17 +877,9 @@ void ProtocolGame::parseTileRemoveThing(const InputMessagePtr& msg)
 
 void ProtocolGame::parseCreatureMove(const InputMessagePtr& msg)
 {
-    bool isLocalPlayer = msg->getU8() != 0x00;
     ThingPtr thing = getMappedThing(msg);
     Position newPos = getPosition(msg);
-
-    if (isLocalPlayer && g_extras.newWalking) {
-        auto player = g_game.getLocalPlayer();
-        if (player->isNewPreWalkingPosition(newPos))
-            return;
-        thing = player;
-    }
-
+    
     if(!thing || !thing->isCreature()) {
         g_logger.traceError("no creature found to move");
         return;
@@ -1737,7 +1729,8 @@ void ProtocolGame::parseCancelWalk(const InputMessagePtr& msg)
 {
     Otc::Direction direction = (Otc::Direction)msg->getU8();
     Position pos = getPosition(msg);
-    g_game.processWalkCancel(direction, pos);
+    uint8 stackpos = msg->getU8();
+    g_game.processWalkCancel(direction, pos, stackpos);
 }
 
 void ProtocolGame::parseWalkWait(const InputMessagePtr& msg)
@@ -2207,6 +2200,7 @@ ThingPtr ProtocolGame::getMappedThing(const InputMessagePtr& msg)
         pos.y = msg->getU16();
         pos.z = msg->getU8();
         uint8 stackpos = msg->getU8();
+
         assert(stackpos != 255);
         thing = g_map.getThing(pos, stackpos);
         if(!thing)

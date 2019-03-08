@@ -130,6 +130,7 @@ struct AwareRange
     int right;
     int bottom;
     int left;
+    int extra = 0;
 
     int horizontal() { return left + right + 1; }
     int vertical() { return top + bottom + 1; }
@@ -145,6 +146,8 @@ public:
     void addMapView(const MapViewPtr& mapView);
     void removeMapView(const MapViewPtr& mapView);
     void notificateTileUpdate(const Position& pos);
+
+    void requestVisibleTilesCacheUpdate();
 
     bool loadOtcm(const std::string& fileName);
     void saveOtcm(const std::string& fileName);

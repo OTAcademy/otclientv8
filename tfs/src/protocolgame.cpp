@@ -243,8 +243,10 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	}
 
 	OperatingSystem_t operatingSystem = static_cast<OperatingSystem_t>(msg.get<uint16_t>());
-	if(operatingSystem >= 10)
-		otclient = true;
+	if(operatingSystem >= 20) {
+		otclientV8 = true;
+		extraFOV = 4;
+	}
 	version = msg.get<uint16_t>();
 
 	msg.skipBytes(7); // U32 client version, U8 client type, U16 dat revision
@@ -424,15 +426,15 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 		case 0x21: parseNewPing(msg); break;
 		case 0x32: parseExtendedOpcode(msg); break; //otclient extended opcode
 		case 0x64: parseAutoWalk(msg); break;
-		case 0x65: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTH, otclient ? msg.getPosition() : Position()); break;
-		case 0x66: addGameTask(&Game::playerMove, player->getID(), DIRECTION_EAST, otclient ? msg.getPosition() : Position()); break;
-		case 0x67: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTH, otclient ? msg.getPosition() : Position()); break;
-		case 0x68: addGameTask(&Game::playerMove, player->getID(), DIRECTION_WEST, otclient ? msg.getPosition() : Position()); break;
+		case 0x65: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTH, otclientV8 ? msg.getPosition() : Position()); break;
+		case 0x66: addGameTask(&Game::playerMove, player->getID(), DIRECTION_EAST, otclientV8 ? msg.getPosition() : Position()); break;
+		case 0x67: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTH, otclientV8 ? msg.getPosition() : Position()); break;
+		case 0x68: addGameTask(&Game::playerMove, player->getID(), DIRECTION_WEST, otclientV8 ? msg.getPosition() : Position()); break;
 		case 0x69: addGameTask(&Game::playerStopAutoWalk, player->getID()); break;
-		case 0x6A: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHEAST, otclient ? msg.getPosition() : Position()); break;
-		case 0x6B: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHEAST, otclient ? msg.getPosition() : Position()); break;
-		case 0x6C: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHWEST, otclient ? msg.getPosition() : Position()); break;
-		case 0x6D: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHWEST, otclient ? msg.getPosition() : Position()); break;
+		case 0x6A: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHEAST, otclientV8 ? msg.getPosition() : Position()); break;
+		case 0x6B: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHEAST, otclientV8 ? msg.getPosition() : Position()); break;
+		case 0x6C: addGameTask(&Game::playerMove, player->getID(), DIRECTION_SOUTHWEST, otclientV8 ? msg.getPosition() : Position()); break;
+		case 0x6D: addGameTask(&Game::playerMove, player->getID(), DIRECTION_NORTHWEST, otclientV8 ? msg.getPosition() : Position()); break;
 		case 0x6F: addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), DIRECTION_NORTH); break;
 		case 0x70: addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), DIRECTION_EAST); break;
 		case 0x71: addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), DIRECTION_SOUTH); break;
@@ -524,7 +526,7 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 			groundSpeed = 150;
 		}
 	}
-	if(otclient)
+	if(otclientV8) // fixes wrong ground speeds in client
 		msg.add<uint16_t>(groundSpeed);
 
 	int32_t count;
@@ -711,8 +713,8 @@ bool ProtocolGame::canSee(int32_t x, int32_t y, int32_t z) const
 
 	//negative offset means that the action taken place is on a lower floor than ourself
 	int32_t offsetz = myPos.getZ() - z;
-	if ((x >= myPos.getX() - 8 + offsetz) && (x <= myPos.getX() + 9 + offsetz) &&
-	        (y >= myPos.getY() - 6 + offsetz) && (y <= myPos.getY() + 7 + offsetz)) {
+	if ((x >= myPos.getX() - (8 + extraFOV) + offsetz) && (x <= myPos.getX() + (9 + extraFOV) + offsetz) &&
+	        (y >= myPos.getY() - (6 + extraFOV) + offsetz) && (y <= myPos.getY() + (7 + extraFOV) + offsetz)) {
 		return true;
 	}
 	return false;
@@ -2249,8 +2251,13 @@ void ProtocolGame::sendCancelWalk()
 	NetworkMessage msg;
 	msg.addByte(0xB5);
 	msg.addByte(player->getDirection());
-	if(otclient)
+	if(otclientV8) { // for new walking
 		msg.addPosition(player->getPosition());
+		if(Tile* tile = player->getTile()) {
+			msg.addByte(tile->getStackposOfCreature(player, player));
+		} else
+			msg.addByte(0);
+	}
 	writeToOutputBuffer(msg);
 }
 
@@ -2333,7 +2340,7 @@ void ProtocolGame::sendMapDescription(const Position& pos)
 	NetworkMessage msg;
 	msg.addByte(0x64);
 	msg.addPosition(player->getPosition());
-	GetMapDescription(pos.x - 8, pos.y - 6, pos.z, 18, 14, msg);
+	GetMapDescription(pos.x - (8 + extraFOV), pos.y - (6 + extraFOV), pos.z, 18 + extraFOV * 2, 14 + extraFOV * 2, msg);
 	writeToOutputBuffer(msg);
 }
 
@@ -2524,8 +2531,6 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 				RemoveTileThing(msg, oldPos, oldStackPos);
 			} else {
 				msg.addByte(0x6D);
-				if(otclient)
-					msg.addByte(0x01);
 				msg.addPosition(oldPos);
 				msg.addByte(oldStackPos);
 				msg.addPosition(newPos);
@@ -2539,18 +2544,18 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 
 			if (oldPos.y > newPos.y) { // north, for old x
 				msg.addByte(0x65);
-				GetMapDescription(oldPos.x - 8, newPos.y - 6, newPos.z, 18, 1, msg);
+				GetMapDescription(oldPos.x - (8 + extraFOV), newPos.y - (6 + extraFOV), newPos.z, 18 + extraFOV * 2, 1 + extraFOV, msg);
 			} else if (oldPos.y < newPos.y) { // south, for old x
 				msg.addByte(0x67);
-				GetMapDescription(oldPos.x - 8, newPos.y + 7, newPos.z, 18, 1, msg);
+				GetMapDescription(oldPos.x - (8 + extraFOV), newPos.y + (7 + extraFOV), newPos.z, 18 + extraFOV * 2, 1 + extraFOV, msg);
 			}
 
 			if (oldPos.x < newPos.x) { // east, [with new y]
 				msg.addByte(0x66);
-				GetMapDescription(newPos.x + 9, newPos.y - 6, newPos.z, 1, 14, msg);
+				GetMapDescription(newPos.x + (9 + extraFOV), newPos.y - (6 + extraFOV), newPos.z, 1 + extraFOV, 14 + extraFOV * 2, msg);
 			} else if (oldPos.x > newPos.x) { // west, [with new y]
 				msg.addByte(0x68);
-				GetMapDescription(newPos.x - 8, newPos.y - 6, newPos.z, 1, 14, msg);
+				GetMapDescription(newPos.x - (8 + extraFOV), newPos.y - (6 + extraFOV), newPos.z, 1 + extraFOV, 14 + extraFOV * 2, msg);
 			}
 			writeToOutputBuffer(msg);
 		}
@@ -2561,8 +2566,6 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 		} else {
 			NetworkMessage msg;
 			msg.addByte(0x6D);
-			if(otclient)
-				msg.addByte(0x00);				
 			msg.addPosition(oldPos);
 			msg.addByte(oldStackPos);
 			msg.addPosition(creature->getPosition());
@@ -3032,12 +3035,12 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 	//going to surface
 	if (newPos.z == 7) {
 		int32_t skip = -1;
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, 5, 18, 14, 3, skip); //(floor 7 and 6 already set)
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, 4, 18, 14, 4, skip);
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, 3, 18, 14, 5, skip);
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, 2, 18, 14, 6, skip);
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, 1, 18, 14, 7, skip);
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, 0, 18, 14, 8, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), 5, 18 + extraFOV * 2, 14 + extraFOV * 2, 3, skip); //(floor 7 and 6 already set)
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), 4, 18 + extraFOV * 2, 14 + extraFOV * 2, 4, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), 3, 18 + extraFOV * 2, 14 + extraFOV * 2, 5, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), 2, 18 + extraFOV * 2, 14 + extraFOV * 2, 6, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), 1, 18 + extraFOV * 2, 14 + extraFOV * 2, 7, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), 0, 18 + extraFOV * 2, 14 + extraFOV * 2, 8, skip);
 
 		if (skip >= 0) {
 			msg.addByte(skip);
@@ -3047,7 +3050,7 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 	//underground, going one floor up (still underground)
 	else if (newPos.z > 7) {
 		int32_t skip = -1;
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, oldPos.getZ() - 3, 18, 14, 3, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), oldPos.getZ() - 3, 18  + extraFOV * 2, 14 + extraFOV * 2, 3, skip);
 
 		if (skip >= 0) {
 			msg.addByte(skip);
@@ -3058,11 +3061,11 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 	//moving up a floor up makes us out of sync
 	//west
 	msg.addByte(0x68);
-	GetMapDescription(oldPos.x - 8, oldPos.y - 5, newPos.z, 1, 14, msg);
+	GetMapDescription(oldPos.x - (8 + extraFOV), oldPos.y - (5 + extraFOV), newPos.z, 1 + extraFOV, 14 + extraFOV * 2, msg);
 
 	//north
 	msg.addByte(0x65);
-	GetMapDescription(oldPos.x - 8, oldPos.y - 6, newPos.z, 18, 1, msg);
+	GetMapDescription(oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), newPos.z, 18 + extraFOV * 2, 1 + extraFOV, msg);
 }
 
 void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creature, const Position& newPos, const Position& oldPos)
@@ -3078,9 +3081,9 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 	if (newPos.z == 8) {
 		int32_t skip = -1;
 
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, newPos.z, 18, 14, -1, skip);
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, newPos.z + 1, 18, 14, -2, skip);
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, newPos.z + 2, 18, 14, -3, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), newPos.z, 18 + extraFOV * 2, 14 + extraFOV * 2, -1, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), newPos.z + 1, 18 + extraFOV * 2, 14 + extraFOV * 2, -2, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), newPos.z + 2, 18 + extraFOV * 2, 14 + extraFOV * 2, -3, skip);
 
 		if (skip >= 0) {
 			msg.addByte(skip);
@@ -3090,7 +3093,7 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 	//going further down
 	else if (newPos.z > oldPos.z && newPos.z > 8 && newPos.z < 14) {
 		int32_t skip = -1;
-		GetFloorDescription(msg, oldPos.x - 8, oldPos.y - 6, newPos.z + 2, 18, 14, -3, skip);
+		GetFloorDescription(msg, oldPos.x - (8 + extraFOV), oldPos.y - (6 + extraFOV), newPos.z + 2, 18 + extraFOV * 2, 14 + extraFOV * 2, -3, skip);
 
 		if (skip >= 0) {
 			msg.addByte(skip);
@@ -3101,11 +3104,11 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 	//moving down a floor makes us out of sync
 	//east
 	msg.addByte(0x66);
-	GetMapDescription(oldPos.x + 9, oldPos.y - 7, newPos.z, 1, 14, msg);
+	GetMapDescription(oldPos.x + (9 + extraFOV), oldPos.y - (7 + extraFOV), newPos.z, 1 + extraFOV, 14 + extraFOV * 2, msg);
 
 	//south
 	msg.addByte(0x67);
-	GetMapDescription(oldPos.x - 8, oldPos.y + 7, newPos.z, 18, 1, msg);
+	GetMapDescription(oldPos.x - (8 + extraFOV), oldPos.y + (7 + extraFOV), newPos.z, 18 + extraFOV * 2, 1 + extraFOV, msg);
 }
 
 void ProtocolGame::AddShopItem(NetworkMessage& msg, const ShopInfo& item)

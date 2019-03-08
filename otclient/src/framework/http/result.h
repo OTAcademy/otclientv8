@@ -13,6 +13,7 @@ struct HttpResult {
     int progress = 0; // from 0 to 100
     int redirects = 0; // redirect
     bool finished = false;
+    std::string postData;
     std::vector<uint8_t> response;
     std::string error;
 };

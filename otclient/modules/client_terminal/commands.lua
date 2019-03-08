@@ -60,9 +60,7 @@ function ls(path)
 end
 
 function about_version()
-  pcolored(g_app.getName() .. ' ' .. g_app.getVersion() .. '\n' ..
-        'Rev  ' .. g_app.getBuildRevision() .. ' ('.. g_app.getBuildCommit() .. ')\n' ..
-        'Made by kondrah\nDiscord: kondrah#7945')
+  pcolored(g_app.getName() .. ' ' .. g_app.getVersion() .. '\n' .. g_app.getAuthor())
 end
 
 function about_graphics()

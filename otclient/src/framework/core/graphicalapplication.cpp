@@ -138,8 +138,10 @@ void GraphicalApplication::run()
 
             if(m_backgroundFrameCounter.shouldProcessNextFrame()) {
                 redraw = true;
+                m_backgroundFrameCounter.processNextFrame();
 
                 if(m_mustRepaint || m_foregroundFrameCounter.shouldProcessNextFrame()) {
+                    m_foregroundFrameCounter.processNextFrame();
                     m_mustRepaint = false;
                     updateForeground = true;
                 }
@@ -153,7 +155,7 @@ void GraphicalApplication::run()
 
                     // draw the foreground into a texture
                     if(updateForeground) {
-                        m_foregroundFrameCounter.processNextFrame();
+                        
 
                         // draw foreground
                         g_painter->setAlphaWriting(true);
@@ -167,8 +169,7 @@ void GraphicalApplication::run()
                         g_painter->setAlphaWriting(false);
                     }
 
-                    // draw background (animated stuff)
-                    m_backgroundFrameCounter.processNextFrame();
+                    // draw background (animated stuff)                    
                     g_ui.render(Fw::BackgroundPane);
 
                     // draw the foreground (steady stuff)
@@ -176,8 +177,6 @@ void GraphicalApplication::run()
                     g_painter->setOpacity(1.0);
                     g_painter->drawTexturedRect(viewportRect, m_foreground, viewportRect);
                 } else {
-                    m_foregroundFrameCounter.processNextFrame();
-                    m_backgroundFrameCounter.processNextFrame();
                     g_ui.render(Fw::BothPanes);
                 }
 

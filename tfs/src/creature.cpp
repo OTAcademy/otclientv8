@@ -189,12 +189,15 @@ void Creature::onIdleStatus()
 void Creature::onWalk()
 {
 	if (getWalkDelay() <= 0) {
+		Player* player = getPlayer();
+		if(player)
+			fixSteps();
 		Direction dir;
 		uint32_t flags = FLAG_IGNOREFIELDDAMAGE;
 		if (getNextStep(dir, flags)) {
 			ReturnValue ret = g_game.internalMoveCreature(this, dir, flags);
 			if (ret != RETURNVALUE_NOERROR) {
-				if (Player* player = getPlayer()) {
+				if (player) {
 					player->sendCancelMessage(ret);
 					player->sendCancelWalk();
 				}
@@ -244,6 +247,40 @@ bool Creature::getNextStep(Direction& dir, uint32_t&)
 	dir = listWalkDir.front();
 	listWalkDir.pop_front();
 	onWalk(dir);
+	return true;
+}
+
+bool Creature::fixSteps() {
+	// fix for auto walking, but can use few % of cpu
+	if(listWalkDir.empty())
+		return true;
+	
+	Position finalPos = getPosition();	
+
+	auto dirsCopy = listWalkDir;
+
+	auto firstDir = listWalkDir.front();
+	listWalkDir.pop_front();
+	if(listWalkDir.empty()) { // just 1 dir, nothing to do
+		listWalkDir.push_front(firstDir); // restore that 1 dir
+		return true;
+	}
+	finalPos = getNextPosition(firstDir, finalPos);
+	
+	for(int i = 0; i <= 5 && !listWalkDir.empty(); ++i) { // check up to next 14 steps
+		finalPos = getNextPosition(listWalkDir.front(), finalPos);
+		listWalkDir.pop_front();
+	}
+	
+	std::forward_list<Direction> dirList;
+	if(!getPathTo(finalPos, dirList, 0, 0, true, true)) {
+		listWalkDir = dirsCopy;
+		return false;
+	}
+	
+	dirList.reverse();
+	for(auto& it : dirList)
+		listWalkDir.push_front(it);
 	return true;
 }
 

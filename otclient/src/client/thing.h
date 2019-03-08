@@ -44,7 +44,7 @@ public:
     virtual uint32 getId() { return 0; }
     Position getPosition() { return m_position; }
     int getStackPriority();
-    const TilePtr& getTile();
+    virtual const TilePtr& getTile();
     ContainerPtr getParentContainer();
     int getStackPos();
 

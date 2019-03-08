@@ -48,7 +48,7 @@ bool AdaptativeFrameCounter::shouldProcessNextFrame()
     if(m_maxFps == 0)
         return true;
 
-    ticks_t now = g_clock.micros();
+    ticks_t now = stdext::micros();
     if(now - m_lastFrame < m_bestFrameDelay)
         return false;
     return true;
@@ -56,7 +56,7 @@ bool AdaptativeFrameCounter::shouldProcessNextFrame()
 
 void AdaptativeFrameCounter::processNextFrame()
 {
-    ticks_t now = g_clock.micros();
+    ticks_t now = stdext::micros();
     m_frames++;
     m_partialFrames++;
     m_frameDelaySum += now - m_lastFrame;

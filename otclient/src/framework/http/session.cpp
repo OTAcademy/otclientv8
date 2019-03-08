@@ -21,6 +21,11 @@ void HttpSession::start() {
     m_request.target(parsedUrl.query);
     m_request.set(boost::beast::http::field::host, parsedUrl.domain);
     m_request.set(boost::beast::http::field::user_agent, "OTClient");
+    if (!m_result->postData.empty()) {
+        m_request.method(boost::beast::http::verb::post);
+        m_request.body().assign(m_result->postData);
+        m_request.content_length(m_result->postData.size());
+    }
 
     boost::asio::ip::tcp::resolver::query query(parsedUrl.domain, "http");
     m_resolver.async_resolve(query, std::bind(&HttpSession::on_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
@@ -93,6 +98,10 @@ void HttpSession::on_read_header(const boost::system::error_code& ec, size_t byt
 
     if (msg.result_int() != 200)
         return onError("Invalid http status code", std::to_string(msg.result_int()));
+
+    if (m_response.is_done()) { // there's nothing more to read
+        return on_read(ec, 0);
+    }
 
     if (m_ssl) {
         boost::beast::http::async_read_some(*m_ssl, m_streambuf, m_response, 

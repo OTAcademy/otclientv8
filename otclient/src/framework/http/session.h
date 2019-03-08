@@ -6,7 +6,6 @@
 
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/http/string_body.hpp>
-#include <boost/beast/http/empty_body.hpp>
 #include <boost/beast/http/dynamic_body.hpp>
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/http/write.hpp>
@@ -41,7 +40,7 @@ private:
     boost::asio::steady_timer m_timer;
     int m_timeout;
     boost::beast::flat_buffer m_streambuf{ 512 * 1024 * 1024 }; // limited to 512MB
-    boost::beast::http::request<boost::beast::http::empty_body> m_request;
+    boost::beast::http::request<boost::beast::http::string_body> m_request;
     boost::beast::http::response_parser<boost::beast::http::dynamic_body> m_response;
     HttpResult_ptr m_result;
     HttpResult_cb m_callback;

@@ -21,7 +21,6 @@ void Http::poll() {
     m_ios.poll();
 }
 
-// https://codereview.stackexchange.com/questions/148596/http-downloader-using-beast
 int Http::get(const std::string& url, int timeout) {
     if (!timeout) // lua is not working with default values
         timeout = 5;
@@ -35,6 +34,29 @@ int Http::get(const std::string& url, int timeout) {
             return;
         }
         g_lua.callGlobalField("g_http", "onGet", result->operationId, result->url, result->error, std::string(result->response.begin(), result->response.end()));
+    });
+    session->start();
+    return m_operationId++;
+}
+
+int Http::post(const std::string& url, const std::string& data, int timeout) {
+    if (!timeout) // lua is not working with default values
+        timeout = 5;
+    if (data.empty()) {
+        g_logger.error(stdext::format("Invalid post request for %s, empty data, use get instead", url));
+        return -1;
+    }
+    auto result = std::make_shared<HttpResult>();
+    result->url = url;
+    result->operationId = m_operationId;
+    result->postData = data;
+    m_operations[m_operationId] = result;
+    auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&] (HttpResult_ptr result) {     
+        if (!result->finished) {
+            g_lua.callGlobalField("g_http", "onPostProgress", result->operationId, result->url, result->progress);
+            return;
+        }
+        g_lua.callGlobalField("g_http", "onPost", result->operationId, result->url, result->error, std::string(result->response.begin(), result->response.end()));
     });
     session->start();
     return m_operationId++;

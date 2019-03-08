@@ -10,10 +10,9 @@ local updateEvent = nil
 function init()
   debugButton = modules.client_topmenu.addLeftButton('debugButton',
     'Debug Info', '/images/topbuttons/debug', toggle)
-  debugButton:setOn(true)
+  debugButton:setOn(false)
 
-  debugWindow = g_ui.loadUI('debug', modules.game_interface.getLeftPanel())
-  debugWindow:setup()
+  debugWindow = g_ui.loadUI('debug', modules.game_interface.getRightPanel())
     
   g_keyboard.bindKeyDown('Ctrl+D', toggle)
 
@@ -23,6 +22,7 @@ function init()
   adaptiveRender = debugWindow:recursiveGetChildById('adaptiveRender')
   
   updateEvent = scheduleEvent(update, 200)
+  debugWindow:setup()
 end
 
 function terminate()

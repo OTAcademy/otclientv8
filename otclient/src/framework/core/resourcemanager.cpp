@@ -185,11 +185,17 @@ bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
 
 bool ResourceManager::fileExists(const std::string& fileName)
 {
+    if (fileName.find("/downloads") != std::string::npos) {
+        return g_http.getFile(fileName.substr(10)) != nullptr;
+    }
+
     return (PHYSFS_exists(resolvePath(fileName).c_str()) && !PHYSFS_isDirectory(resolvePath(fileName).c_str()));
 }
 
 bool ResourceManager::directoryExists(const std::string& directoryName)
 {
+    if (directoryName == "/downloads")
+        return true;
     return (PHYSFS_isDirectory(resolvePath(directoryName).c_str()));
 }
 
@@ -208,6 +214,12 @@ void ResourceManager::readFileStream(const std::string& fileName, std::iostream&
 std::string ResourceManager::readFileContents(const std::string& fileName)
 {
     std::string fullPath = resolvePath(fileName);
+    
+    if (fullPath.find("/downloads") != std::string::npos) {
+        auto dfile = g_http.getFile(fullPath.substr(10));
+        if (dfile)
+            return std::string(dfile->response.begin(), dfile->response.end());
+    }
 
     PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
     if(!file)

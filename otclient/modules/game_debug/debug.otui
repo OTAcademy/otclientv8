@@ -20,7 +20,7 @@ MiniWindow
   !text: tr('Debug Info')
   icon: /images/topbuttons/debug
   @onClose: modules.game_debug.onMiniWindowClose()
-  &save: true
+  &save: false
   
   MiniWindowContents  
     anchors.right: parent.right

@@ -240,6 +240,10 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
     Rect backgroundRect = Rect(point.x-(13.5), point.y, 27, 4);
     backgroundRect.bind(parentRect);
 
+    //debug    
+    //m_nameCache.setText(stdext::format("%i %i %i %i\n%i %i %i %i", g_game.getLocalPlayer()->newPos().size(), getNewPreWalkingPosition().x, getNewPreWalkingPosition().y, getNewPreWalkingPosition().z,
+    //                                   getWalkOffset().x, getWalkOffset().y, m_position.x, m_position.y));
+
     Size nameSize = m_nameCache.getTextSize();
     Rect textRect = Rect(point.x - nameSize.width() / 2.0, point.y-12, nameSize);
     textRect.bind(parentRect);
@@ -548,7 +552,7 @@ void Creature::updateWalkingTile()
 
             // only render creatures where bottom right is inside tile rect
             if(virtualTileRect.contains(virtualCreatureRect.bottomRight())) {
-                newWalkingTile = g_map.getOrCreateTile(m_position.translated(xi, yi, 0));
+                newWalkingTile = g_map.getOrCreateTile(getNewPreWalkingPosition().translated(xi, yi, 0));
             }
         }
     }

@@ -38,7 +38,7 @@ public:
     void unlockWalk() { m_walkLockExpiration = 0; }
     void lockWalk(int millis = 250);
     void stopAutoWalk();
-    bool autoWalk(const Position& destination);
+    bool autoWalk(const Position& destination, int retries = 0);
     bool canWalk(Otc::Direction direction);
 
     void setStates(int states);
@@ -91,7 +91,7 @@ public:
 
     bool hasSight(const Position& pos);
     bool isKnown() { return m_known; }
-    bool isPreWalking() { return m_preWalking; }
+    bool isPreWalking() { return m_preWalking || !m_newPreWalkingPositions.empty(); }
     bool isAutoWalking() { return m_autoWalkDestination.isValid(); }
     bool isServerWalking() { return m_serverWalking; }
     bool isPremium() { return m_premium; }
@@ -104,13 +104,26 @@ public:
     virtual void onPositionChange(const Position& newPos, const Position& oldPos);
 
     // new walking
-    bool isNewPreWalkingPosition(const Position& pos);
+    bool isNewPreWalking() override { return !m_newPreWalkingPositions.empty(); }
+    Position getNewPreWalkingPosition(bool beforePrewalk = false) override {
+        if(m_newPreWalkingPositions.empty())
+            return m_position;
+        else if (!beforePrewalk && m_newPreWalkingPositions.size() == 1)
+            return m_position;
+        auto ret = m_newPreWalkingPositions.rbegin();
+        if(!beforePrewalk)
+            ret++;
+        return *ret; 
+    }
+    std::list<Position> newPos() {
+        return m_newPreWalkingPositions;
+    };
 
 protected:
     void walk(const Position& oldPos, const Position& newPos);
     void preWalk(Otc::Direction direction);
     void newPreWalk(Otc::Direction direction);
-    void cancelWalk(Otc::Direction direction = Otc::InvalidDirection, Position pos = Position());
+    void cancelWalk(Otc::Direction direction = Otc::InvalidDirection, Position pos = Position(), uint8_t stackpos = -1);
     void stopWalk();
 
     friend class Game;
@@ -135,6 +148,7 @@ private:
     stdext::boolean<false> m_knownCompletePath;
 
     std::list<Position> m_newPreWalkingPositions;
+    bool m_newLastPrewalkingDone = false;
 
     stdext::boolean<false> m_premium;
     stdext::boolean<false> m_known;

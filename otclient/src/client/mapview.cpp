@@ -30,6 +30,7 @@
 #include "missile.h"
 #include "shadermanager.h"
 #include "lightview.h"
+#include "localplayer.h"
 
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/image.h>
@@ -229,7 +230,7 @@ void MapView::draw(const Rect& rect)
 
             PointF jumpOffset = creature->getJumpOffset() * scaleFactor;
             Point creatureOffset = Point(16 - creature->getDisplacementX(), - creature->getDisplacementY() - 2);
-            Position pos = creature->getPosition();
+            Position pos = creature->getNewPreWalkingPosition();
             Point p = transformPositionTo2D(pos, cameraPosition) - drawOffset;
             p += (creature->getDrawOffset() + creatureOffset) * scaleFactor - Point(stdext::round(jumpOffset.x), stdext::round(jumpOffset.y));
             p.x = p.x * horizontalStretchFactor;
@@ -446,7 +447,7 @@ void MapView::newDraw(const Rect& rect)
 
         PointF jumpOffset = creature->getJumpOffset() * scaleFactor;
         Point creatureOffset = Point(16 - creature->getDisplacementX(), - creature->getDisplacementY() - 2);
-        Position pos = creature->getPosition();
+        Position pos = creature->getNewPreWalkingPosition();
         Point p = transformPositionTo2D(pos, cameraPosition) - drawOffset;
         p += (creature->getDrawOffset() + creatureOffset) * scaleFactor - Point(stdext::round(jumpOffset.x), stdext::round(jumpOffset.y));
         p.x = p.x * horizontalStretchFactor;
@@ -928,8 +929,9 @@ int MapView::calcLastVisibleFloor()
 
 Position MapView::getCameraPosition()
 {
-    if(isFollowingCreature())
-        return m_followingCreature->getPosition();
+    if (isFollowingCreature()) {
+        return m_followingCreature->getNewPreWalkingPosition();
+    }
 
     return m_customCameraPosition;
 }

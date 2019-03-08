@@ -30,9 +30,9 @@ int main(int argc, const char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
 
     // setup application name and version
-    g_app.setName("OTClient");
-    g_app.setCompactName("otclient");
-    g_app.setVersion(VERSION);
+    g_app.setName("OTClientV8");
+    g_app.setCompactName("otclientv8");
+    g_app.setVersion("0.1 alpha");
 
     // initialize resources
     g_resources.init(args[0].c_str());

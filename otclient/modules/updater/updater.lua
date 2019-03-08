@@ -1,6 +1,5 @@
 Updater = { }
 
-Updater.url = "http://m.bbarwik.com/otclient/updater.php"
 Updater.maxRetries = 5
 
 --[[
@@ -113,7 +112,7 @@ function Updater.terminate()
 end
 
 function Updater.show()
-  if not g_resources.isLoadedFromArchive() then
+  if not g_resources.isLoadedFromArchive() or StaticConfig.updater == nil or StaticConfig.updater:len() < 4 then
     Updater.hide()
     return EnterGame.firstShow()
   end
@@ -126,7 +125,7 @@ function Updater.show()
   if binaryChecksum:len() ~= 32 then
     return updateError("Invalid binary checksum: " .. binaryChecksum)  
   end
-  getStatusId = g_http.get(Updater.url)  
+  getStatusId = g_http.get(StaticConfig.updater)  
   if generateChecksumsEvent == nil then
 	  generateChecksumsEvent = scheduleEvent(generateChecksum, 5)
   end

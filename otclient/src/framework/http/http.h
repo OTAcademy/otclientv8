@@ -15,6 +15,7 @@ public:
     void poll();
 
     int get(const std::string& url, int timeout = 5);
+    int post(const std::string& url, const std::string& data, int timeout = 5);
     int download(const std::string& url, const std::string& path, int timeout = 5);
 
     int getProgress(int id);
@@ -24,6 +25,12 @@ public:
     }
     void clearDownloads() {
         m_downloads.clear();
+    }
+    HttpResult_ptr getFile(const std::string& path) {
+        auto it = m_downloads.find(path);
+        if (it == m_downloads.end())
+            return nullptr;
+        return it->second;
     }
 
 private:
