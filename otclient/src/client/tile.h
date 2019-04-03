@@ -65,6 +65,7 @@ public:
     void draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView = nullptr);
 
     void newDraw(const Point & dest, float scaleFactor, int drawFlags, LightView * lightView);
+    void newDrawLocalPlayer(const Point & dest);
 
 public:
     void clean();
@@ -94,6 +95,7 @@ public:
     std::vector<ThingPtr> getThings() { return m_things; }
     ItemPtr getGround();
     int getGroundSpeed();
+    bool isBlocking() { return m_blocking != 0; }
     uint8 getMinimapColorByte();
     int getThingCount() { return m_things.size() + m_effects.size(); }
     bool isPathable();
@@ -132,12 +134,10 @@ public:
     TilePtr asTile() { return static_self_cast<Tile>(); }
 
     void markTilesToRedrawn();
-    void setWillBeRedrawn(bool value) {
-        m_willBeRedrawn = value;
-    }
 
-    void setSpeed(uint16_t speed) {
+    void setSpeed(uint16_t speed, uint8_t blocking) {
         m_speed = speed;
+        m_blocking = blocking;
     }
 
 private:
@@ -148,10 +148,12 @@ private:
     stdext::packed_vector<ThingPtr> m_things;
     Position m_position;
     uint8 m_drawElevation;
+    Point m_localPlayerPoint;
     uint8 m_minimapColor;
     uint32 m_flags, m_houseId;
-    bool m_willBeRedrawn = false;
+    int m_willBeRedrawn = 0;
     uint16 m_speed = 150;
+    uint8 m_blocking = 0;
 
     stdext::boolean<false> m_selected;
 };

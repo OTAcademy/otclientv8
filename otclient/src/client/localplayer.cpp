@@ -61,6 +61,7 @@ LocalPlayer::LocalPlayer()
 void LocalPlayer::lockWalk(int millis)
 {
     m_walkLockExpiration = std::max<int>(m_walkLockExpiration, (ticks_t) g_clock.millis() + millis);
+    g_game.cancelWalkEvent();
 }
 
 bool LocalPlayer::canWalk(Otc::Direction direction) {
@@ -73,7 +74,7 @@ bool LocalPlayer::canWalk(Otc::Direction direction) {
         return false;
 
     // last walk is not done yet
-    if ((m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
+    if (m_walking && (m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
         return false;
 
     // prewalk has a timeout, because for some reason that I don't know yet the server sometimes doesn't answer the prewalk
@@ -83,7 +84,8 @@ bool LocalPlayer::canWalk(Otc::Direction direction) {
     if (!m_lastPrewalkDone && m_preWalking && !prewalkTimeouted)
         return false;
 
-    if (isNewPreWalking() && !m_newLastPrewalkingDone)
+    auto tile = g_map.getTile(getNewPreWalkingPosition(true));
+    if (isNewPreWalking() && (!m_newLastPrewalkingDone || (tile && tile->isBlocking())))
         return false;
 
     // cannot walk while already walking
@@ -174,22 +176,14 @@ void LocalPlayer::newPreWalk(Otc::Direction direction)
     Creature::walk(startPos, newPos);
 }
 
-void LocalPlayer::cancelWalk(Otc::Direction direction, Position pos, uint8_t stackpos)
+void LocalPlayer::cancelWalk(Otc::Direction direction)
 {
-    m_newPreWalkingPositions.clear();
+    if (g_game.getFeature(Otc::GameNewWalking))
+        return;
 
     // only cancel client side walks
     if(m_walking && m_preWalking)
         stopWalk();
-
-    if (g_extras.newWalking && pos.isValid() && pos != m_position) { // fixing position
-        if(!g_map.removeThing(asLocalPlayer())) {
-            g_logger.traceError("unable to remove creature");
-        } else {
-            g_map.addThing(asLocalPlayer(), pos, stackpos);
-            g_map.requestVisibleTilesCacheUpdate();
-        }
-    }
 
     m_lastPrewalkDone = true;
     m_idleTimer.restart();
@@ -199,7 +193,7 @@ void LocalPlayer::cancelWalk(Otc::Direction direction, Position pos, uint8_t sta
         g_game.stop();
         auto self = asLocalPlayer();
 
-        if (g_extras.newAutoWalking && m_autoWalkContinueEvent)
+        if (m_autoWalkContinueEvent)
             return;
 
         if(m_autoWalkContinueEvent)
@@ -208,7 +202,7 @@ void LocalPlayer::cancelWalk(Otc::Direction direction, Position pos, uint8_t sta
             self->m_autoWalkContinueEvent = nullptr;
             if(self->m_autoWalkDestination.isValid())
                 self->autoWalk(self->m_autoWalkDestination, 0);
-        }, g_extras.newAutoWalking ? 100 : 500);
+        }, 100);
     }
 
     // turn to the cancel direction
@@ -216,6 +210,40 @@ void LocalPlayer::cancelWalk(Otc::Direction direction, Position pos, uint8_t sta
         setDirection(direction);
 
     callLuaField("onCancelWalk", direction);
+}
+
+void LocalPlayer::cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir)     
+{
+    m_newPreWalkingPositions.clear();
+
+    if (m_position != pos) {
+        //allowAppearWalk(0);
+        g_map.removeThing(this);
+        g_map.addThing(this, pos, stackpos);
+        g_map.requestVisibleTilesCacheUpdate();
+    }
+
+    m_idleTimer.restart();
+    lockWalk();
+
+    if(m_autoWalkDestination.isValid()) {
+        g_game.stop();
+        auto self = asLocalPlayer();
+
+        if (m_autoWalkContinueEvent)
+            return;
+
+        if(m_autoWalkContinueEvent)
+            m_autoWalkContinueEvent->cancel();
+        m_autoWalkContinueEvent = g_dispatcher.scheduleEvent([self]() {
+            self->m_autoWalkContinueEvent = nullptr;
+            if(self->m_autoWalkDestination.isValid())
+                self->autoWalk(self->m_autoWalkDestination, 0);
+        }, 100);
+    }
+
+    setDirection(dir);
+    callLuaField("onCancelWalk", dir);
 }
 
 bool LocalPlayer::autoWalk(const Position& destination, int retries)
@@ -241,8 +269,10 @@ bool LocalPlayer::autoWalk(const Position& destination, int retries)
         if(std::get<1>(result) == Otc::PathFindResultOk) {
             limitedPath = std::get<0>(result);
             // limit to 127 steps
-            if(limitedPath.size() > 127)
+            if(!g_game.getFeature(Otc::GameNewWalking) && limitedPath.size() > 127)
                 limitedPath.resize(127);
+            else if(limitedPath.size() > 4095)
+                limitedPath.resize(4095);
             m_knownCompletePath = true;
         }
     }
@@ -251,9 +281,9 @@ bool LocalPlayer::autoWalk(const Position& destination, int retries)
     if(limitedPath.empty()) {
         result = g_map.findPath(getNewPreWalkingPosition(true), destination, 50000, Otc::PathFindAllowNotSeenTiles);
         if(std::get<1>(result) != Otc::PathFindResultOk) {
-            if (g_extras.newAutoWalking && retries < 5) {
-                if(retries > 2)
-                    result = g_map.findPath(getNewPreWalkingPosition(true), destination, 10000, Otc::PathFindAllowNotSeenTiles | Otc::PathFindIgnoreCreatures);
+            if (g_game.getFeature(Otc::GameNewWalking) && retries < 3) {
+                //if(retries > 2)
+                //    result = g_map.findPath(getNewPreWalkingPosition(true), destination, 10000, Otc::PathFindAllowNotSeenTiles | Otc::PathFindIgnoreCreatures);
                 if (std::get<1>(result) != Otc::PathFindResultOk) {
                     auto self = asLocalPlayer();
 
@@ -264,7 +294,7 @@ bool LocalPlayer::autoWalk(const Position& destination, int retries)
                         self->m_autoWalkContinueEvent = nullptr;
                         if (self->m_autoWalkDestination.isValid())
                             self->autoWalk(self->m_autoWalkDestination, retries + 1);
-                    }, 200);
+                    }, 300 + retries * 200);
                     return true;
                 }
             } else {
@@ -291,15 +321,15 @@ bool LocalPlayer::autoWalk(const Position& destination, int retries)
     m_autoWalkDestination = destination;
     m_lastAutoWalkPosition = getNewPreWalkingPosition(true).translatedToDirections(limitedPath).back();
 
-    /*
-    // debug calculated path using minimap
-    for(auto pos : m_position.translatedToDirections(limitedPath)) {
-        g_map.getOrCreateTile(pos)->overwriteMinimapColor(215);
-        g_map.notificateTileUpdate(pos);
+    if (g_extras.debugPathfinding) {
+        for (auto pos : m_position.translatedToDirections(limitedPath)) {
+            g_map.getOrCreateTile(pos)->overwriteMinimapColor(215);
+            g_map.notificateTileUpdate(pos);
+        }
     }
-    */
 
-    g_game.autoWalk(limitedPath);
+    g_game.autoWalk(limitedPath, getNewPreWalkingPosition(true));
+    lockWalk();
     return true;
 }
 
@@ -313,13 +343,18 @@ void LocalPlayer::stopAutoWalk()
         m_autoWalkContinueEvent->cancel();
 }
 
-void LocalPlayer::stopWalk()
-{
+void LocalPlayer::stopWalk(bool teleport) {
     Creature::stopWalk(); // will call terminateWalk
 
     m_newPreWalkingPositions.clear();
     m_lastPrewalkDone = true;
     m_lastPrewalkDestination = Position();
+
+    if (teleport) {
+        lockWalk();
+    } else {
+        lockWalk(50);
+    }
 }
 
 void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
@@ -342,9 +377,13 @@ void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
 
 void LocalPlayer::updateWalk()
 {
+    float ticksInterval = (1000.0f / 100.0f);
+
+    float ticksElapsed = ticksInterval * ((int)(m_walkTimer.ticksElapsed() / ticksInterval));
+
     int stepDuration = getStepDuration();
     float walkTicksPerPixel = getStepDuration(true) / 32.0f;
-    int totalPixelsWalked = std::min<int>(m_walkTimer.ticksElapsed() / walkTicksPerPixel, 32.0f);
+    int totalPixelsWalked = std::min<int>(ticksElapsed / walkTicksPerPixel, 32.0f);
 
     // update walk animation and offsets
     updateWalkAnimation(totalPixelsWalked);
@@ -365,6 +404,7 @@ void LocalPlayer::terminateWalk()
     m_secondPreWalk = false;
     m_idleTimer.restart();
     m_newPreWalkingPositions.clear();
+    m_walking = false;
 
     auto self = asLocalPlayer();
 

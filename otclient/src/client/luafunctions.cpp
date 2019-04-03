@@ -284,6 +284,8 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "getProtocolGame", &Game::getProtocolGame, &g_game);
     g_lua.bindSingletonFunction("g_game", "getProtocolVersion", &Game::getProtocolVersion, &g_game);
     g_lua.bindSingletonFunction("g_game", "setProtocolVersion", &Game::setProtocolVersion, &g_game);
+    g_lua.bindSingletonFunction("g_game", "getCustomProtocolVersion", &Game::getCustomProtocolVersion, &g_game);
+    g_lua.bindSingletonFunction("g_game", "setCustomProtocolVersion", &Game::setCustomProtocolVersion, &g_game);
     g_lua.bindSingletonFunction("g_game", "getClientVersion", &Game::getClientVersion, &g_game);
     g_lua.bindSingletonFunction("g_game", "setClientVersion", &Game::setClientVersion, &g_game);
     g_lua.bindSingletonFunction("g_game", "setCustomOs", &Game::setCustomOs, &g_game);
@@ -306,6 +308,10 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "openStore", &Game::openStore, &g_game);
     g_lua.bindSingletonFunction("g_game", "transferCoins", &Game::transferCoins, &g_game);
     g_lua.bindSingletonFunction("g_game", "openTransactionHistory", &Game::openTransactionHistory, &g_game);
+    /*
+    g_lua.bindSingletonFunction("g_game", "hasExtentedView", &Game::getWalkDelay, &g_game);    
+    g_lua.bindSingletonFunction("g_game", "setExtendedView", &Game::getWalkDelay, &g_game);    
+    */
 
     g_lua.registerSingletonClass("g_shaders");
     g_lua.bindSingletonFunction("g_shaders", "createShader", &ShaderManager::createShader, &g_shaders);

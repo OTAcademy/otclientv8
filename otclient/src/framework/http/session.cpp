@@ -12,6 +12,8 @@ void HttpSession::start() {
         return onError("Invalid url", m_url);
     }
 
+    m_domain = parsedUrl.domain;
+
     m_timer.expires_after(std::chrono::seconds(m_timeout));
     m_timer.async_wait(std::bind(&HttpSession::onTimeout, shared_from_this(), std::placeholders::_1));
 
@@ -27,14 +29,13 @@ void HttpSession::start() {
         m_request.content_length(m_result->postData.size());
     }
 
-    boost::asio::ip::tcp::resolver::query query(parsedUrl.domain, "http");
+    boost::asio::ip::tcp::resolver::query query(parsedUrl.domain, parsedUrl.protocol);
     m_resolver.async_resolve(query, std::bind(&HttpSession::on_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void HttpSession::on_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator iterator) {
     if (ec)
         return onError("resolve error", ec.message());
-
     m_socket.async_connect(*iterator, std::bind(&HttpSession::on_connect, shared_from_this(), std::placeholders::_1));
 }
 
@@ -44,9 +45,17 @@ void HttpSession::on_connect(const boost::system::error_code& ec) {
 
     if (m_url.find("https") == 0)
     {
-        boost::asio::ssl::context ctx{ boost::asio::ssl::context::tlsv12 };
-        m_ssl = std::make_unique<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>>(m_socket, ctx);
-        m_ssl->set_verify_mode(boost::asio::ssl::verify_none);
+        //m_context.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::tlsv12_client);
+        m_ssl = std::make_unique<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>>(m_socket, m_context);
+        m_ssl->set_verify_mode(boost::asio::ssl::verify_peer);
+        m_ssl->set_verify_callback([](bool, boost::asio::ssl::verify_context&) { return true; });         
+
+        if(! SSL_set_tlsext_host_name(m_ssl->native_handle(), m_domain.c_str()))
+        {
+            boost::beast::error_code ec2(static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category());
+            return onError("HTTPS error", ec2.message());
+        }
+
         auto self(shared_from_this());
         m_ssl->async_handshake(boost::asio::ssl::stream_base::client, [&, self] (const boost::system::error_code& ec) {
             if (ec)
@@ -66,6 +75,8 @@ void HttpSession::on_connect(const boost::system::error_code& ec) {
 void HttpSession::on_request_sent(const boost::system::error_code& ec) {
     if (ec)
         return onError("request sending error", ec.message());
+    if(m_result->canceled)
+        return onError("canceled");
 
     m_response.body_limit(512 * 1024 * 1024);
     m_response.header_limit(4 * 1024 * 1024);
@@ -84,6 +95,8 @@ void HttpSession::on_request_sent(const boost::system::error_code& ec) {
 void HttpSession::on_read_header(const boost::system::error_code& ec, size_t bytes_transferred) {
     if (ec)
         return onError("read header error", ec.message());
+    if(m_result->canceled)
+        return onError("canceled", ec.message());
 
     auto msg = m_response.get();
     m_result->status = msg.result_int();
@@ -115,6 +128,8 @@ void HttpSession::on_read_header(const boost::system::error_code& ec, size_t byt
 }
 
 void HttpSession::on_read(const boost::system::error_code& ec, size_t bytes_transferred) {
+    if(m_result->canceled)
+        return onError("canceled", ec.message());
     if (ec && ec != boost::beast::http::error::end_of_stream)
         return onError("read error", ec.message());
     else if (ec == boost::beast::http::error::end_of_stream || m_response.is_done()) {

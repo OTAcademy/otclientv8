@@ -333,7 +333,8 @@ class Game
 		void playerMoveItem(Player* player, const Position& fromPos,
 		                    uint16_t spriteId, uint8_t fromStackPos, const Position& toPos, uint8_t count, Item* item, Cylinder* toCylinder);
 		void playerEquipItem(uint32_t playerId, uint16_t spriteId);
-		void playerMove(uint32_t playerId, Direction direction, Position localPlayerPos);
+		void playerMove(uint32_t playerId, Direction direction);
+        void playerNewWalk(uint32_t playerId, uint32_t walkId, Position pos, std::forward_list<Direction> listDir, bool autoWalk);
 		void playerCreatePrivateChannel(uint32_t playerId);
 		void playerChannelInvite(uint32_t playerId, const std::string& name);
 		void playerChannelExclude(uint32_t playerId, const std::string& name);

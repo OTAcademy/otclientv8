@@ -1,8 +1,7 @@
 Panel
   OptionCheckBox
-    id: vsync
-    !text: tr('Enable vertical synchronization')
-    !tooltip: tr('Limits FPS to 60')
+    id: classicView
+    !text: tr('Classic view')
 
   OptionCheckBox
     id: showFps
@@ -17,10 +16,31 @@ Panel
     !text: tr('Fullscreen')
     tooltip: Ctrl+Shift+F
 
-  OptionCheckBox
-    id: dontStretchShrink
-    !text: tr('Don\'t stretch/shrink Game Window')
-
+  Label
+    margin-top: 12
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    id: optimizationLevelLabel
+    !text: tr("Optimization level")
+    
+  ComboBox
+    id: optimizationLevel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    margin-right: 2
+    margin-left: 2
+    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onSetup: |
+      self:addOption("Automatic")
+      self:addOption("None")
+      self:addOption("Low")
+      self:addOption("Medium")
+      self:addOption("High")
+      self:addOption("Maximum")
+      
   Label
     id: backgroundFrameRateLabel
     !text: tr('Game framerate limit: %s', 'max')
@@ -45,30 +65,6 @@ Panel
     margin-top: 3
     minimum: 10
     maximum: 201
-
-  Label
-    id: foregroundFrameRateLabel
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 6
-    @onSetup: |
-      local value = modules.client_options.getOption('foregroundFrameRate')
-      local text = value
-      if value <= 0 or value >= 61 then
-        text = 'max'
-      end
-
-      self:setText(tr('Interface framerate limit: %s', text))
-
-  OptionScrollbar
-    id: foregroundFrameRate
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 3
-    minimum: 1
-    maximum: 61
 
   Label
     id: ambientLightLabel

@@ -1,30 +1,45 @@
 #ifndef ADAPTIVERENDERER_H
 #define ADAPTIVERENDERER_H
 
+#include <list>
+
 constexpr int RenderSpeeds = 5;
 
 class AdaptiveRenderer {
 public:
-    void updateLastRenderTime(size_t microseconds);
-    int effetsLimit() const;
+    void newFrame();
 
-    int creaturesLimit() const;
+    void refresh();
 
-    int itemsLimit() const;
+    int effetsLimit();
 
-    bool ignoreLight() const;
+    int creaturesLimit();
 
-    int getLevel() const {
-        return speed;
+    int itemsLimit();
+
+    int mapViewDelay();
+
+    int getLevel() {
+        return m_speed;
     }
 
-    int getAvg() const {
-        return avg;
+    int getFps() {
+        return m_frames.size() / 5;
+    }
+
+    int foregroundUpdateInterval();
+
+    std::string getDebugInfo();
+
+    void setForcedLevel(int value) {
+        m_forcedSpeed = value;
     }
 
 private:
-    int speed = 0;
-    int avg = 0; 
+    int m_forcedSpeed = -1;
+    int m_speed = 0;
+    time_t m_update = 0;
+    std::list<time_t> m_frames;
 };
 
 extern AdaptiveRenderer g_adaptiveRenderer;

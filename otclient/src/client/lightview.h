@@ -41,7 +41,8 @@ public:
 
     void reset();
     void setGlobalLight(const Light& light);
-    void addLightSource(const Point& center, float scaleFactor, const Light& light);
+    void addLightSource(const Point& center, float scaleFactor, const Light& light, bool player = false);
+
     void resize(const Size& size);
     void draw(const Rect& dest, const Rect& src);
 
@@ -57,6 +58,7 @@ private:
     FrameBufferPtr m_lightbuffer;
     Light m_globalLight;
     std::vector<LightSource> m_lightMap;
+    std::shared_ptr<LightSource> m_playerLight;
 };
 
 #endif

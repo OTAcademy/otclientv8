@@ -220,7 +220,7 @@ function checkCreatures()
     end
   end
   
-  local following = g_game.getAttackingCreature()
+  local following = g_game.getFollowingCreature()
   local attacking = g_game.getAttackingCreature()
   
   -- sorting

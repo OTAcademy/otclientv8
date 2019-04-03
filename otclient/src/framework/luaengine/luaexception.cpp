@@ -25,7 +25,7 @@
 
 LuaException::LuaException(const std::string& error, int traceLevel)
 {
-    g_lua.clearStack(); // on every exception, clear lua stack
+    //g_lua.clearStack(); // on every exception, clear lua stack
     generateLuaErrorMessage(error, traceLevel);
 }
 

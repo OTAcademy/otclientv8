@@ -22,7 +22,8 @@
 
 #include "event.h"
 
-Event::Event(const std::function<void()>& callback) :
+Event::Event(const std::string& function, const std::function<void()>& callback) :
+    m_function(function),
     m_callback(callback),
     m_canceled(false),
     m_executed(false)

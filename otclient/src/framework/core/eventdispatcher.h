@@ -35,9 +35,9 @@ public:
     void shutdown();
     void poll();
 
-    EventPtr addEvent(const std::function<void()>& callback, bool pushFront = false);
-    ScheduledEventPtr scheduleEvent(const std::function<void()>& callback, int delay);
-    ScheduledEventPtr cycleEvent(const std::function<void()>& callback, int delay);
+    EventPtr addEventEx(const std::string& function, const std::function<void()>& callback, bool pushFront = false);
+    ScheduledEventPtr scheduleEventEx(const std::string& function, const std::function<void()>& callback, int delay);
+    ScheduledEventPtr cycleEventEx(const std::string& function, const std::function<void()>& callback, int delay);
 
 private:
     std::list<EventPtr> m_eventList;
@@ -47,5 +47,9 @@ private:
 };
 
 extern EventDispatcher g_dispatcher;
+
+#define addEvent(...) addEventEx(__FUNCTION__, __VA_ARGS__)
+#define scheduleEvent(...) scheduleEventEx(__FUNCTION__, __VA_ARGS__)
+#define cycleEvent(...) cycleEventEx(__FUNCTION__, __VA_ARGS__)
 
 #endif

@@ -68,7 +68,7 @@ function init()
   connect(g_app, { onRun = startup,
                    onExit = exit })
 
-  g_window.setMinimumSize({ width = 600, height = 480 })
+  g_window.setMinimumSize({ width = 800, height = 480 })
   if g_sounds ~= nil then
     --g_sounds.preload(musicFilename)
   end

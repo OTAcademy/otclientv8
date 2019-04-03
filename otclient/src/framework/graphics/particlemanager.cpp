@@ -23,6 +23,7 @@
 #include "particlemanager.h"
 #include <framework/core/resourcemanager.h>
 #include <framework/otml/otml.h>
+#include <framework/util/stats.h>
 
 ParticleManager g_particles;
 
@@ -73,6 +74,7 @@ void ParticleManager::terminate()
 
 void ParticleManager::poll()
 {
+    AutoStat s(STATS_MAIN, "PollParticles");
     for(auto it = m_effects.begin(); it != m_effects.end();) {
         const ParticleEffectPtr& particleEffect = *it;
 

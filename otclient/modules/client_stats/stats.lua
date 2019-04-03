@@ -16,15 +16,15 @@ function initUUID()
 end
 
 function init()
-  connect(g_game, { onGameStart = onGameStart,
-                    onGameEnd = onGameEnd })
+--  connect(g_game, { onGameStart = onGameStart,
+--                    onGameEnd = onGameEnd })
 
   initUUID()
 end
 
 function terminate()
-  disconnect(g_game, { onGameStart = onGameStart,
-                       onGameEnd = onGameEnd })
+--  disconnect(g_game, { onGameStart = onGameStart,
+--                       onGameEnd = onGameEnd })
   removeEvent(firstReportEvent)
   removeEvent(sendReportEvent)
 end
@@ -63,7 +63,7 @@ function onConnect(protocol)
     protocol:disconnect()
     return
   end
-
+  --[[
   local post = ''
   post = post .. 'uid='                .. UUID
   post = post .. '&report_delay='      .. REPORT_DELAY
@@ -104,20 +104,5 @@ function onConnect(protocol)
   message = message .. post
 
   protocol:send(message)
-  protocol:recv()
-end
-
-function getAdditionalData()
-  return ''
-end
-
-function onRecv(protocol, message)
-  if string.find(message, 'HTTP/1.1 200 OK') then
-    --pinfo('Stats sent to server successfully!')
-  end
-  protocol:disconnect()
-end
-
-function onError(protocol, message, code)
-  pdebug('Could not send statistics: ' .. message)
+  protocol:recv() ]]--
 end

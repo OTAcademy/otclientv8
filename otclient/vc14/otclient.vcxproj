@@ -127,7 +127,7 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <MinimalRebuild>false</MinimalRebuild>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExceptionHandling>Async</ExceptionHandling>
       <FloatingPointModel>Fast</FloatingPointModel>
       <SDLCheck>true</SDLCheck>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -139,6 +139,8 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -148,8 +150,7 @@
       <AdditionalDependencies>$(OTCLIENT_LIBDEPS)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <LinkStatus>false</LinkStatus>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -211,7 +212,6 @@
     <ClCompile Include="..\src\client\uiminimap.cpp" />
     <ClCompile Include="..\src\client\uiprogressrect.cpp" />
     <ClCompile Include="..\src\client\uisprite.cpp" />
-    <ClCompile Include="..\src\framework\core\adaptativeframecounter.cpp" />
     <ClCompile Include="..\src\framework\core\adaptiverenderer.cpp" />
     <ClCompile Include="..\src\framework\core\application.cpp" />
     <ClCompile Include="..\src\framework\core\asyncdispatcher.cpp" />
@@ -264,7 +264,6 @@
     <ClCompile Include="..\src\framework\luaengine\luaexception.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luainterface.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luaobject.cpp" />
-    <ClCompile Include="..\src\framework\luaengine\luastats.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luavaluecasts.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputDir)\$(IntDir)\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(InputDir)\$(IntDir)\</ObjectFileName>
@@ -367,7 +366,6 @@
     <ClInclude Include="..\src\client\uiprogressrect.h" />
     <ClInclude Include="..\src\client\uisprite.h" />
     <ClInclude Include="..\src\framework\const.h" />
-    <ClInclude Include="..\src\framework\core\adaptativeframecounter.h" />
     <ClInclude Include="..\src\framework\core\adaptiverenderer.h" />
     <ClInclude Include="..\src\framework\core\application.h" />
     <ClInclude Include="..\src\framework\core\asyncdispatcher.h" />
@@ -427,7 +425,6 @@
     <ClInclude Include="..\src\framework\luaengine\luaexception.h" />
     <ClInclude Include="..\src\framework\luaengine\luainterface.h" />
     <ClInclude Include="..\src\framework\luaengine\luaobject.h" />
-    <ClInclude Include="..\src\framework\luaengine\luastats.h" />
     <ClInclude Include="..\src\framework\luaengine\luavaluecasts.h" />
     <ClInclude Include="..\src\framework\net\connection.h" />
     <ClInclude Include="..\src\framework\net\declarations.h" />

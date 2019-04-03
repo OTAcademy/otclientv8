@@ -68,6 +68,9 @@ public:
     void setTexture(Texture *texture);
     void setAlphaWriting(bool enable);
 
+    void setNewShaderProgram() { m_shaderProgram = m_drawTexturedNewProgram.get(); }
+    bool isUsingNewShaderProgram() { return m_shaderProgram == m_drawTexturedNewProgram.get(); }
+
     void setTexture(const TexturePtr& texture) { setTexture(texture.get()); }
     void setResolution(const Size& resolution);
 
@@ -132,6 +135,7 @@ protected:
 private:
     PainterShaderProgram *m_drawProgram;
     PainterShaderProgramPtr m_drawTexturedProgram;
+    PainterShaderProgramPtr m_drawTexturedNewProgram;
     PainterShaderProgramPtr m_drawSolidColorProgram;
 };
 

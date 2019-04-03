@@ -30,7 +30,7 @@
 class ScheduledEvent : public Event
 {
 public:
-    ScheduledEvent(const std::function<void()>& callback, int delay, int maxCycles);
+    ScheduledEvent(const std::string& function, const std::function<void()>& callback, int delay, int maxCycles);
     void execute();
     bool nextCycle();
 

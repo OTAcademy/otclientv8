@@ -56,6 +56,12 @@ PainterOGL::PainterOGL()
     m_drawSolidColorProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslSolidColorFragmentShader);
     m_drawSolidColorProgram->link();
 
+    m_drawTexturedNewProgram = PainterShaderProgramPtr(new PainterShaderProgram);
+    assert(m_drawTexturedNewProgram);
+    m_drawTexturedNewProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsNewVertexShader + glslPositionOnlyNewVertexShader);
+    m_drawTexturedNewProgram->addShaderFromSourceCode(Shader::Fragment, glslMainNewFragmentShader + glslTextureSrcNewFragmentShader);
+    m_drawTexturedNewProgram->link();
+
     PainterShaderProgram::release();
 }
 
@@ -297,10 +303,7 @@ void PainterOGL::updateGlCompositionMode()
 {
     switch(m_compositionMode) {
         case CompositionMode_Normal:
-            if(g_graphics.canUseBlendFuncSeparate())
-                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-            else
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
             break;
         case CompositionMode_Multiply:
             glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
@@ -317,6 +320,15 @@ void PainterOGL::updateGlCompositionMode()
         case CompositionMode_Light:
             glBlendFunc(GL_ZERO, GL_SRC_COLOR);
             break;
+        case CompositionMode_AlphaZeroing:
+            glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
+            break;
+        case CompositionMode_AlphaRestoring:
+            glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
+            break;
+        case CompositionMode_ZeroAlphaOverrite:
+            glBlendFuncSeparate(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA, GL_ONE, GL_ONE);
+            break;
     }
 }
 
@@ -325,9 +337,11 @@ void PainterOGL::updateGlBlendEquation()
     if(!g_graphics.canUseBlendEquation())
         return;
     if(m_blendEquation == BlendEquation_Add)
-        glBlendEquation(0x8006); // GL_FUNC_ADD
+        glBlendEquation(GL_FUNC_ADD); // GL_FUNC_ADD
     else if(m_blendEquation == BlendEquation_Max)
-        glBlendEquation(0x8008); // GL_MAX
+        glBlendEquation(GL_MAX); // GL_MAX
+    else if(m_blendEquation == BlendEquation_Subtract)
+        glBlendEquation(GL_FUNC_SUBTRACT); // GL_MAX
 }
 
 void PainterOGL::updateGlClipRect()

@@ -23,6 +23,7 @@
 #include "eventdispatcher.h"
 
 #include <framework/core/clock.h>
+#include <framework/util/stats.h>
 #include "timer.h"
 
 EventDispatcher g_dispatcher;
@@ -42,13 +43,18 @@ void EventDispatcher::shutdown()
 
 void EventDispatcher::poll()
 {
+    AutoStat s(STATS_MAIN, "PollDispatcher");
+
     int loops = 0;
     for(int count = 0, max = m_scheduledEventList.size(); count < max && !m_scheduledEventList.empty(); ++count) {
         ScheduledEventPtr scheduledEvent = m_scheduledEventList.top();
         if(scheduledEvent->remainingTicks() > 0)
             break;
         m_scheduledEventList.pop();
-        scheduledEvent->execute();
+        {
+            AutoStat s2(STATS_DISPATCHER, scheduledEvent->getFunction());
+            scheduledEvent->execute();
+        }
 
         if(scheduledEvent->nextCycle())
             m_scheduledEventList.push(scheduledEvent);
@@ -71,7 +77,10 @@ void EventDispatcher::poll()
         for(int i=0;i<m_pollEventsSize;++i) {
             EventPtr event = m_eventList.front();
             m_eventList.pop_front();
-            event->execute();
+            {
+                AutoStat s2(STATS_DISPATCHER, event->getFunction());
+                event->execute();
+            }
         }
         m_pollEventsSize = m_eventList.size();
         
@@ -79,34 +88,34 @@ void EventDispatcher::poll()
     }
 }
 
-ScheduledEventPtr EventDispatcher::scheduleEvent(const std::function<void()>& callback, int delay)
+ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
 {
     if(m_disabled)
-        return ScheduledEventPtr(new ScheduledEvent(nullptr, delay, 1));
+        return ScheduledEventPtr(new ScheduledEvent("", nullptr, delay, 1));
 
     assert(delay >= 0);
-    ScheduledEventPtr scheduledEvent(new ScheduledEvent(callback, delay, 1));
+    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 1));
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
 }
 
-ScheduledEventPtr EventDispatcher::cycleEvent(const std::function<void()>& callback, int delay)
+ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
 {
     if(m_disabled)
-        return ScheduledEventPtr(new ScheduledEvent(nullptr, delay, 0));
+        return ScheduledEventPtr(new ScheduledEvent("", nullptr, delay, 0));
 
     assert(delay > 0);
-    ScheduledEventPtr scheduledEvent(new ScheduledEvent(callback, delay, 0));
+    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 0));
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
 }
 
-EventPtr EventDispatcher::addEvent(const std::function<void()>& callback, bool pushFront)
+EventPtr EventDispatcher::addEventEx(const std::string& function, const std::function<void()>& callback, bool pushFront)
 {
     if(m_disabled)
-        return EventPtr(new Event(nullptr));
+        return EventPtr(new Event("", nullptr));
 
-    EventPtr event(new Event(callback));
+    EventPtr event(new Event(function, callback));
     // front pushing is a way to execute an event before others
     if(pushFront) {
         m_eventList.push_front(event);

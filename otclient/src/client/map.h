@@ -130,7 +130,6 @@ struct AwareRange
     int right;
     int bottom;
     int left;
-    int extra = 0;
 
     int horizontal() { return left + right + 1; }
     int vertical() { return top + bottom + 1; }
@@ -175,7 +174,7 @@ public:
 
     // thing related
     void addThing(const ThingPtr& thing, const Position& pos, int stackPos = -1);
-    void setTileSpeed(const Position & pos, uint16_t speed);
+    void setTileSpeed(const Position & pos, uint16_t speed, uint8_t blocking);
     ThingPtr getThing(const Position& pos, int stackPos);
     bool removeThing(const ThingPtr& thing);
     bool removeThingByPos(const Position& pos, int stackPos);

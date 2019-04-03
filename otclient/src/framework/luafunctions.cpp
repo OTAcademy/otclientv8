@@ -21,8 +21,8 @@
  */
 
 #include <framework/core/application.h>
+#include <framework/core/adaptiverenderer.h>
 #include <framework/luaengine/luainterface.h>
-#include <framework/luaengine/luastats.h>
 #include <framework/core/eventdispatcher.h>
 #include <framework/core/configmanager.h>
 #include <framework/core/config.h>
@@ -164,24 +164,23 @@ void Application::registerLuaFunctions()
 
     // Lua stats
     g_lua.registerSingletonClass("g_stats");
-    g_lua.bindSingletonFunction("g_stats", "get", &LuaStats::getAsString, &g_luaStats);
-    g_lua.bindSingletonFunction("g_stats", "getCallback", &LuaStats::getCallbackAsString, &g_luaStats);
-    g_lua.bindSingletonFunction("g_stats", "clear", &LuaStats::clear, &g_luaStats);
-    g_lua.bindSingletonFunction("g_stats", "special", &Stats::getSpecial, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "types", &Stats::types, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "get", &Stats::get, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "clear", &Stats::clear, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "getSlow", &Stats::getSlow, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "clearSlow", &Stats::clearSlow, &g_stats);
 
     g_lua.registerSingletonClass("g_extras");
     g_lua.bindSingletonFunction("g_extras", "set", &Extras::set, &g_extras);
     g_lua.bindSingletonFunction("g_extras", "get", &Extras::get, &g_extras);
     g_lua.bindSingletonFunction("g_extras", "getDescription", &Extras::getDescription, &g_extras);
     g_lua.bindSingletonFunction("g_extras", "getAll", &Extras::getAll, &g_extras);
-    g_lua.bindSingletonFunction("g_extras", "setTestMode", &Extras::setTestMode, &g_extras);
-    g_lua.bindSingletonFunction("g_extras", "getTestMode", &Extras::getTestMode, &g_extras);
-    g_lua.bindSingletonFunction("g_extras", "getFrameRenderDebufInfo", &Extras::getFrameRenderDebufInfo, &g_extras);
 
     g_lua.registerSingletonClass("g_http");
     g_lua.bindSingletonFunction("g_http", "get", &Http::get, &g_http);
     g_lua.bindSingletonFunction("g_http", "post", &Http::post, &g_http);
     g_lua.bindSingletonFunction("g_http", "download", &Http::download, &g_http);
+    g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
     g_lua.bindSingletonFunction("g_http", "getProgress", &Http::getProgress, &g_http);
 
     // ModuleManager
@@ -197,9 +196,9 @@ void Application::registerLuaFunctions()
 
     // EventDispatcher
     g_lua.registerSingletonClass("g_dispatcher");
-    g_lua.bindSingletonFunction("g_dispatcher", "addEvent", &EventDispatcher::addEvent, &g_dispatcher);
-    g_lua.bindSingletonFunction("g_dispatcher", "scheduleEvent", &EventDispatcher::scheduleEvent, &g_dispatcher);
-    g_lua.bindSingletonFunction("g_dispatcher", "cycleEvent", &EventDispatcher::cycleEvent, &g_dispatcher);
+    g_lua.bindSingletonFunction("g_dispatcher", "addEvent", &EventDispatcher::addEventEx, &g_dispatcher);
+    g_lua.bindSingletonFunction("g_dispatcher", "scheduleEvent", &EventDispatcher::scheduleEventEx, &g_dispatcher);
+    g_lua.bindSingletonFunction("g_dispatcher", "cycleEvent", &EventDispatcher::cycleEventEx, &g_dispatcher);
 
     // ResourceManager
     g_lua.registerSingletonClass("g_resources");
@@ -274,15 +273,16 @@ void Application::registerLuaFunctions()
 
 #ifdef FW_GRAPHICS
     // GraphicalApplication
-    g_lua.bindSingletonFunction("g_app", "setForegroundPaneMaxFps", &GraphicalApplication::setForegroundPaneMaxFps, &g_app);
-    g_lua.bindSingletonFunction("g_app", "setBackgroundPaneMaxFps", &GraphicalApplication::setBackgroundPaneMaxFps, &g_app);
+    g_lua.bindSingletonFunction("g_app", "setMaxFps", &GraphicalApplication::setMaxFps, &g_app);
+    g_lua.bindSingletonFunction("g_app", "getMaxFps", &GraphicalApplication::getMaxFps, &g_app);
+    g_lua.bindSingletonFunction("g_app", "getFps", &GraphicalApplication::getFps, &g_app);
     g_lua.bindSingletonFunction("g_app", "isOnInputEvent", &GraphicalApplication::isOnInputEvent, &g_app);
-    g_lua.bindSingletonFunction("g_app", "getForegroundPaneFps", &GraphicalApplication::getForegroundPaneFps, &g_app);
-    g_lua.bindSingletonFunction("g_app", "getBackgroundPaneFps", &GraphicalApplication::getBackgroundPaneFps, &g_app);
-    g_lua.bindSingletonFunction("g_app", "getForegroundPaneMaxFps", &GraphicalApplication::getForegroundPaneMaxFps, &g_app);
-    g_lua.bindSingletonFunction("g_app", "getBackgroundPaneMaxFps", &GraphicalApplication::getBackgroundPaneMaxFps, &g_app);
-    g_lua.bindSingletonFunction("g_app", "getAdaptiveRendererLevel", &GraphicalApplication::getAdaptiveRendererLevel, &g_app);
-    g_lua.bindSingletonFunction("g_app", "getAdaptiveRendererAvg", &GraphicalApplication::getAdaptiveRendererAvg, &g_app);
+
+    // AdaptiveRenderer
+    g_lua.registerSingletonClass("g_adaptiveRenderer");
+    g_lua.bindSingletonFunction("g_adaptiveRenderer", "getLevel", &AdaptiveRenderer::getLevel, &g_adaptiveRenderer);
+    g_lua.bindSingletonFunction("g_adaptiveRenderer", "setLevel", &AdaptiveRenderer::setForcedLevel, &g_adaptiveRenderer);
+    g_lua.bindSingletonFunction("g_adaptiveRenderer", "getDebugInfo", &AdaptiveRenderer::getDebugInfo, &g_adaptiveRenderer);
 
     // PlatformWindow
     g_lua.registerSingletonClass("g_window");
@@ -603,6 +603,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("getOpacity", &UIWidget::getOpacity);
     g_lua.bindClassMemberFunction<UIWidget>("getRotation", &UIWidget::getRotation);
     g_lua.bindClassMemberFunction<UIWidget>("setImageSource", &UIWidget::setImageSource);
+    g_lua.bindClassMemberFunction<UIWidget>("setImageSourceBase64", &UIWidget::setImageSourceBase64);
     g_lua.bindClassMemberFunction<UIWidget>("setImageClip", &UIWidget::setImageClip);
     g_lua.bindClassMemberFunction<UIWidget>("setImageOffsetX", &UIWidget::setImageOffsetX);
     g_lua.bindClassMemberFunction<UIWidget>("setImageOffsetY", &UIWidget::setImageOffsetY);

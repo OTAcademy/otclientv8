@@ -1,4 +1,5 @@
 #include <framework/core/logger.h>
+#include <framework/core/graphicalapplication.h>
 #include <framework/stdext/format.h>
 #include <framework/util/extras.h>
 
@@ -6,43 +7,64 @@
 
 AdaptiveRenderer g_adaptiveRenderer;
 
-void AdaptiveRenderer::updateLastRenderTime(size_t microseconds) {
-    if (!g_extras.adaptiveRendering) {
-        speed = 0;
+void AdaptiveRenderer::newFrame() {
+    auto now = stdext::millis();
+    m_frames.push_back(now);
+    while (m_frames.front() + 5000 < now)
+        m_frames.pop_front();
+
+    if (m_forcedSpeed >= 0 && m_forcedSpeed <= 4) {
+        m_speed = m_forcedSpeed;
         return;
     }
 
-    avg = (microseconds + avg * 59) / 60;
+    if (m_update + 5000 > now)
+        return;
+    m_update = stdext::millis();
 
-    if (speed == RenderSpeeds - 1) {
-        // nothing to be done
-    } else if (microseconds > 30000) {
-        speed = min(speed + 1, RenderSpeeds - 1);
-    } else if (avg > 12000) { // >12ms for frame
-        speed = min(speed + 1, RenderSpeeds - 1);
+    if (m_speed < 1)
+        m_speed = 1;
+
+    int maxFps = std::min<int>(100, std::max<int>(10, g_app.getMaxFps() < 10 ? 100 : g_app.getMaxFps()));
+    if (m_frames.size() < maxFps * (4.0f - m_speed * 0.3f) && m_speed != RenderSpeeds - 1) {
+        m_speed += 1;
     }
-
-    if (avg < 8000 && speed != 0) { // <8ms for frame
-        avg += 4000;
-        speed -= 1;
+    if (m_frames.size() > maxFps * (4.5f - m_speed * 0.1f) && m_speed > 1) {
+        m_speed -= 1;
     }
 }
 
-int AdaptiveRenderer::effetsLimit() const {
-    static int limits[RenderSpeeds] = { 20, 10, 5, 3, 1 };
-    return limits[speed];
+void AdaptiveRenderer::refresh() {
+    m_update = stdext::millis();
 }
 
-int AdaptiveRenderer::creaturesLimit() const {
-    static int limits[RenderSpeeds] = { 20, 10, 7, 4, 2 };
-    return limits[speed];
+int AdaptiveRenderer::effetsLimit() {
+    static int limits[RenderSpeeds] = { 20, 10, 5, 3, 2 };
+    return limits[m_speed];
 }
 
-int AdaptiveRenderer::itemsLimit() const {
-    static int limits[RenderSpeeds] = { 20, 10, 7, 4, 2 };
-    return limits[speed];
+int AdaptiveRenderer::creaturesLimit() {
+    static int limits[RenderSpeeds] = { 20, 10, 7, 5, 3 };
+    return limits[m_speed];
 }
 
-bool AdaptiveRenderer::ignoreLight() const {
-    return speed >= 3;
+int AdaptiveRenderer::itemsLimit() {
+    static int limits[RenderSpeeds] = { 20, 10, 7, 5, 3 };
+    return limits[m_speed];
+}
+
+int AdaptiveRenderer::mapViewDelay() {
+    static int limits[RenderSpeeds] = { 0, 10, 15, 20, 30 };
+    return limits[m_speed];
+}
+
+int AdaptiveRenderer::foregroundUpdateInterval() {
+    static int limits[RenderSpeeds] = { 10, 30, 40, 50, 60 };
+    return limits[m_speed];
+}
+
+std::string AdaptiveRenderer::getDebugInfo() {
+    std::stringstream ss;
+    ss << "Frames: " << m_frames.size();
+    return ss.str();
 }

@@ -34,7 +34,9 @@ local checksumIter = 0
 local downloadIter = 0
 local aborted = false
 local statusData = nil
+local thingsUpdate = {}
 local toUpdate = {}
+
 
 local function onGet(operationId, url, err, data)
   if aborted then
@@ -58,11 +60,12 @@ local function onDownload(operationId, url, err, path, checksum)
   end
 end
 
-local function onDownloadProgress(operationId, url, progress)  
+local function onDownloadProgress(operationId, url, progress, speed)  
   if aborted then
     return
   end
   if downloadId == operationId then
+    print("Download speed: " .. (speed / 128) .. " kbps")
     downloadProgressBar:setPercent(progress)
   end
 end
@@ -79,10 +82,6 @@ function Updater.init()
   downloadStatusLabel = updatePanel:getChildById('downloadStatusLabel')
   downloadProgressBar = updatePanel:getChildById('downloadProgressBar')
   
-  progressBar:setPercent(0)
-  updateProgressBar:setPercent(0)
-  downloadProgressBar:setPercent(0)
-
   updatePanel:hide()
   
   scheduleEvent(Updater.show, 50)
@@ -111,12 +110,34 @@ function Updater.terminate()
   end  
 end
 
+local function clear()
+  if generateChecksumsEvent ~= nil then
+	  removeEvent(generateChecksumsEvent)
+	  generateChecksumsEvent = nil
+  end  
+  updateableFiles = nil
+  binaryChecksum = nil
+  binaryFile = ""
+  fileChecksums = {}
+  checksumIter = 0
+  downloadIter = 0
+  aborted = false
+  statusData = nil
+  toUpdate = {}  
+  progressBar:setPercent(0)
+  updateProgressBar:setPercent(0)
+  downloadProgressBar:setPercent(0)
+end
+
 function Updater.show()
-  if not g_resources.isLoadedFromArchive() or StaticConfig.updater == nil or StaticConfig.updater:len() < 4 then
+  if not g_resources.isLoadedFromArchive() or Services.updater == nil or Services.updater:len() < 4 then
     Updater.hide()
     return EnterGame.firstShow()
   end
   updaterWindow:show()
+  
+  clear()
+  
   updateableFiles = g_resources.listUpdateableFiles()
   if #updateableFiles < 1 then
     return updateError("Can't get list of files")
@@ -125,10 +146,16 @@ function Updater.show()
   if binaryChecksum:len() ~= 32 then
     return updateError("Invalid binary checksum: " .. binaryChecksum)  
   end
-  getStatusId = g_http.get(StaticConfig.updater)  
+  
+  getStatusId = g_http.get(Services.updater)  
   if generateChecksumsEvent == nil then
 	  generateChecksumsEvent = scheduleEvent(generateChecksum, 5)
   end
+end
+
+function Updater.updateThings(things)
+  thingsUpdate = things
+  Updater:show()
 end
 
 function Updater.hide()
@@ -174,6 +201,16 @@ function gotStatus(data, err)
   statusData = result
   if statusData["url"] == nil or statusData["files"] == nil or statusData["binary"] == nil then
     return updateError("Invalid json data from server:\n" .. data)    
+  end  
+  if statusData["things"] ~= nil then
+    for file, checksum in pairs(statusData["things"]) do
+      for thingtype, thingdata in pairs(thingsUpdate) do
+        if string.match(file:lower(), thingdata[1]:lower()) then
+          statusData["files"][file] = checksum
+          break
+        end
+      end    
+    end
   end  
   if checksumIter == 100 then
     compareChecksums()

@@ -135,6 +135,8 @@ private:
                      (m_virtualCenterOffset.y + (position.y - relativePosition.y) - (relativePosition.z - position.z)) * m_tileSize);
     }
 
+    int m_lastRender = 0;
+
     int m_lockedFirstVisibleFloor;
     int m_cachedFirstVisibleFloor;
     int m_cachedLastVisibleFloor;
@@ -165,6 +167,7 @@ private:
     std::vector<CreaturePtr> m_cachedFloorVisibleCreatures;
     CreaturePtr m_followingCreature;
     FrameBufferPtr m_framebuffer;
+    FrameBufferPtr m_outfitBuffer;
     PainterShaderProgramPtr m_shader;
     ViewMode m_viewMode;
     Otc::DrawFlags m_drawFlags;

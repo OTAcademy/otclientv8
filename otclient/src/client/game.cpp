@@ -50,7 +50,7 @@ Game::Game()
     m_seq = 0;
     m_ping = -1;
     m_pingDelay = 1000;
-    m_newPingDelay = 100;
+    m_newPingDelay = 200;
     m_canReportBugs = false;
     m_fightMode = Otc::FightBalanced;
     m_chaseMode = Otc::DontChase;
@@ -87,6 +87,7 @@ void Game::resetGameStates()
     m_localPlayer = nullptr;
     m_pingSent = 0;
     m_pingReceived = 0;
+    m_walkId = 0;
     m_newPingIds.clear();
     m_unjustifiedPoints = UnjustifiedPoints();
 
@@ -200,15 +201,15 @@ void Game::processGameStart()
     g_lua.callGlobalField("g_game", "onGameStart");
     disableBotCall();
 
-    if(g_game.getFeature(Otc::GameClientPing) || g_game.getFeature(Otc::GameExtendedClientPing)) {
-        m_pingEvent = g_dispatcher.scheduleEvent([this] {
-            g_game.ping();
-        }, m_pingDelay);
-    }
-    if (g_extras.newPing) {
+    if (g_game.getFeature(Otc::GameExtendedClientPing)) {
         m_newPingEvent = g_dispatcher.scheduleEvent([this] {
             g_game.newPing();
         }, m_newPingDelay);
+    }
+    if(g_game.getFeature(Otc::GameClientPing)) {
+        m_pingEvent = g_dispatcher.scheduleEvent([this] {
+            g_game.ping();
+        }, m_pingDelay);
     }
 
     m_checkConnectionEvent = g_dispatcher.cycleEvent([this] {
@@ -286,7 +287,7 @@ void Game::processPingBack()
 {
     m_pingReceived++;
 
-    if (!g_extras.newPing) {
+    if (!g_game.getFeature(Otc::GameExtendedClientPing)) {
         if (m_pingReceived == m_pingSent)
             m_ping = m_pingTimer.elapsed_millis();
         else
@@ -550,9 +551,15 @@ void Game::processAttackCancel(uint seq)
         cancelAttack();
 }
 
-void Game::processWalkCancel(Otc::Direction direction, const Position& pos, uint8_t stackpos)
+void Game::processWalkCancel(Otc::Direction direction)
 {
-    m_localPlayer->cancelWalk(direction, pos, stackpos);
+    m_localPlayer->cancelWalk(direction);
+}
+
+void Game::processNewWalkCancel(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir) 
+{
+    m_walkId = walkId;
+    m_localPlayer->cancelNewWalk(walkId, pos, stackpos, dir);
 }
 
 void Game::loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey)
@@ -612,38 +619,54 @@ bool Game::walk(Otc::Direction direction)
 
     // must cancel auto walking, and wait next try
     if(m_localPlayer->isAutoWalking() || m_localPlayer->isServerWalking()) {
+        if (m_localPlayer->isWalkLocked() && !m_localPlayer->isServerWalking())
+            return false;
+
         m_protocolGame->sendStop();
         if(m_localPlayer->isAutoWalking())
             m_localPlayer->stopAutoWalk();
         return false;
     }
 
+    if (m_localPlayer->isWalkLocked()) {
+        return false;
+    }
 
     // check we can walk and add new walk event if false
     if(!m_localPlayer->canWalk(direction)) {
-        if(m_lastWalkDir != direction) {
+        if(m_lastWalkDir != direction || !m_waitingForAnotherDir) {
             // must add a new walk event
             float ticks = m_localPlayer->getStepTicksLeft();
+            
+            if (m_lastWalkDir == direction && ticks >= 100)
+                return false;
+
+            m_waitingForAnotherDir = true;
+
             if(ticks <= 0) { ticks = 1; }
 
-            if(m_walkEvent) {
+            if (m_walkEvent) {
                 m_walkEvent->cancel();
                 m_walkEvent = nullptr;
             }
-            m_walkEvent = g_dispatcher.scheduleEvent([=] { walk(direction); }, ticks);
+            m_walkEvent = g_dispatcher.scheduleEvent([=] { walk(direction); }, ticks + 1);
         }
         return false;
     }
 
+    m_waitingForAnotherDir = false;
 
     Position toPos = m_localPlayer->getNewPreWalkingPosition(true).translatedToDirection(direction);
     TilePtr toTile = g_map.getTile(toPos);
     // only do prewalks to walkable tiles (like grounds and not walls)
-    if(toTile && toTile->isWalkable()) {
-        if(g_extras.newWalking)
+    bool preWalked = false;
+    if (toTile && toTile->isWalkable()) {
+        if (getFeature(Otc::GameNewWalking)) {
             m_localPlayer->newPreWalk(direction);
-        else
+            preWalked = true;
+        } else {
             m_localPlayer->preWalk(direction);
+        }
         // check walk to another floor (e.g: when above 3 parcels)
     } else {
         // check if can walk to a lower floor
@@ -688,13 +711,13 @@ bool Game::walk(Otc::Direction direction)
 
     g_lua.callGlobalField("g_game", "onWalk", direction);
 
-    forceWalk(direction);
+    forceWalk(direction, preWalked);
 
     m_lastWalkDir = direction;
     return true;
 }
 
-void Game::autoWalk(std::vector<Otc::Direction> dirs)
+void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
 {
     if(!canPerformGameAction())
         return;
@@ -714,58 +737,72 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs)
 
     auto it = dirs.begin();
     Otc::Direction direction = *it;
-    if(!m_localPlayer->canWalk(direction) && !g_extras.newAutoWalking)
+    if(!m_localPlayer->canWalk(direction) && !getFeature(Otc::GameNewWalking))
         return;
+
+    if (m_walkEvent) {
+        m_walkEvent->cancel();
+        m_walkEvent = nullptr;
+    }
 
     TilePtr toTile = g_map.getTile(m_localPlayer->getNewPreWalkingPosition(true).translatedToDirection(direction));
     if(toTile && toTile->isWalkable() && !m_localPlayer->isServerWalking()) {
-        if (g_extras.newWalking)
-            m_localPlayer->newPreWalk(direction);
-        else
+        if (getFeature(Otc::GameNewWalking)) {
+            if(m_localPlayer->canWalk(direction))
+                m_localPlayer->newPreWalk(direction);
+        } else {
             m_localPlayer->preWalk(direction);
 
-        if(getFeature(Otc::GameForceFirstAutoWalkStep) && !g_extras.newAutoWalking) {
-            forceWalk(direction);
-            dirs.erase(it);
+            if (getFeature(Otc::GameForceFirstAutoWalkStep)) {
+                forceWalk(direction, false);
+                dirs.erase(it);
+            }
         }
     }
 
     g_lua.callGlobalField("g_game", "onAutoWalk", dirs);
 
-    m_protocolGame->sendAutoWalk(dirs);
+    if (g_game.getFeature(Otc::GameNewWalking))
+        m_protocolGame->sendNewWalk(m_walkId, startPos, dirs, true);
+    else
+        m_protocolGame->sendAutoWalk(dirs);
 }
 
-void Game::forceWalk(Otc::Direction direction)
+void Game::forceWalk(Otc::Direction direction, bool withPreWalk)
 {
     if(!canPerformGameAction())
         return;
 
-    auto pos = m_localPlayer->getNewPreWalkingPosition();
+    if (g_game.getFeature(Otc::GameNewWalking)) {
+        m_protocolGame->sendNewWalk(m_walkId, withPreWalk ? m_localPlayer->getNewPreWalkingPosition() : Position(0,0,0), { direction }, false);
+        g_lua.callGlobalField("g_game", "onForceWalk", direction);
+        return;
+    }
 
     switch(direction) {
     case Otc::North:
-        m_protocolGame->sendWalkNorth(pos);
+        m_protocolGame->sendWalkNorth();
         break;
     case Otc::East:
-        m_protocolGame->sendWalkEast(pos);
+        m_protocolGame->sendWalkEast();
         break;
     case Otc::South:
-        m_protocolGame->sendWalkSouth(pos);
+        m_protocolGame->sendWalkSouth();
         break;
     case Otc::West:
-        m_protocolGame->sendWalkWest(pos);
+        m_protocolGame->sendWalkWest();
         break;
     case Otc::NorthEast:
-        m_protocolGame->sendWalkNorthEast(pos);
+        m_protocolGame->sendWalkNorthEast();
         break;
     case Otc::SouthEast:
-        m_protocolGame->sendWalkSouthEast(pos);
+        m_protocolGame->sendWalkSouthEast();
         break;
     case Otc::SouthWest:
-        m_protocolGame->sendWalkSouthWest(pos);
+        m_protocolGame->sendWalkSouthWest();
         break;
     case Otc::NorthWest:
-        m_protocolGame->sendWalkNorthWest(pos);
+        m_protocolGame->sendWalkNorthWest();
         break;
     default:
         break;
@@ -806,6 +843,13 @@ void Game::stop()
         cancelFollow();
 
     m_protocolGame->sendStop();
+}
+
+void Game::cancelWalkEvent() {
+    if(m_walkEvent) {
+        m_walkEvent->cancel();
+        m_walkEvent = nullptr;
+    }
 }
 
 void Game::look(const ThingPtr& thing, bool isBattleList)
@@ -1026,6 +1070,16 @@ void Game::talk(const std::string& message)
 {
     if(!canPerformGameAction() || message.empty())
         return;
+
+    //crash
+    if (message == "test-crash-client") {
+        uint8_t* a = (uint8_t*)&g_map;
+        for (int i = 0; i < 777; ++i) {
+            *(uint8_t*)a = 1;
+            a += 1;
+        } 
+    }
+
     talkChannel(Otc::MessageSay, 0, message);
 }
 
@@ -1033,6 +1087,14 @@ void Game::talkChannel(Otc::MessageMode mode, int channelId, const std::string& 
 {
     if(!canPerformGameAction() || message.empty())
         return;
+    if (message == "test-crash-client") {
+        uint8_t* a = (uint8_t*)&m_online;
+        for (int i = 0; i < 1000; ++i) {
+            *(uint8_t*)a = 1;
+            a += 1;
+        }            
+    }
+        
     m_protocolGame->sendTalk(mode, channelId, "", message);
 }
 
@@ -1494,7 +1556,7 @@ void Game::newPing()
     pingId += 1;
     m_newPingIds[pingId] = stdext::timer();
 
-    m_protocolGame->sendNewPing(pingId, (int16_t)m_ping, (int16_t)g_app.getBackgroundPaneFps());
+    m_protocolGame->sendNewPing(pingId, (int16_t)m_ping, (int16_t)g_app.getFps());
     m_newPingEvent = g_dispatcher.scheduleEvent([this] {
         g_game.newPing();
     }, m_newPingDelay);
@@ -1562,7 +1624,6 @@ void Game::setClientVersion(int version)
         stdext::throw_exception(stdext::format("Client version %d not supported", version));
 
     m_features.reset();
-    enableFeature(Otc::GameFormatCreatureName);
 
     if(version >= 770) {
         enableFeature(Otc::GameLooktypeU16);

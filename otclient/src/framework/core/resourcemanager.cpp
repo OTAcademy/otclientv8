@@ -50,18 +50,23 @@ void ResourceManager::terminate()
     PHYSFS_deinit();
 }
 
-bool ResourceManager::launchCorrect(const std::string& app) { // curently works only on windows
+int ResourceManager::launchCorrect(const std::string& app) { // curently works only on windows
+    auto init_path = m_binaryPath.parent_path();
+    init_path /= "init.lua";
+    if (boost::filesystem::exists(init_path)) // debug version
+        return 0;
+
     const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
     if (!localDir)
-        return false;
+        return 0;
 
     boost::filesystem::path path(localDir);
-    time_t lastWrite = 0;
-    boost::filesystem::path binary = "";
+    time_t lastWrite = boost::filesystem::last_write_time(m_binaryPath);
+    boost::filesystem::path binary = m_binaryPath;
     for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) {
         if (boost::filesystem::is_directory(entry.path()))
             continue;
-        if (entry.path().extension() == ".exe") {
+        if (entry.path().extension() == m_binaryPath.extension()) {
             auto writeTime = boost::filesystem::last_write_time(entry.path());
             if (writeTime > lastWrite) {
                 lastWrite = writeTime;
@@ -72,25 +77,25 @@ bool ResourceManager::launchCorrect(const std::string& app) { // curently works 
     for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) { // remove old
         if (boost::filesystem::is_directory(entry.path()))
             continue;
-        if (entry.path().extension() == ".exe") {
+        if (entry.path().extension() == m_binaryPath.extension()) {
             if (binary == entry.path())
                 continue;
             boost::system::error_code ec;
             boost::filesystem::remove(entry.path(), ec);
         }
     }
-    if(lastWrite != 0 && lastWrite != boost::filesystem::last_write_time(m_binaryPath)) {
-        boost::process::child c(binary);
-        stdext::millisleep(5000);
-        if (c.joinable())
-            return false;
-        return true;
+
+    boost::process::child c(binary, "--from-updater");
+    std::error_code ec;
+    if (c.wait_for(std::chrono::seconds(15), ec)) {
+        return c.exit_code() == 0 ? 1 : -1;
     }
-    return false;
+
+    c.detach();
+    return 1;
 }
 
-bool ResourceManager::setup(const std::string& app, const std::string& existentFile)
-{
+bool ResourceManager::setupWriteDir(const std::string& app) {
     const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
     if (!localDir) {
         g_logger.fatal(stdext::format("Unable to get local dir, error: %s", PHYSFS_getLastError()));
@@ -106,9 +111,14 @@ bool ResourceManager::setup(const std::string& app, const std::string& existentF
         g_logger.fatal(stdext::format("Unable to set write dir '%s': %s", localDir, PHYSFS_getLastError()));
         return false;
     }
+    return true;
+}
 
+bool ResourceManager::setup(const std::string& existentFile)
+{
     // search for modules directory
-    std::vector<std::string> possiblePaths = { std::string(localDir), g_platform.getCurrentDir()};
+    std::string localDir(PHYSFS_getWriteDir());
+    std::vector<std::string> possiblePaths = { localDir, g_platform.getCurrentDir()};
     const char* baseDir = PHYSFS_getBaseDir();
     if (baseDir)
         possiblePaths.push_back(baseDir);
@@ -139,8 +149,6 @@ bool ResourceManager::setup(const std::string& app, const std::string& existentF
     }
 
     if (loadDataFromSelf(existentFile)) {
-        m_loadedFromMemory = true;
-        m_loadedFromArchive = true;
         return true;
     }
 
@@ -152,6 +160,7 @@ bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
     std::ifstream file(m_binaryPath.string(), std::ios::binary);
     if (!file.is_open())
         return false;
+
     std::string buffer(std::istreambuf_iterator<char>(file), {});
     file.close();
 
@@ -173,6 +182,8 @@ bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
     if (PHYSFS_mountMemory(m_memoryDataBuffer, m_memoryDataBufferSize, [](void* pointer) { delete[] pointer; }, "data.zip", NULL, 0)) {
         if (PHYSFS_exists(existentFile.c_str())) {
             g_logger.debug("Found work dir in memory");
+            m_loadedFromMemory = true;
+            m_loadedFromArchive = true;
             return true;
         }
         PHYSFS_unmount("data.zip");
@@ -376,6 +387,12 @@ std::list<std::string> ResourceManager::listUpdateableFiles() {
 }
 
 std::string ResourceManager::fileChecksum(const std::string& path) {
+    static std::map<std::string, std::string> cache;
+
+    auto it = cache.find(path);
+    if (it != cache.end())
+        return it->second;
+
     PHYSFS_File* file = PHYSFS_openRead(path.c_str());
     if(!file)
         return "";
@@ -385,7 +402,10 @@ std::string ResourceManager::fileChecksum(const std::string& path) {
     PHYSFS_read(file, (void*)&buffer[0], 1, fileSize);
     PHYSFS_close(file);
 
-    return g_crypt.md5Encode(buffer, false);
+    auto checksum = g_crypt.md5Encode(buffer, false);
+    cache[path] = checksum;
+
+    return checksum;
 }
 
 std::string ResourceManager::selfChecksum() {

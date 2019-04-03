@@ -34,6 +34,7 @@ public:
     
 private:
     std::string m_url;
+    std::string m_domain;
     boost::asio::ip::tcp::socket m_socket;
     std::unique_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> m_ssl;
     boost::asio::ip::tcp::resolver m_resolver;
@@ -44,6 +45,8 @@ private:
     boost::beast::http::response_parser<boost::beast::http::dynamic_body> m_response;
     HttpResult_ptr m_result;
     HttpResult_cb m_callback;
+
+    boost::asio::ssl::context m_context{ boost::asio::ssl::context::tlsv12_client };
 
     void on_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator iterator);
     void on_connect(const boost::system::error_code& ec);

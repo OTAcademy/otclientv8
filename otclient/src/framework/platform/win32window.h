@@ -84,6 +84,12 @@ public:
     std::string getClipboardText();
     std::string getPlatformType();
 
+#ifndef OPENGL_ES
+    bool hasSecondContext() { return m_wglContext2 != NULL; }
+    void bindSecondContext();
+    void releaseSecondContext();
+#endif
+
 protected:
     int internalLoadMouseCursor(const ImagePtr& image, const Point& hotSpot);
 
@@ -112,6 +118,7 @@ private:
     EGLSurface m_eglSurface;
 #else
     HGLRC m_wglContext;
+    HGLRC m_wglContext2;
 #endif
 };
 

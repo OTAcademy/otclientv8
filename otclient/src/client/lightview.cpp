@@ -69,6 +69,7 @@ TexturePtr LightView::generateLightBubble(float centerFactor)
 void LightView::reset()
 {
     m_lightMap.clear();
+    m_playerLight.reset();
 }
 
 void LightView::setGlobalLight(const Light& light)
@@ -76,7 +77,7 @@ void LightView::setGlobalLight(const Light& light)
     m_globalLight = light;
 }
 
-void LightView::addLightSource(const Point& center, float scaleFactor, const Light& light)
+void LightView::addLightSource(const Point& center, float scaleFactor, const Light& light, bool player)
 {
     int intensity = std::min<int>(light.intensity, MAX_LIGHT_INTENSITY);
     int radius = intensity * Otc::TILE_PIXELS * scaleFactor;
@@ -98,7 +99,10 @@ void LightView::addLightSource(const Point& center, float scaleFactor, const Lig
     source.center = center;
     source.color = color;
     source.radius = radius;
-    m_lightMap.push_back(source);
+    if (player) {
+        m_playerLight = std::make_shared<LightSource>(source);
+    } else
+        m_lightMap.push_back(source);
 }
 
 void LightView::drawGlobalLight(const Light& light)
@@ -137,6 +141,8 @@ void LightView::draw(const Rect& dest, const Rect& src)
     g_painter->setCompositionMode(Painter::CompositionMode_Add);
     for(const LightSource& source : m_lightMap)
         drawLightSource(source.center, source.color, source.radius);
+    if(m_playerLight)
+        drawLightSource(m_playerLight->center, m_playerLight->color, m_playerLight->radius);
     m_lightbuffer->release();
     g_painter->setCompositionMode(Painter::CompositionMode_Light);
     m_lightbuffer->draw(dest, src);

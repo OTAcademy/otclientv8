@@ -16,7 +16,6 @@ limitedZoom = false
 currentViewMode = 0
 smartWalkDirs = {}
 smartWalkDir = nil
-walkFunction = nil
 hookedMenuOptions = {}
 lastDirTime = g_clock.millis()
 
@@ -61,10 +60,12 @@ function init()
   showTopMenuButton.onClick = function()
     modules.client_topmenu.toggle()
   end
-
+  
   setupViewMode(0)
 
   bindKeys()
+  
+  connect(gameMapPanel, { onGeometryChange = updateSize })
 
   if g_game.isOnline() then
     show()
@@ -144,6 +145,7 @@ function terminate()
   })
 
   disconnect(gameLeftPanel, { onVisibilityChange = onLeftPanelVisibilityChange })
+  disconnect(gameMapPanel, { onGeometryChange = updateSize })
 
   logoutButton:destroy()
   gameRootPanel:destroy()
@@ -171,11 +173,16 @@ function show()
   gameRootPanel:show()
   gameRootPanel:focus()
   gameMapPanel:followCreature(g_game.getLocalPlayer())
-  setupViewMode(0)
-  setupViewMode(1)
-  setupViewMode(2)
+    
   updateStretchShrink()
   logoutButton:setTooltip(tr('Logout'))
+  
+  local classicView = g_settings.getBoolean('classicView')
+  if classicView then
+    setupViewMode(0)
+  else
+    setupViewMode(1)  
+  end  
 
   addEvent(function()
     if not limitedZoom or g_game.isGM() then
@@ -339,13 +346,13 @@ function changeWalkDir(dir, pop)
 end
 
 function smartWalk(dir)
+  local localPlayer = g_game.getLocalPlayer()
+  if localPlayer:isPreWalking() and not g_settings.getBoolean('extentedPreWalking') then
+    return false
+  end
   if g_keyboard.getModifiers() == KeyboardNoModifier then
-    local func = walkFunction
-    if not func then
-        func = g_game.walk
-    end
     local dire = smartWalkDir or dir
-    func(dire)
+    g_game.walk(dire)
     return true
   end
   return false
@@ -832,14 +839,12 @@ function onLeftPanelVisibilityChange(leftPanel, visible)
   end
 end
 
-function nextViewMode()
-  setupViewMode((currentViewMode + 1) % 3)
-end
-
 function setupViewMode(mode)
-  if mode == currentViewMode then return end
+  if not g_settings.getBoolean("allowFullView") then
+    mode = 0
+  end
 
-  if currentViewMode == 2 then
+  if mode == 0 then
     gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
     gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
     gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)
@@ -851,24 +856,21 @@ function setupViewMode(mode)
     gameRightPanel:setMarginTop(0)
     gameBottomPanel:setImageColor('white')
     modules.client_topmenu.getTopMenu():setImageColor('white')
-    g_game.changeMapAwareRange(18, 14)
-  end
 
-  if mode == 0 then
+    gameMapPanel:setMarginLeft(0)
+    gameMapPanel:setMarginRight(0)
+    gameBottomPanel:setMarginLeft(0)
+    gameBottomPanel:setMarginRight(0)
     gameMapPanel:setKeepAspectRatio(true)
     gameMapPanel:setLimitVisibleRange(false)
     gameMapPanel:setZoom(11)
     gameMapPanel:setVisibleDimension({ width = 15, height = 11 })
+    g_game.changeMapAwareRange(22, 18)
   elseif mode == 1 then
     gameMapPanel:setKeepAspectRatio(false)
-    gameMapPanel:setLimitVisibleRange(true)
-    gameMapPanel:setZoom(11)
-    gameMapPanel:setVisibleDimension({ width = 15, height = 11 })
-  elseif mode == 2 then
-    local limit = limitedZoom and not g_game.isGM()
-    gameMapPanel:setLimitVisibleRange(limit)
+    gameMapPanel:setLimitVisibleRange(false)
     gameMapPanel:setZoom(13)
-    gameMapPanel:setVisibleDimension({ width = 19, height = 15 })
+    gameMapPanel:setVisibleDimension({ width = 25, height = 15 })
     gameMapPanel:fill('parent')
     gameRootPanel:fill('parent')
     gameLeftPanel:setImageColor('alpha')
@@ -883,14 +885,41 @@ function setupViewMode(mode)
     gameMapPanel:setOn(true)
     gameBottomPanel:setImageColor('#ffffff88')
     modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')
-    if not limit then
-      g_game.changeMapAwareRange(24, 20)
-    end
+    g_game.changeMapAwareRange(30, 20)
   end
-
   currentViewMode = mode
 end
 
 function limitZoom()
   limitedZoom = true
+end
+
+function updateSize() 
+  if currentViewMode ~= 1 then
+    return
+  end
+  
+  local height = gameRootPanel:getHeight()
+  local width = gameRootPanel:getWidth()
+  if width < 400 or height < 400 then
+    gameMapPanel:setMarginLeft(0)
+    gameMapPanel:setMarginRight(0)
+    gameBottomPanel:setMarginLeft(0)
+    gameBottomPanel:setMarginRight(0)
+    return
+  end
+  local maxWidth = math.floor(height * 2)
+  local extraMargin = 0
+  if width >= maxWidth then
+    extraMargin = math.ceil((width - maxWidth) / 2)
+  end
+  local bottomMaxWidth = 1200  -- something broken, it's not pixels
+  local bottomMargin = 0
+  if width > bottomMaxWidth then
+    bottomMargin = math.ceil((width - bottomMaxWidth) / 2)
+  end
+  gameMapPanel:setMarginLeft(extraMargin)
+  gameMapPanel:setMarginRight(extraMargin)
+  gameBottomPanel:setMarginLeft(bottomMargin)
+  gameBottomPanel:setMarginRight(bottomMargin)
 end

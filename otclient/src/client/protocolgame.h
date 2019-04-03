@@ -42,15 +42,15 @@ public:
     void sendPingBack();
     void sendNewPing(uint32_t pingId, uint16_t localPing, uint16_t fps);
     void sendAutoWalk(const std::vector<Otc::Direction>& path);
-    void sendWalkNorth(const Position& currentPos);
-    void sendWalkEast(const Position& currentPos);
-    void sendWalkSouth(const Position& currentPos);
-    void sendWalkWest(const Position& currentPos);
+    void sendWalkNorth();
+    void sendWalkEast();
+    void sendWalkSouth();
+    void sendWalkWest();
     void sendStop();
-    void sendWalkNorthEast(const Position& currentPos);
-    void sendWalkSouthEast(const Position& currentPos);
-    void sendWalkSouthWest(const Position& currentPos);
-    void sendWalkNorthWest(const Position& currentPos);
+    void sendWalkNorthEast();
+    void sendWalkSouthEast();
+    void sendWalkSouthWest();
+    void sendWalkNorthWest();
     void sendTurnNorth();
     void sendTurnEast();
     void sendTurnSouth();
@@ -123,6 +123,7 @@ public:
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);
+    void sendNewWalk(int walkId, const Position& pos, const std::vector<Otc::Direction>& path, bool autoWalk);
 
 protected:
     void onConnect();
@@ -244,6 +245,7 @@ private:
     void parseExtendedOpcode(const InputMessagePtr& msg);
     void parseChangeMapAwareRange(const InputMessagePtr& msg);
     void parseCreaturesMark(const InputMessagePtr& msg);
+    void parseNewCancelWalk(const InputMessagePtr& msg);
 
 public:
     void setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height);

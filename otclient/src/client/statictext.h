@@ -51,6 +51,8 @@ public:
     void setColor(const Color& color) { m_color = color; }
     Color getColor() { return m_color; }
 
+    CachedText& getCachedText() { return m_cachedText; }
+
 private:
     void update();
     void scheduleUpdate();

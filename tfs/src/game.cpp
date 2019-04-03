@@ -1763,20 +1763,58 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t spriteId)
 	}
 }
 
-void Game::playerMove(uint32_t playerId, Direction direction, Position localPlayerPos)
+void Game::playerMove(uint32_t playerId, Direction direction)
 {
 	Player* player = getPlayerByID(playerId);
 	if (!player) {
 		return;
 	}
 	
-	if(localPlayerPos.x != 0 && player->getPosition() != localPlayerPos)
-		return player->sendCancelWalk();
-
 	player->resetIdleTime();
 	player->setNextWalkActionTask(nullptr);
 
 	player->startAutoWalk(std::forward_list<Direction> { direction });
+}
+
+void Game::playerNewWalk(uint32_t playerId, uint32_t walkId, Position pos, std::forward_list<Direction> listDir, bool autoWalk) 
+{
+	Player* player = getPlayerByID(playerId);
+	if (!player) {
+		return;
+	}
+        
+    if(pos.x != 0 && pos.y != 0 && pos != player->getPosition()) {
+        if(!autoWalk) {
+            player->sendNewCancelWalk();
+            return;
+        }        
+        auto listDirCopy = listDir;
+        for(int i = 0; i < 3; ++i) {
+            if(listDir.empty())
+                break;
+            pos = getNextPosition(listDir.front(), pos);
+            listDir.pop_front();
+        }
+        
+        std::forward_list<Direction> dirList;
+        if(player->getPathTo(pos, dirList, 0, 0, false, true)) {
+            dirList.reverse();
+            for(auto& it : dirList)
+                listDir.push_front(it);            
+        } else 
+            listDir = listDirCopy;
+    }
+    
+    if(pos.x == 0 && pos.y == 0 && !autoWalk && !listDir.empty()) {
+        if(!map.canWalkTo(*player, getNextPosition(listDir.front(), player->getPosition()))) {
+            player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
+            return;
+        }
+    }
+
+	player->resetIdleTime();
+	player->setNextWalkTask(nullptr);
+	player->startAutoWalk(listDir);    
 }
 
 bool Game::playerBroadcastMessage(Player* player, const std::string& text) const

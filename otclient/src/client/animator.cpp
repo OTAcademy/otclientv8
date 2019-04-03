@@ -132,14 +132,12 @@ int Animator::getPhase()
 int Animator::getPhaseAt(ticks_t time)
 {
     int index = 0;
-    if (g_extras.fasterAnimations) {
-        for (int i = 0; i < m_animationPhases; ++i) {
-            if (time < m_phaseDurationsSummed[i].first)
-                return i;
-        }
-        return m_animationPhases - 1;
+    for (int i = 0; i < m_animationPhases; ++i) {
+        if (time < m_phaseDurationsSummed[i].first)
+            return i;
     }
-
+    return m_animationPhases - 1;
+    /*
     ticks_t total = 0;
 
     for (const auto &pair : m_phaseDurations) {
@@ -153,6 +151,7 @@ int Animator::getPhaseAt(ticks_t time)
     }
 
     return std::min<int>(index, m_animationPhases - 1);
+    */
 }
 
 int Animator::getStartPhase()

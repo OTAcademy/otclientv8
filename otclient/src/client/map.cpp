@@ -172,10 +172,10 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
     notificateTileUpdate(pos);
 }
 
-void Map::setTileSpeed(const Position& pos, uint16_t speed) {
+void Map::setTileSpeed(const Position& pos, uint16_t speed, uint8_t blocking) {
     const TilePtr& tile = getOrCreateTile(pos);
     if (tile)
-        tile->setSpeed(speed);
+        tile->setSpeed(speed, blocking);
 }
 
 ThingPtr Map::getThing(const Position& pos, int stackPos)
@@ -700,11 +700,10 @@ void Map::setAwareRange(const AwareRange& range)
 void Map::resetAwareRange()
 {
     AwareRange range;
-    range.extra = 4;
-    range.left = 8 + range.extra;
-    range.top = 6 + range.extra;
-    range.bottom = 7 + range.extra;
-    range.right = 9 + range.extra;
+    range.left = 8;
+    range.top = 6;
+    range.bottom = 7;
+    range.right = 9;
     setAwareRange(range);
 }
 

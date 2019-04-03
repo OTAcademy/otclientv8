@@ -63,6 +63,9 @@ function init()
     onFreeCapacityChange(localPlayer, localPlayer:getFreeCapacity())
   end
 
+  hideLabels()
+  hideExperience()
+
   healthInfoWindow:setup()
 end
 
@@ -161,9 +164,11 @@ end
 
 -- personalization functions
 function hideLabels()
-  local removeHeight = math.max(capLabel:getMarginRect().height, soulLabel:getMarginRect().height)
+  local content = healthInfoWindow:recursiveGetChildById('conditionPanel')
+  local removeHeight = math.max(capLabel:getMarginRect().height, soulLabel:getMarginRect().height) + content:getMarginRect().height - 3
   capLabel:setOn(false)
   soulLabel:setOn(false)
+  content:setVisible(false)
   healthInfoWindow:setHeight(math.max(healthInfoWindow.minimizedHeight, healthInfoWindow:getHeight() - removeHeight))
 end
 

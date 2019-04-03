@@ -33,7 +33,8 @@ class Painter
 public:
     enum BlendEquation {
         BlendEquation_Add,
-        BlendEquation_Max
+        BlendEquation_Max,
+        BlendEquation_Subtract
     };
     enum CompositionMode {
         CompositionMode_Normal,
@@ -41,7 +42,11 @@ public:
         CompositionMode_Add,
         CompositionMode_Replace,
         CompositionMode_DestBlending,
-        CompositionMode_Light
+        CompositionMode_Light,
+        CompositionMode_AlphaZeroing,
+        CompositionMode_AlphaRestoring,
+        CompositionMode_ZeroAlphaOverrite
+
     };
     enum DrawMode {
         Triangles = GL_TRIANGLES,
@@ -79,6 +84,7 @@ public:
     virtual void setBlendEquation(BlendEquation blendEquation) = 0;
     virtual void setShaderProgram(PainterShaderProgram *shaderProgram) { m_shaderProgram = shaderProgram; }
     void setShaderProgram(const PainterShaderProgramPtr& shaderProgram) { setShaderProgram(shaderProgram.get()); }
+    virtual void setNewShaderProgram() = 0;
 
     virtual void scale(float x, float y) = 0;
     void scale(float factor) { scale(factor, factor); }

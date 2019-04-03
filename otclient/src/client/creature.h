@@ -45,6 +45,7 @@ public:
     Creature();
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr);
+    void drawLight(const Point& dest, float scaleFactor, LightView *lightView);
 
     void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr);
     void drawOutfit(const Rect& destRect, bool resize);
@@ -115,8 +116,8 @@ public:
     void turn(Otc::Direction direction);
     void jump(int height, int duration);
     virtual void walk(const Position& oldPos, const Position& newPos);
-    virtual void stopWalk();
-    void allowAppearWalk() { m_allowAppearWalk = true; }
+    virtual void stopWalk(bool appear = false);
+    void allowAppearWalk(uint16_t stepSpeed) { m_allowAppearWalk = true; m_nextStepSpeed = stepSpeed; }
 
     bool isWalking() { return m_walking; }
     bool isRemoved() { return m_removed; }
@@ -136,6 +137,19 @@ public:
 
     virtual bool isNewPreWalking() { return false; }
     virtual Position getNewPreWalkingPosition(bool beforePrewalk = false) { return m_position; }
+
+    TilePtr getWalkingTileOrTile() {
+        return m_walkingTile ? m_walkingTile : getTile();
+    }
+
+    virtual bool isServerWalking() { return true; }
+
+    void setElevation(uint8 elevation) {
+        m_elevation = elevation;
+    }
+    uint8 getElevation() {
+        return m_elevation;
+    }
 
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
@@ -180,7 +194,9 @@ protected:
     ScheduledEventPtr m_outfitColorUpdateEvent;
     Timer m_outfitColorTimer;
 
-    std::array<double, Otc::LastSpeedFormula> m_speedFormula;
+    static std::array<double, Otc::LastSpeedFormula> m_speedFormula;
+    uint16 m_nextStepSpeed = 0;
+    uint16 m_stepDuration = 0;
 
     // walk related
     int m_walkAnimationPhase;
@@ -201,6 +217,7 @@ protected:
     Position m_lastStepFromPosition;
     Position m_lastStepToPosition;
     Position m_oldPosition;
+    uint8 m_elevation = 0;
 
     // jump related
     float m_jumpHeight;

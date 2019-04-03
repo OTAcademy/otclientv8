@@ -61,6 +61,7 @@ namespace Otc
         DrawNames = 8192,
         DrawLights = 16384,
         DrawManaBar = 32768,
+        DontDrawLocalPlayer = 65536,
         DrawWalls = DrawOnBottom | DrawOnTop,
         DrawEverything = DrawGround | DrawGroundBorders | DrawWalls | DrawItems |
                          DrawCreatures | DrawEffects | DrawMissiles | DrawCreaturesInformation |
@@ -417,6 +418,10 @@ namespace Otc
         GameIngameStoreHighlights = 74,
         GameIngameStoreServiceType = 75,
         GameAdditionalSkills = 76,
+
+        // 90-99 otclientv8 features
+        GameNewWalking = 90,
+        GameSlowerManualWalking = 91,
 
         LastGameFeature = 101
     };

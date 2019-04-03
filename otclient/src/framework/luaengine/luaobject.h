@@ -23,8 +23,8 @@
 #ifndef LUAOBJECT_H
 #define LUAOBJECT_H
 
+#include <framework/util/stats.h>
 #include "declarations.h"
-#include "luastats.h"
 
 /// LuaObject, all script-able classes have it as base
 // @bindclass
@@ -155,6 +155,7 @@ int LuaObject::luaCallLuaField(const std::string& field, const T&... args) {
     // to force using the __index metamethod of it's metatable
     // so cannot use LuaObject::getField here
     // push field
+    AutoStat s(STATS_LUA, field);
     g_lua.pushObject(asLuaObject());
     g_lua.getField(field);
 
@@ -170,7 +171,6 @@ int LuaObject::luaCallLuaField(const std::string& field, const T&... args) {
         g_lua.pop(2);
     }
 
-    g_luaStats.add(field, stdext::micros() - executionStart);
     return ret;
 }
 

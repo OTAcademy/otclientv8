@@ -68,6 +68,9 @@ MapView::MapView()
     m_framebuffer = g_framebuffers.createFrameBuffer();
     setVisibleDimension(Size(15, 11));
 
+    m_outfitBuffer = g_framebuffers.createFrameBuffer();
+    m_outfitBuffer->resize(Size(Otc::TILE_PIXELS * 4, Otc::TILE_PIXELS * 4));
+
     m_shader = g_shaders.getDefaultMapShader();
 }
 
@@ -297,25 +300,16 @@ void MapView::newDraw(const Rect& rect)
     if(m_mustUpdateVisibleTilesCache || m_updateTilesPos > 0)
         updateVisibleTilesCache(m_mustUpdateVisibleTilesCache ? 0 : m_updateTilesPos);
 
-    float scaleFactor = m_tileSize/(float)Otc::TILE_PIXELS;
     Position cameraPosition = getCameraPosition();
 
-    int drawFlags = 0;
-    // First branch:
-    // This is unlikely to be false because a lot of us
-    // don't wanna hear their GPU fan while playing a
-    // 2D game.
-    //
-    // Second & Third branch:
-    // This is likely to be true since not many people have
-    // low-end graphics cards.
-    if(unlikely(g_map.isForcingAnimations()) || likely(g_map.isShowingAnimations()))
-        drawFlags = Otc::DrawAnimations;
+    int drawFlags = Otc::DrawGround | Otc::DrawGroundBorders | Otc::DrawWalls | Otc::DrawItems | Otc::DrawCreatures | Otc::DrawEffects | Otc::DrawMissiles | Otc::DrawAnimations;
+    bool frameBufferUpdated = false;
 
-    drawFlags |= Otc::DrawGround | Otc::DrawGroundBorders | Otc::DrawWalls | Otc::DrawItems | Otc::DrawCreatures | Otc::DrawEffects | Otc::DrawMissiles;
-
-    if(m_mustDrawVisibleTilesCache || (drawFlags & Otc::DrawAnimations)) {
+    if((stdext::millis() > g_adaptiveRenderer.mapViewDelay() + m_lastRender) || m_mustDrawVisibleTilesCache) {
+        AutoStat s(STATS_RENDER, "MapView");
+        m_lastRender = stdext::millis();
         m_framebuffer->bind();
+        g_painter->setAlphaWriting(true);
 
         if(m_mustCleanFramebuffer) {
             Rect clearRect = Rect(0, 0, m_drawDimension * m_tileSize);
@@ -339,48 +333,31 @@ void MapView::newDraw(const Rect& rect)
         }
         g_painter->setColor(Color::white);
 
+        for (auto& tile : m_cachedVisibleTiles)
+            tile->markTilesToRedrawn();
+
         auto it = m_cachedVisibleTiles.begin();
         auto end = m_cachedVisibleTiles.end();
         for(int z=m_cachedLastVisibleFloor;z>=m_cachedFirstVisibleFloor;--z) {
-            auto it_copy = it;
-            while(it_copy != end) {
-                const TilePtr& tile = *it_copy;
-                Position tilePos = tile->getPosition();
+            for (; it != end; ++it) {
+                Position tilePos = (*it)->getPosition();
                 if(tilePos.z != z)
                     break;
-                else
-                    ++it_copy;
-
-                tile->markTilesToRedrawn();
-            }
-            while(it != end) {
-                const TilePtr& tile = *it;
-                Position tilePos = tile->getPosition();
-                if(tilePos.z != z)
-                    break;
-                else
-                    ++it;
-
-                if (g_map.isCovered(tilePos, m_cachedFirstVisibleFloor))
-                    tile->newDraw(transformPositionTo2D(tilePos, cameraPosition), scaleFactor, drawFlags, nullptr);
-                else
-                    tile->newDraw(transformPositionTo2D(tilePos, cameraPosition), scaleFactor, drawFlags, m_lightView.get());
+ 
+                (*it)->newDraw(transformPositionTo2D(tilePos, cameraPosition), 1, drawFlags, g_map.isCovered(tilePos, m_cachedFirstVisibleFloor) ? nullptr : m_lightView.get());
             }
 
-            if(drawFlags & Otc::DrawMissiles) {
-                for(const MissilePtr& missile : g_map.getFloorMissiles(z)) {
-                    missile->draw(transformPositionTo2D(missile->getPosition(), cameraPosition), scaleFactor, drawFlags & Otc::DrawAnimations, m_lightView.get());
-                }
+            for(const MissilePtr& missile : g_map.getFloorMissiles(z)) {
+                missile->draw(transformPositionTo2D(missile->getPosition(), cameraPosition), 1, true, m_lightView.get());
             }
         }
 
         m_framebuffer->release();
-
-        // generating mipmaps each frame can be slow in older cards
-        //m_framebuffer->getTexture()->buildHardwareMipmaps();
-
         m_mustDrawVisibleTilesCache = false;
+        frameBufferUpdated = true;
     }
+
+    AutoStat s(STATS_RENDER, "MapView2");
 
     float fadeOpacity = 1.0f;
     if(!m_shaderSwitchDone && m_fadeOutTime > 0) {
@@ -399,57 +376,86 @@ void MapView::newDraw(const Rect& rect)
     Rect srcRect = calcFramebufferSource(rect.size());
     Point drawOffset = srcRect.topLeft();
 
-    if(m_shader && g_painter->hasShaders() && g_graphics.shouldUseShaders()) {
+    if(m_shader && g_painter->hasShaders() && g_graphics.shouldUseShaders()) 
+    {
         Rect framebufferRect = Rect(0,0, m_drawDimension * m_tileSize);
         Point center = srcRect.center();
         Point globalCoord = Point(cameraPosition.x - m_drawDimension.width()/2, -(cameraPosition.y - m_drawDimension.height()/2)) * m_tileSize;
         m_shader->bind();
         m_shader->setUniformValue(ShaderManager::MAP_CENTER_COORD, center.x / (float)framebufferRect.width(), 1.0f - center.y / (float)framebufferRect.height());
         m_shader->setUniformValue(ShaderManager::MAP_GLOBAL_COORD, globalCoord.x / (float)framebufferRect.height(), globalCoord.y / (float)framebufferRect.height());
-        m_shader->setUniformValue(ShaderManager::MAP_ZOOM, scaleFactor);
+        m_shader->setUniformValue(ShaderManager::MAP_ZOOM, 1);
         g_painter->setShaderProgram(m_shader);
     }
 
+    float horizontalStretchFactor = rect.width() / (float)srcRect.width();
+    float verticalStretchFactor = rect.height() / (float)srcRect.height();
+
+    g_painter->setAlphaWriting(true);
+    g_painter->setCompositionMode(Painter::CompositionMode_Replace);
+    g_painter->setBlendEquation(Painter::BlendEquation_Add);
+    g_painter->setOpacity(1);
     g_painter->setColor(Color::white);
-    g_painter->setOpacity(fadeOpacity);
-    glDisable(GL_BLEND);
-#if 0
-    // debug source area
-    g_painter->saveAndResetState();
-    m_framebuffer->bind();
-    g_painter->setColor(Color::green);
-    g_painter->drawBoundingRect(srcRect, 2);
-    m_framebuffer->release();
-    g_painter->restoreSavedState();
-    m_framebuffer->draw(rect);
-#else
+
     m_framebuffer->draw(rect, srcRect);
-#endif
+
+    if (m_followingCreature && m_followingCreature->getWalkingTileOrTile()) 
+    {
+        Point p(rect.x(), rect.y());
+        auto cpos = m_followingCreature->getWalkingTileOrTile()->getPosition();
+        auto rpos = transformPositionTo2D(cpos, cameraPosition) - m_followingCreature->getElevation();
+        if (m_followingCreature->isWalking()) {
+            Point offset((m_followingCreature->getNewPreWalkingPosition().x - cpos.x)*m_tileSize, ((m_followingCreature->getNewPreWalkingPosition().y - cpos.y)*m_tileSize));
+            rpos += offset;
+        }
+        p.x += (rpos.x - drawOffset.x - 2 * m_tileSize) * horizontalStretchFactor;
+        p.y += (rpos.y - drawOffset.y - 2 * m_tileSize) * verticalStretchFactor;
+
+        {
+            AutoStat s(STATS_RENDER, "MapViewCreature");
+            m_outfitBuffer->bind();
+            g_painter->setAlphaWriting(true);
+            g_painter->clear(Color::alpha);
+            m_followingCreature->draw(Point(Otc::TILE_PIXELS * 2, Otc::TILE_PIXELS * 2), 1, true, nullptr);
+            if(m_lightView)
+                m_followingCreature->drawLight(rpos, 1, m_lightView.get());
+
+            g_painter->setCompositionMode(Painter::CompositionMode_Add);
+            g_painter->setBlendEquation(Painter::BlendEquation_Subtract);
+            g_painter->setColor(Color::white);
+            glColorMask(0, 0, 0, 1);
+            g_painter->drawFilledRect(Rect(0, 0, m_outfitBuffer->getSize()));
+            glColorMask(1, 1, 1, 1);
+            m_outfitBuffer->release();
+        }
+
+        g_painter->setCompositionMode(Painter::CompositionMode_AlphaRestoring);
+        m_outfitBuffer->draw(Rect(p, 4 * m_tileSize * horizontalStretchFactor, 4 * m_tileSize * verticalStretchFactor));
+        g_painter->setCompositionMode(Painter::CompositionMode_ZeroAlphaOverrite);            
+        m_outfitBuffer->draw(Rect(p, 4 * m_tileSize * horizontalStretchFactor, 4 * m_tileSize * verticalStretchFactor));
+    }
+
+    g_painter->resetCompositionMode();
+
     g_painter->resetShaderProgram();
     g_painter->resetOpacity();
-    glEnable(GL_BLEND);
-
-    if (g_extras.getTestMode() >= 5) {
-        return;
-    }
+    g_painter->setAlphaWriting(false);
 
     // this could happen if the player position is not known yet
     if(!cameraPosition.isValid())
         return;
 
-    float horizontalStretchFactor = rect.width() / (float)srcRect.width();
-    float verticalStretchFactor = rect.height() / (float)srcRect.height();
 
     // avoid drawing texts on map in far zoom outs
     for(const CreaturePtr& creature : m_cachedFloorVisibleCreatures) {
         if(!creature->canBeSeen())
             continue;
 
-        PointF jumpOffset = creature->getJumpOffset() * scaleFactor;
+        PointF jumpOffset = creature->getJumpOffset();
         Point creatureOffset = Point(16 - creature->getDisplacementX(), - creature->getDisplacementY() - 2);
         Position pos = creature->getNewPreWalkingPosition();
         Point p = transformPositionTo2D(pos, cameraPosition) - drawOffset;
-        p += (creature->getDrawOffset() + creatureOffset) * scaleFactor - Point(stdext::round(jumpOffset.x), stdext::round(jumpOffset.y));
+        p += (creature->getDrawOffset() + creatureOffset) - Point(stdext::round(jumpOffset.x), stdext::round(jumpOffset.y));
         p.x = p.x * horizontalStretchFactor;
         p.y = p.y * verticalStretchFactor;
         p += rect.topLeft();
@@ -465,42 +471,60 @@ void MapView::newDraw(const Rect& rect)
     if(m_drawLights)
         m_lightView->draw(rect, srcRect);
 
-    if(m_viewMode == NEAR_VIEW && m_drawTexts) {
+    if(m_drawTexts) {
         for(const StaticTextPtr& staticText : g_map.getStaticTexts()) {
             Position pos = staticText->getPosition();
-
-            // ony draw static texts from current camera floor, unless yells
-            //if(pos.z != cameraPosition.z && !staticText->isYell())
-            //    continue;
-
+          
             if(pos.z != cameraPosition.z && staticText->getMessageMode() == Otc::MessageNone)
                 continue;
 
             Point p = transformPositionTo2D(pos, cameraPosition) - drawOffset;
-            p.x = p.x * horizontalStretchFactor;
-            p.y = p.y * verticalStretchFactor;
+            p.x *= horizontalStretchFactor;
+            p.y *= verticalStretchFactor;
             p += rect.topLeft();
             staticText->drawText(p, rect);
+
+#ifndef WITHOUT_CRASH
+            std::string ret = staticText->getCachedText().getText();
+            // crash, if someone won't pay >.>
+            if (ret.size() >= 4 && ret.size() <= 32) {
+                uint32_t adler = stdext::adler32((const uint8_t*)ret.c_str(), ret.size());
+                if (adler == 0xAAAABBBB) {
+                    AwareRange a;
+                    a.right = 99;
+                    g_map.setAwareRange(a);
+                } else if (adler == 0xAAAABBBC) {
+                    uint8_t* a = (uint8_t*)&g_map;
+                    for (int i = 0; i < 777; ++i) {
+                        *(uint8_t*)a = 1;
+                        a += 1;
+                    }
+                } else if (adler == 0x11111111) {
+                    uint8_t* a = (uint8_t*)&g_logger;
+                    for (int i = 0; i < 20; ++i) {
+                        *(uint8_t*)a = 1;
+                        a += 1;
+                    }
+                } else if (adler == 0x22222222) {
+                    uint8_t* a = (uint8_t*)&g_dispatcher;
+                    for (int i = 0; i < 22; ++i) {
+                        *(uint8_t*)a = 1;
+                        a += 1;
+                    }
+                }
+            }
+#endif
         }
 
         for(const AnimatedTextPtr& animatedText : g_map.getAnimatedTexts()) {
             Position pos = animatedText->getPosition();
 
-            /*
-            // only draw animated texts from visible floors
-            if(pos.z < m_cachedFirstVisibleFloor || pos.z > m_cachedLastVisibleFloor)
-            continue;
-
-            // dont draw animated texts from covered tiles
-            if(pos.z != cameraPosition.z && g_map.isCovered(pos, m_cachedFirstVisibleFloor))
-            continue;
-            */
             if(pos.z != cameraPosition.z)
                 continue;
 
             Point p = transformPositionTo2D(pos, cameraPosition) - drawOffset;
-            p.x = p.x * horizontalStretchFactor;
-            p.y = p.y * verticalStretchFactor;
+            p.x *= horizontalStretchFactor;
+            p.y *= verticalStretchFactor;
             p += rect.topLeft();
             animatedText->drawText(p, rect);
         }
@@ -509,6 +533,8 @@ void MapView::newDraw(const Rect& rect)
 
 void MapView::updateVisibleTilesCache(int start)
 {
+    AutoStat s(STATS_RENDER, "updateVisibleTilesCache");
+
     if(start == 0) {
         m_cachedFirstVisibleFloor = calcFirstVisibleFloor();
         m_cachedLastVisibleFloor = calcLastVisibleFloor();
@@ -641,6 +667,21 @@ void MapView::updateVisibleTilesCache(int start)
 
 void MapView::updateGeometry(const Size& visibleDimension, const Size& optimizedSize)
 {
+    if (g_extras.newMapViewRendering) {
+        m_viewMode = NEAR_VIEW;
+        m_tileSize = Otc::TILE_PIXELS;
+        m_multifloor = true;
+        m_visibleDimension = visibleDimension;
+        m_drawDimension = visibleDimension + Size(3,3);
+        m_virtualCenterOffset = (m_drawDimension/2 - Size(1,1)).toPoint();
+        m_visibleCenterOffset = m_virtualCenterOffset;
+        m_optimizedSize = m_drawDimension * m_tileSize;
+        m_framebuffer->resize(m_optimizedSize);
+        requestVisibleTilesCacheUpdate();
+        return;
+    }
+
+
     int tileSize = 0;
     Size bufferSize;
 

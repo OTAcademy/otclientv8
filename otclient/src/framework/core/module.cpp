@@ -38,6 +38,20 @@ bool Module::load()
     if(m_loaded)
         return true;
 
+    auto errorHandler = [&] (const std::string& error) {
+        g_lua.getGlobalField("package", "loaded");
+        g_lua.pushNil();
+        g_lua.setField(m_name);
+        g_lua.pop();
+
+        if(m_sandboxed)
+            g_lua.resetGlobalEnvironment();
+        if(m_loadedOnStartup) // just reload, don't exit
+            g_logger.error(stdext::format("Unable to load module '%s': %s", m_name, error));
+        else
+            g_logger.fatal(stdext::format("Unable to load module '%s': %s", m_name, error));
+    };
+
     try {
         // add to package.loaded
         g_lua.getGlobalField("package", "loaded");
@@ -65,7 +79,12 @@ bool Module::load()
 
         for(const std::string& script : m_scripts) {
             g_lua.loadScript(script);
-            g_lua.safeCall(0, 0);
+            auto error = std::make_shared<std::string>();
+            g_lua.safeCall(0, 0, error);
+            if (!error->empty()) {
+                errorHandler(*error);
+                return false;
+            }
         }
 
         const std::string& onLoadBuffer = std::get<0>(m_onLoadFunc);
@@ -76,7 +95,12 @@ bool Module::load()
                 g_lua.getRef(m_sandboxEnv);
                 g_lua.setEnv();
             }
-            g_lua.safeCall(0, 0);
+            auto error = std::make_shared<std::string>();
+            g_lua.safeCall(0, 0, error);
+            if (!error->empty()) {
+                errorHandler(*error);
+                return false;
+            }
         }
 
         if(m_sandboxed)
@@ -86,14 +110,7 @@ bool Module::load()
         g_logger.debug(stdext::format("Loaded module '%s'", m_name));
     } catch(stdext::exception& e) {
         // remove from package.loaded
-        g_lua.getGlobalField("package", "loaded");
-        g_lua.pushNil();
-        g_lua.setField(m_name);
-        g_lua.pop();
-
-        if(m_sandboxed)
-            g_lua.resetGlobalEnvironment();
-        g_logger.error(stdext::format("Unable to load module '%s': %s", m_name, e.what()));
+        errorHandler(e.what());
         return false;
     }
 
@@ -107,6 +124,7 @@ bool Module::load()
             dep->load();
     }
 
+    m_loadedOnStartup = true;
     return true;
 }
 

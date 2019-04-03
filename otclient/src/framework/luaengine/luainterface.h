@@ -24,7 +24,9 @@
 #define LUAINTERFACE_H
 
 #include "declarations.h"
-#include "luastats.h"
+
+#include <framework/util/stats.h>
+
 
 struct lua_State;
 typedef int (*LuaCFunction) (lua_State *L);
@@ -178,7 +180,7 @@ public:
     /// results are pushed onto the stack.
     /// @exception LuaException is thrown on any lua error
     /// @return number of results
-    int safeCall(int numArgs = 0, int numRets = -1);
+    int safeCall(int numArgs = 0, int numRets = -1, const std::shared_ptr<std::string>& error = nullptr);
 
     /// Same as safeCall but catches exceptions and can also calls a table of functions,
     /// if any error occurs it will be reported to stdout and returns 0 results
@@ -437,17 +439,16 @@ T LuaInterface::castValue(int index) {
 
 template<typename... T>
 int LuaInterface::luaCallGlobalField(const std::string& global, const std::string& field, const T&... args) {
+    AutoStat(STATS_LUA, std::string(global) + ":" + field);
+
     g_lua.getGlobalField(global, field);
     int ret = 0;
-
-    auto executionStart = stdext::micros();
 
     if(!g_lua.isNil()) {
         int numArgs = g_lua.polymorphicPush(args...);
         ret = g_lua.signalCall(numArgs);
     } else
         g_lua.pop(1);
-    g_luaStats.add(stdext::format("[%s] %s", global, field), stdext::micros() - executionStart);
     return ret;
 }
 

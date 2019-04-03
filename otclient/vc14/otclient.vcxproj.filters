@@ -114,9 +114,6 @@
     <ClCompile Include="..\src\framework\luafunctions.cpp">
       <Filter>Source Files\framework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\framework\core\adaptativeframecounter.cpp">
-      <Filter>Source Files\framework\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\core\application.cpp">
       <Filter>Source Files\framework\core</Filter>
     </ClCompile>
@@ -531,9 +528,6 @@
     <ClCompile Include="..\src\client\animator.cpp">
       <Filter>Source Files\client</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\framework\luaengine\luastats.cpp">
-      <Filter>Source Files\framework\luaengine</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\util\stats.cpp">
       <Filter>Source Files\framework\util</Filter>
     </ClCompile>
@@ -559,9 +553,6 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\pch.h">
       <Filter>Header Files\framework</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\core\adaptativeframecounter.h">
-      <Filter>Header Files\framework\core</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\core\application.h">
       <Filter>Header Files\framework\core</Filter>
@@ -1063,9 +1054,6 @@
     </ClInclude>
     <ClInclude Include="..\src\client\animator.h">
       <Filter>Header Files\client</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\luaengine\luastats.h">
-      <Filter>Header Files\framework\luaengine</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\util\stats.h">
       <Filter>Header Files\framework\util</Filter>

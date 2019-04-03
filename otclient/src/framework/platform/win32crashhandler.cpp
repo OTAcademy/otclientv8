@@ -132,6 +132,7 @@ void Stacktrace(LPEXCEPTION_POINTERS e, std::stringstream& ss)
 
 LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
 {
+    MessageBoxA(NULL, "exc", "e", 0);
     // generate crash report
     SymInitialize(GetCurrentProcess(), 0, TRUE);
     std::stringstream ss;
@@ -146,8 +147,10 @@ LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
     ss << stdext::format("exception: %s (0x%08lx)\n", getExceptionName(e->ExceptionRecord->ExceptionCode), e->ExceptionRecord->ExceptionCode);
     ss << stdext::format("exception address: 0x%08lx\n", (size_t)e->ExceptionRecord->ExceptionAddress);
     ss << stdext::format("  backtrace:\n");
+    MessageBoxA(NULL, ss.str().c_str(), "e", 0);
     Stacktrace(e, ss);
     ss << "\n";
+    MessageBoxA(NULL, ss.str().c_str(), "e", 0);
     SymCleanup(GetCurrentProcess());
 
     // print in stdout
@@ -179,9 +182,97 @@ LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+
+#define TRACE_MAX_FUNCTION_NAME_LENGTH 1024
+#define TRACE_LOG_ERRORS FALSE
+#define TRACE_DUMP_NAME "Exception.dmp"
+
+LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
+{
+    CONTEXT context = *(exception->ContextRecord);
+    HANDLE thread = GetCurrentThread();
+    HANDLE process = GetCurrentProcess();
+    STACKFRAME frame;
+    memset(&frame, 0, sizeof(STACKFRAME));
+    DWORD image;
+#ifdef _M_IX86
+    image = IMAGE_FILE_MACHINE_I386;
+    frame.AddrPC.Offset = context.Eip;
+    frame.AddrPC.Mode = AddrModeFlat;
+    frame.AddrFrame.Offset = context.Ebp;
+    frame.AddrFrame.Mode = AddrModeFlat;
+    frame.AddrStack.Offset = context.Esp;
+    frame.AddrStack.Mode = AddrModeFlat;
+#elif _M_X64
+    image = IMAGE_FILE_MACHINE_AMD64;
+    frame.AddrPC.Offset = context.Rip;
+    frame.AddrPC.Mode = AddrModeFlat;
+    frame.AddrFrame.Offset = context.Rbp;
+    frame.AddrFrame.Mode = AddrModeFlat;
+    frame.AddrStack.Offset = context.Rsp;
+    frame.AddrStack.Mode = AddrModeFlat;
+#elif _M_IA64
+    image = IMAGE_FILE_MACHINE_IA64;
+    frame.AddrPC.Offset = context.StIIP;
+    frame.AddrPC.Mode = AddrModeFlat;
+    frame.AddrFrame.Offset = context.IntSp;
+    frame.AddrFrame.Mode = AddrModeFlat;
+    frame.AddrBStore.Offset = context.RsBSP;
+    frame.AddrBStore.Mode = AddrModeFlat;
+    frame.AddrStack.Offset = context.IntSp;
+    frame.AddrStack.Mode = AddrModeFlat;
+#else
+#error "This platform is not supported."
+#endif
+    SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO)+(TRACE_MAX_FUNCTION_NAME_LENGTH - 1) * sizeof(TCHAR));
+    symbol->MaxNameLen = TRACE_MAX_FUNCTION_NAME_LENGTH;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    IMAGEHLP_LINE64 *line = (IMAGEHLP_LINE64 *)malloc(sizeof(IMAGEHLP_LINE64));
+    line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+    DWORD displacement;
+    char buf[1024];
+    while (StackWalk(image, process, thread, &frame, &context, NULL, NULL, NULL, NULL))
+    {
+        if (SymFromAddr(process, frame.AddrPC.Offset, NULL, symbol))
+        {
+            if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &displacement, line))
+            {
+                sprintf(buf, "\tat %s in %s: line: %lu: address: 0x%0X\n", symbol->Name, line->FileName, line->LineNumber, symbol->Address);
+                MessageBoxA(NULL, buf, "Exc", 0);
+            }
+            else if (TRACE_LOG_ERRORS)
+            {
+                sprintf(buf, "Error from SymGetLineFromAddr64: %lu.\n", GetLastError());
+                MessageBoxA(NULL, buf, "Exc", 0);
+            }
+        }
+        else if (TRACE_LOG_ERRORS)
+        {
+            sprintf(buf, "Error from SymFromAddr: %lu.\n", GetLastError());
+            MessageBoxA(NULL, buf, "Exc", 0);
+        }
+    }
+    DWORD error = GetLastError();
+    if (error && TRACE_LOG_ERRORS)
+    {
+        sprintf(buf, "Error from StackWalk64: %lu.\n", error);
+        MessageBoxA(NULL, buf, "Exc", 0);
+    }
+    HANDLE dumpFile = CreateFileA(TRACE_DUMP_NAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
+    exceptionInformation.ThreadId = GetCurrentThreadId();
+    exceptionInformation.ExceptionPointers = exception;
+    exceptionInformation.ClientPointers = FALSE;
+    if (MiniDumpWriteDump(process, GetProcessId(process), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL))
+    {
+        printf("Wrote a dump.");
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 void installCrashHandler()
 {
-    SetUnhandledExceptionFilter(ExceptionHandler);
+    SetUnhandledExceptionFilter(UnhandledExceptionFilter2);
 }
 
 #endif

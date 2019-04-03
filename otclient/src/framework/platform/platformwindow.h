@@ -64,6 +64,8 @@ public:
     virtual void setIcon(const std::string& iconFile) = 0;
     virtual void setClipboardText(const std::string& text) = 0;
 
+    bool hasVerticalSync() { return m_verticalSync; }
+
     virtual Size getDisplaySize() = 0;
     virtual std::string getClipboardText() = 0;
     virtual std::string getPlatformType() = 0;
@@ -94,6 +96,10 @@ public:
     void setOnResize(const OnResizeCallback& onResize) { m_onResize = onResize; }
     void setOnInputEvent(const OnInputEventCallback& onInputEvent) { m_onInputEvent = onInputEvent; }
 
+    virtual bool hasSecondContext() { return false; }
+    virtual void bindSecondContext() {}
+    virtual void releaseSecondContext() {}
+
 protected:
     virtual int internalLoadMouseCursor(const ImagePtr& image, const Point& hotSpot) = 0;
 
@@ -123,6 +129,7 @@ protected:
     stdext::boolean<false> m_focused;
     stdext::boolean<false> m_fullscreen;
     stdext::boolean<false> m_maximized;
+    bool m_verticalSync = false;
 
     std::function<void()> m_onClose;
     OnResizeCallback m_onResize;

@@ -25,6 +25,7 @@
 #include <framework/graphics/texture.h>
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/graphics.h>
+#include <framework/util/crypt.h>
 
 void UIWidget::initImage()
 {
@@ -36,6 +37,8 @@ void UIWidget::parseImageStyle(const OTMLNodePtr& styleNode)
     for(const OTMLNodePtr& node : styleNode->children()) {
         if(node->tag() == "image-source")
             setImageSource(stdext::resolve_path(node->value(), node->source()));
+        if(node->tag() == "image-source-base64")
+            setImageSourceBase64(node->value());
         else if(node->tag() == "image-offset-x")
             setImageOffsetX(node->value<int>());
         else if(node->tag() == "image-offset-y")
@@ -182,6 +185,30 @@ void UIWidget::setImageSource(const std::string& source)
     else
         m_imageTexture = g_textures.getTexture(source);
 
+    if(m_imageTexture && (!m_rect.isValid() || m_imageAutoResize)) {
+        Size size = getSize();
+        Size imageSize = m_imageTexture->getSize();
+        if(size.width() <= 0 || m_imageAutoResize)
+            size.setWidth(imageSize.width());
+        if(size.height() <= 0 || m_imageAutoResize)
+            size.setHeight(imageSize.height());
+        setSize(size);
+    }
+
+    m_imageMustRecache = true;
+}
+
+void UIWidget::setImageSourceBase64(const std::string& data) {
+    if (data.size() % 4 != 0 || data.empty()) {
+        m_imageTexture = nullptr;
+        m_imageMustRecache = true;
+        return;
+    }
+
+    std::stringstream stream;
+    std::string decoded = g_crypt.base64Decode(data);
+    stream.write(decoded.c_str(), decoded.size());
+    m_imageTexture = g_textures.loadTexture(stream);
     if(m_imageTexture && (!m_rect.isValid() || m_imageAutoResize)) {
         Size size = getSize();
         Size imageSize = m_imageTexture->getSize();

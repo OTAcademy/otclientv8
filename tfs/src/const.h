@@ -20,7 +20,7 @@
 #ifndef FS_CONST_H_0A49B5996F074465BF44B90F4F780E8B
 #define FS_CONST_H_0A49B5996F074465BF44B90F4F780E8B
 
-static constexpr int32_t NETWORKMESSAGE_MAXSIZE = 24590;
+static constexpr int32_t NETWORKMESSAGE_MAXSIZE = 65000;
 
 enum MagicEffectClasses : uint8_t {
 	CONST_ME_NONE,
@@ -113,6 +113,10 @@ enum MagicEffectClasses : uint8_t {
 	CONST_ME_CRITICAL_DAMAGE = 173,
 	// 174 is empty
 	CONST_ME_PLUNGING_FISH = 175,
+	CONST_ME_TEST1 = 176,
+	CONST_ME_TEST2 = 177,
+	CONST_ME_TEST3 = 178,
+	CONST_ME_TEST4 = 179
 };
 
 enum ShootType_t : uint8_t {

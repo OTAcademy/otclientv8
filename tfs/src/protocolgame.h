@@ -94,9 +94,7 @@ class ProtocolGame final : public Protocol
 		void onRecvFirstMessage(NetworkMessage& msg) override;
 		void onConnect() override;
 
-		//Parse methods
-		void parseNewPing(NetworkMessage& msg);
-		
+		//Parse methods		
 		void parseAutoWalk(NetworkMessage& msg);
 		void parseSetOutfit(NetworkMessage& msg);
 		void parseSay(NetworkMessage& msg);
@@ -184,7 +182,6 @@ class ProtocolGame final : public Protocol
 		void sendSkills();
 		void sendPing();
 		void sendPingBack();
-		void sendNewPingBack(uint32_t pingId);
 		void sendCreatureTurn(const Creature* creature, uint32_t stackPos);
 		void sendCreatureSay(const Creature* creature, SpeakClasses type, const std::string& text, const Position* pos = nullptr);
 
@@ -303,6 +300,13 @@ class ProtocolGame final : public Protocol
 
 		//otclient
 		void parseExtendedOpcode(NetworkMessage& msg);
+		
+		void parseNewPing(NetworkMessage& msg);
+		void parseChangeMapAwareRange(NetworkMessage& msg);
+        void parseNewWalk(NetworkMessage& msg);
+		void updateAndSendAwareRange(int width, int height);
+		void sendNewPingBack(uint32_t pingId);		
+        void sendNewCancelWalk();
 
 		friend class Player;
 
@@ -325,11 +329,19 @@ class ProtocolGame final : public Protocol
 		uint16_t version = CLIENT_VERSION_MIN;
 
 		uint8_t challengeRandom = 0;
+        uint32_t walkId = 0;
 
 		bool debugAssertSent = false;
 		bool acceptPackets = false;
 		bool otclientV8 = false;
-		int extraFOV = 0;
+		
+		struct AwareRange {
+			int width = 17;
+			int height = 13;
+			
+			int horizontal() { return width + 1; }
+			int vertical() { return height + 1; }			
+		} awareRange;
 };
 
 #endif

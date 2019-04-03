@@ -19,14 +19,20 @@ end
 
 function load()
   local version = g_game.getClientVersion()
-
+  local things = g_settings.getNode('things')
+  
   local datPath, sprPath
-  if filename then
-    datPath = resolvepath('/things/' .. filename)
-    sprPath = resolvepath('/things/' .. filename)
-  else
-    datPath = resolvepath('/things/' .. version .. '/Tibia')
-    sprPath = resolvepath('/things/' .. version .. '/Tibia')
+  if things["data"] ~= nil and things["sprites"] ~= nil then
+    datPath = '/data/things/' .. things["data"]
+    sprPath = '/data/things/' .. things["sprites"]
+  else  
+    if filename then
+      datPath = resolvepath('/things/' .. filename)
+      sprPath = resolvepath('/things/' .. filename)
+    else
+      datPath = resolvepath('/things/' .. version .. '/Tibia')
+      sprPath = resolvepath('/things/' .. version .. '/Tibia')
+    end
   end
 
   local errorMessage = ''

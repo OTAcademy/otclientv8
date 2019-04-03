@@ -24,6 +24,7 @@
 #include "luaobject.h"
 
 #include <framework/core/resourcemanager.h>
+#include <framework/util/stats.h>
 #include <lua.hpp>
 
 #include "lbitlib.h"
@@ -456,7 +457,7 @@ std::string LuaInterface::getCurrentFunction(int level)
     return path;
 }
 
-int LuaInterface::safeCall(int numArgs, int numRets)
+int LuaInterface::safeCall(int numArgs, int numRets, const std::shared_ptr<std::string>& error)
 {
     assert(hasIndex(-numArgs-1));
 
@@ -474,9 +475,15 @@ int LuaInterface::safeCall(int numArgs, int numRets)
     remove(errorFuncIndex); // remove error func
 
      // if there was an error throw an exception
-    if(ret != 0)
-        throw LuaException(popString());
-
+    if (ret != 0) {
+        if (error) {
+            error->assign(popString());
+            clearStack();
+            return 0;
+        } else {
+            throw LuaException(popString());
+        }
+    }
     int rets = (stackSize() + numArgs + 1) - previousStackSize;
     while(numRets != -1 && rets != numRets) {
         if(rets < numRets) {
@@ -657,8 +664,8 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 
     int numRets = 0;
 
-    uint64_t executionStart = stdext::micros();
-    auto function = g_lua.getCurrentFunction();
+    // enable only for tests, high cpu usage
+    //AutoStat s(STATS_LUACALLBACK, g_lua.getCurrentFunction());
 
     // do the call
     try {
@@ -674,8 +681,6 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
         g_lua.pushString(stdext::format("C++ call failed: %s", g_lua.traceback(e.what())));
         g_lua.error();
     }
-
-    g_luaStats.addFromCallback(function, stdext::micros() - executionStart);
 
     return numRets;
 }

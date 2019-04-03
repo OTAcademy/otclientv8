@@ -31,8 +31,10 @@
 #include <framework/graphics/particlemanager.h>
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/painter.h>
+#include <framework/graphics/framebuffermanager.h>
 #include <framework/input/mouse.h>
 #include <framework/util/extras.h>
+#include <framework/util/stats.h>
 
 #ifdef FW_SOUND
 #include <framework/sound/soundmanager.h>
@@ -123,85 +125,76 @@ void GraphicalApplication::run()
 
     g_lua.callGlobalField("g_app", "onRun");
 
+    auto foregoundBuffer = g_framebuffers.createFrameBuffer();
+    foregoundBuffer->resize(g_painter->getResolution());
+
+    auto lastRender = stdext::micros();
+    auto lastForegroundRender = stdext::millis();
+    bool cacheForeground = g_graphics.canCacheBackbuffer();
+
     while(!m_stopping) {
+        m_iteration += 1;
+
         // poll all events before rendering
+        g_clock.update();
+
         poll();
 
-        if(g_window.isVisible()) {
-            // the screen consists of two panes
-            // background pane - high updated and animated pane (where the game are stuff happens)
-            // foreground pane - steady pane with few animated stuff (UI)
-            bool redraw = false;
-            bool updateForeground = false;
+        g_clock.update();
 
-            bool cacheForeground = g_graphics.canCacheBackbuffer() && m_foregroundFrameCounter.getMaxFps() != 0;
+        if (!g_window.isVisible()) {
+            stdext::microsleep(1000);
+            g_adaptiveRenderer.refresh();
+            continue;
+        }
 
-            if(m_backgroundFrameCounter.shouldProcessNextFrame()) {
-                redraw = true;
-                m_backgroundFrameCounter.processNextFrame();
+        int frameDelay = getMaxFps() <= 0 ? 0 : (1000000 / getMaxFps()) - 2000;
 
-                if(m_mustRepaint || m_foregroundFrameCounter.shouldProcessNextFrame()) {
-                    m_foregroundFrameCounter.processNextFrame();
-                    m_mustRepaint = false;
-                    updateForeground = true;
-                }
+        if (lastRender + frameDelay > stdext::micros()) {
+            stdext::microsleep(2000);
+            continue;
+        }
+        lastRender = stdext::micros();
+
+        g_adaptiveRenderer.newFrame();
+        bool updateForeground = false;
+        
+        if(lastForegroundRender + g_adaptiveRenderer.foregroundUpdateInterval() <= stdext::millis()) {
+            lastForegroundRender = stdext::millis();
+            m_mustRepaint = false;
+            updateForeground = true;
+        }
+
+        if(cacheForeground) {
+            if(updateForeground) {
+                AutoStat s(STATS_MAIN, "RenderForeground");
+                foregoundBuffer->resize(g_painter->getResolution());
+                foregoundBuffer->bind();
+                g_painter->setAlphaWriting(true);
+                g_painter->clear(Color::alpha);
+                g_ui.render(Fw::ForegroundPane);
+                foregoundBuffer->release();
             }
 
-            if(redraw) {
-                auto render_start_time = stdext::micros();
+            g_painter->clear(Color::black);
+            g_painter->setAlphaWriting(false);
 
-                if(cacheForeground) {
-                    Rect viewportRect(0, 0, g_painter->getResolution());
-
-                    // draw the foreground into a texture
-                    if(updateForeground) {
-                        
-
-                        // draw foreground
-                        g_painter->setAlphaWriting(true);
-                        g_painter->clear(Color::alpha);
-                        g_ui.render(Fw::ForegroundPane);
-
-                        // copy the foreground to a texture
-                        m_foreground->copyFromScreen(viewportRect);
-
-                        g_painter->clear(Color::black);
-                        g_painter->setAlphaWriting(false);
-                    }
-
-                    // draw background (animated stuff)                    
-                    g_ui.render(Fw::BackgroundPane);
-
-                    // draw the foreground (steady stuff)
-                    g_painter->setColor(Color::white);
-                    g_painter->setOpacity(1.0);
-                    g_painter->drawTexturedRect(viewportRect, m_foreground, viewportRect);
-                } else {
-                    g_ui.render(Fw::BothPanes);
-                }
-
-                // update screen pixels
-                g_window.swapBuffers();
-
-                auto render_time = stdext::micros() - render_start_time;
-                g_adaptiveRenderer.updateLastRenderTime(render_time);
-                g_extras.addFrameRenderTime(render_time);
+            {
+                AutoStat s(STATS_MAIN, "RenderBackground");
+                g_ui.render(Fw::BackgroundPane);
             }
 
-            // only update the current time once per frame to gain performance
-            g_clock.update();
-
-            if(m_backgroundFrameCounter.update())
-                g_lua.callGlobalField("g_app", "onFps", m_backgroundFrameCounter.getLastFps());
-            m_foregroundFrameCounter.update();
-
-            int sleepMicros = m_backgroundFrameCounter.getMaximumSleepMicros();
-            if(sleepMicros >= AdaptativeFrameCounter::MINIMUM_MICROS_SLEEP)
-                stdext::millisleep(1);
+            g_painter->setColor(Color::white);
+            g_painter->setOpacity(1.0);
+            foregoundBuffer->draw(Rect(0, 0, g_painter->getResolution()));
         } else {
-            // sleeps until next poll to avoid massive cpu usage
-            stdext::millisleep(1);
-            g_clock.update();
+            AutoStat s(STATS_MAIN, "RenderBothPanes");
+            g_ui.render(Fw::BothPanes);
+        } 
+
+        {
+            AutoStat s(STATS_MAIN, "SwapBuffers");
+            g_window.swapBuffers();
         }
     }
 
@@ -209,8 +202,7 @@ void GraphicalApplication::run()
     m_running = false;
 }
 
-void GraphicalApplication::poll()
-{
+void GraphicalApplication::poll() {
 #ifdef FW_SOUND
     g_sounds.poll();
 #endif

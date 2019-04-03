@@ -63,7 +63,7 @@ void UIManager::render(Fw::DrawPane drawPane)
 
 void UIManager::resize(const Size& size)
 {
-    m_rootWidget->setSize(g_window.getSize());
+    m_rootWidget->setSize(size);
 }
 
 void UIManager::inputEvent(const InputEvent& event)

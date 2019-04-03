@@ -26,6 +26,8 @@
 #include <framework/graphics/image.h>
 #include <framework/core/application.h>
 #include <framework/core/resourcemanager.h>
+#include <framework/util/stats.h>
+#include <framework/util/extras.h>
 
 #define HSB_BIT_SET(p, n) (p[(n)/8] |= (128 >>((n)%8)))
 
@@ -46,6 +48,7 @@ WIN32Window::WIN32Window()
     m_eglSurface = 0;
 #else
     m_wglContext = 0;
+    m_wglContext2 = 0;
 #endif
 
     m_keyMap[VK_ESCAPE] = Fw::KeyEscape;
@@ -397,6 +400,16 @@ void WIN32Window::internalCreateGLContext()
 
     if(!(m_wglContext = wglCreateContext(m_deviceContext)))
         g_logger.fatal("Unable to create GL context");
+
+    //m_wglContext2 = wglCreateContext(m_deviceContext);
+    if (m_wglContext2) {
+        BOOL error = wglShareLists(m_wglContext, m_wglContext2);
+        if (error == FALSE) {
+            g_logger.error("Can't create context bound");
+            wglDeleteContext(m_wglContext2);
+            m_wglContext2 = NULL;
+        }
+    }
 #endif
 }
 
@@ -421,7 +434,10 @@ void WIN32Window::internalDestroyGLContext()
             g_logger.error("Release of dc and rc failed.");
         if(!wglDeleteContext(m_wglContext))
             g_logger.error("Release rendering context failed.");
+        if(m_wglContext2 && !wglDeleteContext(m_wglContext2))
+            g_logger.error("Release rendering context2 failed.");        
         m_wglContext = NULL;
+        m_wglContext2 = NULL;
     }
 #endif
 }
@@ -436,6 +452,17 @@ void WIN32Window::internalRestoreGLContext()
         g_logger.fatal("Unable to make current WGL context");
 #endif
 }
+
+#ifndef OPENGL_ES
+void WIN32Window::bindSecondContext() {
+    if(!m_wglContext2 || !wglMakeCurrent(m_deviceContext, m_wglContext2))
+        g_logger.fatal("Unable to make current WGL second context");
+}
+
+void WIN32Window::releaseSecondContext() {
+    wglMakeCurrent(NULL, NULL);
+}
+#endif
 
 bool WIN32Window::isExtensionSupported(const char *ext)
 {
@@ -511,12 +538,19 @@ void WIN32Window::maximize()
 
 void WIN32Window::poll()
 {
+    AutoStat s(STATS_MAIN, "PollWindow");
+
     fireKeysPress();
+
+    auto now = stdext::micros();
 
     MSG msg;
     while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+        if (g_extras.limitedPolling && stdext::micros() > now + 5) {
+            break;
+        }
     }
 
     updateUnmaximizedCoords();
@@ -865,13 +899,22 @@ void WIN32Window::setFullscreen(bool fullscreen)
 
 void WIN32Window::setVerticalSync(bool enable)
 {
+    m_verticalSync = enable;
 #ifdef OPENGL_ES
     eglSwapInterval(m_eglDisplay, enable ? 1 : 0);
 #else
+    typedef BOOL (WINAPI * wglSwapIntervalProc)(int);
+    if (isExtensionSupported("WGL_EXT_swap_control")) {
+        wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
+        if (wglSwapInterval) {
+            wglSwapInterval(enable ? -1 : 0);
+            return;
+        }
+    }
+
     if(!isExtensionSupported("WGL_EXT_swap_control"))
         return;
 
-    typedef BOOL (WINAPI * wglSwapIntervalProc)(int);
     wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
     if(!wglSwapInterval)
         return;

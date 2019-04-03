@@ -7,7 +7,6 @@
         _CRT_SECURE_NO_WARNINGS;
         _WIN32_WINNT=0x0600;
 		WINVER=0x0600;
-        BOT_PROTECTION;
         OTCLIENT;
         CRASH_HANDLER;
         FW_GRAPHICS;
@@ -38,6 +37,8 @@
 		ucrt.lib;
 		vcruntime.lib;
 		msvcrt.lib;
+		mincore_downlevel.lib;
+		mincore.lib;
     </OTCLIENT_LIBDEPS>
     
     <OTCLIENT_LIBDEPS_D>
@@ -58,6 +59,8 @@
 		ucrt.lib;
 		vcruntime.lib;
 		msvcrt.lib;
+		mincore_downlevel.lib;
+		mincore.lib;
 	</OTCLIENT_LIBDEPS_D>
     
   </PropertyGroup>

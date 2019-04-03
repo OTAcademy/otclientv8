@@ -293,10 +293,8 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
 
 std::string BitmapFont::wrapText(const std::string& text, int maxWidth)
 {
-    if (g_extras.fastOTMLTextRendering) {
-        return newWrapText(text, maxWidth);
-    }
-
+    return newWrapText(text, maxWidth);
+    /*
     std::string outText;
     std::string line;
     std::vector<std::string> words;
@@ -345,7 +343,7 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth)
     outText += line;
     outText = outText.substr(0, outText.length()-1);
 
-    return outText;
+    return outText; */
 }
 
 std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)

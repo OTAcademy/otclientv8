@@ -14,29 +14,21 @@ class Extras {
 public:
     Extras() {
         DEFINE_OPTION(botDetection, "Bot detection");
-        DEFINE_OPTION(fastOTMLTextRendering, "Fast QTML text rendering");
         DEFINE_OPTION(newMapViewRendering, "New map view (and tile) rendering");
-        DEFINE_OPTION(adaptiveRendering, "Adaptive rendering");
 
-        DEFINE_OPTION(OTMLChildIdCache, "OTML child id cache");
-        DEFINE_OPTION(fasterAnimations, "Faster animations");    
-        DEFINE_OPTION(newPing, "New ping (needs restart and change in tfs)");    
+        DEFINE_OPTION(limitedPolling, "Limited polling");
 
-        DEFINE_OPTION(newWalking, "New walking");
-        DEFINE_OPTION(newAutoWalking, "New auto walking (requries new walknig)");
+        DEFINE_OPTION(debugWalking, "Debbug walking");
+        DEFINE_OPTION(debugPathfinding, "Debbug path finding");
     }
 
     bool botDetection = default_value;
-
-    bool fastOTMLTextRendering = default_value;
-    bool OTMLChildIdCache = default_value;
-
+    
     bool newMapViewRendering = default_value;
-    bool newWalking = default_value;
-    bool newAutoWalking = default_value;
-    bool adaptiveRendering = default_value;
-    bool fasterAnimations = default_value;
-    bool newPing = default_value;
+    bool limitedPolling = default_value;
+
+    bool debugWalking  = false;
+    bool debugPathfinding  = false;
 
     int testMode = 0;
 
@@ -73,23 +65,6 @@ public:
             ret.push_back(it.first);
         return ret;
     }
-
-    void setTestMode(int value) {
-        g_logger.debug(std::string("Test mode set to: ") + std::to_string(value));
-        testMode = value;
-    }
-
-    int getTestMode() {
-        return testMode;
-    }
-
-    void addFrameRenderTime(ticks_t time) {
-        framerRenderTimes.push_front(time);
-        if (framerRenderTimes.size() > 100)
-            framerRenderTimes.pop_back();
-    }
-
-    std::string getFrameRenderDebufInfo();
 
 private:
     std::map<std::string, std::pair<std::string, bool*>> m_options;

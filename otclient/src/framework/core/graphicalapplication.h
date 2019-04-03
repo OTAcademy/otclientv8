@@ -46,28 +46,25 @@ public:
     bool willRepaint() { return m_mustRepaint; }
     void repaint() { m_mustRepaint = true; }
 
-    void setForegroundPaneMaxFps(int maxFps) { m_foregroundFrameCounter.setMaxFps(maxFps); }
-    void setBackgroundPaneMaxFps(int maxFps) { m_backgroundFrameCounter.setMaxFps(maxFps); }
-
-    int getForegroundPaneFps() { return m_foregroundFrameCounter.getLastFps(); }
-    int getBackgroundPaneFps() { return m_backgroundFrameCounter.getLastFps(); }
-    int getForegroundPaneMaxFps() { return m_foregroundFrameCounter.getMaxFps(); }
-    int getBackgroundPaneMaxFps() { return m_backgroundFrameCounter.getMaxFps(); }
-
-    int getAdaptiveRendererLevel() { return g_adaptiveRenderer.getLevel();  }
-    int getAdaptiveRendererAvg() { return g_adaptiveRenderer.getAvg();  }
+    void setMaxFps(int maxFps) { m_maxFps = maxFps; }
+    int getMaxFps() { return m_maxFps; }
+    int getFps() { return g_adaptiveRenderer.getFps(); }
 
     bool isOnInputEvent() { return m_onInputEvent; }
+
+    int getIteration() {
+        return m_iteration;
+    }
 
 protected:
     void resize(const Size& size);
     void inputEvent(const InputEvent& event);
 
 private:
+    int m_iteration = 0;
+    int m_maxFps = 100;
     stdext::boolean<false> m_onInputEvent;
     stdext::boolean<false> m_mustRepaint;
-    AdaptativeFrameCounter m_backgroundFrameCounter;
-    AdaptativeFrameCounter m_foregroundFrameCounter;
     TexturePtr m_foreground;
 };
 

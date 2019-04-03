@@ -29,6 +29,7 @@
 #include <framework/core/clock.h>
 #include <framework/core/eventdispatcher.h>
 #include <framework/graphics/apngloader.h>
+#include <framework/util/stats.h>
 
 TextureManager g_textures;
 
@@ -46,6 +47,8 @@ void TextureManager::terminate()
 
 void TextureManager::poll()
 {
+    AutoStat s(STATS_MAIN, "PollTextures");
+
     // update only every 16msec, this allows upto 60 fps for animated textures
     static ticks_t lastUpdate = 0;
     ticks_t now = g_clock.millis();

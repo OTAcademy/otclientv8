@@ -92,7 +92,8 @@ protected:
     void processGMActions(const std::vector<uint8>& actions);
     void processInventoryChange(int slot, const ItemPtr& item);
     void processAttackCancel(uint seq);
-    void processWalkCancel(Otc::Direction direction, const Position & pos, uint8_t stackpos);
+    void processWalkCancel(Otc::Direction direction);
+    void processNewWalkCancel(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir);
 
     void processPlayerHelpers(int helpers);
     void processPlayerModes(Otc::FightModes fightMode, Otc::ChaseModes chaseMode, bool safeMode, Otc::PVPModes pvpMode);
@@ -167,10 +168,11 @@ public:
 
     // walk related
     bool walk(Otc::Direction direction);
-    void autoWalk(std::vector<Otc::Direction> dirs);
-    void forceWalk(Otc::Direction direction);
+    void autoWalk(std::vector<Otc::Direction> dirs, Position startPos);
+    void forceWalk(Otc::Direction direction, bool withPreWalk);
     void turn(Otc::Direction direction);
     void stop();
+    void cancelWalkEvent();
 
     // item related
     void look(const ThingPtr& thing, bool isBattleList = false);
@@ -312,6 +314,8 @@ public:
 
     void setProtocolVersion(int version);
     int getProtocolVersion() { return m_protocolVersion; }
+    void setCustomProtocolVersion(int version) { m_customProtocolVersion = version; }
+    int getCustomProtocolVersion() { return m_customProtocolVersion != 0 ? m_customProtocolVersion : m_protocolVersion; }
 
     void setClientVersion(int version);
     int getClientVersion() { return m_clientVersion; }
@@ -375,6 +379,7 @@ private:
     ticks_t m_ping;
     uint m_pingSent;
     uint m_pingReceived;
+    uint m_walkId = 0;
     stdext::timer m_pingTimer;
     std::map<uint32_t, stdext::timer> m_newPingIds;
     uint m_seq;
@@ -384,6 +389,7 @@ private:
     Otc::ChaseModes m_chaseMode;
     Otc::PVPModes m_pvpMode;
     Otc::Direction m_lastWalkDir;
+    bool m_waitingForAnotherDir = false;
     UnjustifiedPoints m_unjustifiedPoints;
     int m_openPvpSituations;
     bool m_safeFight;
@@ -398,6 +404,7 @@ private:
     ScheduledEventPtr m_checkConnectionEvent;
     bool m_connectionFailWarned;
     int m_protocolVersion;
+    int m_customProtocolVersion = 0;
     int m_clientVersion;
     std::string m_clientSignature;
     int m_clientCustomOs;

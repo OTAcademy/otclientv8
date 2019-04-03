@@ -18,6 +18,7 @@ public:
     int post(const std::string& url, const std::string& data, int timeout = 5);
     int download(const std::string& url, const std::string& path, int timeout = 5);
 
+    bool cancel(int id);
     int getProgress(int id);
 
     const std::map<std::string, HttpResult_ptr>& downloads() {
@@ -36,6 +37,8 @@ public:
 private:
     bool m_working = false;
     int m_operationId = 1;
+    int m_speed = 0;
+    size_t m_lastSpeedUpdate = 0;
     boost::asio::io_context m_ios;
     std::map<int, HttpResult_ptr> m_operations;
     std::map<std::string, HttpResult_ptr> m_downloads;

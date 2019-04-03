@@ -34,6 +34,7 @@
 #include <framework/core/resourcemanager.h>
 #include <framework/core/asyncdispatcher.h>
 #include <thread>
+#include <framework/util/stats.h>
 
 SoundManager g_sounds;
 
@@ -88,6 +89,8 @@ void SoundManager::terminate()
 
 void SoundManager::poll()
 {
+    AutoStat s(STATS_MAIN, "PollSounds");
+
     static ticks_t lastUpdate = 0;
     ticks_t now = g_clock.millis();
 

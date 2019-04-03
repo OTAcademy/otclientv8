@@ -38,8 +38,9 @@ public:
     // @dontbind
     void terminate();
 
-    bool launchCorrect(const std::string& app);
-    bool setup(const std::string& app, const std::string& existentFile);
+    int launchCorrect(const std::string& app);
+    bool setupWriteDir(const std::string& app);
+    bool setup(const std::string& existentFile);
 
     bool loadDataFromSelf(const std::string & existentFile);
 

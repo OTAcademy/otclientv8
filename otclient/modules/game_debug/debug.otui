@@ -42,6 +42,20 @@ MiniWindow
       text: -
 
     DebugLabel
+      !text: tr('Main')
+
+    DebugText
+      id: mainStats
+      text: -
+
+    DebugLabel
+      !text: tr('Dispatcher')
+
+    DebugText
+      id: dispatcherStats
+      text: -
+
+    DebugLabel
       !text: tr('Lua')
 
     DebugText
@@ -53,6 +67,13 @@ MiniWindow
 
     DebugText
       id: luaCallback
+      text: -
+
+    DebugLabel
+      !text: tr('Slow main functions')
+
+    DebugText
+      id: slowMain
       text: -
 
   ResizeBorder

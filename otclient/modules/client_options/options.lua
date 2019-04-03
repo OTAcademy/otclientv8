@@ -3,8 +3,10 @@ local defaultOptions = {
   showFps = true,
   showPing = true,
   fullscreen = false,
+  classicView = false,
   classicControl = true,
   smartWalk = false,
+  extentedPreWalking = true,
   autoChaseOverride = true,
   showStatusMessagesInConsole = true,
   showEventMessagesInConsole = true,
@@ -13,22 +15,22 @@ local defaultOptions = {
   showLevelsInConsole = true,
   showPrivateMessagesInConsole = true,
   showPrivateMessagesOnScreen = true,
-  showLeftPanel = true,
-  foregroundFrameRate = 30,
-  backgroundFrameRate = 60,
+  showLeftPanel = false,
+  backgroundFrameRate = 100,
   painterEngine = 0,
   enableAudio = false,
   enableMusicSound = false,
   musicSoundVolume = 100,
-  enableLights = true,
-  ambientLight = 25,
+  enableLights = false,
+  ambientLight = 100,
+  optimizationLevel = 1,
   displayNames = true,
   displayHealth = true,
   displayMana = true,
   displayText = true,
   dontStretchShrink = false,
   turnDelay = 50,
-  hotkeyDelay = 50
+  hotkeyDelay = 50,
 }
 
 local optionsWindow
@@ -157,16 +159,16 @@ end
 
 function setOption(key, value, force)
   if extraOptions[key] ~= nil then
-	g_extras.set(key, value)
-	g_settings.set("extras_" .. key, value)
-	return
+    g_extras.set(key, value)
+    g_settings.set("extras_" .. key, value)
+    return
   end
-  
+   
   if not force and options[key] == value then return end
   local gameMapPanel = modules.game_interface.getMapPanel()
 
   if key == 'vsync' then
-    g_window.setVerticalSync(value)
+    --g_window.setVerticalSync(value)
   elseif key == 'showFps' then
     modules.client_topmenu.setFpsVisible(value)
   elseif key == 'showPing' then
@@ -193,16 +195,17 @@ function setOption(key, value, force)
     audioPanel:getChildById('musicSoundVolumeLabel'):setText(tr('Music volume: %d', value))
   elseif key == 'showLeftPanel' then
     modules.game_interface.getLeftPanel():setOn(value)
+  elseif key == 'classicView' and not force then
+    local viewMode = 1
+    if value then
+      viewMode = 0
+    end    
+    modules.game_interface.setupViewMode(viewMode)    
   elseif key == 'backgroundFrameRate' then
     local text, v = value, value
     if value <= 0 or value >= 201 then text = 'max' v = 0 end
     graphicsPanel:getChildById('backgroundFrameRateLabel'):setText(tr('Game framerate limit: %s', text))
-    g_app.setBackgroundPaneMaxFps(v)
-  elseif key == 'foregroundFrameRate' then
-    local text, v = value, value
-    if value <= 0 or value >= 61 then  text = 'max' v = 0 end
-    graphicsPanel:getChildById('foregroundFrameRateLabel'):setText(tr('Interface framerate limit: %s', text))
-    g_app.setForegroundPaneMaxFps(v)
+    g_app.setMaxFps(v)
   elseif key == 'enableLights' then
     gameMapPanel:setDrawLights(value and options['ambientLight'] < 100)
     graphicsPanel:getChildById('ambientLight'):setEnabled(value)
@@ -213,6 +216,12 @@ function setOption(key, value, force)
     gameMapPanel:setDrawLights(options['enableLights'] and value < 100)
   elseif key == 'painterEngine' then
     g_graphics.selectPainterEngine(value)
+  elseif key == 'optimizationLevel' then
+    local optlvl = graphicsPanel:getChildById('optimizationLevel')
+    if optlvl.currentIndex ~= value then
+      optlvl:setCurrentIndex(value)
+    end
+    g_adaptiveRenderer.setLevel(value - 2)
   elseif key == 'displayNames' then
     gameMapPanel:setDrawNames(value)
   elseif key == 'displayHealth' then
@@ -230,7 +239,6 @@ function setOption(key, value, force)
   elseif key == 'hotkeyDelay' then
     generalPanel:getChildById('hotkeyDelayLabel'):setText(tr('Hotkey delay: %sms', value))
   end
-  
   if key == 'newWalking' then
 	g_app.setNewWalking(value)
   elseif key == 'newAutoWalking' then
@@ -260,7 +268,7 @@ function setOption(key, value, force)
       break
     end
   end
-
+  
   g_settings.set(key, value)
   options[key] = value
 end

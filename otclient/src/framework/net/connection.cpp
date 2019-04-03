@@ -25,6 +25,9 @@
 #include <framework/core/application.h>
 #include <framework/core/eventdispatcher.h>
 #include <boost/asio.hpp>
+#include <framework/util/stats.h>
+#include <framework/util/extras.h>
+#include <chrono>
 
 asio::io_service g_ioService;
 std::list<std::shared_ptr<asio::streambuf>> Connection::m_outputStreams;
@@ -50,6 +53,7 @@ Connection::~Connection()
 
 void Connection::poll()
 {
+    AutoStat s(STATS_MAIN, "PollConnection");
     // reset must always be called prior to poll
     g_ioService.reset();
     g_ioService.poll();

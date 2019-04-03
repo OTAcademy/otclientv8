@@ -67,6 +67,7 @@ private:
     stdext::boolean<false> m_autoLoad;
     stdext::boolean<false> m_reloadable;
     stdext::boolean<false> m_sandboxed;
+    bool m_loadedOnStartup = false;
     int m_autoLoadPriority;
     int m_sandboxEnv;
     std::tuple<std::string, std::string> m_onLoadFunc;

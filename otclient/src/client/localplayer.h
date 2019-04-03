@@ -40,6 +40,9 @@ public:
     void stopAutoWalk();
     bool autoWalk(const Position& destination, int retries = 0);
     bool canWalk(Otc::Direction direction);
+    bool isWalkLocked() {
+        return (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration);
+    }
 
     void setStates(int states);
     void setSkill(Otc::Skill skill, int level, int levelPercent);
@@ -123,8 +126,9 @@ protected:
     void walk(const Position& oldPos, const Position& newPos);
     void preWalk(Otc::Direction direction);
     void newPreWalk(Otc::Direction direction);
-    void cancelWalk(Otc::Direction direction = Otc::InvalidDirection, Position pos = Position(), uint8_t stackpos = -1);
-    void stopWalk();
+    void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);
+    void cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir);
+    void stopWalk(bool teleport = false);
 
     friend class Game;
 

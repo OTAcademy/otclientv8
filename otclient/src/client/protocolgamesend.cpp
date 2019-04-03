@@ -54,7 +54,7 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
 
     msg->addU8(Proto::ClientPendingGame);
     msg->addU16(g_game.getOs());
-    msg->addU16(g_game.getProtocolVersion());
+    msg->addU16(g_game.getCustomProtocolVersion());
 
     if(g_game.getFeature(Otc::GameClientVersion))
         msg->addU32(g_game.getClientVersion());
@@ -138,13 +138,9 @@ void ProtocolGame::sendLogout()
 
 void ProtocolGame::sendPing()
 {
-    if(g_game.getFeature(Otc::GameExtendedClientPing))
-        sendExtendedOpcode(2, "");
-    else {
-        OutputMessagePtr msg(new OutputMessage);
-        msg->addU8(Proto::ClientPing);
-        Protocol::send(msg);
-    }
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientPing);
+    Protocol::send(msg);
 }
 
 void ProtocolGame::sendPingBack()
@@ -205,35 +201,31 @@ void ProtocolGame::sendAutoWalk(const std::vector<Otc::Direction>& path)
     send(msg);
 }
 
-void ProtocolGame::sendWalkNorth(const Position& currentPos)
+void ProtocolGame::sendWalkNorth()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkNorth);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkEast(const Position& currentPos)
+void ProtocolGame::sendWalkEast()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkEast);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkSouth(const Position& currentPos)
+void ProtocolGame::sendWalkSouth()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkSouth);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkWest(const Position& currentPos)
+void ProtocolGame::sendWalkWest()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkWest);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
@@ -244,35 +236,31 @@ void ProtocolGame::sendStop()
     send(msg);
 }
 
-void ProtocolGame::sendWalkNorthEast(const Position& currentPos)
+void ProtocolGame::sendWalkNorthEast()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkNorthEast);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkSouthEast(const Position& currentPos)
+void ProtocolGame::sendWalkSouthEast()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkSouthEast);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkSouthWest(const Position& currentPos)
+void ProtocolGame::sendWalkSouthWest()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkSouthWest);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
-void ProtocolGame::sendWalkNorthWest(const Position& currentPos)
+void ProtocolGame::sendWalkNorthWest()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientWalkNorthWest);
-    addPosition(msg, currentPos);
     send(msg);
 }
 
@@ -965,6 +953,52 @@ void ProtocolGame::sendChangeMapAwareRange(int xrange, int yrange)
     msg->addU8(yrange);
     send(msg);
 }
+
+void ProtocolGame::sendNewWalk(int walkId, const Position& pos, const std::vector<Otc::Direction>& path, bool autoWalk) 
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientNewWalk);
+    msg->addU32(walkId);
+    addPosition(msg, pos);
+    msg->addU8(autoWalk ? 1 : 0);
+    msg->addU16(path.size());
+    for(Otc::Direction dir : path) {
+        uint8 byte;
+        switch(dir) {
+            case Otc::East:
+                byte = 1;
+                break;
+            case Otc::NorthEast:
+                byte = 2;
+                break;
+            case Otc::North:
+                byte = 3;
+                break;
+            case Otc::NorthWest:
+                byte = 4;
+                break;
+            case Otc::West:
+                byte = 5;
+                break;
+            case Otc::SouthWest:
+                byte = 6;
+                break;
+            case Otc::South:
+                byte = 7;
+                break;
+            case Otc::SouthEast:
+                byte = 8;
+                break;
+            default:
+                byte = 0;
+                break;
+        }
+        msg->addU8(byte);
+    }
+
+    send(msg);
+}
+
 
 void ProtocolGame::addPosition(const OutputMessagePtr& msg, const Position& position)
 {

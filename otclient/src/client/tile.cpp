@@ -43,9 +43,6 @@ Tile::Tile(const Position& position) :
 
 void Tile::draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView)
 {
-    if (g_extras.newMapViewRendering)
-        return newDraw(dest, scaleFactor, drawFlags, lightView);
-
     bool animate = drawFlags & Otc::DrawAnimations;
 
     /* Flags to be checked for.  */
@@ -180,7 +177,7 @@ void Tile::markTilesToRedrawn() {
     int redrawPreviousTopW = 0;
     int redrawPreviousTopH = 0;
 
-    setWillBeRedrawn(false);
+    m_willBeRedrawn = 0;
 
     for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
         const ThingPtr& thing = *it;
@@ -198,16 +195,13 @@ void Tile::markTilesToRedrawn() {
                 continue;
             const TilePtr& tile = g_map.getTile(m_position.translated(x,y));
             if (tile)
-                tile->setWillBeRedrawn(true);
+                tile->m_willBeRedrawn += 1;
         }
     }
 }
 
 void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView)
 {
-    if (g_adaptiveRenderer.ignoreLight())
-        lightView = nullptr;
-
     bool animate = drawFlags & Otc::DrawAnimations;
 
     /* Flags to be checked for.  */
@@ -267,12 +261,11 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
 
     if(drawFlags & Otc::DrawItems) {
         // now common items in reverse order
-        std::vector<ThingPtr> toDraw;
         for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
             const ThingPtr& thing = *it;
             if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
                 break;
-            toDraw.push_back(thing);
+            thing->draw(dest - m_drawElevation*scaleFactor, scaleFactor, animate, lightView);
 
             if(thing->isLyingCorpse()) {
                 redrawPreviousTopW = std::max<int>(thing->getWidth(), redrawPreviousTopW);
@@ -283,10 +276,6 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
             if(m_drawElevation > Otc::MAX_ELEVATION)
                 m_drawElevation = Otc::MAX_ELEVATION;
         }
-
-        int limit = g_adaptiveRenderer.itemsLimit();
-        for (int i = (int)toDraw.size() > limit ? toDraw.size() - limit : 0; i != toDraw.size(); ++i)
-            toDraw[i]->draw(dest - m_drawElevation * scaleFactor, scaleFactor, animate, lightView);
     }
 
     // after we render 2x2 lying corpses, we must redraw previous creatures/ontop above them
@@ -299,20 +288,31 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
                         continue;
                     const TilePtr& tile = g_map.getTile(m_position.translated(x,y));
                     if (tile) {
-                        tile->draw(dest + Point(x*Otc::TILE_PIXELS, y*Otc::TILE_PIXELS)*scaleFactor, scaleFactor, topRedrawFlags);
+                        tile->newDraw(dest + Point(x*Otc::TILE_PIXELS, y*Otc::TILE_PIXELS)*scaleFactor, scaleFactor, topRedrawFlags, lightView);
                     }
                 }
             }
         }
     }
 
-    if (m_willBeRedrawn && (drawFlags & Otc::DrawItems))
+    if (m_willBeRedrawn != 0) {
+        m_willBeRedrawn -= 1;
         return;
+    }
 
     // creatures
     if(drawFlags & Otc::DrawCreatures) {
+        m_localPlayerPoint = Point(0, 0);
+
         if(animate) {
             for(const CreaturePtr& creature : m_walkingCreatures) {
+                if (creature->isLocalPlayer()) {
+                    creature->setElevation(m_drawElevation);
+                    newDrawLocalPlayer(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
+                                             dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor));
+                    continue;
+                }
+
                 creature->draw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
                                      dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, animate, lightView);
             }
@@ -331,6 +331,12 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
 
         int limit = g_adaptiveRenderer.creaturesLimit();
         for (auto i = (int)toDraw.size() > limit ? toDraw.size() - limit : 0; i < toDraw.size(); ++i) {
+            if (toDraw[i]->isLocalPlayer()) {
+                toDraw[i]->setElevation(m_drawElevation);
+                newDrawLocalPlayer(dest - m_drawElevation * scaleFactor);
+                continue;
+            }
+
             toDraw[i]->draw(dest - m_drawElevation * scaleFactor, scaleFactor, animate, lightView);
         }
     }
@@ -354,6 +360,16 @@ void Tile::newDraw(const Point& dest, float scaleFactor, int drawFlags, LightVie
         light.intensity = 1;
         lightView->addLightSource(dest + Point(16,16) * scaleFactor, scaleFactor, light);
     }
+}
+
+void Tile::newDrawLocalPlayer(const Point & dest) {
+    g_painter->setCompositionMode(Painter::CompositionMode_AlphaZeroing);
+    g_painter->setBlendEquation(Painter::BlendEquation_Add);
+    g_painter->resetOpacity();
+    g_painter->setColor(Color(1.0f, 1.0f, 1.0f, 0.0f));
+    g_painter->drawFilledRect(Rect(dest - Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), dest + Point(Otc::TILE_PIXELS * 2, Otc::TILE_PIXELS * 2)));
+    g_painter->resetColor();
+    g_painter->resetCompositionMode();
 }
 
 void Tile::clean()
@@ -544,7 +560,7 @@ ItemPtr Tile::getGround()
 
 int Tile::getGroundSpeed()
 {
-    if (g_extras.newWalking)
+    if (m_speed)
         return m_speed;
     int groundSpeed = 100;
     if(ItemPtr ground = getGround())

@@ -55,7 +55,6 @@ namespace Proto {
         GameServerPingBack                  = 29,
         GameServerPing                      = 30,
         GameServerChallenge                 = 31,
-        GameServerNewPing                   = 33,
         GameServerDeath                     = 40,
 
         // all in game opcodes must be greater than 50
@@ -67,6 +66,10 @@ namespace Proto {
         // NOTE: add any custom opcodes in this range
         // 51 - 99
         GameServerChangeMapAwareRange       = 51,
+
+        GameServerNewPing                   = 55,
+
+        GameServerNewCancelWalk             = 65,
 
         // original tibia ONLY
         GameServerFullMap                   = 100,
@@ -174,8 +177,7 @@ namespace Proto {
         ClientLeaveGame                     = 20,
         ClientPing                          = 29,
         ClientPingBack                      = 30,
-        ClientNewPing                       = 33,
-
+        
         // all in game opcodes must be equal or greater than 50
         ClientFirstGameOpcode               = 50,
 
@@ -185,6 +187,9 @@ namespace Proto {
 
         // NOTE: add any custom opcodes in this range
         // 51 - 99
+        ClientNewPing                       = 55,
+
+        ClientNewWalk                       = 64,
 
         // original tibia ONLY
         ClientAutoWalk                      = 100,

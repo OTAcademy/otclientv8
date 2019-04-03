@@ -18,10 +18,23 @@ if not g_resources.directoryExists("/modules") then
   g_logger.fatal("Modules dir doesn't exist.")
 end
 
-StaticConfig = {
-  url = "http://otclient.ovh",
-  updater = "http://otclient.ovh/updater.php",
-  news = "http://otclient.ovh/news.php",
+Services = {
+  website = "http://otclient.ovh", -- currently not used
+  updater = "http://otclient.ovh/api/updater.php",
+  news = "http://otclient.ovh/api/news.php",
+--  newLogin = "http://otclient.ovh/api/newlogin.php", -- password less login, will be added in future (may)
+  stats = "http://otclient.ovh/api/stats.php",
+  crash = "http://otclient.ovh/api/crash.php",
+  feedback = "http://otclient.ovh/api/feedback.php"
+}
+
+Servers = {
+  BloodWar = "http://baiak-master.com/login.php",
+  OTClientV8 = "http://otclient.ovh/api/login.php",
+  Wartera = "https://wartera.online/login.php",
+  KasteriaTest = "https://www.xavato.eu/login.php",
+  Xavato = "https://www.xavato.eu/login2.php",
+  TestBloodWar = "http://168.228.157.20/login.php"
 }
 
 -- settings

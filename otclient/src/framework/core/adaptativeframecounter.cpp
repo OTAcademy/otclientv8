@@ -75,7 +75,7 @@ bool AdaptativeFrameCounter::update()
     }
 
     delta =  now - m_lastFpsUpdate;
-    if(delta >= 250000) {
+    if(delta >= 1000000) {
         m_lastFps = m_frames / (delta / 1000000.0f);
         if(m_frames > 0)
             m_mediumFrameDelay = m_frameDelaySum / m_frames;

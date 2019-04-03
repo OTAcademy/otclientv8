@@ -12,21 +12,36 @@ G = G or {}
 -- @docfuncs @{
 
 function scheduleEvent(callback, delay)
-  local event = g_dispatcher.scheduleEvent(callback, delay)
+  local desc = "lua"
+  local info = debug.getinfo(2, "Sl")
+  if info then
+    desc = info.short_src .. ":" .. info.currentline
+  end
+  local event = g_dispatcher.scheduleEvent(desc, callback, delay)
   -- must hold a reference to the callback, otherwise it would be collected
   event._callback = callback
   return event
 end
 
 function addEvent(callback, front)
-  local event = g_dispatcher.addEvent(callback, front)
+  local desc = "lua"
+  local info = debug.getinfo(2, "Sl")
+  if info then
+    desc = info.short_src .. ":" .. info.currentline
+  end
+  local event = g_dispatcher.addEvent(desc, callback, front)
   -- must hold a reference to the callback, otherwise it would be collected
   event._callback = callback
   return event
 end
 
 function cycleEvent(callback, interval)
-  local event = g_dispatcher.cycleEvent(callback, interval)
+  local desc = "lua"
+  local info = debug.getinfo(2, "Sl")
+  if info then
+    desc = info.short_src .. ":" .. info.currentline
+  end
+  local event = g_dispatcher.cycleEvent(desc, callback, interval)
   -- must hold a reference to the callback, otherwise it would be collected
   event._callback = callback
   return event

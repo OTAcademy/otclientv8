@@ -399,6 +399,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerChangeMapAwareRange:
                 parseChangeMapAwareRange(msg);
                 break;
+            case Proto::GameServerNewCancelWalk:
+                parseNewCancelWalk(msg);
+                break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
                 break;
@@ -778,7 +781,7 @@ void ProtocolGame::parseMapMoveNorth(const InputMessagePtr& msg)
     pos.y--;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), 1 + range.extra);
+    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), 1);
     g_map.setCentralPosition(pos);
 }
 
@@ -792,7 +795,7 @@ void ProtocolGame::parseMapMoveEast(const InputMessagePtr& msg)
     pos.x++;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x + range.right, pos.y - range.top, pos.z, 1 + range.extra, range.vertical());
+    setMapDescription(msg, pos.x + range.right, pos.y - range.top, pos.z, 1, range.vertical());
     g_map.setCentralPosition(pos);
 }
 
@@ -806,7 +809,7 @@ void ProtocolGame::parseMapMoveSouth(const InputMessagePtr& msg)
     pos.y++;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x - range.left, pos.y + range.bottom, pos.z, range.horizontal(), 1 + range.extra);
+    setMapDescription(msg, pos.x - range.left, pos.y + range.bottom, pos.z, range.horizontal(), 1);
     g_map.setCentralPosition(pos);
 }
 
@@ -820,7 +823,7 @@ void ProtocolGame::parseMapMoveWest(const InputMessagePtr& msg)
     pos.x--;
 
     AwareRange range = g_map.getAwareRange();
-    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, 1 + range.extra, range.vertical());
+    setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, 1, range.vertical());
     g_map.setCentralPosition(pos);
 }
 
@@ -879,6 +882,10 @@ void ProtocolGame::parseCreatureMove(const InputMessagePtr& msg)
 {
     ThingPtr thing = getMappedThing(msg);
     Position newPos = getPosition(msg);
+
+    uint16_t stepDuration = 0;
+    if(g_game.getFeature(Otc::GameNewWalking))
+        stepDuration = msg->getU16();
     
     if(!thing || !thing->isCreature()) {
         g_logger.traceError("no creature found to move");
@@ -891,7 +898,7 @@ void ProtocolGame::parseCreatureMove(const InputMessagePtr& msg)
     }
 
     CreaturePtr creature = thing->static_self_cast<Creature>();
-    creature->allowAppearWalk();
+    creature->allowAppearWalk(stepDuration);
 
     g_map.addThing(thing, newPos, -1);
 }
@@ -1728,9 +1735,8 @@ void ProtocolGame::parseTextMessage(const InputMessagePtr& msg)
 void ProtocolGame::parseCancelWalk(const InputMessagePtr& msg)
 {
     Otc::Direction direction = (Otc::Direction)msg->getU8();
-    Position pos = getPosition(msg);
-    uint8 stackpos = msg->getU8();
-    g_game.processWalkCancel(direction, pos, stackpos);
+
+    g_game.processWalkCancel(direction);
 }
 
 void ProtocolGame::parseWalkWait(const InputMessagePtr& msg)
@@ -2053,6 +2059,16 @@ void ProtocolGame::parseCreatureType(const InputMessagePtr& msg)
         g_logger.traceError("could not get creature");
 }
 
+void ProtocolGame::parseNewCancelWalk(const InputMessagePtr& msg)
+{
+    uint32 walkId = msg->getU32();
+    Position pos = getPosition(msg);
+    uint8_t stackpos = msg->getU8();
+    Otc::Direction direction = (Otc::Direction)msg->getU8();
+
+    g_game.processNewWalkCancel(walkId, pos, stackpos, direction);
+}
+
 void ProtocolGame::setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height)
 {
     int startz, endz, zstep;
@@ -2098,8 +2114,12 @@ int ProtocolGame::setTileDescription(const InputMessagePtr& msg, Position positi
     if(g_game.getFeature(Otc::GameEnvironmentEffect)) {
         msg->getU16();
     }
-    uint16_t groundSpeed = msg->getU16();
-    g_map.setTileSpeed(position, groundSpeed);
+
+    if (g_game.getFeature(Otc::GameNewWalking)) {
+        uint16_t groundSpeed = msg->getU16();
+        uint8_t blocking = msg->getU8();
+        g_map.setTileSpeed(position, groundSpeed, blocking);
+    }
 
     for(int stackPos=0;stackPos<256;stackPos++) {
         if(msg->peekU16()  >= 0xff00)

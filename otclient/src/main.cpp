@@ -29,30 +29,52 @@
 int main(int argc, const char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
 
+    std::thread *control_thread = nullptr;
+    if (std::find(args.begin(), args.end(), "--from-updater") != args.end()) {
+        // wait 5s, if app didn't started - kill it
+        control_thread = new std::thread([] {
+            stdext::millisleep(10000);
+            if (g_app.getIteration() < 5)
+                std::exit(-1);
+        });
+    }
+
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName("otclientv8");
-    g_app.setVersion("0.1 alpha");
+    g_app.setVersion("0.2 alpha");
 
     // initialize resources
     g_resources.init(args[0].c_str());
 
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
         g_resources.encrypt();
+        std::cout << "Encryption complete" << std::endl;
+#ifdef WIN32
+        MessageBoxA(NULL, "Encryption complete", "Success", 0);
+#endif
         return 0;
     }
-    if (g_resources.launchCorrect(g_app.getCompactName())) {
+
+    int launchCorrect = control_thread ? 0 : g_resources.launchCorrect(g_app.getCompactName());
+    if (launchCorrect == 1) {
         return 0;
-    }
+    }    
 
     // initialize application framework and otclient
     g_app.init(args);
     g_client.init(args);
     g_http.init();
-    //g_stats.init();
-
+    
     // find script init.lua and run it
-    g_resources.setup(g_app.getCompactName(), "init.lua");
+    g_resources.setupWriteDir(g_app.getCompactName());
+
+    if (launchCorrect == -1 || (std::find(args.begin(), args.end(), "--update") != args.end())) {
+        if(!g_resources.loadDataFromSelf("init.lua"))
+            g_resources.setup("init.lua");
+    } else {
+        g_resources.setup("init.lua");
+    }
 
     if(!g_lua.safeRunScript("init.lua"))
         g_logger.fatal("Unable to run script init.lua!");
@@ -62,6 +84,11 @@ int main(int argc, const char* argv[]) {
 
     // unload modules
     g_app.deinit();
+
+    if (control_thread) {
+        control_thread->join();
+        delete control_thread;
+    }
 
     // terminate everything and free memory
     g_http.terminate();

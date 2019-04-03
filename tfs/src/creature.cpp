@@ -200,6 +200,7 @@ void Creature::onWalk()
 				if (player) {
 					player->sendCancelMessage(ret);
 					player->sendCancelWalk();
+                    player->sendNewCancelWalk();
 				}
 
 				forceUpdateFollowPath = true;
@@ -267,13 +268,19 @@ bool Creature::fixSteps() {
 	}
 	finalPos = getNextPosition(firstDir, finalPos);
 	
-	for(int i = 0; i <= 5 && !listWalkDir.empty(); ++i) { // check up to next 14 steps
+	bool tryToFix = false;
+	if(!g_game.map.canWalkTo(*this, finalPos))
+		tryToFix = true;
+	
+	for(int i = 0; i <= 5 && !listWalkDir.empty(); ++i) { // check up to next 6 steps
 		finalPos = getNextPosition(listWalkDir.front(), finalPos);
 		listWalkDir.pop_front();
+		if(!g_game.map.canWalkTo(*this, finalPos))
+			tryToFix = true;
 	}
 	
 	std::forward_list<Direction> dirList;
-	if(!getPathTo(finalPos, dirList, 0, 0, true, true)) {
+	if(!tryToFix || !getPathTo(finalPos, dirList, 0, 0, true, true)) {
 		listWalkDir = dirsCopy;
 		return false;
 	}
@@ -292,7 +299,7 @@ void Creature::startAutoWalk(const std::forward_list<Direction>& listDir)
 	for (auto it = listDir.begin(); it != listDir.end() && size <= 1; ++it) {
 		size++;
 	}
-	addEventWalk(size == 1);
+    addEventWalk(true);
 }
 
 void Creature::addEventWalk(bool firstStep)
@@ -1410,10 +1417,10 @@ int64_t Creature::getStepDuration() const
 	double duration = std::floor(1000 * groundSpeed / calculatedStepSpeed);
 	int64_t stepDuration = std::ceil(duration / 50) * 50;
 
-	const Monster* monster = getMonster();
+	/* const Monster* monster = getMonster();
 	if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
 		stepDuration *= 2;
-	}
+	} */
 
 	return stepDuration;
 }

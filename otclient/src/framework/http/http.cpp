@@ -1,5 +1,6 @@
 #include <framework/luaengine/luainterface.h>
 #include <framework/util/crypt.h>
+#include <framework/util/stats.h>
 
 #include "http.h"
 #include "session.h"
@@ -18,6 +19,8 @@ void Http::terminate() {
 }
 
 void Http::poll() {
+    AutoStat s(STATS_MAIN, "PollHTTP");
+    m_ios.reset();
     m_ios.poll();
 }
 
@@ -28,7 +31,7 @@ int Http::get(const std::string& url, int timeout) {
     result->url = url;
     result->operationId = m_operationId;
     m_operations[m_operationId] = result;
-    auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&] (HttpResult_ptr result) {     
+    auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&] (HttpResult_ptr result) {   
         if (!result->finished) {
             g_lua.callGlobalField("g_http", "onGetProgress", result->operationId, result->url, result->progress);
             return;
@@ -70,8 +73,11 @@ int Http::download(const std::string& url, const std::string& path, int timeout)
     result->operationId = m_operationId;
     m_operations[m_operationId] = result;
     auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&, path] (HttpResult_ptr result) {
+        m_speed = ((result->size) * 10) / (1 + stdext::micros() - m_lastSpeedUpdate);
+        m_lastSpeedUpdate = stdext::micros();
+
         if (!result->finished) {
-            g_lua.callGlobalField("g_http", "onDownloadProgress", result->operationId, result->url, result->progress);
+            g_lua.callGlobalField("g_http", "onDownloadProgress", result->operationId, result->url, result->progress, m_speed);
             return;
         }
         if (result->error.empty())
@@ -81,6 +87,16 @@ int Http::download(const std::string& url, const std::string& path, int timeout)
     });
     session->start();
     return m_operationId++;
+}
+
+bool Http::cancel(int id) {
+    auto it = m_operations.find(id);
+    if (it == m_operations.end())
+        return false;
+    if (it->second->canceled)
+        return false;
+    it->second->canceled =true;
+    return true;
 }
 
 int Http::getProgress(int id) {

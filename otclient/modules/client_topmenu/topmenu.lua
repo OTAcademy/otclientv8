@@ -4,6 +4,9 @@ local leftButtonsPanel
 local rightButtonsPanel
 local leftGameButtonsPanel
 local rightGameButtonsPanel
+local feedbackButton
+local fpsUpdateEvent = nil
+local showFeedback = false
 
 -- private functions
 local function addButton(id, description, icon, callback, panel, toggle, front)
@@ -40,7 +43,6 @@ function init()
   connect(g_game, { onGameStart = online,
                     onGameEnd = offline,
                     onPingBack = updatePing })
-  connect(g_app, { onFps = updateFps })
 
   topMenu = g_ui.displayUI('topmenu')
 
@@ -50,20 +52,28 @@ function init()
   rightGameButtonsPanel = topMenu:getChildById('rightGameButtonsPanel')
   pingLabel = topMenu:getChildById('pingLabel')
   fpsLabel = topMenu:getChildById('fpsLabel')
+  feedbackButton = topMenu:getChildById('feedbackButton')
   
   g_keyboard.bindKeyDown('Ctrl+Shift+T', toggle)
+  
+  showFeedback = Services.feedback ~= nil and Services.feedback:len() > 4
 
   if g_game.isOnline() then
     online()
   end
+  
+  updateFps()
 end
 
 function terminate()
   disconnect(g_game, { onGameStart = online,
                        onGameEnd = offline,
                        onPingBack = updatePing })
-  disconnect(g_app, { onFps = updateFps })
-
+  if fpsUpdateEvent ~= nil then
+	  removeEvent(fpsUpdateEvent)
+	  fpsUpdateEvent = nil
+  end
+  
   topMenu:destroy()
 end
 
@@ -73,8 +83,12 @@ function online()
   addEvent(function()
     if modules.client_options.getOption('showPing') and (g_game.getFeature(GameClientPing) or g_game.getFeature(GameExtendedClientPing)) then
       pingLabel:show()
+      if showFeedback then
+        feedbackButton:show()
+      end
     else
       pingLabel:hide()
+      feedbackButton:hide()
     end
   end)
 end
@@ -82,10 +96,14 @@ end
 function offline()
   hideGameButtons()
   pingLabel:hide()
+  if showFeedback then
+    feedbackButton:show()
+  end
 end
 
-function updateFps(fps)
-  text = 'FPS: ' .. fps
+function updateFps()
+  fpsUpdateEvent = scheduleEvent(updateFps, 500)
+  text = 'FPS: ' .. g_app.getFps()
   fpsLabel:setText(text)
 end
 
@@ -111,6 +129,7 @@ end
 
 function setPingVisible(enable)
   pingLabel:setVisible(enable)
+  feedbackButton:setVisible(enable and showFeedback)
 end
 
 function setFpsVisible(enable)
