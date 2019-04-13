@@ -126,12 +126,44 @@ function onHealthChange(localPlayer, health, maxHealth)
   healthBar:setText(health .. ' / ' .. maxHealth)
   healthBar:setTooltip(tr(healthTooltip, health, maxHealth))
   healthBar:setValue(health, 0, maxHealth)
+  modules.game_interface.healthBar:setText(health .. ' / ' .. maxHealth)
+  modules.game_interface.healthBar:setTooltip(tr(healthTooltip, health, maxHealth))
+  modules.game_interface.healthBar:setValue(health, 0, maxHealth)
+
+  local healthPercent = math.floor(g_game.getLocalPlayer():getHealthPercent())
+  local Yhppc = math.floor(208 * (1 - (healthPercent / 100)))
+  local rect = { x = 0, y = Yhppc, width = 63, height = 208 }
+  modules.game_interface.healthCircleFront:setImageClip(rect)
+
+  if healthPercent > 92 then
+    modules.game_interface.healthCircleFront:setImageColor("#00BC00FF")
+  elseif healthPercent > 60 then
+    modules.game_interface.healthCircleFront:setImageColor("#50A150FF")
+  elseif healthPercent > 30 then
+    modules.game_interface.healthCircleFront:setImageColor("#A1A100FF")
+  elseif healthPercent > 8 then
+    modules.game_interface.healthCircleFront:setImageColor("#BF0A0AFF")
+  elseif healthPercent > 3 then
+    modules.game_interface.healthCircleFront:setImageColor("#910F0FFF")
+  else
+    modules.game_interface.healthCircleFront:setImageColor("#850C0CFF")
+  end
+
+  modules.game_interface.healthCircleFront:setMarginTop(Yhppc)
 end
 
 function onManaChange(localPlayer, mana, maxMana)
   manaBar:setText(mana .. ' / ' .. maxMana)
   manaBar:setTooltip(tr(manaTooltip, mana, maxMana))
   manaBar:setValue(mana, 0, maxMana)
+  modules.game_interface.manaBar:setText(mana .. ' / ' .. maxMana)
+  modules.game_interface.manaBar:setTooltip(tr(manaTooltip, mana, maxMana))
+  modules.game_interface.manaBar:setValue(mana, 0, maxMana)
+
+  local Ymppc = math.floor(208 * (1 - (math.floor((g_game.getLocalPlayer():getMaxMana() - (g_game.getLocalPlayer():getMaxMana() - g_game.getLocalPlayer():getMana())) * 100 / g_game.getLocalPlayer():getMaxMana()) / 100)))
+  local rect = { x = 0, y = Ymppc, width = 63, height = 208 }
+  modules.game_interface.manaCircleFront:setImageClip(rect)
+  modules.game_interface.manaCircleFront:setMarginTop(Ymppc)
 end
 
 function onLevelChange(localPlayer, value, percent)

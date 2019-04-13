@@ -520,7 +520,55 @@ void UITextEdit::moveCursorHorizontally(bool right)
 
 void UITextEdit::moveCursorVertically(bool up)
 {
-    //TODO
+    if (up) {
+        int shifted = 0;
+        int i = m_cursorPos - 1;
+        int limit = 0;
+        bool nextLine = false;
+        for (; i > 0; --i) {
+            if (m_text[i] == '\n') {
+                if (nextLine) {
+                    i += 1;
+                    break;
+                }
+                nextLine = true;
+                limit = i;
+            } else if(!nextLine) {
+                shifted++;
+            }
+        }
+        i += shifted;
+        m_cursorPos = std::min<uint>(limit, i);
+    } else {
+        int shifted = 0;
+        int i = m_cursorPos - 1;
+        for (; i >= 0; --i) {
+            if (m_text[i] == '\n') {
+                break;
+            } else {
+                shifted++;
+            }
+        }
+        i = m_cursorPos;
+
+        bool nextLine = false;
+        int limit = m_text.size();
+        int moveTo = m_text.size();
+        for (; i < (int)m_text.size(); ++i) {
+            if (m_text[i] == '\n') {
+                if (nextLine) {
+                    limit = i;
+                    break;
+                }
+                nextLine = true;
+                moveTo = i + 1;
+            }
+        }
+        moveTo += shifted;
+        m_cursorPos = std::min<uint>(limit, moveTo);
+    }
+    blinkCursor();
+    update(true);
 }
 
 int UITextEdit::getTextPos(Point pos)
@@ -701,9 +749,13 @@ bool UITextEdit::onKeyPress(uchar keyCode, int keyboardModifiers, int autoRepeat
                 return true;
             }
         } else if(keyCode == Fw::KeyTab && !m_shiftNavigation) {
-            clearSelection();
-            if(UIWidgetPtr parent = getParent())
-                parent->focusNextChild(Fw::KeyboardFocusReason, true);
+            if (m_multiline) {
+                appendText("  ");
+            } else {
+                clearSelection();
+                if (UIWidgetPtr parent = getParent())
+                    parent->focusNextChild(Fw::KeyboardFocusReason, true);
+            }
             return true;
         } else if(keyCode == Fw::KeyEnter && m_multiline && m_editable) {
             appendCharacter('\n');
@@ -740,7 +792,7 @@ bool UITextEdit::onKeyPress(uchar keyCode, int keyboardModifiers, int autoRepeat
             if(UIWidgetPtr parent = getParent())
                 parent->focusPreviousChild(Fw::KeyboardFocusReason, true);
             return true;
-        } else if(keyCode == Fw::KeyRight || keyCode == Fw::KeyLeft) {
+        } else if(keyCode == Fw::KeyRight || keyCode == Fw::KeyLeft || ((keyCode == Fw::KeyUp || keyCode == Fw::KeyDown) && m_multiline)) {
 
             int oldCursorPos = m_cursorPos;
 
@@ -748,7 +800,11 @@ bool UITextEdit::onKeyPress(uchar keyCode, int keyboardModifiers, int autoRepeat
                 moveCursorHorizontally(true);
             else if(keyCode == Fw::KeyLeft) // move cursor left
                 moveCursorHorizontally(false);
-
+            else if (keyCode == Fw::KeyUp && !m_shiftNavigation && m_multiline)
+                moveCursorVertically(true);
+            else if (keyCode == Fw::KeyDown && !m_shiftNavigation && m_multiline)
+                moveCursorVertically(false);
+        
             if(m_shiftNavigation)
                 clearSelection();
             else {

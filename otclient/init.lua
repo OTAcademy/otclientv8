@@ -29,10 +29,11 @@ Services = {
 }
 
 Servers = {
-  BloodWar = "http://baiak-master.com/login.php",
+  MasterBaiak = "http://baiak-master.com/login.php",
   OTClientV8 = "http://otclient.ovh/api/login.php",
   Wartera = "https://wartera.online/login.php",
   KasteriaTest = "https://www.xavato.eu/login.php",
+  Kasteria = "http://login.otupdate.ovh/login.php",
   Xavato = "https://www.xavato.eu/login2.php",
   TestBloodWar = "http://168.228.157.20/login.php"
 }

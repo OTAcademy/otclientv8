@@ -58,6 +58,7 @@ public:
     void setDrawHealthBars(bool enable) { m_mapView->setDrawHealthBars(enable); }
     void setDrawLights(bool enable) { m_mapView->setDrawLights(enable); }
     void setDrawManaBar(bool enable) { m_mapView->setDrawManaBar(enable); }
+    void setDrawPlayerBars(bool enable) { m_mapView->setDrawPlayerBars(enable); }
     void setAnimated(bool enable) { m_mapView->setAnimated(enable); }
     void setKeepAspectRatio(bool enable);
     void setMapShader(const PainterShaderProgramPtr& shader, float fadeout, float fadein) { m_mapView->setShader(shader, fadein, fadeout); }

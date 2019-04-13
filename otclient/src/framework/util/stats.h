@@ -49,6 +49,8 @@ public:
     std::string get(int type, int limit, bool pretty);
     void clear(int type);
 
+    void clearAll();
+
     std::string getSlow(int type, int limit, int minTime, bool pretty);
     void clearSlow(int type);
 

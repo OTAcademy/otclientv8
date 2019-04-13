@@ -1,11 +1,18 @@
 UUID = nil
-HOST = 'otclient.herokuapp.com'
-PORT = 80
-FIRST_REPORT_DELAY = 15
-REPORT_DELAY = 60
+local statsWindow = nil
+local statsButton = nil
+local luaStats = nil
+local luaCallback = nil
+local mainStats = nil
+local dispatcherStats = nil
+local render = nil
+local adaptiveRender = nil
+local slowMain = nil
 
-sendReportEvent = nil
-firstReportEvent = nil
+local updateEvent = nil
+local iter = 0
+local lastSend = 0
+local sendInterval = 600 -- 10 m
 
 function initUUID()
   UUID = g_settings.getString('report-uuid')
@@ -16,93 +23,128 @@ function initUUID()
 end
 
 function init()
---  connect(g_game, { onGameStart = onGameStart,
---                    onGameEnd = onGameEnd })
+  statsButton = modules.client_topmenu.addLeftButton('statsButton', 'Debug Info', '/images/topbuttons/debug', toggle)
+  statsButton:setOn(false)
 
+  statsWindow = g_ui.displayUI('stats')
+  statsWindow:hide()
+    
+  g_keyboard.bindKeyDown('Ctrl+D', toggle)
+
+  luaStats = statsWindow:recursiveGetChildById('luaStats')
+  luaCallback = statsWindow:recursiveGetChildById('luaCallback')
+  mainStats = statsWindow:recursiveGetChildById('mainStats')
+  dispatcherStats = statsWindow:recursiveGetChildById('dispatcherStats')
+  render = statsWindow:recursiveGetChildById('render')
+  adaptiveRender = statsWindow:recursiveGetChildById('adaptiveRender')
+  slowMain = statsWindow:recursiveGetChildById('slowMain')
+  
+  lastSend = os.time()
   initUUID()
+  
+  updateEvent = scheduleEvent(update, 2000)
 end
 
 function terminate()
---  disconnect(g_game, { onGameStart = onGameStart,
---                       onGameEnd = onGameEnd })
-  removeEvent(firstReportEvent)
-  removeEvent(sendReportEvent)
+  statsWindow:destroy()
+  statsButton:destroy()
+  g_keyboard.unbindKeyDown('Ctrl+D')
+  
+  if updateEvent ~= nil then
+	  removeEvent(updateEvent)
+	  updateEvent = nil
+  end
 end
 
-function configure(host, port, delay)
-  if not host then return end
-  HOST = host
-  PORT = port or PORT
-  REPORT_DELAY = delay or REPORT_DELAY
+function onMiniWindowClose()
+  statsButton:setOn(false)
 end
 
-function sendReport()
-  if not HOST then return end
-  local protocolHttp = ProtocolHttp.create()
-  protocolHttp.onConnect = onConnect
-  protocolHttp.onRecv = onRecv
-  protocolHttp.onError = onError
-  protocolHttp:connect(HOST, PORT)
+function toggle()
+  if statsButton:isOn() then
+    statsWindow:hide()
+    statsButton:setOn(false)
+  else
+    statsWindow:show()
+    statsButton:setOn(true)
+  end
 end
 
-function onGameStart()
-  if not HOST then return end
-  removeEvent(firstReportEvent)
-  removeEvent(sendReportEvent)
-  firstReportEvent = addEvent(sendReport, FIRST_REPORT_DELAY*1000)
-  sendReportEvent = cycleEvent(sendReport, REPORT_DELAY*1000)
-end
-
-function onGameEnd()
-  removeEvent(firstReportEvent)
-  removeEvent(sendReportEvent)
-end
-
-function onConnect(protocol)
-  if not g_game.isOnline() then
-    protocol:disconnect()
+function sendStats()
+  if Services.stats == nil or Services.stats:len() < 6 then
     return
   end
-  --[[
-  local post = ''
-  post = post .. 'uid='                .. UUID
-  post = post .. '&report_delay='      .. REPORT_DELAY
-  post = post .. '&os='                .. g_app.getOs()
-  post = post .. '&graphics_vendor='   .. g_graphics.getVendor()
-  post = post .. '&graphics_renderer=' .. g_graphics.getRenderer()
-  post = post .. '&graphics_version='  .. g_graphics.getVersion()
-  post = post .. '&painter_engine='    .. g_graphics.getPainterEngine()
-  post = post .. '&fps='               .. g_app.getBackgroundPaneFps()
-  post = post .. '&max_fps='           .. g_app.getBackgroundPaneMaxFps()
-  post = post .. '&fullscreen='        .. tostring(g_window.isFullscreen())
-  post = post .. '&window_width='      .. g_window.getWidth()
-  post = post .. '&window_height='     .. g_window.getHeight()
-  post = post .. '&player_name='       .. g_game.getCharacterName()
-  post = post .. '&world_name='        .. g_game.getWorldName()
-  post = post .. '&otserv_host='       .. G.host
-  post = post .. '&otserv_port='       .. G.port
-  post = post .. '&otserv_protocol='   .. g_game.getProtocolVersion()
-  post = post .. '&otserv_client='     .. g_game.getClientVersion()
-  post = post .. '&build_version='     .. g_app.getVersion()
-  post = post .. '&build_revision='    .. g_app.getBuildRevision()
-  post = post .. '&build_commit='      .. g_app.getBuildCommit()
-  post = post .. '&build_date='        .. g_app.getBuildDate()
-  post = post .. '&display_width='     .. g_window.getDisplayWidth()
-  post = post .. '&display_height='    .. g_window.getDisplayHeight()
-  post = post .. '&cpu='               .. g_platform.getCPUName()
-  post = post .. '&mem='               .. g_platform.getTotalSystemMemory()
-  post = post .. '&os_name='           .. g_platform.getOSName()
-  post = post .. getAdditionalData()
+  lastSend = os.time()
+  local localPlayer = g_game.getLocalPlayer()
+  local playerData = nil
+  if localPlayer ~= nil then
+    playerData = {
+      name = localPlayer:getName(),
+      position = localPlayer:getPosition()
+    }
+  end
+  local data = {
+    uid = UUID,
+    stats = {},
+    slow = {},
+    render = g_adaptiveRenderer.getDebugInfo(),
+    player = playerData,
 
-  local message = ''
-  message = message .. "POST /report HTTP/1.1\r\n"
-  message = message .. "Host: " .. HOST .. "\r\n"
-  message = message .. "Accept: */*\r\n"
-  message = message .. "Connection: close\r\n"
-  message = message .. "Content-Type: application/x-www-form-urlencoded\r\n"
-  message = message .. "Content-Length: " .. post:len() .. "\r\n\r\n"
-  message = message .. post
-
-  protocol:send(message)
-  protocol:recv() ]]--
+    details = {
+      report_delay = sendInterval,
+      os = g_app.getOs(),
+      graphics_vendor = g_graphics.getVendor(),
+      graphics_renderer = g_graphics.getRenderer(),
+      graphics_version = g_graphics.getVersion(),
+      painter_engine = g_graphics.getPainterEngine(),
+      fps = g_app.getFps(),
+      fullscreen = tostring(g_window.isFullscreen()),
+      window_width = g_window.getWidth(),
+      window_height = g_window.getHeight(),
+      player_name = g_game.getCharacterName(),
+      world_name = g_game.getWorldName(),
+      otserv_host = G.host,
+      otserv_port = G.port,
+      otserv_protocol = g_game.getProtocolVersion(),
+      otserv_client = g_game.getClientVersion(),
+      build_version = g_app.getVersion(),
+      build_revision = g_app.getBuildRevision(),
+      build_commit = g_app.getBuildCommit(),
+      build_date = g_app.getBuildDate(),
+      display_width = g_window.getDisplayWidth(),
+      display_height = g_window.getDisplayHeight(),
+      cpu = g_platform.getCPUName(),
+      mem = g_platform.getTotalSystemMemory(),
+      os_name = g_platform.getOSName()    
+    }
+  } 
+  for i = 1, g_stats.types() do
+    table.insert(data.stats, g_stats.get(i - 1, 10, false))
+    table.insert(data.slow, g_stats.getSlow(i - 1, 50, 10, false))
+    g_stats.clear(i - 1)
+    g_stats.clearSlow(i - 1)
+  end
+  data = json.encode(data)
+  g_http.post(Services.stats, data)
 end
+
+function update()
+  updateEvent = scheduleEvent(update, 200)
+  if lastSend + sendInterval < os.time() then
+    sendStats()
+  end
+  
+  if not statsWindow:isVisible() then
+    return
+  end
+  
+  local adaptive = "Adaptive: " .. g_adaptiveRenderer.getLevel() .. " | " .. g_adaptiveRenderer.getDebugInfo()
+  render:setText(g_stats.get(2, 10, true))  
+  adaptiveRender:setText(adaptive)
+  mainStats:setText(g_stats.get(1, 5, true))
+  dispatcherStats:setText(g_stats.get(3, 5, true))
+  luaStats:setText(g_stats.get(4, 5, true))
+  luaCallback:setText(g_stats.get(5, 5, true))
+  slowMain:setText(g_stats.getSlow(3, 10, 10, true) .. "\n\n\n" .. g_stats.getSlow(1, 20, 20, true))  
+end
+

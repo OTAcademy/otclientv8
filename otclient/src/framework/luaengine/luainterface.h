@@ -229,6 +229,8 @@ public:
 
     void loadBuffer(const std::string& buffer, const std::string& source);
 
+    std::string generateByteCode(const std::string & buffer, std::string source);
+
     int pcall(int numArgs = 0, int numRets = 0, int errorFuncIndex = 0);
     void call(int numArgs = 0, int numRets = 0);
     void error();

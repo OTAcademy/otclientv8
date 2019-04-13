@@ -62,18 +62,20 @@ public:
     void resetTile(int x, int y) { m_tiles[getTileIndex(x,y)] = MinimapTile(); }
     uint getTileIndex(int x, int y) { return ((y % MMBLOCK_SIZE) * MMBLOCK_SIZE) + (x % MMBLOCK_SIZE); }
     const TexturePtr& getTexture() { return m_texture; }
-    std::array<MinimapTile, MMBLOCK_SIZE *MMBLOCK_SIZE>& getTiles() { return m_tiles; }
+    std::array<MinimapTile, MMBLOCK_SIZE * MMBLOCK_SIZE>& getTiles() { return m_tiles; }
     void mustUpdate() { m_mustUpdate = true; }
     void justSaw() { m_wasSeen = true; }
     bool wasSeen() { return m_wasSeen; }
 private:
     TexturePtr m_texture;
-    std::array<MinimapTile, MMBLOCK_SIZE *MMBLOCK_SIZE> m_tiles;
+    std::array<MinimapTile, MMBLOCK_SIZE * MMBLOCK_SIZE> m_tiles;
     stdext::boolean<true> m_mustUpdate;
     stdext::boolean<false> m_wasSeen;
 };
 
 #pragma pack(pop)
+
+using MinimapBlock_ptr = std::shared_ptr<MinimapBlock>;
 
 class Minimap
 {
@@ -91,6 +93,7 @@ public:
 
     void updateTile(const Position& pos, const TilePtr& tile);
     const MinimapTile& getTile(const Position& pos);
+    std::pair<MinimapBlock_ptr, const MinimapTile&> threadGetTile(const Position& pos);
 
     bool loadImage(const std::string& fileName, const Position& topLeft, float colorFactor);
     void saveImage(const std::string& fileName, const Rect& mapRect);
@@ -100,13 +103,20 @@ public:
 private:
     Rect calcMapRect(const Rect& screenRect, const Position& mapCenter, float scale);
     bool hasBlock(const Position& pos) { return m_tileBlocks[pos.z].find(getBlockIndex(pos)) != m_tileBlocks[pos.z].end(); }
-    MinimapBlock& getBlock(const Position& pos) { return m_tileBlocks[pos.z][getBlockIndex(pos)]; }
+    MinimapBlock& getBlock(const Position& pos) { 
+        std::lock_guard<std::mutex> lock(m_lock);
+        auto& ptr = m_tileBlocks[pos.z][getBlockIndex(pos)];
+        if (!ptr)
+            ptr = std::make_shared<MinimapBlock>();
+        return *ptr;
+    }
     Point getBlockOffset(const Point& pos) { return Point(pos.x - pos.x % MMBLOCK_SIZE,
                                                           pos.y - pos.y % MMBLOCK_SIZE); }
     Position getIndexPosition(int index, int z) { return Position((index % (65536 / MMBLOCK_SIZE))*MMBLOCK_SIZE,
                                                                   (index / (65536 / MMBLOCK_SIZE))*MMBLOCK_SIZE, z); }
     uint getBlockIndex(const Position& pos) { return ((pos.y / MMBLOCK_SIZE) * (65536 / MMBLOCK_SIZE)) + (pos.x / MMBLOCK_SIZE); }
-    std::unordered_map<uint, MinimapBlock> m_tileBlocks[Otc::MAX_Z+1];
+    std::unordered_map<uint, MinimapBlock_ptr> m_tileBlocks[Otc::MAX_Z+1];
+    std::mutex m_lock;
 };
 
 extern Minimap g_minimap;

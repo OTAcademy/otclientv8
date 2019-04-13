@@ -4,7 +4,11 @@ gameRootPanel = nil
 gameMapPanel = nil
 gameRightPanel = nil
 gameLeftPanel = nil
+gameThirdPanel = nil
+gameForthPanel = nil
 gameBottomPanel = nil
+healthBar = nil
+manaBar = nil
 showTopMenuButton = nil
 logoutButton = nil
 mouseGrabberWidget = nil
@@ -18,6 +22,10 @@ smartWalkDirs = {}
 smartWalkDir = nil
 hookedMenuOptions = {}
 lastDirTime = g_clock.millis()
+healthCircle = nil
+healthCircleFront = nil
+manaCircle = nil
+manaCircleFront = nil
 
 function init()
   g_ui.importStyle('styles/countwindow')
@@ -51,7 +59,19 @@ function init()
   gameRightPanel = gameRootPanel:getChildById('gameRightPanel')
   gameLeftPanel = gameRootPanel:getChildById('gameLeftPanel')
   gameBottomPanel = gameRootPanel:getChildById('gameBottomPanel')
+  gameThirdPanel = gameRootPanel:getChildById('gameThirdPanel')
+  gameForthPanel = gameRootPanel:getChildById('gameForthPanel')
   connect(gameLeftPanel, { onVisibilityChange = onLeftPanelVisibilityChange })
+  connect(gameThirdPanel, { onVisibilityChange = onThirdPanelVisibilityChange })
+  connect(gameForthPanel, { onVisibilityChange = onForthPanelVisibilityChange })
+
+  healthBar = gameMapPanel:getChildById('healthBar')
+  manaBar = gameMapPanel:getChildById('manaBar')
+
+  healthCircle = gameRootPanel:getChildById('healthCircle')
+  healthCircleFront = gameRootPanel:getChildById('healthCircleFront')
+  manaCircle = gameRootPanel:getChildById('manaCircle')
+  manaCircleFront = gameRootPanel:getChildById('manaCircleFront')
 
   logoutButton = modules.client_topmenu.addLeftButton('logoutButton', tr('Exit'),
     '/images/topbuttons/logout', tryLogout, true)
@@ -145,6 +165,8 @@ function terminate()
   })
 
   disconnect(gameLeftPanel, { onVisibilityChange = onLeftPanelVisibilityChange })
+  disconnect(gameThirdPanel, { onVisibilityChange = onThirdPanelVisibilityChange })
+  disconnect(gameForthPanel, { onVisibilityChange = onForthPanelVisibilityChange })
   disconnect(gameMapPanel, { onGeometryChange = updateSize })
 
   logoutButton:destroy()
@@ -638,6 +660,11 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     end
   end
 
+  if g_game.getFeature(GameBot) and useThing then
+    menu:addSeparator()
+    menu:addOption(tr("ID: " .. useThing:getId()))
+  end
+
   menu:display(menuPosition)
 end
 
@@ -826,6 +853,14 @@ function getBottomPanel()
   return gameBottomPanel
 end
 
+function getThirdPanel()
+  return gameThirdPanel
+end
+
+function getForthPanel()
+  return gameForthPanel
+end
+
 function getShowTopMenuButton()
   return showTopMenuButton
 end
@@ -833,6 +868,15 @@ end
 function onLeftPanelVisibilityChange(leftPanel, visible)
   if not visible and g_game.isOnline() then
     local children = leftPanel:getChildren()
+    for i=1,#children do
+      children[i]:setParent(gameRightPanel)
+    end
+  end
+end
+
+function onThirdPanelVisibilityChange(thirdPanel, visible)
+  if not visible and g_game.isOnline() then
+    local children = thirdPanel:getChildren()
     for i=1,#children do
       children[i]:setParent(gameRightPanel)
     end
@@ -850,10 +894,14 @@ function setupViewMode(mode)
     gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)
     gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
     gameLeftPanel:setOn(modules.client_options.getOption('showLeftPanel'))
+    gameThirdPanel:setOn(modules.client_options.getOption('showExtraPanels'))
+    gameForthPanel:setOn(modules.client_options.getOption('showExtraPanels'))
     gameLeftPanel:setImageColor('white')
     gameRightPanel:setImageColor('white')
     gameLeftPanel:setMarginTop(0)
     gameRightPanel:setMarginTop(0)
+    gameThirdPanel:setMarginTop(0)
+    gameForthPanel:setMarginTop(0)
     gameBottomPanel:setImageColor('white')
     modules.client_topmenu.getTopMenu():setImageColor('white')
 
@@ -879,6 +927,10 @@ function setupViewMode(mode)
       :getHeight() - gameLeftPanel:getPaddingTop())
     gameRightPanel:setMarginTop(modules.client_topmenu.getTopMenu()
       :getHeight() - gameRightPanel:getPaddingTop())
+    gameThirdPanel:setMarginTop(modules.client_topmenu.getTopMenu()
+      :getHeight() - gameThirdPanel:getPaddingTop())
+    gameForthPanel:setMarginTop(modules.client_topmenu.getTopMenu()
+      :getHeight() - gameForthPanel:getPaddingTop())
     gameLeftPanel:setOn(true)
     gameLeftPanel:setVisible(true)
     gameRightPanel:setOn(true)
@@ -895,12 +947,21 @@ function limitZoom()
 end
 
 function updateSize() 
+  local height = gameMapPanel:getHeight()
+  local width = gameMapPanel:getWidth()
+   
+  local dimenstion = gameMapPanel:getVisibleDimension()
+  local dheight = dimenstion.height
+  local dwidth = dimenstion.width
+  local realWidth = math.floor(math.min(width, height * dwidth / dheight))
+  healthBar:setMarginLeft(math.max(0, (width - realWidth) / 2 + 2))
+  manaBar:setMarginRight(math.max(0, (width - realWidth) / 2 + 2))
+
   if currentViewMode ~= 1 then
     return
   end
-  
-  local height = gameRootPanel:getHeight()
-  local width = gameRootPanel:getWidth()
+  height = gameRootPanel:getHeight()
+  width = gameRootPanel:getWidth()
   if width < 400 or height < 400 then
     gameMapPanel:setMarginLeft(0)
     gameMapPanel:setMarginRight(0)

@@ -35,6 +35,7 @@
 #include <framework/stdext/net.h>
 #include <framework/platform/platform.h>
 #include <framework/util/stats.h>
+#include <regex>
 
 #ifdef FW_SOUND
 #include <framework/sound/soundmanager.h>
@@ -56,7 +57,6 @@
 #ifdef FW_NET
 #include <framework/net/server.h>
 #include <framework/net/protocol.h>
-#include <framework/net/protocolhttp.h>
 #endif
 
 #ifdef FW_SQL
@@ -82,6 +82,26 @@ void Application::registerLuaFunctions()
     g_lua.bindGlobalFunction("stringtoip", [](const std::string& v) { return stdext::string_to_ip(v); });
     g_lua.bindGlobalFunction("listSubnetAddresses", [](uint32 a, uint8 b) { return stdext::listSubnetAddresses(a, b); });
     g_lua.bindGlobalFunction("ucwords", [](std::string s) { return stdext::ucwords(s); });
+    g_lua.bindGlobalFunction("regexMatch", [](std::string s, const std::string& exp) {
+        int limit = 10000;
+        std::vector<std::vector<std::string>> ret;
+        if (s.empty() || exp.empty())
+            return ret;
+        try {
+            std::smatch m;
+            std::regex e(exp);
+            while (std::regex_search (s,m,e)) {
+                ret.push_back(std::vector<std::string>());
+                for (auto x:m)
+                    ret[ret.size() - 1].push_back(x);                
+                s = m.suffix().str();
+                if (--limit == 0)
+                    return ret;
+            }
+        } catch (...) {
+        }
+        return ret;
+    });
 
     // Platform
     g_lua.registerSingletonClass("g_platform");
@@ -167,6 +187,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_stats", "types", &Stats::types, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "get", &Stats::get, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "clear", &Stats::clear, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "clearAll", &Stats::clearAll, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "getSlow", &Stats::getSlow, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "clearSlow", &Stats::clearSlow, &g_stats);
 
@@ -208,12 +229,13 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_resources", "getWriteDir", &ResourceManager::getWriteDir, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "getBinaryName", &ResourceManager::getBinaryName, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "listDirectoryFiles", &ResourceManager::listDirectoryFiles, &g_resources);
-    g_lua.bindSingletonFunction("g_resources", "readFileContents", &ResourceManager::readFileContents, &g_resources);
-    g_lua.bindSingletonFunction("g_resources", "writeFileContents", &ResourceManager::writeFileContents, &g_resources);
-    g_lua.bindSingletonFunction("g_resources", "guessFilePath", &ResourceManager::guessFilePath, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "isFileType", &ResourceManager::isFileType, &g_resources);
-    g_lua.bindSingletonFunction("g_resources", "makeDir", &ResourceManager::makeDir, &g_resources);
-    g_lua.bindSingletonFunction("g_resources", "deleteFile", &ResourceManager::deleteFile, &g_resources);
+    // unsafe for encryption
+    //g_lua.bindSingletonFunction("g_resources", "readFileContents", &ResourceManager::readFileContents, &g_resources);
+    //g_lua.bindSingletonFunction("g_resources", "writeFileContents", &ResourceManager::writeFileContents, &g_resources);
+    //g_lua.bindSingletonFunction("g_resources", "guessFilePath", &ResourceManager::guessFilePath, &g_resources);
+    //g_lua.bindSingletonFunction("g_resources", "makeDir", &ResourceManager::makeDir, &g_resources);
+    //g_lua.bindSingletonFunction("g_resources", "deleteFile", &ResourceManager::deleteFile, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "resolvePath", &ResourceManager::resolvePath, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "isLoadedFromMemory", &ResourceManager::isLoadedFromMemory, &g_resources);    
     g_lua.bindSingletonFunction("g_resources", "isLoadedFromArchive", &ResourceManager::isLoadedFromArchive, &g_resources);    
@@ -810,14 +832,6 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Protocol>("generateXteaKey", &Protocol::generateXteaKey);
     g_lua.bindClassMemberFunction<Protocol>("enableXteaEncryption", &Protocol::enableXteaEncryption);
     g_lua.bindClassMemberFunction<Protocol>("enableChecksum", &Protocol::enableChecksum);
-
-    // ProtocolHttp
-    g_lua.registerClass<ProtocolHttp>();
-    g_lua.bindClassStaticFunction<ProtocolHttp>("create", []{ return ProtocolHttpPtr(new ProtocolHttp); });
-    g_lua.bindClassMemberFunction<ProtocolHttp>("connect", &ProtocolHttp::connect);
-    g_lua.bindClassMemberFunction<ProtocolHttp>("disconnect", &ProtocolHttp::disconnect);
-    g_lua.bindClassMemberFunction<ProtocolHttp>("send", &ProtocolHttp::send);
-    g_lua.bindClassMemberFunction<ProtocolHttp>("recv", &ProtocolHttp::recv);
 
     // InputMessage
     g_lua.registerClass<InputMessage>();

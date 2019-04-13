@@ -1,9 +1,8 @@
 local defaultOptions = {
-  vsync = false,
   showFps = true,
   showPing = true,
   fullscreen = false,
-  classicView = false,
+  classicView = true,
   classicControl = true,
   smartWalk = false,
   extentedPreWalking = true,
@@ -16,8 +15,9 @@ local defaultOptions = {
   showPrivateMessagesInConsole = true,
   showPrivateMessagesOnScreen = true,
   showLeftPanel = false,
+  showExtraPanels = true,
+  openContainersInThirdPanel = true,
   backgroundFrameRate = 100,
-  painterEngine = 0,
   enableAudio = false,
   enableMusicSound = false,
   musicSoundVolume = 100,
@@ -27,6 +27,9 @@ local defaultOptions = {
   displayNames = true,
   displayHealth = true,
   displayMana = true,
+  showHealthManaCircle = true,
+  hidePlayerBars = true,
+  topHealtManaBar = true,
   displayText = true,
   dontStretchShrink = false,
   turnDelay = 50,
@@ -167,9 +170,7 @@ function setOption(key, value, force)
   if not force and options[key] == value then return end
   local gameMapPanel = modules.game_interface.getMapPanel()
 
-  if key == 'vsync' then
-    --g_window.setVerticalSync(value)
-  elseif key == 'showFps' then
+  if key == 'showFps' then
     modules.client_topmenu.setFpsVisible(value)
   elseif key == 'showPing' then
     modules.client_topmenu.setPingVisible(value)
@@ -193,8 +194,16 @@ function setOption(key, value, force)
       g_sounds.getChannel(SoundChannels.Music):setGain(value/100)
     end
     audioPanel:getChildById('musicSoundVolumeLabel'):setText(tr('Music volume: %d', value))
+  elseif key == 'showHealthManaCircle' then
+    modules.game_interface.healthCircle:setVisible(value)
+    modules.game_interface.healthCircleFront:setVisible(value)
+    modules.game_interface.manaCircle:setVisible(value)
+    modules.game_interface.manaCircleFront:setVisible(value)
   elseif key == 'showLeftPanel' then
     modules.game_interface.getLeftPanel():setOn(value)
+  elseif key == 'showExtraPanels' then
+    modules.game_interface.getThirdPanel():setOn(value)
+    modules.game_interface.getForthPanel():setOn(value)
   elseif key == 'classicView' and not force then
     local viewMode = 1
     if value then
@@ -214,8 +223,6 @@ function setOption(key, value, force)
     graphicsPanel:getChildById('ambientLightLabel'):setText(tr('Ambient light: %s%%', value))
     gameMapPanel:setMinimumAmbientLight(value/100)
     gameMapPanel:setDrawLights(options['enableLights'] and value < 100)
-  elseif key == 'painterEngine' then
-    g_graphics.selectPainterEngine(value)
   elseif key == 'optimizationLevel' then
     local optlvl = graphicsPanel:getChildById('optimizationLevel')
     if optlvl.currentIndex ~= value then
@@ -228,6 +235,11 @@ function setOption(key, value, force)
     gameMapPanel:setDrawHealthBars(value)
   elseif key == 'displayMana' then
     gameMapPanel:setDrawManaBar(value)
+  elseif key == 'hidePlayerBars' then
+    gameMapPanel:setDrawPlayerBars(not value)
+  elseif key == 'topHealtManaBar' then
+    modules.game_interface.healthBar:setVisible(value)
+    modules.game_interface.manaBar:setVisible(value)
   elseif key == 'displayText' then
     gameMapPanel:setDrawTexts(value)
   elseif key == 'dontStretchShrink' then

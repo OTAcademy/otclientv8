@@ -296,7 +296,7 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
             g_lua.collectGarbage();
             for(const UIWidgetPtr& widget : backupList) {
                 if(widget->ref_count() != 1)
-                    g_logger.warning(stdext::format("widget '%s' destroyed but still have %d reference(s) left", widget->getId(), widget->getUseCount()-1));
+                    g_logger.warning(stdext::format("widget '%s' (parent: '%s') destroyed but still have %d reference(s) left", widget->getId(), widget->getParent() ? widget->getParent()->getId() : "", widget->getUseCount()-1));
             }
         }, 1);
     }, 1000);

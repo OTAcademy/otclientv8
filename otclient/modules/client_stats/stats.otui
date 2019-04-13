@@ -15,19 +15,23 @@ DebugLabel < Label
   anchors.left: parent.left
   anchors.top: prev.bottom
   
-MiniWindow
+MainWindow
   id: debugWindow
+  size: 550 600
   !text: tr('Debug Info')
-  icon: /images/topbuttons/debug
-  @onClose: modules.game_debug.onMiniWindowClose()
+  @onClose: modules.client_stats.onMiniWindowClose()
   &save: false
+  margin: 0 0 0 0
+  padding: 25 3 3 3
+  opacity: 0.9
   
-  MiniWindowContents  
-    anchors.right: parent.right
-    anchors.left: parent.left
-    anchors.top: parent.top
+  ScrollablePanel 
+    id: debugPanel
+    anchors.fill: parent
+    margin-bottom: 5
+    margin: 5 5 5 5
     padding-left: 5
-    padding-right: 5
+    vertical-scrollbar: debugScroll
           
     DebugLabel
       anchors.top: parent.top
@@ -75,8 +79,23 @@ MiniWindow
     DebugText
       id: slowMain
       text: -
-
+      
+  VerticalScrollBar  
+    id: debugScroll
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    step: 48
+    pixels-scroll: true
+    
+  ResizeBorder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+  
   ResizeBorder
     anchors.right: parent.right
     anchors.top: parent.top
     anchors.bottom: parent.bottom
+    
+    

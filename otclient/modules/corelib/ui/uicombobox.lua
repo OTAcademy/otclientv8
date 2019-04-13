@@ -47,6 +47,11 @@ function UIComboBox:setCurrentOption(text, dontSignal)
   end
 end
 
+function UIComboBox:updateCurrentOption(newText)
+  self.options[self.currentIndex].text = newText
+  self:setText(newText)
+end
+
 function UIComboBox:setCurrentOptionByData(data, dontSignal)
   if not self.options then return end
   for i,v in ipairs(self.options) do

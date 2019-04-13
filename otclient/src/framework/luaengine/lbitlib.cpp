@@ -33,8 +33,13 @@
 #define LUA_LIB
 
 extern "C" {
+#ifdef _MSC_VER
+#include <luajit/lua.h>
+#include <luajit/lauxlib.h>
+#else
 #include <lua.h>
 #include <lauxlib.h>
+#endif
 }
 
 /* ----- adapted from lua-5.2.0 luaconf.h: ----- */

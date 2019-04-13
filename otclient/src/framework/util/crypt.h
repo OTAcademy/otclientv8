@@ -56,9 +56,9 @@ public:
     bool rsaEncrypt(unsigned char *msg, int size);
     bool rsaDecrypt(unsigned char *msg, int size);
     int rsaGetSize();
-
+#ifdef WITH_ENCRYPTION
     void bencrypt(uint8_t * buffer, int len, uint64_t k);
-
+#endif
     void bdecrypt(uint8_t * buffer, int len, uint64_t k);
 
 private:

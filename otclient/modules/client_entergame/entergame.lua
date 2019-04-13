@@ -308,13 +308,7 @@ function EnterGame.init()
   EnterGame.setAccountName(account)
   EnterGame.setPassword(password)
   
-  protos = {}
-  for _, proto in pairs(g_game.getSupportedClients()) do
-    if g_resources.directoryExists("/data/things/" .. proto) then
-      versionsFound = true
-      table.insert(protos, proto)
-    end
-  end
+  local protos = {"740", "760", "772", "800", "810", "854", "860", "1096", "1099"}
 
   enterGame:getChildById('autoLoginBox'):setChecked(autologin)
   
@@ -338,6 +332,7 @@ function EnterGame.init()
       server:addOption(name)
     end
     server:setCurrentOption(host)
+    server:addOption(tr("Another"))
   end
 
   connect(g_http, {onPost = onPost, onGet = onGet})
@@ -522,6 +517,12 @@ function EnterGame.onClientVersionChange(comboBox, text, data)
 end
 
 function EnterGame.onServerChange(comboBox, text, data)
+  if text == tr("Another") and http then
+    Servers = nil
+    g_modules.getModule('client_entergame'):reload()
+    g_game.setCustomOs(2) -- windows
+    return
+  end
   serverUrl = Servers[text]
 end
 
@@ -545,7 +546,7 @@ function EnterGame.doLogin()
   if http then
     return EnterGame.doLoginHttp()
   end
-  
+    
   G.stayLogged = enterGame:getChildById('stayLoggedBox'):isChecked()
   G.host = enterGame:getChildById('serverHostTextEdit'):getText()
   G.port = tonumber(enterGame:getChildById('serverPortTextEdit'):getText())
@@ -555,6 +556,29 @@ function EnterGame.doLogin()
   g_settings.set('host', G.host)
   g_settings.set('port', G.port)
   g_settings.set('client-version', clientVersion)
+
+  local things = {
+    data = {clientVersion .. "/Tibia.dat", ""},
+    sprites = {clientVersion .. "/Tibia.spr", ""}
+  }
+  local correctThings = true
+  if things ~= nil then
+    local thingsNode = {}
+    for thingtype, thingdata in pairs(things) do
+      thingsNode[thingtype] = thingdata[1]
+      if not g_resources.fileExists("/data/things/" .. thingdata[1]) then
+        correctThings = false
+        print("Missing file: " .. thingdata[1])
+        break
+      end
+    end
+  end
+  
+  if not correctThings then
+    g_settings.save()
+    Updater.updateThings(things)
+    return
+  end
 
   g_settings.setNode("things", {})
 
@@ -575,6 +599,9 @@ function EnterGame.doLogin()
   g_game.setClientVersion(clientVersion)
   g_game.setProtocolVersion(g_game.getClientProtocolVersion(clientVersion))
   g_game.chooseRsa(G.host)
+  
+  g_game.enableFeature(GameBot)
+
 
   if modules.game_things.isLoaded() then
     protocolLogin:login(G.host, G.port, G.account, G.password, G.authenticatorToken, G.stayLogged)

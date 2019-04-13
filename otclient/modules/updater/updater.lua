@@ -65,7 +65,7 @@ local function onDownloadProgress(operationId, url, progress, speed)
     return
   end
   if downloadId == operationId then
-    print("Download speed: " .. (speed / 128) .. " kbps")
+    print("Download speed: " .. speed .. " kbps")
     downloadProgressBar:setPercent(progress)
   end
 end

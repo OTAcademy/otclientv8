@@ -394,13 +394,16 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 break;
             // otclient ONLY
             case Proto::GameServerExtendedOpcode:
-                parseExtendedOpcode(msg);
+                //if(g_game.getFeature(Otc::GameExtendedOpcode))
+                    parseExtendedOpcode(msg);
                 break;
             case Proto::GameServerChangeMapAwareRange:
-                parseChangeMapAwareRange(msg);
+                if(g_game.getFeature(Otc::GameChangeMapAwareRange))
+                    parseChangeMapAwareRange(msg);
                 break;
             case Proto::GameServerNewCancelWalk:
-                parseNewCancelWalk(msg);
+                if(g_game.getFeature(Otc::GameNewWalking))
+                    parseNewCancelWalk(msg);
                 break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));

@@ -386,7 +386,7 @@ int Crypt::rsaGetSize()
 
 #define DELTA 0x9e3779b9
 #define MX (((z>>5^y<<2) + (y>>3^z<<4)) ^ ((sum^y) + (key[(p&3)^e] ^ z)))
-
+#ifdef WITH_ENCRYPTION
 void Crypt::bencrypt(uint8_t* buffer, int len, uint64_t k) {
     uint32_t const key[4] = { (uint32_t)(k >> 32), (uint32_t)(k & 0xFFFFFFFF), 0xDEADDEAD, 0xB00BEEEF };
     uint32_t y, z, sum;
@@ -409,6 +409,7 @@ void Crypt::bencrypt(uint8_t* buffer, int len, uint64_t k) {
         z = v[n - 1] += MX;
     } while (--rounds);
 }
+#endif
 
 void Crypt::bdecrypt(uint8_t* buffer, int len, uint64_t k) {
     uint32_t const key[4] = { (uint32_t)(k >> 32), (uint32_t)(k & 0xFFFFFFFF), 0xDEADDEAD, 0xB00BEEEF };

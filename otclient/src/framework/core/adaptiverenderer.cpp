@@ -26,6 +26,10 @@ void AdaptiveRenderer::newFrame() {
         m_speed = 1;
 
     int maxFps = std::min<int>(100, std::max<int>(10, g_app.getMaxFps() < 10 ? 100 : g_app.getMaxFps()));
+    if (m_speed >= 2 && maxFps > 60) { // fix for forced vsync
+        maxFps = 60;
+    }
+
     if (m_frames.size() < maxFps * (4.0f - m_speed * 0.3f) && m_speed != RenderSpeeds - 1) {
         m_speed += 1;
     }
@@ -54,7 +58,7 @@ int AdaptiveRenderer::itemsLimit() {
 }
 
 int AdaptiveRenderer::mapViewDelay() {
-    static int limits[RenderSpeeds] = { 0, 10, 15, 20, 30 };
+    static int limits[RenderSpeeds] = { 0, 10, 15, 20, 25 };
     return limits[m_speed];
 }
 

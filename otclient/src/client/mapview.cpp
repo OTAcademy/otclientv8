@@ -462,8 +462,10 @@ void MapView::newDraw(const Rect& rect)
 
         int flags = 0;
         if(m_drawNames){ flags = Otc::DrawNames; }
-        if(m_drawHealthBars) { flags |= Otc::DrawBars; }
-        if(m_drawManaBar) { flags |= Otc::DrawManaBar; }
+        if (!creature->isLocalPlayer() || m_drawPlayerBars) {
+            if (m_drawHealthBars) { flags |= Otc::DrawBars; }
+            if (m_drawManaBar) { flags |= Otc::DrawManaBar; }
+        }
         creature->drawInformation(p, g_map.isCovered(pos, m_cachedFirstVisibleFloor), rect, flags);
     }
 

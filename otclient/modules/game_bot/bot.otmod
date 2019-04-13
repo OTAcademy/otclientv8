@@ -1,8 +1,8 @@
 Module
-  name: game_debug
-  description: View debug informations
+  name: game_bot
+  description: Bot
   author: otclient@otclient.ovh
   sandboxed: true
-  scripts: [ debug ]
+  scripts: [ bot ]
   @onLoad: init()
   @onUnload: terminate()

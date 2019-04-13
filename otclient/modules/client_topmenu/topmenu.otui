@@ -38,7 +38,7 @@ TopMenuPanel
     anchors.top: parent.top
     anchors.left: leftGameButtonsPanel.right
     margin-left: 85
-    margin-top: 4
+    margin-top: 5
     @onClick: modules.client_feedback.show()
 
   TopMenuButtonsPanel

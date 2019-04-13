@@ -132,6 +132,8 @@ void GraphicalApplication::run()
     auto lastForegroundRender = stdext::millis();
     bool cacheForeground = g_graphics.canCacheBackbuffer();
 
+    g_window.setVerticalSync(false);
+
     while(!m_stopping) {
         m_iteration += 1;
 

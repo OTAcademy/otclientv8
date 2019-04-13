@@ -81,11 +81,12 @@ public:
     std::string selfChecksum();
 
     void updateClient(const std::vector<std::string>& files, const std::string& binaryName);
+#ifdef WITH_ENCRYPTION
     void encrypt();
-
+    bool encryptBuffer(std::string & buffer);
+#endif
     bool decryptBuffer(std::string & buffer);
 
-    bool encryptBuffer(std::string & buffer);
 
 private:
     boost::filesystem::path m_binaryPath;

@@ -38,7 +38,7 @@ public:
     void unlockWalk() { m_walkLockExpiration = 0; }
     void lockWalk(int millis = 250);
     void stopAutoWalk();
-    bool autoWalk(const Position& destination, int retries = 0);
+    bool autoWalk(Position destination, int retries = 0);
     bool canWalk(Otc::Direction direction);
     bool isWalkLocked() {
         return (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration);
@@ -149,7 +149,6 @@ private:
     stdext::boolean<true> m_lastPrewalkDone;
     stdext::boolean<false> m_secondPreWalk;
     stdext::boolean<false> m_serverWalking;
-    stdext::boolean<false> m_knownCompletePath;
 
     std::list<Position> m_newPreWalkingPositions;
     bool m_newLastPrewalkingDone = false;

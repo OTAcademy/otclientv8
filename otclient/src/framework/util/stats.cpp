@@ -72,6 +72,13 @@ void Stats::clear(int type) {
     stats[type].data.clear();
 }
 
+void Stats::clearAll() {
+    for (int i = 0; i <= STATS_LAST; ++i) {
+        stats[i].data.clear();
+        stats[i].slow.clear();
+    }
+}
+
 std::string Stats::getSlow(int type, int limit, int minTime, bool pretty) {
     if (type > STATS_LAST)
         return "";
@@ -95,7 +102,7 @@ std::string Stats::getSlow(int type, int limit, int minTime, bool pretty) {
             std::string name = (*it)->description.substr(0, 45);
             ret << name << std::setw(50 - name.size()) << (*it)->executionTime / 1000 << std::setw(20) << (*it)->extraDescription << "\n";
         } else {
-            ret << (*it)->description << "|" << (*it)->extraDescription << "|" << (*it)->extraDescription << "\n";
+            ret << (*it)->description << "|" << (*it)->executionTime << "|" << (*it)->extraDescription << "\n";
         }
     }
 

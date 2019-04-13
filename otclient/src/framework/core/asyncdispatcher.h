@@ -43,6 +43,12 @@ public:
         return boost::shared_future<typename std::result_of<F()>::type>(prom->get_future());
     }
 
+    void dispatch(std::function<void()> f) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_tasks.push_back(f);
+        m_condition.notify_all();
+    }
+
 protected:
     void exec_loop();
 

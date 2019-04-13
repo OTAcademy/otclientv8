@@ -30,11 +30,14 @@
 #include "mapview.h"
 #include "minimap.h"
 
+#include <framework/core/asyncdispatcher.h>
 #include <framework/core/eventdispatcher.h>
 #include <framework/core/application.h>
+#include <framework/util/extras.h>
+#include <set>
 
 Map g_map;
-TilePtr Map::m_nulltile;
+TilePtr Map::m_nulltile = nullptr;
 
 void Map::init()
 {
@@ -725,20 +728,20 @@ int Map::getLastAwareFloor()
 
 std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const Position& startPos, const Position& goalPos, int maxComplexity, int flags)
 {
-    // pathfinding using A* search algorithm
+    // pathfinding using A* search algorithm (otclientv8 note: it's dijkstra algorithm)
     // as described in http://en.wikipedia.org/wiki/A*_search_algorithm
 
-    struct Node {
-        Node(const Position& pos) : cost(0), totalCost(0), pos(pos), prev(nullptr), dir(Otc::InvalidDirection) { }
+    struct SNode {
+        SNode(const Position& pos) : cost(0), totalCost(0), pos(pos), prev(nullptr), dir(Otc::InvalidDirection) { }
         float cost;
         float totalCost;
         Position pos;
-        Node *prev;
+        SNode *prev;
         Otc::Direction dir;
     };
 
-    struct LessNode : std::binary_function<std::pair<Node*, float>, std::pair<Node*, float>, bool> {
-        bool operator()(std::pair<Node*, float> a, std::pair<Node*, float> b) const {
+    struct LessNode : std::binary_function<std::pair<SNode*, float>, std::pair<SNode*, float>, bool> {
+        bool operator()(std::pair<SNode*, float> a, std::pair<SNode*, float> b) const {
             return b.second < a.second;
         }
     };
@@ -773,13 +776,13 @@ std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const
         }
     }
 
-    std::unordered_map<Position, Node*, PositionHasher> nodes;
-    std::priority_queue<std::pair<Node*, float>, std::vector<std::pair<Node*, float>>, LessNode> searchList;
+    std::unordered_map<Position, SNode*, PositionHasher> nodes;
+    std::priority_queue<std::pair<SNode*, float>, std::vector<std::pair<SNode*, float>>, LessNode> searchList;
 
-    Node *currentNode = new Node(startPos);
+    SNode *currentNode = new SNode(startPos);
     currentNode->pos = startPos;
     nodes[startPos] = currentNode;
-    Node *foundNode = nullptr;
+    SNode *foundNode = nullptr;
     while(currentNode) {
         if((int)nodes.size() > maxComplexity) {
             result = Otc::PathFindResultTooFar;
@@ -853,9 +856,9 @@ std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const
 
                 float cost = currentNode->cost + (speed * walkFactor) / 100.0f;
 
-                Node *neighborNode;
+                SNode *neighborNode;
                 if(nodes.find(neighborPos) == nodes.end()) {
-                    neighborNode = new Node(neighborPos);
+                    neighborNode = new SNode(neighborPos);
                     nodes[neighborPos] = neighborNode;
                 } else {
                     neighborNode = nodes[neighborPos];
@@ -893,4 +896,126 @@ std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const
         delete it.second;
 
     return ret;
+}
+
+PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal, std::shared_ptr<std::list<Node*>> visibleNodes) {
+    auto ret = std::make_shared<PathFindResult>();
+    ret->destination = goal;
+
+    if (start == goal) {
+        ret->status = Otc::PathFindResultSamePosition;
+        return ret;
+    }
+    if (goal.z != start.z) {
+        return ret;
+    }
+
+    struct LessNode : std::binary_function<Node*, Node*, bool> {
+        bool operator()(Node* a, Node* b) const {
+            return b->totalCost < a->totalCost;
+        }
+    };
+
+    std::unordered_map<Position, Node*, PositionHasher> nodes;
+    std::priority_queue<Node*, std::vector<Node*>, LessNode> searchList;
+
+    if (visibleNodes) {
+        for (auto& node : *visibleNodes)
+            nodes.emplace(node->pos, node);
+    }
+
+    Node* initNode = new Node{ 1, 0, start, nullptr, 0, 0 };
+    nodes[start] = initNode;
+    searchList.push(initNode);
+
+    int limit = 50000;
+    float distance = start.distance(goal);
+
+    Node* dstNode = nullptr;
+    while (!searchList.empty() && --limit) {
+        Node* node = searchList.top();
+        searchList.pop();
+        if (node->pos == goal) {
+            dstNode = node;
+            break;
+        }
+        if (node->pos.distance(goal) > distance + 10000)
+            continue;
+        for (int i = -1; i <= 1; ++i) {
+            for (int j = -1; j <= 1; ++j) {
+                if (i == 0 && j == 0)
+                    continue;
+                Position neighbor = node->pos.translated(i, j);
+                auto it = nodes.find(neighbor);
+                if (it == nodes.end()) {
+                    auto blockAndTile = g_minimap.threadGetTile(neighbor);
+                    bool wasSeen = blockAndTile.second.hasFlag(MinimapTileWasSeen);
+                    bool isNotWalkable = blockAndTile.second.hasFlag(MinimapTileNotWalkable);
+                    bool isNotPathable = blockAndTile.second.hasFlag(MinimapTileNotPathable);
+                    float speed = blockAndTile.second.getSpeed();
+                    if (isNotWalkable || isNotPathable) {
+                        it = nodes.emplace(neighbor, nullptr).first;
+                    } else {
+                        if (!wasSeen)
+                            speed = 500;
+                        it = nodes.emplace(neighbor, new Node{ speed, 10000000.0f, neighbor, node, node->distance + 1, wasSeen ? 0 : 1 }).first;
+                    }
+                }
+                if (!it->second) // no way
+                    continue;
+                if (it->second->unseen > 50)
+                    continue;
+
+                float diagonal = ((i == 0 || j == 0) ? 1.0f : 3.0f);
+                float cost = it->second->cost * diagonal;
+                cost += diagonal * (50 * it->second->pos.distance(goal)); // heuristic
+                if (node->totalCost + cost + 50 < it->second->totalCost) {
+                    it->second->totalCost = node->totalCost + cost;
+                    it->second->prev = node;
+                    if(it->second->unseen)
+                        it->second->unseen = node->unseen + 1;
+                    it->second->distance = node->distance + 1;
+                    searchList.push(it->second);
+                }
+            }
+        }
+    }
+
+    if (dstNode) {
+        while(dstNode && dstNode->prev) {
+            ret->path.push_back(dstNode->prev->pos.getDirectionFromPosition(dstNode->pos));
+            dstNode = dstNode->prev;
+        }
+        std::reverse(ret->path.begin(), ret->path.end());
+        ret->status = Otc::PathFindResultOk;
+    }
+    ret->limit = limit;
+
+    for (auto& node : nodes) {
+        if (node.second)
+            delete node.second;
+    }
+
+    return ret;
+}
+
+void Map::findPathAsync(const Position& start, const Position& goal, std::function<void(PathFindResult_ptr)> callback) {
+    auto visibleNodes = std::make_shared<std::list<Node*>>();
+    for (auto& tile : getTiles(start.z)) {
+        if (tile->getPosition() == start)
+            continue;
+        bool isNotWalkable = !tile->isWalkable(false);
+        bool isNotPathable = !tile->isPathable();
+        float speed = tile->getGroundSpeed();
+        if (isNotWalkable || isNotPathable) {
+            visibleNodes->push_back(new Node{ speed, 0, tile->getPosition(), nullptr, 0, 0 });
+        } else {
+            visibleNodes->push_back(new Node{ speed, 10000000.0f, tile->getPosition(), nullptr, 0, 0 });
+        }
+    }
+
+    g_asyncDispatcher.dispatch([=] {
+        auto ret = g_map.newFindPath(start, goal, visibleNodes);
+        g_dispatcher.addEvent(std::bind(callback, ret));
+    });
 }

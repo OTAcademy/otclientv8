@@ -30,8 +30,8 @@ UIWidget
     anchors.right: gameRightPanel.left
     anchors.top: parent.top
     anchors.bottom: gameBottomPanel.top
-    focusable: false
-
+    focusable: false    
+    
     Button
       id: showTopMenuButton
       anchors.top: parent.top
@@ -39,6 +39,22 @@ UIWidget
       !text: tr('Show Top Menu')
       height: 32
       visible: false
+
+    ProgressBar
+      id: healthBar
+      background-color: #ff4444
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.horizontalCenter
+      height: 16
+
+    ProgressBar
+      id: manaBar
+      background-color: #4444ff
+      anchors.top: parent.top
+      anchors.right: parent.right
+      anchors.left: parent.horizontalCenter
+      height: 16
 
   GameBottomPanel
     id: gameBottomPanel
@@ -67,6 +83,32 @@ UIWidget
     focusable: false
     on: true
 
+  GameSidePanel
+    id: gameThirdPanel
+    anchors.right: gameRightPanel.left
+    anchors.top: parent.top
+    anchors.bottom: gameBottomPanel.top
+    focusable: false
+    visible: true
+    on: false
+    image-color: alpha
+    $!on:
+      width: 0
+      visible: false
+
+  GameSidePanel
+    id: gameForthPanel
+    anchors.left: gameLeftPanel.right
+    anchors.top: parent.top
+    anchors.bottom: gameBottomPanel.top
+    focusable: false
+    visible: true
+    on: false
+    image-color: alpha
+    $!on:
+      width: 0
+      visible: false
+
   Splitter
     id: bottomSplitter
     anchors.left: gameLeftPanel.right
@@ -81,3 +123,45 @@ UIWidget
     id: mouseGrabber
     focusable: false
     visible: false
+
+  UIProgressBar
+    id: healthCircle
+    anchors.horizontalCenter: gameMapPanel.horizontalCenter
+    anchors.verticalCenter: gameMapPanel.verticalCenter
+    image-source: /images/game/circle/left_empty
+    margin-right: 134
+    margin-bottom: 16
+    opacity: 0.5
+    phantom: true
+
+  UIProgressBar
+    id: healthCircleFront
+    anchors.horizontalCenter: gameMapPanel.horizontalCenter
+    anchors.verticalCenter: gameMapPanel.verticalCenter
+    image-source: /images/game/circle/left_full
+    margin-right: 134
+    margin-bottom: 16
+    opacity: 0.5
+    phantom: true
+
+  UIProgressBar
+    id: manaCircle
+    anchors.horizontalCenter: gameMapPanel.horizontalCenter
+    anchors.verticalCenter: gameMapPanel.verticalCenter
+    image-source: /images/game/circle/right_empty    
+    margin-left: 110
+    margin-bottom: 16
+    opacity: 0.5
+    phantom: true
+
+  UIProgressBar
+    id: manaCircleFront
+    anchors.horizontalCenter: gameMapPanel.horizontalCenter
+    anchors.verticalCenter: gameMapPanel.verticalCenter
+    image-source: /images/game/circle/right_full
+    margin-left: 110
+    margin-bottom: 16    
+    opacity: 0.5
+    image-color: #0000FFFF
+    phantom: true
+

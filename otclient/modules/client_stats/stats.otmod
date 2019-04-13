@@ -1,9 +1,9 @@
 Module
   name: client_stats
-  description: Sends client statistics to a server
-  author: baxnie
-  website: https://github.com/edubart/otclient
+  description: Showing and sending debug/stats informations
+  author: otclient@otclient.ovh
   sandboxed: true
   scripts: [ stats ]
+  dependencies: [ client_topmenu ]
   @onLoad: init()
   @onUnload: terminate()

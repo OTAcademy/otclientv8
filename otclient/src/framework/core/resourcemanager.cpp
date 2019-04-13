@@ -241,8 +241,17 @@ std::string ResourceManager::readFileContents(const std::string& fileName)
     PHYSFS_read(file, (void*)&buffer[0], 1, fileSize);
     PHYSFS_close(file);
 
+    static std::string unencryptedFiles[] = { "/config.otml", "/minimap.otmm", "/bot.otml" };
+
     if (!decryptBuffer(buffer)) {
-        g_logger.fatal(stdext::format("unable to decrypt file: %s", fullPath));
+        bool ignore = false;
+        for (auto& it : unencryptedFiles) {
+            if (fileName == it) {
+                ignore = true;
+            }
+        }
+        if(!ignore)
+            g_logger.fatal(stdext::format("unable to decrypt file: %s", fullPath));
     }
 
     return buffer;
@@ -529,6 +538,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
     boost::process::spawn(m_binaryPath);
 }
 
+#ifdef WITH_ENCRYPTION
 void ResourceManager::encrypt() {
     const std::string dirsToCheck[] = { "data", "modules", "mods" };
     const std::string luaExtension = ".lua";
@@ -553,7 +563,20 @@ void ResourceManager::encrypt() {
             continue;
         std::string buffer(std::istreambuf_iterator<char>(in_file), {});
         in_file.close();
-        if (!encryptBuffer(buffer)) {// already encrypted
+        if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
+            continue; // already encrypted
+
+        if (it.extension().string() == luaExtension) {
+            std::string bytecode = g_lua.generateByteCode(buffer, it.string());
+            if (bytecode.length() > 10) {
+                buffer = bytecode;
+                g_logger.info(stdext::format("%s - lua bytecode encrypted", it.string()));
+            } else {
+                g_logger.info(stdext::format("%s - lua but not bytecode encrypted", it.string()));
+            }
+        }
+
+        if (!encryptBuffer(buffer)) { // already encrypted
             g_logger.info(stdext::format("%s - already encrypted", it.string()));
             continue;
         }
@@ -565,10 +588,18 @@ void ResourceManager::encrypt() {
         g_logger.info(stdext::format("%s - encrypted", it.string()));
     }
 }
+#endif 
 
 bool ResourceManager::decryptBuffer(std::string& buffer) {
-    if (buffer.size() < 5 || buffer.substr(0, 4).compare("ENC3") != 0)
+    if (buffer.size() < 5)
         return true;
+    if (buffer.substr(0, 4).compare("ENC3") != 0) {
+#ifdef WITH_ENCRYPTION
+        return true;
+#else
+        return false;
+#endif
+    }
 
     uint64_t key = *(uint64_t*)&buffer[4];
     uint32_t compressed_size = *(uint32_t*)&buffer[12];
@@ -593,6 +624,7 @@ bool ResourceManager::decryptBuffer(std::string& buffer) {
     return true;
 }
 
+#ifdef WITH_ENCRYPTION
 bool ResourceManager::encryptBuffer(std::string& buffer) {
     if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
         return false; // already encrypted
@@ -624,3 +656,4 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
     buffer = new_buffer;
     return true;
 }
+#endif

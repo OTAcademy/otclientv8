@@ -25,7 +25,11 @@
 
 #include <framework/core/resourcemanager.h>
 #include <framework/util/stats.h>
+#ifdef _MSC_VER
+#include <luajit/lua.hpp>
+#else
 #include <lua.hpp>
+#endif
 
 #include "lbitlib.h"
 
@@ -770,6 +774,30 @@ void LuaInterface::loadBuffer(const std::string& buffer, const std::string& sour
     int ret = luaL_loadbuffer(L, buffer.c_str(), buffer.length(), source.c_str());
     if(ret != 0)
         throw LuaException(popString(), 0);
+}
+
+int dumpWriter(lua_State *L, const void* p, size_t sz, void* ud) {
+    if (!ud)
+        return -1;
+
+    std::string* ret = (std::string*)ud;
+    ret->append((const char*)p, sz);
+    return 0;
+}
+
+std::string LuaInterface::generateByteCode(const std::string& buffer, std::string source)
+{
+    stdext::replace_all(source, "\\", "/");
+    source = std::string("@/") + source;
+
+    std::string ret;
+    int status = luaL_loadbuffer(L, buffer.c_str(), buffer.length(), source.c_str());
+    if (status != 0)
+        return ret;
+
+    lua_dump(L, dumpWriter, &ret);
+    clearStack();
+    return ret;
 }
 
 int LuaInterface::pcall(int numArgs, int numRets, int errorFuncIndex)

@@ -27,6 +27,14 @@ Panel
     !text: tr('Show left panel')
 
   OptionCheckBox
+    id: showExtraPanels
+    !text: tr('Enable two extra transparent panels (left and right)')
+
+  OptionCheckBox
+    id: openContainersInThirdPanel
+    !text: tr('Open contrainers in transparent right panel')
+
+  OptionCheckBox
     id: displayNames
     !text: tr('Display creature names')
 
@@ -37,6 +45,18 @@ Panel
   OptionCheckBox
     id: displayMana
     !text: tr('Display player mana bar')
+
+  OptionCheckBox
+    id: hidePlayerBars
+    !text: tr('Hide player health and mana bar')
+
+  OptionCheckBox
+    id: topHealtManaBar
+    !text: tr('Show top health and mana bar')
+
+  OptionCheckBox
+    id: showHealthManaCircle
+    !text: tr('Show healt/mana circle')
 
   OptionCheckBox
     id: displayText

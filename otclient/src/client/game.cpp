@@ -723,8 +723,8 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
         return;
 
     // protocol limits walk path up to 255 directions
-    if(dirs.size() > 127) {
-        g_logger.error("Auto walk path too great, the maximum number of directions is 127");
+    if((!g_game.getFeature(Otc::GameNewWalking) || dirs.size() > 4097) && dirs.size() > 127) {
+        g_logger.error("Auto walk path too great");
         return;
     }
 
@@ -748,7 +748,7 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
     TilePtr toTile = g_map.getTile(m_localPlayer->getNewPreWalkingPosition(true).translatedToDirection(direction));
     if(toTile && toTile->isWalkable() && !m_localPlayer->isServerWalking()) {
         if (getFeature(Otc::GameNewWalking)) {
-            if(m_localPlayer->canWalk(direction))
+            if(m_localPlayer->canWalk(direction) && !m_localPlayer->isWalking())
                 m_localPlayer->newPreWalk(direction);
         } else {
             m_localPlayer->preWalk(direction);

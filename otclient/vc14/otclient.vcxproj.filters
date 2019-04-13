@@ -264,9 +264,6 @@
     <ClCompile Include="..\src\framework\net\protocol.cpp">
       <Filter>Source Files\framework\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\framework\net\protocolhttp.cpp">
-      <Filter>Source Files\framework\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\net\server.cpp">
       <Filter>Source Files\framework\net</Filter>
     </ClCompile>
@@ -726,9 +723,6 @@
       <Filter>Header Files\framework\net</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\net\protocol.h">
-      <Filter>Header Files\framework\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\net\protocolhttp.h">
       <Filter>Header Files\framework\net</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\net\server.h">

@@ -37,6 +37,9 @@ void ProtocolGame::send(const OutputMessagePtr& outputMessage)
 
 void ProtocolGame::sendExtendedOpcode(uint8 opcode, const std::string& buffer)
 {
+    if (!g_game.getFeature(Otc::GameExtendedOpcode))
+        return;
+        
     if(m_enableSendExtendedOpcode) {
         OutputMessagePtr msg(new OutputMessage);
         msg->addU8(Proto::ClientExtendedOpcode);

@@ -419,9 +419,13 @@ namespace Otc
         GameIngameStoreServiceType = 75,
         GameAdditionalSkills = 76,
 
+        GameExtendedOpcode = 80,
+
         // 90-99 otclientv8 features
         GameNewWalking = 90,
         GameSlowerManualWalking = 91,
+
+        GameBot = 95,
 
         LastGameFeature = 101
     };

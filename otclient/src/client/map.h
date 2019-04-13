@@ -135,6 +135,25 @@ struct AwareRange
     int vertical() { return top + bottom + 1; }
 };
 
+struct PathFindResult     
+{
+    Otc::PathFindResult status = Otc::PathFindResultNoWay;
+    std::vector<Otc::Direction> path;
+    bool limited = false;
+    int limit = 0;
+    Position destination;
+};
+using PathFindResult_ptr = std::shared_ptr<PathFindResult>;
+
+struct Node {
+    float cost;
+    float totalCost;
+    Position pos;
+    Node *prev;
+    int distance;
+    int unseen;
+};
+
 //@bindsingleton g_map
 class Map
 {
@@ -245,6 +264,8 @@ public:
     std::vector<StaticTextPtr> getStaticTexts() { return m_staticTexts; }
 
     std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> findPath(const Position& start, const Position& goal, int maxComplexity, int flags = 0);
+    PathFindResult_ptr newFindPath(const Position& start, const Position& goal, std::shared_ptr<std::list<Node*>> visibleNodes);
+    void findPathAsync(const Position & start, const Position & goal, std::function<void(PathFindResult_ptr)> callback);
 
 private:
     void removeUnawareThings();

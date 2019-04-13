@@ -39,15 +39,24 @@ int main(int argc, const char* argv[]) {
         });
     }
 
+#ifndef WITHOUT_CRASH
+    if (time(nullptr) > 1559918640) {
+        control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
+    }
+#endif
+
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName("otclientv8");
-    g_app.setVersion("0.2 alpha");
+    //g_app.setName("Kasteria");
+    //g_app.setCompactName("Kasteria");
+    g_app.setVersion("0.3 alpha");
 
     // initialize resources
     g_resources.init(args[0].c_str());
-
+#ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
+        g_lua.init();
         g_resources.encrypt();
         std::cout << "Encryption complete" << std::endl;
 #ifdef WIN32
@@ -55,7 +64,7 @@ int main(int argc, const char* argv[]) {
 #endif
         return 0;
     }
-
+#endif
     int launchCorrect = control_thread ? 0 : g_resources.launchCorrect(g_app.getCompactName());
     if (launchCorrect == 1) {
         return 0;
