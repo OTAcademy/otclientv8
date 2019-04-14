@@ -953,11 +953,11 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
                     bool isNotWalkable = blockAndTile.second.hasFlag(MinimapTileNotWalkable);
                     bool isNotPathable = blockAndTile.second.hasFlag(MinimapTileNotPathable);
                     float speed = blockAndTile.second.getSpeed();
-                    if (isNotWalkable || isNotPathable) {
+                    if ((isNotWalkable || isNotPathable) && neighbor != goal) {
                         it = nodes.emplace(neighbor, nullptr).first;
                     } else {
                         if (!wasSeen)
-                            speed = 500;
+                            speed = 1000;
                         it = nodes.emplace(neighbor, new Node{ speed, 10000000.0f, neighbor, node, node->distance + 1, wasSeen ? 0 : 1 }).first;
                     }
                 }
@@ -968,7 +968,7 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
 
                 float diagonal = ((i == 0 || j == 0) ? 1.0f : 3.0f);
                 float cost = it->second->cost * diagonal;
-                cost += diagonal * (50 * it->second->pos.distance(goal)); // heuristic
+                cost += diagonal * (50.0f * std::max<float>(5.0f, it->second->pos.distance(goal))); // heuristic
                 if (node->totalCost + cost + 50 < it->second->totalCost) {
                     it->second->totalCost = node->totalCost + cost;
                     it->second->prev = node;
@@ -982,14 +982,18 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
     }
 
     if (dstNode) {
-        while(dstNode && dstNode->prev) {
-            ret->path.push_back(dstNode->prev->pos.getDirectionFromPosition(dstNode->pos));
+        while (dstNode && dstNode->prev) {
+            if (dstNode->unseen) {
+                ret->path.clear();
+            } else {
+                ret->path.push_back(dstNode->prev->pos.getDirectionFromPosition(dstNode->pos));
+            }
             dstNode = dstNode->prev;
         }
         std::reverse(ret->path.begin(), ret->path.end());
         ret->status = Otc::PathFindResultOk;
     }
-    ret->limit = limit;
+    ret->complexity = 50000 - limit;
 
     for (auto& node : nodes) {
         if (node.second)
@@ -1007,7 +1011,7 @@ void Map::findPathAsync(const Position& start, const Position& goal, std::functi
         bool isNotWalkable = !tile->isWalkable(false);
         bool isNotPathable = !tile->isPathable();
         float speed = tile->getGroundSpeed();
-        if (isNotWalkable || isNotPathable) {
+        if ((isNotWalkable || isNotPathable) && tile->getPosition() != goal) {
             visibleNodes->push_back(new Node{ speed, 0, tile->getPosition(), nullptr, 0, 0 });
         } else {
             visibleNodes->push_back(new Node{ speed, 10000000.0f, tile->getPosition(), nullptr, 0, 0 });

@@ -35,10 +35,9 @@ TopMenuPanel
     id: feedbackButton
     text: Send feedback/Report bug
     text-auto-resize: true
-    anchors.top: parent.top
+    anchors.verticalCenter: parent.verticalCenter
     anchors.left: leftGameButtonsPanel.right
     margin-left: 85
-    margin-top: 5
     @onClick: modules.client_feedback.show()
 
   TopMenuButtonsPanel

@@ -50,7 +50,7 @@ int main(int argc, const char* argv[]) {
     g_app.setCompactName("otclientv8");
     //g_app.setName("Kasteria");
     //g_app.setCompactName("Kasteria");
-    g_app.setVersion("0.3 alpha");
+    g_app.setVersion("0.4 alpha");
 
     // initialize resources
     g_resources.init(args[0].c_str());

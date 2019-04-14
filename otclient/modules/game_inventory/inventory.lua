@@ -63,7 +63,7 @@ function init()
 
   inventoryWindow = g_ui.loadUI('inventory', modules.game_interface.getRightPanel())
   inventoryWindow:disableResize()
-  inventoryPanel = inventoryWindow:getChildById('contentsPanel')
+  inventoryPanel = inventoryWindow:getChildById('contentsPanel'):getChildById('inventoryPanel')
 
   purseButton = inventoryPanel:getChildById('purseButton')
   local function purseFunction()

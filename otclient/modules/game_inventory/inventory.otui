@@ -112,178 +112,181 @@ MiniWindow
 
   MiniWindowContents
     anchors.left: parent.left
-  
-    margin-right: 53
-    margin-bottom: 40
-    
-    HeadSlot
-      anchors.top: parent.top
-      anchors.horizontalCenter: parent.horizontalCenter
-      margin-top: 3
-
-    BodySlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    LegSlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    FeetSlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    NeckSlot
-      anchors.top: slot1.top
-      anchors.right: slot1.left
-      margin-top: 10
-      margin-right: 5
-
-    LeftSlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    FingerSlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    BackSlot
-      anchors.top: slot1.top
-      anchors.left: slot1.right
-      margin-top: 10
-      margin-left: 5
-
-    RightSlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    AmmoSlot
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
-      margin-top: 3
-
-    PurseButton
-      margin-top: 3
-      anchors.top: prev.bottom
-      anchors.horizontalCenter: prev.horizontalCenter
+        
+    Panel
+      id: inventoryPanel
+      margin-right: 53
+      margin-bottom: 40
+      anchors.fill: parent
       
-  Panel
-    margin-top: 28
-    anchors.fill: parent
-    anchors.left: prev.right
-    margin-bottom: 40
-      
-    FightOffensiveBox
-      id: fightOffensiveBox
-      anchors.left: parent.left
-      anchors.top: parent.top
+      HeadSlot
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-top: 3
 
-    ChaseModeBox
-      id: chaseModeBox
+      BodySlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      LegSlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      FeetSlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      NeckSlot
+        anchors.top: slot1.top
+        anchors.right: slot1.left
+        margin-top: 10
+        margin-right: 5
+
+      LeftSlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      FingerSlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      BackSlot
+        anchors.top: slot1.top
+        anchors.left: slot1.right
+        margin-top: 10
+        margin-left: 5
+
+      RightSlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      AmmoSlot
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        margin-top: 3
+
+      PurseButton
+        margin-top: 3
+        anchors.top: prev.bottom
+        anchors.horizontalCenter: prev.horizontalCenter
+        
+    Panel
+      margin-top: 5
+      anchors.fill: parent
       anchors.left: prev.right
-      anchors.top: parent.top
+      margin-bottom: 40
+        
+      FightOffensiveBox
+        id: fightOffensiveBox
+        anchors.left: parent.left
+        anchors.top: parent.top
 
-    FightBalancedBox
-      id: fightBalancedBox
-      margin-top: 26
-      anchors.left: parent.left
-      anchors.top: parent.top
-      
-    SafeFightBox
-      id: safeFightBox
-      margin-top: 26
-      anchors.left: prev.right
-      anchors.top: parent.top
+      ChaseModeBox
+        id: chaseModeBox
+        anchors.left: prev.right
+        anchors.top: parent.top
 
-    FightDefensiveBox
-      id: fightDefensiveBox
-      margin-top: 52
-      anchors.left: parent.left
-      anchors.top: parent.top
-      
-    MountButton
-      id: mountButton
-      margin-top: 52
-      anchors.left: prev.right
-      anchors.top: parent.top
-      
-    Button
-      id: buttonPvp
-      !text: tr('PVP')
-      margin-top: 83
-      margin-left: 3
-      width: 45
-      anchors.left: parent.left
-      anchors.top: parent.top
+      FightBalancedBox
+        id: fightBalancedBox
+        margin-top: 26
+        anchors.left: parent.left
+        anchors.top: parent.top
+        
+      SafeFightBox
+        id: safeFightBox
+        margin-top: 26
+        anchors.left: prev.right
+        anchors.top: parent.top
 
-    Button
-      !text: tr('Stop')
-      margin-top: 115
-      margin-left: 3
-      width: 45
-      anchors.left: parent.left
-      anchors.top: parent.top
-      @onClick: g_game.stop(); g_game.cancelAttackAndFollow()
-  
-  Panel
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.bottom: parent.bottom
-    anchors.top: prev.bottom
-    margin-left: 4
-    margin-right: 4      
+      FightDefensiveBox
+        id: fightDefensiveBox
+        margin-top: 52
+        anchors.left: parent.left
+        anchors.top: parent.top
+        
+      MountButton
+        id: mountButton
+        margin-top: 52
+        anchors.left: prev.right
+        anchors.top: parent.top
+        
+      Button
+        id: buttonPvp
+        !text: tr('PVP')
+        margin-top: 83
+        margin-left: 3
+        width: 45
+        anchors.left: parent.left
+        anchors.top: parent.top
+
+      Button
+        !text: tr('Stop')
+        margin-top: 115
+        margin-left: 3
+        width: 45
+        anchors.left: parent.left
+        anchors.top: parent.top
+        @onClick: g_game.stop(); g_game.cancelAttackAndFollow()
     
     Panel
-      id: conditionPanel
-      layout:
-        type: horizontalBox
-      height: 22
-      padding: 2
-      anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
-      border-width: 1
-      border-color: #00000077
-      background-color: #ffffff11
-
-    GameLabel
-      id: soulLabel
-      text-align: right
-      color: white
-      font: verdana-11px-rounded
+      anchors.bottom: parent.bottom
       anchors.top: prev.bottom
-      anchors.bottom: parent.bottom
-      anchors.right: parent.right
-      anchors.left: parent.horizontalCenter
-      on: true
-      margin-right: 2
-      margin-top: 1
+      margin-left: 4
+      margin-right: 4      
+      
+      Panel
+        id: conditionPanel
+        layout:
+          type: horizontalBox
+        height: 22
+        padding: 2
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        border-width: 1
+        border-color: #00000077
+        background-color: #ffffff11
 
-      $!on:
-        visible: false
-        margin-top: 0
-        height: 0
+      GameLabel
+        id: soulLabel
+        text-align: right
+        color: white
+        font: verdana-11px-rounded
+        anchors.top: prev.bottom
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.left: parent.horizontalCenter
+        on: true
+        margin-right: 2
+        margin-top: 1
 
-    GameLabel
-      id: capLabel
-      color: white
-      font: verdana-11px-rounded
-      margin-left: 2
-      margin-top: 1
-      anchors.top: prev.top
-      anchors.bottom: parent.bottom
-      anchors.left: parent.left
-      anchors.right: parent.horizontalCenter
-      on: true
+        $!on:
+          visible: false
+          margin-top: 0
+          height: 0
 
-      $!on:
-        visible: false
-        margin-top: 0
-        height: 0
+      GameLabel
+        id: capLabel
+        color: white
+        font: verdana-11px-rounded
+        margin-left: 2
+        margin-top: 1
+        anchors.top: prev.top
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.horizontalCenter
+        on: true
+
+        $!on:
+          visible: false
+          margin-top: 0
+          height: 0
 

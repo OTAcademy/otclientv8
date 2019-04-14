@@ -78,7 +78,9 @@ function init()
       configList:addOption("Config #" .. i)    
     end
   end
-  configList:setCurrentIndex(botConfig.selectedConfig)
+  if type(botConfig.selectedConfig) == 'number' then
+    configList:setCurrentIndex(botConfig.selectedConfig)
+  end
   configList.onOptionChange = modules.game_bot.refreshConfig
   
   mainTab = configTab:addTab("all")
