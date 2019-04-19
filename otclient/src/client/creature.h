@@ -44,7 +44,7 @@ public:
 
     Creature();
 
-    virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr);
+    virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
     void drawLight(const Point& dest, float scaleFactor, LightView *lightView);
 
     void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr);

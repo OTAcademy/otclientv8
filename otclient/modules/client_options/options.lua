@@ -22,6 +22,8 @@ local defaultOptions = {
   enableMusicSound = false,
   musicSoundVolume = 100,
   enableLights = false,
+  floorFading = 500,
+  crosshair = 1,
   ambientLight = 100,
   optimizationLevel = 1,
   displayNames = true,
@@ -219,6 +221,21 @@ function setOption(key, value, force)
     gameMapPanel:setDrawLights(value and options['ambientLight'] < 100)
     graphicsPanel:getChildById('ambientLight'):setEnabled(value)
     graphicsPanel:getChildById('ambientLightLabel'):setEnabled(value)
+  elseif key == 'floorFading' then
+    gameMapPanel:setFloorFading(value)
+    graphicsPanel:getChildById('floorFadingLabel'):setText(tr('Floor fading: %s ms', value))
+  elseif key == 'crosshair' then
+    local crosshair = graphicsPanel:getChildById('crosshair')
+    if crosshair.currentIndex ~= value then
+      crosshair:setCurrentIndex(value)
+    end
+    if value == 1 then
+      gameMapPanel:setCrosshair("")    
+    elseif value == 2 then
+      gameMapPanel:setCrosshair("/data/images/crosshair/default.png")        
+    elseif value == 3 then
+      gameMapPanel:setCrosshair("/data/images/crosshair/full.png")    
+    end
   elseif key == 'ambientLight' then
     graphicsPanel:getChildById('ambientLightLabel'):setText(tr('Ambient light: %s%%', value))
     gameMapPanel:setMinimumAmbientLight(value/100)

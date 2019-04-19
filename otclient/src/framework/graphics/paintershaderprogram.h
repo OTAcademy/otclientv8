@@ -43,7 +43,9 @@ protected:
         TEX2_UNIFORM = 7,
         TEX3_UNIFORM = 8,
         RESOLUTION_UNIFORM = 9,
-        TRANSFORM_MATRIX_UNIFORM = 10
+        TRANSFORM_MATRIX_UNIFORM = 10,
+        GLOBALOPACITY_UNIFORM = 11,
+        DEPTH_UNIFORM = 12
     };
 
     friend class PainterOGL;
@@ -60,6 +62,8 @@ public:
     void setTextureMatrix(const Matrix3& textureMatrix);
     void setColor(const Color& color);
     void setOpacity(float opacity);
+    void setGlobalOpacity(float opacity);
+    void setDepth(float depth);
     void setResolution(const Size& resolution);
     void updateTime();
 
@@ -71,6 +75,8 @@ private:
 
     Color m_color;
     float m_opacity;
+    float m_globalOpacity;
+    float m_depth;
     Matrix3 m_transformMatrix;
     Matrix3 m_projectionMatrix;
     Matrix3 m_textureMatrix;

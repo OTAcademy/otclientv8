@@ -17,7 +17,11 @@ public:
 
     int itemsLimit();
 
-    int mapViewDelay();
+    int mapRenderInterval();
+
+    int creaturesRenderInterval();
+
+    bool allowFading();
 
     int getLevel() {
         return m_speed;

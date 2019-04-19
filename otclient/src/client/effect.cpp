@@ -26,7 +26,7 @@
 #include <framework/core/eventdispatcher.h>
 #include <framework/util/extras.h>
 
-void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int offsetX, int offsetY, LightView *lightView)
+void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int offsetX, int offsetY, LightView *lightView, bool lightOnly)
 {
     if(m_id == 0)
         return;
@@ -55,7 +55,7 @@ void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int 
     if(yPattern < 0)
         yPattern += getNumPatternY();
 
-    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, 0, animationPhase, lightView);
+    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, 0, animationPhase, lightView, lightOnly);
 }
 
 void Effect::onAppear()

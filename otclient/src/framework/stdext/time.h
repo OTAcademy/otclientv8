@@ -39,7 +39,7 @@ public:
     float elapsed_seconds() { return (float)((stdext::micros() - m_start)/1000000.0); }
     ticks_t elapsed_millis() { return (stdext::micros() - m_start)/1000; }
     ticks_t elapsed_micros() { return stdext::micros() - m_start; }
-    void restart() { m_start = stdext::micros(); }
+    void restart(int shift = 0) { m_start = stdext::micros() - shift; }
 private:
     ticks_t m_start;
 };

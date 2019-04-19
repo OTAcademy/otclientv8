@@ -69,27 +69,29 @@ Creature::Creature() : Thing()
     m_outfitColor = Color::white;
 }
 
-void Creature::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView)
+void Creature::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView, bool lightOnly)
 {
     if(!canBeSeen())
         return;
 
     Point animationOffset = animate ? m_walkOffset : Point(0,0);
 
-    if(m_showTimedSquare && animate) {
-        g_painter->setColor(m_timedSquareColor);
-        g_painter->drawBoundingRect(Rect(dest + (animationOffset - getDisplacement() + 2)*scaleFactor, Size(28, 28)*scaleFactor), std::max<int>((int)(2*scaleFactor), 1));
-        g_painter->setColor(Color::white);
-    }
+    if (!lightOnly) {
+        if (m_showTimedSquare && animate) {
+            g_painter->setColor(m_timedSquareColor);
+            g_painter->drawBoundingRect(Rect(dest + (animationOffset - getDisplacement() + 2)*scaleFactor, Size(28, 28)*scaleFactor), std::max<int>((int)(2 * scaleFactor), 1));
+            g_painter->setColor(Color::white);
+        }
 
-    if(m_showStaticSquare && animate) {
-        g_painter->setColor(m_staticSquareColor);
-        g_painter->drawBoundingRect(Rect(dest + (animationOffset - getDisplacement())*scaleFactor, Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS)*scaleFactor), std::max<int>((int)(2*scaleFactor), 1));
-        g_painter->setColor(Color::white);
-    }
+        if (m_showStaticSquare && animate) {
+            g_painter->setColor(m_staticSquareColor);
+            g_painter->drawBoundingRect(Rect(dest + (animationOffset - getDisplacement())*scaleFactor, Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS)*scaleFactor), std::max<int>((int)(2 * scaleFactor), 1));
+            g_painter->setColor(Color::white);
+        }
 
-    internalDrawOutfit(dest + animationOffset * scaleFactor, scaleFactor, animate, animate, m_direction);
-    m_footStepDrawn = true;
+        internalDrawOutfit(dest + animationOffset * scaleFactor, scaleFactor, animate, animate, m_direction);
+        m_footStepDrawn = true;
+    }
 
     if(lightView) {
         Light light = rawGetThingType()->getLight();
@@ -104,11 +106,14 @@ void Creature::draw(const Point& dest, float scaleFactor, bool animate, LightVie
         }
 
         if(light.intensity > 0)
-            lightView->addLightSource(dest + (animationOffset + Point(8,8)) * scaleFactor, scaleFactor, light);
+            lightView->addLightSource(dest + (animationOffset + Point(8,8)) * scaleFactor, scaleFactor, light, true);
     }
 }
 
 void Creature::drawLight(const Point& dest, float scaleFactor, LightView *lightView) {
+    if (!lightView)
+        return;
+
     Light light = rawGetThingType()->getLight();
     if(m_light.intensity != light.intensity || m_light.color != light.color)
         light = m_light;
@@ -121,7 +126,7 @@ void Creature::drawLight(const Point& dest, float scaleFactor, LightView *lightV
     }
 
     if(light.intensity > 0)
-        lightView->addLightSource(dest + (m_walkOffset + Point(8,8)) * scaleFactor, scaleFactor, light, isLocalPlayer());
+        lightView->addLightSource(dest + (m_walkOffset + Point(8,8)) * scaleFactor, scaleFactor, light);
 }
 
 

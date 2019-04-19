@@ -32,6 +32,8 @@ PainterShaderProgram::PainterShaderProgram()
 {
     m_startTime = g_clock.seconds();
     m_opacity = 1;
+    m_globalOpacity = 1;
+    m_depth = 0;
     m_color = Color::white;
     m_time = 0;
 }
@@ -49,6 +51,8 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(TEX2_UNIFORM, "u_Tex2");
     bindUniformLocation(TEX3_UNIFORM, "u_Tex3");
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
+    bindUniformLocation(GLOBALOPACITY_UNIFORM, "u_GlobalOpacity");
+    bindUniformLocation(DEPTH_UNIFORM, "u_Depth");
 
     setUniformValue(TRANSFORM_MATRIX_UNIFORM, m_transformMatrix);
     setUniformValue(PROJECTION_MATRIX_UNIFORM, m_projectionMatrix);
@@ -61,6 +65,8 @@ void PainterShaderProgram::setupUniforms()
     setUniformValue(TEX2_UNIFORM, 2);
     setUniformValue(TEX3_UNIFORM, 3);
     setUniformValue(RESOLUTION_UNIFORM, (float)m_resolution.width(), (float)m_resolution.height());
+    setUniformValue(GLOBALOPACITY_UNIFORM, m_globalOpacity);    
+    setUniformValue(DEPTH_UNIFORM, m_depth);    
 }
 
 bool PainterShaderProgram::link()
@@ -125,6 +131,28 @@ void PainterShaderProgram::setOpacity(float opacity)
     bind();
     setUniformValue(OPACITY_UNIFORM, opacity);
     m_opacity = opacity;
+}
+
+void PainterShaderProgram::setGlobalOpacity(float opacity)
+{
+    if(m_globalOpacity == opacity)
+        return;
+
+    bind();
+    setUniformValue(GLOBALOPACITY_UNIFORM, opacity);
+    m_globalOpacity = opacity;
+}
+
+void PainterShaderProgram::setDepth(float depth)
+{
+    depth /= 65536.f;
+
+    if(m_depth == depth)
+        return;
+
+    bind();
+    setUniformValue(DEPTH_UNIFORM, depth);
+    m_depth = depth;
 }
 
 void PainterShaderProgram::setResolution(const Size& resolution)

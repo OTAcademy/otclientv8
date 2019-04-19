@@ -48,6 +48,12 @@ public:
         CompositionMode_ZeroAlphaOverrite
 
     };
+    enum DepthFunc {
+        DepthFunc_None,
+        DepthFunc_LESS,
+        DepthFunc_LEQUAL,
+        DepthFunc_ALWAYS
+    };
     enum DrawMode {
         Triangles = GL_TRIANGLES,
         TriangleStrip = GL_TRIANGLE_STRIP
@@ -95,33 +101,46 @@ public:
     void rotate(const Point& p, float angle) { rotate(p.x, p.y, angle); }
 
     virtual void setOpacity(float opacity) { m_opacity = opacity; }
+    virtual void setGlobalOpacity(float opacity) { m_globalOpacity = opacity; }
     virtual void setResolution(const Size& resolution) { m_resolution = resolution; }
+
+    virtual void setDepth(float depth) { m_depth = depth; }
+    virtual void resetDepth() { m_depth = 0; }
+    virtual float getDepth() { return m_depth; }
 
     Size getResolution() { return m_resolution; }
     Color getColor() { return m_color; }
     float getOpacity() { return m_opacity; }
+    float getGlobalOpacity() { return m_globalOpacity; }
     Rect getClipRect() { return m_clipRect; }
     CompositionMode getCompositionMode() { return m_compositionMode; }
-
     virtual void setCompositionMode(CompositionMode compositionMode) = 0;
+
+    DepthFunc getDepthFunc() { return m_depthFunc; }
+    virtual void setDepthFunc(DepthFunc func) = 0;
 
     virtual void pushTransformMatrix() = 0;
     virtual void popTransformMatrix() = 0;
 
     void resetClipRect() { setClipRect(Rect()); }
     void resetOpacity() { setOpacity(1.0f); }
+    void resetGlobalOpacity() { setGlobalOpacity(1.0f); }
     void resetCompositionMode() { setCompositionMode(CompositionMode_Normal); }
     void resetColor() { setColor(Color::white); }
     void resetShaderProgram() { setShaderProgram(nullptr); }
+    void resetDepthFunc() { setDepthFunc(DepthFunc_None); }
 
     virtual bool hasShaders() = 0;
 
 protected:
     PainterShaderProgram *m_shaderProgram;
     CompositionMode m_compositionMode;
+    DepthFunc m_depthFunc;
     Color m_color;
     Size m_resolution;
     float m_opacity;
+    float m_globalOpacity;
+    float m_depth;
     Rect m_clipRect;
 };
 

@@ -341,6 +341,7 @@ void WIN32Window::internalCreateGLContext()
         EGL_GREEN_SIZE, 4,
         EGL_BLUE_SIZE, 4,
         EGL_ALPHA_SIZE, 4,
+        EGL_DEPTH_SIZE, 8,
         EGL_NONE
     };
 
@@ -384,7 +385,7 @@ void WIN32Window::internalCreateGLContext()
                                          0,                          // Shift Bit Ignored
                                          0,                          // No Accumulation Buffer
                                          0, 0, 0, 0,                 // Accumulation Bits Ignored
-                                         0,                          // Z-Buffer (Depth Buffer)
+                                         24,                         // Z-Buffer (Depth Buffer)
                                          0,                          // No Stencil Buffer
                                          0,                          // No Auxiliary Buffer
                                          PFD_MAIN_PLANE,             // Main Drawing Layer

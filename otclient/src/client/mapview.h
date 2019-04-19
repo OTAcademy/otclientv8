@@ -34,21 +34,14 @@
 class MapView : public LuaObject
 {
 public:
-    enum ViewMode {
-        NEAR_VIEW,
-        MID_VIEW,
-        FAR_VIEW,
-        HUGE_VIEW
-    };
-
     MapView();
     ~MapView();
-    void draw(const Rect& rect);
-    void newDraw(const Rect & rect);
+    void draw(const Rect& rect, const TilePtr& crosshairTile = nullptr);
+    void drawTiles(bool map, bool creatures, bool isFading, const TilePtr& crosshairTile);
 
 private:
     void updateGeometry(const Size& visibleDimension, const Size& optimizedSize);
-    void updateVisibleTilesCache(int start = 0);
+    void updateVisibleTilesCache();
     void requestVisibleTilesCacheUpdate() { m_mustUpdateVisibleTilesCache = true; }
 
 protected:
@@ -68,19 +61,12 @@ public:
 
     // map dimension related
     void setVisibleDimension(const Size& visibleDimension);
+    void optimizeForSize(const Size & visibleSize);
     Size getVisibleDimension() { return m_visibleDimension; }
     int getTileSize() { return m_tileSize; }
     Point getVisibleCenterOffset() { return m_visibleCenterOffset; }
     int getCachedFirstVisibleFloor() { return m_cachedFirstVisibleFloor; }
     int getCachedLastVisibleFloor() { return m_cachedLastVisibleFloor; }
-
-    // view mode related
-    void setViewMode(ViewMode viewMode);
-    ViewMode getViewMode() { return m_viewMode; }
-    void optimizeForSize(const Size& visibleSize);
-
-    void setAutoViewMode(bool enable);
-    bool isAutoViewModeEnabled() { return m_autoViewMode; }
 
     // camera related
     void followCreature(const CreaturePtr& creature);
@@ -107,7 +93,7 @@ public:
     bool isDrawingHealthBars() { return m_drawHealthBars; }
 
     void setDrawLights(bool enable);
-    bool isDrawingLights() { return m_drawLights; }
+    bool isDrawingLights() { return m_lightView != nullptr; }
 
     void setDrawManaBar(bool enable) { m_drawManaBar = enable; }
     bool isDrawingManaBar() { return m_drawManaBar; }
@@ -118,6 +104,9 @@ public:
 
     void setAnimated(bool animated) { m_animated = animated; requestVisibleTilesCacheUpdate(); }
     bool isAnimating() { return m_animated; }
+
+    void setFloorFading(int value) { m_floorFading = value; }
+    void setCrosshair(const std::string& file);
 
     void setAddLightMethod(bool add) { m_lightView->setBlendEquation(add ? Painter::BlendEquation_Add : Painter::BlendEquation_Max); }
 
@@ -130,20 +119,24 @@ public:
 
 private:
     Rect calcFramebufferSource(const Size& destSize);
-    int calcFirstVisibleFloor();
+    int calcFirstVisibleFloor(bool forFading = false);
     int calcLastVisibleFloor();
     Point transformPositionTo2D(const Position& position, const Position& relativePosition) {
         return Point((m_virtualCenterOffset.x + (position.x - relativePosition.x) - (relativePosition.z - position.z)) * m_tileSize,
                      (m_virtualCenterOffset.y + (position.y - relativePosition.y) - (relativePosition.z - position.z)) * m_tileSize);
     }
 
-    int m_lastRender = 0;
+    stdext::timer m_mapRenderTimer;
+    stdext::timer m_creaturesRenderTimer;
 
     int m_lockedFirstVisibleFloor;
     int m_cachedFirstVisibleFloor;
+    int m_cachedFirstFadingFloor;
     int m_cachedLastVisibleFloor;
     int m_tileSize;
     int m_updateTilesPos;
+    int m_floorFading = 500;
+    TexturePtr m_crosshair = nullptr;
     Size m_drawDimension;
     Size m_visibleDimension;
     Size m_optimizedSize;
@@ -151,28 +144,28 @@ private:
     Point m_visibleCenterOffset;
     Point m_moveOffset;
     Position m_customCameraPosition;
+    Position m_lastCameraPosition;
     stdext::boolean<true> m_mustUpdateVisibleTilesCache;
     stdext::boolean<true> m_mustDrawVisibleTilesCache;
-    stdext::boolean<true> m_mustCleanFramebuffer;
     stdext::boolean<true> m_multifloor;
     stdext::boolean<true> m_animated;
-    stdext::boolean<true> m_autoViewMode;
     stdext::boolean<true> m_drawTexts;
     stdext::boolean<true> m_drawNames;
     stdext::boolean<true> m_drawHealthBars;
-    stdext::boolean<false> m_drawLights;
     stdext::boolean<true> m_drawManaBar;
     bool m_drawPlayerBars = true;
     stdext::boolean<true> m_smooth;
 
+
+    stdext::timer m_fadingFloorTimers[Otc::MAX_Z + 1];
+
     stdext::boolean<true> m_follow;
-    std::vector<TilePtr> m_cachedVisibleTiles;
+    std::vector<std::pair<TilePtr, bool>> m_cachedVisibleTiles;
     std::vector<CreaturePtr> m_cachedFloorVisibleCreatures;
     CreaturePtr m_followingCreature;
     FrameBufferPtr m_framebuffer;
-    FrameBufferPtr m_outfitBuffer;
+    FrameBufferPtr m_mapbuffer;
     PainterShaderProgramPtr m_shader;
-    ViewMode m_viewMode;
     Otc::DrawFlags m_drawFlags;
     std::vector<Point> m_spiral;
     LightViewPtr m_lightView;

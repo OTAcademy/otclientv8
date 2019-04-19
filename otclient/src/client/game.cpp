@@ -737,8 +737,8 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
 
     auto it = dirs.begin();
     Otc::Direction direction = *it;
-    if(!m_localPlayer->canWalk(direction) && !getFeature(Otc::GameNewWalking))
-        return;
+    //if(!m_localPlayer->canWalk(direction) && !getFeature(Otc::GameNewWalking))
+    //    return;
 
     if (m_walkEvent) {
         m_walkEvent->cancel();
@@ -751,12 +751,13 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
             if(m_localPlayer->canWalk(direction) && !m_localPlayer->isWalking())
                 m_localPlayer->newPreWalk(direction);
         } else {
-            m_localPlayer->preWalk(direction);
+            if(m_localPlayer->canWalk(direction) && !m_localPlayer->isWalking())
+                m_localPlayer->preWalk(direction);
 
-            if (getFeature(Otc::GameForceFirstAutoWalkStep)) {
-                forceWalk(direction, false);
-                dirs.erase(it);
-            }
+            //if (getFeature(Otc::GameForceFirstAutoWalkStep)) {
+            //    forceWalk(direction, false);
+            //    dirs.erase(it);
+            //}
         }
     }
 

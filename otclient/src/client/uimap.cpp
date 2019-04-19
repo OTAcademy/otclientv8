@@ -48,6 +48,12 @@ UIMap::~UIMap()
     g_map.removeMapView(m_mapView);
 }
 
+bool UIMap::onMouseMove(const Point& mousePos, const Point& mouseMoved) 
+{
+    m_mousePosition = mousePos;
+    return UIWidget::onMouseMove(mousePos, mouseMoved);
+}
+
 void UIMap::drawSelf(Fw::DrawPane drawPane)
 {
     UIWidget::drawSelf(drawPane);
@@ -67,7 +73,7 @@ void UIMap::drawSelf(Fw::DrawPane drawPane)
 
     if(drawPane & Fw::BackgroundPane) {
         g_painter->setColor(Color::white);
-        m_mapView->draw(m_mapRect);
+        m_mapView->draw(m_mapRect, getTile(m_mousePosition));
     }
 }
 
@@ -165,8 +171,6 @@ void UIMap::onStyleApply(const std::string& styleName, const OTMLNodePtr& styleN
     for(const OTMLNodePtr& node : styleNode->children()) {
         if(node->tag() == "multifloor")
             setMultifloor(node->value<bool>());
-        else if(node->tag() == "auto-view-mode")
-            setAutoViewMode(node->value<bool>());
         else if(node->tag() == "draw-texts")
             setDrawTexts(node->value<bool>());
         else if(node->tag() == "draw-lights")

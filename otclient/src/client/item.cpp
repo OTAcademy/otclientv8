@@ -69,7 +69,7 @@ std::string Item::getName()
     return g_things.findItemTypeByClientId(m_clientId)->getName();
 }
 
-void Item::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView)
+void Item::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView, bool lightOnly)
 {
     if(m_clientId == 0)
         return;
@@ -83,7 +83,7 @@ void Item::draw(const Point& dest, float scaleFactor, bool animate, LightView *l
 
     if(m_color != Color::alpha)
         g_painter->setColor(m_color);
-    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, zPattern, animationPhase, lightView);
+    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, zPattern, animationPhase, lightView, lightOnly);
 
     /// Sanity check
     /// This is just to ensure that we don't overwrite some color and
@@ -374,9 +374,9 @@ void Item::calculatePatterns(int& xPattern, int& yPattern, int& zPattern)
         xPattern = (color % 4) % getNumPatternX();
         yPattern = (color / 4) % getNumPatternY();
     } else {
-        xPattern = m_position.x % getNumPatternX();
-        yPattern = m_position.y % getNumPatternY();
-        zPattern = m_position.z % getNumPatternZ();
+        xPattern = m_position.x % std::max<int>(1, getNumPatternX());
+        yPattern = m_position.y % std::max<int>(1, getNumPatternY());
+        zPattern = m_position.z % std::max<int>(1, getNumPatternZ());
     }
 }
 

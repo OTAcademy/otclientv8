@@ -64,10 +64,10 @@ public:
     TPoint<T> operator&(int a) { return TPoint<T>(x & a, y & a); }
     TPoint<T>& operator&=(int a) { x &= a; y &= a; return *this; }
 
-    bool operator<=(const TPoint<T>&other) const { return x<=other.x && y<=other.y; }
-    bool operator>=(const TPoint<T>&other) const { return x>=other.x && y>=other.y; }
-    bool operator<(const TPoint<T>&other) const { return x<other.x && y<other.y; }
-    bool operator>(const TPoint<T>&other) const { return x>other.x && y>other.y; }
+    bool operator<=(const TPoint<T>&other) const { return x<=other.x || (x==other.x && y<=other.y); }
+    bool operator>=(const TPoint<T>&other) const { return x>=other.x || (x==other.x && y>=other.y); }
+    bool operator<(const TPoint<T>&other) const { return x<other.x || (x==other.x && y<other.y); }
+    bool operator>(const TPoint<T>&other) const { return x>other.x || (x==other.x && y>other.y); }
 
     TPoint<T>& operator=(const TPoint<T>& other) { x = other.x; y = other.y; return *this; }
     bool operator==(const TPoint<T>& other) const { return other.x==x && other.y==y; }

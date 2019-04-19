@@ -38,10 +38,14 @@ void FrameBuffer::internalCreate()
 {
     m_prevBoundFbo = 0;
     m_fbo = 0;
-    if(g_graphics.canUseFBO()) {
+    m_depthRbo = 0;
+    if (g_graphics.canUseFBO()) {
         glGenFramebuffers(1, &m_fbo);
+        glGenRenderbuffers(1,&m_depthRbo);
         if(!m_fbo)
             g_logger.fatal("Unable to create framebuffer object");
+        if(!m_depthRbo)
+            g_logger.fatal("Unable to create renderbuffer");
     }
 }
 
@@ -50,8 +54,12 @@ FrameBuffer::~FrameBuffer()
 #ifndef NDEBUG
     assert(!g_app.isTerminated());
 #endif
-    if(g_graphics.ok() && m_fbo != 0)
-        glDeleteFramebuffers(1, &m_fbo);
+    if (g_graphics.ok() && m_fbo != 0) {
+        if(m_fbo != 0)
+            glDeleteFramebuffers(1, &m_fbo);
+        if(m_depthRbo != 0)
+            glDeleteRenderbuffers(1, &m_depthRbo);
+    }
 }
 
 void FrameBuffer::resize(const Size& size)
@@ -65,9 +73,15 @@ void FrameBuffer::resize(const Size& size)
     m_texture->setSmooth(m_smooth);
     m_texture->setUpsideDown(true);
 
+    if(m_depthRbo){
+        glBindRenderbuffer(GL_RENDERBUFFER,m_depthRbo);
+        glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH_COMPONENT24,size.width(),size.height());
+    }
+
     if(m_fbo) {
         internalBind();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture->getId(), 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRbo);
 
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
@@ -109,6 +123,15 @@ void FrameBuffer::draw(const Rect& dest)
 {
     g_painter->drawTexturedRect(dest, m_texture, Rect(0,0, getSize()));
 }
+
+void FrameBuffer::copy(const Rect& dest, const Rect& src)
+{
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, boundFbo);
+    glBlitFramebuffer(src.left(), src.top(), src.right(), src.bottom(), dest.left(), dest.top(), dest.right(), dest.bottom(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, boundFbo);
+}
+
 
 void FrameBuffer::internalBind()
 {

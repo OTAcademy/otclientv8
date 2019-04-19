@@ -42,6 +42,7 @@ public:
     void draw();
     void draw(const Rect& dest);
     void draw(const Rect& dest, const Rect& src);
+    void copy(const Rect& dest, const Rect& src);
 
     void setBackuping(bool enabled) { m_backuping = enabled; }
     void setSmooth(bool enabled) { m_smooth = enabled; }
@@ -61,6 +62,7 @@ private:
     Size m_oldViewportSize;
     uint m_fbo;
     uint m_prevBoundFbo;
+    uint m_depthRbo;
     stdext::boolean<true> m_backuping;
     stdext::boolean<true> m_smooth;
 

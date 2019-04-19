@@ -134,6 +134,7 @@ local function onPost(operationId, url, err, data)
     return onError(nil, err, 1)
   end
   
+  print(data)
   local status, result = pcall(function() return json.decode(data) end)
   if not status then
     return onError(nil, "Json parse error: " .. result .. "\n" .. data, 1)

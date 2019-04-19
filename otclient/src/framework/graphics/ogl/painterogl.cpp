@@ -34,8 +34,11 @@ PainterOGL::PainterOGL()
     m_oldStateIndex = 0;
     m_color = Color::white;
     m_opacity = 1.0f;
+    m_globalOpacity = 1.0f;
+    m_depth = 0;
     m_compositionMode = CompositionMode_Normal;
     m_blendEquation = BlendEquation_Add;
+    m_depthFunc = DepthFunc_None;
     m_shaderProgram = nullptr;
     m_texture = nullptr;
     m_alphaWriting = false;
@@ -86,8 +89,10 @@ void PainterOGL::resetState()
 {
     resetColor();
     resetOpacity();
+    resetDepth();
     resetCompositionMode();
     resetBlendEquation();
+    resetDepthFunc();
     resetClipRect();
     resetShaderProgram();
     resetTexture();
@@ -100,6 +105,7 @@ void PainterOGL::refreshState()
     updateGlViewport();
     updateGlCompositionMode();
     updateGlBlendEquation();
+    updateDepthFunc();
     updateGlClipRect();
     updateGlTexture();
     updateGlAlphaWriting();
@@ -114,8 +120,10 @@ void PainterOGL::saveState()
     m_olderStates[m_oldStateIndex].textureMatrix = m_textureMatrix;
     m_olderStates[m_oldStateIndex].color = m_color;
     m_olderStates[m_oldStateIndex].opacity = m_opacity;
+    m_olderStates[m_oldStateIndex].depth = m_depth;
     m_olderStates[m_oldStateIndex].compositionMode = m_compositionMode;
     m_olderStates[m_oldStateIndex].blendEquation = m_blendEquation;
+    m_olderStates[m_oldStateIndex].depthFunc = m_depthFunc;
     m_olderStates[m_oldStateIndex].clipRect = m_clipRect;
     m_olderStates[m_oldStateIndex].shaderProgram = m_shaderProgram;
     m_olderStates[m_oldStateIndex].texture = m_texture;
@@ -138,8 +146,10 @@ void PainterOGL::restoreSavedState()
     setTextureMatrix(m_olderStates[m_oldStateIndex].textureMatrix);
     setColor(m_olderStates[m_oldStateIndex].color);
     setOpacity(m_olderStates[m_oldStateIndex].opacity);
+    setDepth(m_olderStates[m_oldStateIndex].depth);
     setCompositionMode(m_olderStates[m_oldStateIndex].compositionMode);
     setBlendEquation(m_olderStates[m_oldStateIndex].blendEquation);
+    setDepthFunc(m_olderStates[m_oldStateIndex].depthFunc);
     setClipRect(m_olderStates[m_oldStateIndex].clipRect);
     setShaderProgram(m_olderStates[m_oldStateIndex].shaderProgram);
     setTexture(m_olderStates[m_oldStateIndex].texture);
@@ -149,7 +159,7 @@ void PainterOGL::restoreSavedState()
 void PainterOGL::clear(const Color& color)
 {
     glClearColor(color.rF(), color.gF(), color.bF(), color.aF());
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void PainterOGL::clearRect(const Color& color, const Rect& rect)
@@ -157,7 +167,7 @@ void PainterOGL::clearRect(const Color& color, const Rect& rect)
     Rect oldClipRect = m_clipRect;
     setClipRect(rect);
     glClearColor(color.rF(), color.gF(), color.bF(), color.aF());
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     setClipRect(oldClipRect);
 }
 
@@ -175,6 +185,14 @@ void PainterOGL::setBlendEquation(Painter::BlendEquation blendEquation)
         return;
     m_blendEquation = blendEquation;
     updateGlBlendEquation();
+}
+
+void PainterOGL::setDepthFunc(DepthFunc func) 
+{
+    if (m_depthFunc == func)
+        return;
+    m_depthFunc = func;
+    updateDepthFunc();
 }
 
 void PainterOGL::setClipRect(const Rect& clipRect)
@@ -344,6 +362,28 @@ void PainterOGL::updateGlBlendEquation()
         glBlendEquation(GL_FUNC_SUBTRACT); // GL_MAX
 }
 
+void PainterOGL::updateDepthFunc()
+{
+    switch (m_depthFunc) {
+        case DepthFunc_None:
+            glDepthFunc(GL_ALWAYS);
+            glDepthMask(FALSE);  
+            break;
+        case DepthFunc_ALWAYS:
+            glDepthFunc(GL_ALWAYS);
+            glDepthMask(TRUE);  
+            break;
+        case DepthFunc_LEQUAL:
+            glDepthFunc(GL_LEQUAL);
+            glDepthMask(TRUE);  
+            break;
+        case DepthFunc_LESS:
+            glDepthFunc(GL_LESS);
+            glDepthMask(TRUE);  
+            break;
+    }
+}
+
 void PainterOGL::updateGlClipRect()
 {
     if(m_clipRect.isValid()) {
@@ -390,6 +430,8 @@ void PainterOGL::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode)
     }
 
     m_drawProgram->setOpacity(m_opacity);
+    m_drawProgram->setDepth(m_depth);
+    m_drawProgram->setGlobalOpacity(m_globalOpacity);
     m_drawProgram->setColor(m_color);
     m_drawProgram->setResolution(m_resolution);
     m_drawProgram->updateTime();

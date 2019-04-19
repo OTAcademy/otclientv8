@@ -35,7 +35,8 @@ Servers = {
   KasteriaTest = "https://www.xavato.eu/login.php",
   Kasteria = "http://login.otupdate.ovh/login.php",
   Xavato = "https://www.xavato.eu/login2.php",
-  TestBloodWar = "http://168.228.157.20/login.php"
+  TestBloodWar = "http://168.228.157.20/login.php",
+  Tibijka = "http://54.36.184.164/login.php"
 }
 
 -- settings

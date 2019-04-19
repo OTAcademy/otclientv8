@@ -371,7 +371,7 @@ void ThingType::unserializeOtml(const OTMLNodePtr& node)
     }
 }
 
-void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView)
+void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView, bool lightOnly)
 {
     if(m_null)
         return;
@@ -400,6 +400,14 @@ void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPatte
     Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * 32) * scaleFactor,
                     textureRect.size() * scaleFactor);
 
+    if(lightView && hasLight()) {
+        Light light = getLight();
+        if(light.intensity > 0)
+            lightView->addLightSource(screenRect.center(), scaleFactor, light);
+    }
+    if (lightOnly)
+        return;
+
     bool useOpacity = m_opacity < 1.0f;
 
     if(useOpacity)
@@ -409,12 +417,6 @@ void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPatte
 
     if(useOpacity)
         g_painter->setColor(Color::white);
-
-    if(lightView && hasLight()) {
-        Light light = getLight();
-        if(light.intensity > 0)
-            lightView->addLightSource(screenRect.center(), scaleFactor, light);
-    }
 }
 
 const TexturePtr& ThingType::getTexture(int animationPhase)

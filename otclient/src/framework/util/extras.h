@@ -13,8 +13,7 @@ constexpr bool default_value = true;
 class Extras {
 public:
     Extras() {
-        DEFINE_OPTION(botDetection, "Bot detection");
-        DEFINE_OPTION(newMapViewRendering, "New map view (and tile) rendering");
+        //DEFINE_OPTION(botDetection, "Bot detection");
 
         DEFINE_OPTION(limitedPolling, "Limited polling");
 

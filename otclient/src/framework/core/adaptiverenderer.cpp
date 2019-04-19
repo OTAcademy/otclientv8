@@ -57,10 +57,21 @@ int AdaptiveRenderer::itemsLimit() {
     return limits[m_speed];
 }
 
-int AdaptiveRenderer::mapViewDelay() {
-    static int limits[RenderSpeeds] = { 0, 10, 15, 20, 25 };
+int AdaptiveRenderer::mapRenderInterval() {
+    static int limits[RenderSpeeds] = { 0, 10, 20, 30, 50 };
     return limits[m_speed];
 }
+
+int AdaptiveRenderer::creaturesRenderInterval() {
+    // not working yet
+    static int limits[RenderSpeeds] = { 0, 0, 0, 0, 0 };
+    return limits[m_speed];
+}
+
+bool AdaptiveRenderer::allowFading() {
+    return m_speed <= 2;
+}
+
 
 int AdaptiveRenderer::foregroundUpdateInterval() {
     static int limits[RenderSpeeds] = { 10, 30, 40, 50, 60 };

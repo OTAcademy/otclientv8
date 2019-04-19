@@ -21,6 +21,28 @@ Panel
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
+    id: crosshairLabel
+    !text: tr("Crosshair")
+    
+  ComboBox
+    id: crosshair
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    margin-right: 2
+    margin-left: 2
+    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onSetup: |
+      self:addOption("None")
+      self:addOption("Default")
+      self:addOption("Full")
+
+  Label
+    margin-top: 12
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
     id: optimizationLevelLabel
     !text: tr("Optimization level")
     
@@ -54,7 +76,6 @@ Panel
       if value <= 0 or value >= 201 then
         text = 'max'
       end
-
       self:setText(tr('Game framerate limit: %s', text))
 
   OptionScrollbar
@@ -65,6 +86,25 @@ Panel
     margin-top: 3
     minimum: 10
     maximum: 201
+
+  Label
+    id: floorFadingLabel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 6
+    @onSetup: |
+      local value = modules.client_options.getOption('floorFading')
+      self:setText(tr('Floor fading: %s ms', value))
+
+  OptionScrollbar
+    id: floorFading
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    minimum: 0
+    maximum: 2000
 
   Label
     id: ambientLightLabel

@@ -35,6 +35,8 @@ public:
     UIMap();
     ~UIMap();
 
+    bool onMouseMove(const Point& mousePos, const Point& mouseMoved);
+
     void drawSelf(Fw::DrawPane drawPane);
 
     void movePixels(int x, int y);
@@ -50,8 +52,6 @@ public:
     void lockVisibleFloor(int floor) { m_mapView->lockFirstVisibleFloor(floor); }
     void unlockVisibleFloor() { m_mapView->unlockFirstVisibleFloor(); }
     void setVisibleDimension(const Size& visibleDimension);
-    void setViewMode(MapView::ViewMode viewMode)  { m_mapView->setViewMode(viewMode); }
-    void setAutoViewMode(bool enable) { m_mapView->setAutoViewMode(enable); }
     void setDrawFlags(Otc::DrawFlags drawFlags) { m_mapView->setDrawFlags(drawFlags); }
     void setDrawTexts(bool enable) { m_mapView->setDrawTexts(enable); }
     void setDrawNames(bool enable) { m_mapView->setDrawNames(enable); }
@@ -65,9 +65,10 @@ public:
     void setMinimumAmbientLight(float intensity) { m_mapView->setMinimumAmbientLight(intensity); }
     void setLimitVisibleRange(bool limitVisibleRange) { m_limitVisibleRange = limitVisibleRange; updateVisibleDimension(); }
     void setAddLightMethod(bool add) { m_mapView->setAddLightMethod(add); }
+    void setFloorFading(int value) { m_mapView->setFloorFading(value); }
+    void setCrosshair(const std::string& type) { m_mapView->setCrosshair(type); }
 
     bool isMultifloor() { return m_mapView->isMultifloor(); }
-    bool isAutoViewModeEnabled() { return m_mapView->isAutoViewModeEnabled(); }
     bool isDrawingTexts() { return m_mapView->isDrawingTexts(); }
     bool isDrawingNames() { return m_mapView->isDrawingNames(); }
     bool isDrawingHealthBars() { return m_mapView->isDrawingHealthBars(); }
@@ -78,7 +79,6 @@ public:
     bool isLimitVisibleRangeEnabled() { return m_limitVisibleRange; }
 
     Size getVisibleDimension() { return m_mapView->getVisibleDimension(); }
-    MapView::ViewMode getViewMode() { return m_mapView->getViewMode(); }
     CreaturePtr getFollowingCreature() { return m_mapView->getFollowingCreature(); }
     Otc::DrawFlags getDrawFlags() { return m_mapView->getDrawFlags(); }
     Position getCameraPosition() { return m_mapView->getCameraPosition(); }
@@ -101,6 +101,7 @@ private:
     int m_zoom;
     MapViewPtr m_mapView;
     Rect m_mapRect;
+    Point m_mousePosition;
     float m_aspectRatio;
     bool m_keepAspectRatio;
     bool m_limitVisibleRange;

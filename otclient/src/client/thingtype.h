@@ -131,7 +131,7 @@ public:
     void serialize(const FileStreamPtr& fin);
     void exportImage(std::string fileName);
 
-    void draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView = nullptr);
+    void draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView = nullptr, bool lightOnly = false);
 
     uint16 getId() { return m_id; }
     ThingCategory getCategory() { return m_category; }

@@ -64,8 +64,11 @@ public:
 
     void draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView = nullptr);
 
-    void newDraw(const Point & dest, float scaleFactor, int drawFlags, LightView * lightView);
-    void newDrawLocalPlayer(const Point & dest);
+    void drawBottom(const Point & dest, float scaleFactor, LightView * lightView, bool lightOnly);
+
+    void drawCreatues(const Point & dest, float scaleFactor, LightView * lightView, bool lightOnly);
+
+    void drawTop(const Point & dest, float scaleFactor, LightView * lightView, bool lightOnly);
 
 public:
     void clean();
@@ -133,8 +136,6 @@ public:
 
     TilePtr asTile() { return static_self_cast<Tile>(); }
 
-    void markTilesToRedrawn();
-
     void setSpeed(uint16_t speed, uint8_t blocking) {
         m_speed = speed;
         m_blocking = blocking;
@@ -148,10 +149,8 @@ private:
     stdext::packed_vector<ThingPtr> m_things;
     Position m_position;
     uint8 m_drawElevation;
-    Point m_localPlayerPoint;
     uint8 m_minimapColor;
     uint32 m_flags, m_houseId;
-    int m_willBeRedrawn = 0;
     uint16 m_speed = 150;
     uint8 m_blocking = 0;
 

@@ -44,17 +44,25 @@ static std::string glslPositionOnlyVertexShader = "\n\
     attribute highp vec2 a_Vertex;\n\
     uniform highp mat3 u_TransformMatrix;\n\
     uniform highp mat3 u_ProjectionMatrix;\n\
+    uniform highp float u_Depth;\n\
     highp vec4 calculatePosition() {\n\
-        return vec4(u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0), 1.0);\n\
+        if(u_Depth == 0)\
+            return vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0)), 1.0); \n\
+        return vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0)).xy, u_Depth, 1.0);\n\
     }\n";
 
 static const std::string glslMainFragmentShader = "\n\
     uniform lowp float u_Opacity;\n\
+    uniform lowp float u_GlobalOpacity;\n\
+    uniform highp float u_Depth;\n\
     lowp vec4 calculatePixel();\n\
     void main()\n\
     {\n\
         gl_FragColor = calculatePixel();\n\
         gl_FragColor.a *= u_Opacity;\n\
+        gl_FragColor.a *= u_GlobalOpacity;\n\
+        if(gl_FragColor.a < 0.01 && u_Depth > 0)\n\
+	        discard;\n\
     }\n";
 
 static const std::string glslTextureSrcFragmentShader = "\n\
@@ -77,8 +85,9 @@ static std::string glslPositionOnlyNewVertexShader = "\n\
     attribute highp vec2 a_Vertex;\n\
     uniform highp mat3 u_TransformMatrix;\n\
     uniform highp mat3 u_ProjectionMatrix;\n\
+    uniform highp float u_Depth;\n\
     highp vec4 calculatePosition() {\n\
-        return vec4(u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0), 1.0);\n\
+        return vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0)).xy, u_Depth, 1.0);\n\
     }\n";
 
 static const std::string glslMainWithTexCoordsNewVertexShader = "\n\
@@ -102,11 +111,13 @@ static const std::string glslTextureSrcNewFragmentShader = "\n\
 
 static const std::string glslMainNewFragmentShader = "\n\
     uniform lowp float u_Opacity;\n\
+    uniform lowp float u_GlobalOpacity;\n\
     lowp vec4 calculatePixel();\n\
     void main()\n\
     {\n\
         gl_FragColor = calculatePixel();\n\
         gl_FragColor.a *= u_Opacity;\n\
+        gl_FragColor.a *= u_GlobalOpacity;\n\
     }\n";
 
 #endif

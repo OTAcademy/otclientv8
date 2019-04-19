@@ -63,6 +63,10 @@ void Graphics::init()
 
     // blending is always enabled
     glEnable(GL_BLEND);
+    // depth test
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(FALSE);  
+    glDepthFunc(GL_ALWAYS);
 
     // hints, 
 #ifndef OPENGL_ES
@@ -72,6 +76,7 @@ void Graphics::init()
     glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_FASTEST);
 #endif
+
     // determine max texture size
     int maxTextureSize = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);

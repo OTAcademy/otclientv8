@@ -35,8 +35,10 @@ public:
         Matrix3 textureMatrix;
         Color color;
         float opacity;
+        float depth;
         Painter::CompositionMode compositionMode;
         Painter::BlendEquation blendEquation;
+        Painter::DepthFunc depthFunc;
         Rect clipRect;
         Texture *texture;
         PainterShaderProgram *shaderProgram;
@@ -63,6 +65,7 @@ public:
     void setTextureMatrix(const Matrix3& textureMatrix) { m_textureMatrix = textureMatrix; }
     void setCompositionMode(CompositionMode compositionMode);
     void setBlendEquation(BlendEquation blendEquation);
+    void setDepthFunc(DepthFunc func);
     void setClipRect(const Rect& clipRect);
     void setShaderProgram(PainterShaderProgram *shaderProgram) { m_shaderProgram = shaderProgram; }
     void setTexture(Texture *texture);
@@ -115,6 +118,7 @@ protected:
     void updateGlClipRect();
     void updateGlAlphaWriting();
     void updateGlViewport();
+    void updateDepthFunc();
 
     CoordsBuffer m_coordsBuffer;
 
