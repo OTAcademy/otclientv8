@@ -147,7 +147,7 @@ function Updater.show()
     return updateError("Invalid binary checksum: " .. binaryChecksum)  
   end
   
-  getStatusId = g_http.get(Services.updater)  
+  getStatusId = g_http.get(Services.updater .. "?platform=" .. g_window.getPlatformType())
   if generateChecksumsEvent == nil then
 	  generateChecksumsEvent = scheduleEvent(generateChecksum, 5)
   end

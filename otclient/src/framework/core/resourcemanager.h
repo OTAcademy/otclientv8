@@ -87,6 +87,8 @@ public:
 #endif
     bool decryptBuffer(std::string & buffer);
 
+    bool installDlls();
+
 
 private:
     boost::filesystem::path m_binaryPath;

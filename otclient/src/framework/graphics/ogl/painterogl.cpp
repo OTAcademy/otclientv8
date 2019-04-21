@@ -357,7 +357,7 @@ void PainterOGL::updateGlBlendEquation()
     if(m_blendEquation == BlendEquation_Add)
         glBlendEquation(GL_FUNC_ADD); // GL_FUNC_ADD
     else if(m_blendEquation == BlendEquation_Max)
-        glBlendEquation(GL_MAX); // GL_MAX
+        glBlendEquation(0x8008); // GL_MAX
     else if(m_blendEquation == BlendEquation_Subtract)
         glBlendEquation(GL_FUNC_SUBTRACT); // GL_MAX
 }

@@ -65,6 +65,12 @@ int main(int argc, const char* argv[]) {
         return 0;
     }
 #endif
+
+#ifdef OPENGL_ES
+    // will add angle dlls and restart otclient or do nothing if dlls exist
+    g_resources.installDlls();
+#endif
+
     int launchCorrect = control_thread ? 0 : g_resources.launchCorrect(g_app.getCompactName());
     if (launchCorrect == 1) {
         return 0;

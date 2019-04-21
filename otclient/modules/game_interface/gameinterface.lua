@@ -663,6 +663,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
   if g_game.getFeature(GameBot) and useThing then
     menu:addSeparator()
     menu:addOption(tr("ID: " .. useThing:getId()))
+    menu:addOption(tr("ID: " .. tostring(useThing:isGround())))
   end
 
   menu:display(menuPosition)

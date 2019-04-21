@@ -48,7 +48,6 @@ WIN32Window::WIN32Window()
     m_eglSurface = 0;
 #else
     m_wglContext = 0;
-    m_wglContext2 = 0;
 #endif
 
     m_keyMap[VK_ESCAPE] = Fw::KeyEscape;
@@ -207,26 +206,6 @@ void WIN32Window::init()
 {
     m_instance = GetModuleHandle(NULL);
 
-#ifdef DIRECTX
-    m_d3d = Direct3DCreate9(D3D_SDK_VERSION);    // create the Direct3D interface
-
-    D3DPRESENT_PARAMETERS d3dpp;    // create a struct to hold various device information
-
-    ZeroMemory(&d3dpp, sizeof(d3dpp));    // clear out the struct for use
-    d3dpp.Windowed = TRUE;    // program windowed, not fullscreen
-    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;    // discard old frames
-    d3dpp.hDeviceWindow = m_window;    // set the window to be used by Direct3D
-
-    // create a device class using this information and information from the d3dpp stuct
-    m_d3d->CreateDevice(D3DADAPTER_DEFAULT,
-                      D3DDEVTYPE_HAL,
-                      m_window,
-                      D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-                      &d3dpp,
-                      &m_d3ddev);
-
-#endif
-
     internalCreateWindow();
     internalCreateGLContext();
     internalRestoreGLContext();
@@ -325,23 +304,22 @@ void WIN32Window::internalCreateGLContext()
 {
 #ifdef OPENGL_ES
     m_eglDisplay = eglGetDisplay(m_deviceContext);
-    if(m_eglDisplay == EGL_NO_DISPLAY)
-        g_logger.fatal("EGL not supported");
+    if (m_eglDisplay == EGL_NO_DISPLAY) {
+        if (!g_resources.installDlls()) {
+            g_logger.fatal("EGL not supported, try to use OpenGL version");
+        }
+    }
 
     if(!eglInitialize(m_eglDisplay, NULL, NULL))
         g_logger.fatal("Unable to initialize EGL");
 
     static int configList[] = {
-#if OPENGL_ES==2
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-#else
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES_BIT,
-#endif
-        EGL_RED_SIZE, 4,
-        EGL_GREEN_SIZE, 4,
-        EGL_BLUE_SIZE, 4,
-        EGL_ALPHA_SIZE, 4,
-        EGL_DEPTH_SIZE, 8,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
 
@@ -357,11 +335,7 @@ void WIN32Window::internalCreateGLContext()
         g_logger.warning("Didn't got the exact EGL config");
 
     EGLint contextAtrrList[] = {
-#if OPENGL_ES==2
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#else
-        EGL_CONTEXT_CLIENT_VERSION, 1,
-#endif
         EGL_NONE
     };
 
@@ -401,16 +375,6 @@ void WIN32Window::internalCreateGLContext()
 
     if(!(m_wglContext = wglCreateContext(m_deviceContext)))
         g_logger.fatal("Unable to create GL context");
-
-    //m_wglContext2 = wglCreateContext(m_deviceContext);
-    if (m_wglContext2) {
-        BOOL error = wglShareLists(m_wglContext, m_wglContext2);
-        if (error == FALSE) {
-            g_logger.error("Can't create context bound");
-            wglDeleteContext(m_wglContext2);
-            m_wglContext2 = NULL;
-        }
-    }
 #endif
 }
 
@@ -435,10 +399,7 @@ void WIN32Window::internalDestroyGLContext()
             g_logger.error("Release of dc and rc failed.");
         if(!wglDeleteContext(m_wglContext))
             g_logger.error("Release rendering context failed.");
-        if(m_wglContext2 && !wglDeleteContext(m_wglContext2))
-            g_logger.error("Release rendering context2 failed.");        
         m_wglContext = NULL;
-        m_wglContext2 = NULL;
     }
 #endif
 }
@@ -453,17 +414,6 @@ void WIN32Window::internalRestoreGLContext()
         g_logger.fatal("Unable to make current WGL context");
 #endif
 }
-
-#ifndef OPENGL_ES
-void WIN32Window::bindSecondContext() {
-    if(!m_wglContext2 || !wglMakeCurrent(m_deviceContext, m_wglContext2))
-        g_logger.fatal("Unable to make current WGL second context");
-}
-
-void WIN32Window::releaseSecondContext() {
-    wglMakeCurrent(NULL, NULL);
-}
-#endif
 
 bool WIN32Window::isExtensionSupported(const char *ext)
 {

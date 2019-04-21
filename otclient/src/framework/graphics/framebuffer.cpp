@@ -73,19 +73,19 @@ void FrameBuffer::resize(const Size& size)
     m_texture->setSmooth(m_smooth);
     m_texture->setUpsideDown(true);
 
-    if(m_depthRbo){
-        glBindRenderbuffer(GL_RENDERBUFFER,m_depthRbo);
-        glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH_COMPONENT24,size.width(),size.height());
-    }
+    //if(m_depthRbo){
+    //    glBindRenderbuffer(GL_RENDERBUFFER,m_depthRbo);
+    //    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH_COMPONENT16,size.width(),size.height());
+    //}
 
     if(m_fbo) {
         internalBind();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture->getId(), 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRbo);
+        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRbo);
 
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
-            g_logger.fatal("Unable to setup framebuffer object");
+            g_logger.fatal(stdext::format("Unable to setup framebuffer object %i - %i %i", status, size.width(), size.height()));
         internalRelease();
     } else {
         if(m_backuping) {
@@ -124,6 +124,7 @@ void FrameBuffer::draw(const Rect& dest)
     g_painter->drawTexturedRect(dest, m_texture, Rect(0,0, getSize()));
 }
 
+#ifndef OPENGL_ES
 void FrameBuffer::copy(const Rect& dest, const Rect& src)
 {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
@@ -131,7 +132,7 @@ void FrameBuffer::copy(const Rect& dest, const Rect& src)
     glBlitFramebuffer(src.left(), src.top(), src.right(), src.bottom(), dest.left(), dest.top(), dest.right(), dest.bottom(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, boundFbo);
 }
-
+#endif
 
 void FrameBuffer::internalBind()
 {

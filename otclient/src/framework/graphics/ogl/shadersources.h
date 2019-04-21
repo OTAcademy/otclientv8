@@ -46,8 +46,6 @@ static std::string glslPositionOnlyVertexShader = "\n\
     uniform highp mat3 u_ProjectionMatrix;\n\
     uniform highp float u_Depth;\n\
     highp vec4 calculatePosition() {\n\
-        if(u_Depth == 0)\
-            return vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0)), 1.0); \n\
         return vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0)).xy, u_Depth, 1.0);\n\
     }\n";
 
@@ -55,28 +53,28 @@ static const std::string glslMainFragmentShader = "\n\
     uniform lowp float u_Opacity;\n\
     uniform lowp float u_GlobalOpacity;\n\
     uniform highp float u_Depth;\n\
-    lowp vec4 calculatePixel();\n\
+    highp vec4 calculatePixel();\n\
     void main()\n\
     {\n\
         gl_FragColor = calculatePixel();\n\
         gl_FragColor.a *= u_Opacity;\n\
         gl_FragColor.a *= u_GlobalOpacity;\n\
-        if(gl_FragColor.a < 0.01 && u_Depth > 0)\n\
+        if(gl_FragColor.a < 0.01 && u_Depth > 0.0)\n\
 	        discard;\n\
     }\n";
 
 static const std::string glslTextureSrcFragmentShader = "\n\
     varying mediump vec2 v_TexCoord;\n\
-    uniform lowp vec4 u_Color;\n\
+    uniform highp vec4 u_Color;\n\
     uniform sampler2D u_Tex0;\n\
-    lowp vec4 calculatePixel() {\n\
+    highp vec4 calculatePixel() {\n\
         return texture2D(u_Tex0, v_TexCoord) * u_Color;\n\
     }\n";
 
 
 static const std::string glslSolidColorFragmentShader = "\n\
     uniform lowp vec4 u_Color;\n\
-    lowp vec4 calculatePixel() {\n\
+    highp vec4 calculatePixel() {\n\
         return u_Color;\n\
     }\n";
 

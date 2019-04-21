@@ -1437,6 +1437,7 @@ function online()
       end
     end
   end
+  scheduleEvent(function() consoleTabBar:selectTab(defaultTab) end, 500)
   scheduleEvent(function() ignoredChannels = {} end, 3000)
 end
 

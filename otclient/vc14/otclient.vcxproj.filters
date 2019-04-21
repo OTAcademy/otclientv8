@@ -1070,10 +1070,26 @@
     <ClInclude Include="..\src\framework\stdext\uri.h">
       <Filter>Header Files\framework\stdext</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\otcicon.rc">
+    <ResourceCompile Include="..\src\otclient.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\libEGL.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\libGLESv2.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\src\otcicon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

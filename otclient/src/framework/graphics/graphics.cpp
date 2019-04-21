@@ -197,43 +197,17 @@ void Graphics::resize(const Size& size)
 
 bool Graphics::canUseDrawArrays()
 {
-#ifdef OPENGL_ES
-    return true;
-#else
-    // glDrawArrays is supported by OpenGL 1.1
-    if(!GLEW_VERSION_1_1)
-        return false;
     return m_useDrawArrays;
-#endif
 }
 
 bool Graphics::canUseShaders()
 {
-#if OPENGL_ES==2
     return true;
-#elif OPENGL_ES==1
-    return false;
-#else
-    // fragment and vertex programs are supported by OpenGL 2.0
-    if(GLEW_ARB_vertex_program && GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
-        return true;
-    return false;
-#endif
 }
 
 bool Graphics::canUseFBO()
 {
-#if OPENGL_ES==2
     return m_useFBO;
-#elif OPENGL_ES==1
-    return false;
-#else
-    // FBOs are supported by OpenGL 3.0
-    // or by OpenGL 2.0 with EXT_framebuffer_object (most of the OpenGL 2.0 implementations have this extension)
-    if(!GLEW_ARB_framebuffer_object || !GLEW_EXT_framebuffer_object)
-        return false;
-    return m_useFBO;
-#endif
 }
 
 bool Graphics::canUseBilinearFiltering()
@@ -244,31 +218,12 @@ bool Graphics::canUseBilinearFiltering()
 
 bool Graphics::canUseHardwareBuffers()
 {
-#if OPENGL_ES==2
-    return m_useHardwareBuffers;
-#elif OPENGL_ES==1
-    // OpenGL ES 1.1 supports it but OpenGL ES 1.0 not
-    return false;
-#else
-    // vertex buffer objects is supported by OpenGL 1.5
-    if(!GLEW_ARB_vertex_buffer_object)
-        return false;
-#endif
     return m_useHardwareBuffers;
 }
 
 bool Graphics::canUseNonPowerOfTwoTextures()
 {
-#if OPENGL_ES==2
     return m_useNonPowerOfTwoTextures;
-#elif OPENGL_ES==1
-    return false;
-#else
-    // power of two textures is supported by OpenGL 2.0
-    if(!GLEW_ARB_texture_non_power_of_two)
-        return false;
-    return m_useNonPowerOfTwoTextures;
-#endif
 }
 
 bool Graphics::canUseMipmaps()
@@ -279,16 +234,7 @@ bool Graphics::canUseMipmaps()
 
 bool Graphics::canUseHardwareMipmaps()
 {
-#if OPENGL_ES==2
     return m_useHardwareMipmaps;
-#elif OPENGL_ES==1
-    return false;
-#else
-    // glGenerateMipmap is supported when FBOs are
-    if(!GLEW_ARB_framebuffer_object || !GLEW_EXT_framebuffer_object)
-        return false;
-    return m_useHardwareMipmaps;
-#endif
 }
 
 bool Graphics::canUseClampToEdge()
@@ -305,54 +251,22 @@ bool Graphics::canUseClampToEdge()
 
 bool Graphics::canUseBlendFuncSeparate()
 {
-#if OPENGL_ES==2
     return true;
-#elif OPENGL_ES==1
-    return false;
-#else
-    if(!GLEW_VERSION_1_4)
-        return false;
-    return true;
-#endif
 }
 
 bool Graphics::canUseBlendEquation()
 {
-#if OPENGL_ES==2
-    return false;
-#elif OPENGL_ES==1
-    return false;
-#else
-    if(!GLEW_VERSION_1_4)
-        return false;
     return true;
-#endif
 }
 
 bool Graphics::canCacheBackbuffer()
 {
     if(!m_alphaBits)
         return false;
-#if OPENGL_ES==2
     return m_cacheBackbuffer;
-#elif OPENGL_ES==1
-    return false;
-#else
-    if(!GLEW_VERSION_1_4)
-        return false;
-    return m_cacheBackbuffer;
-#endif
 }
 
 bool Graphics::hasScissorBug()
 {
-#if OPENGL_ES==2
     return false;
-#elif OPENGL_ES==1
-    return false;
-#else
-    if(!GLEW_VERSION_1_2)
-        return true;
-    return false;
-#endif
 }

@@ -32,10 +32,6 @@
 #include <EGL/egl.h>
 #endif
 
-#ifdef DIRECTX
-#include <d3d9.h>
-#endif
-
 struct WindowProcProxy;
 
 class WIN32Window : public PlatformWindow
@@ -84,12 +80,6 @@ public:
     std::string getClipboardText();
     std::string getPlatformType();
 
-#ifndef OPENGL_ES
-    bool hasSecondContext() { return m_wglContext2 != NULL; }
-    void bindSecondContext();
-    void releaseSecondContext();
-#endif
-
 protected:
     int internalLoadMouseCursor(const ImagePtr& image, const Point& hotSpot);
 
@@ -106,11 +96,6 @@ private:
     HCURSOR m_defaultCursor;
     bool m_hidden;
 
-#ifdef DIRECTX
-    LPDIRECT3D9 m_d3d;    // the pointer to our Direct3D interface
-    LPDIRECT3DDEVICE9 m_d3ddev;    // the pointer to the device class
-#endif
-
 #ifdef OPENGL_ES
     EGLConfig m_eglConfig;
     EGLContext m_eglContext;
@@ -118,7 +103,6 @@ private:
     EGLSurface m_eglSurface;
 #else
     HGLRC m_wglContext;
-    HGLRC m_wglContext2;
 #endif
 };
 

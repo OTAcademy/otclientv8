@@ -42,7 +42,9 @@ public:
     void draw();
     void draw(const Rect& dest);
     void draw(const Rect& dest, const Rect& src);
+#ifndef OPENGL_ES
     void copy(const Rect& dest, const Rect& src);
+#endif
 
     void setBackuping(bool enabled) { m_backuping = enabled; }
     void setSmooth(bool enabled) { m_smooth = enabled; }

@@ -108,7 +108,7 @@ void MapView::drawTiles(bool map, bool creatures, bool isFading, const TilePtr& 
                 continue;
             }
 
-            if (map && m_lightView && it->first->isFullGround())
+            if (map && m_lightView && it->first->getGround())
                 m_lightView->hideTile(transformPositionTo2D(tilePos, cameraPosition));
 
             if (map) {
@@ -176,6 +176,9 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile)
     bool updateMap = m_mustDrawVisibleTilesCache || m_mapRenderTimer.elapsed_millis() >= g_adaptiveRenderer.mapRenderInterval();
     bool updateCreatures = m_mustDrawVisibleTilesCache || m_creaturesRenderTimer.elapsed_millis() >= g_adaptiveRenderer.creaturesRenderInterval();
     bool cacheMap = !isFading && g_adaptiveRenderer.mapRenderInterval() > 0;
+#ifdef OPENGL_ES
+    cacheMap = false;
+#endif
     m_mustDrawVisibleTilesCache = false;
 
     if (updateMap && cacheMap) {
@@ -201,7 +204,11 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile)
         if (!cacheMap) {
             g_painter->clear(Color::black);
         } else {
+#ifndef OPENGL_ES
             m_mapbuffer->copy(Rect(0, 0, m_framebuffer->getSize()), Rect(0, 0, m_mapbuffer->getSize()));
+#else
+            g_logger.fatal("Wrong operation");
+#endif
         }
         g_painter->setDepthFunc(Painter::DepthFunc_LEQUAL);
 

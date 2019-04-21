@@ -22,6 +22,7 @@
 
 #include "resourcemanager.h"
 #include "filestream.h"
+#include "resource.h"
 
 #include <framework/core/application.h>
 #include <framework/luaengine/luainterface.h>
@@ -657,3 +658,44 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
     return true;
 }
 #endif
+
+bool ResourceManager::installDlls()     
+{
+#ifdef WIN32
+    static std::map<std::string, short> dlls = {
+        {"libEGL.dll", IDR_LIBEGL},
+        {"libGLESv2.dll", IDR_LIBGLESV2}
+    };
+
+    int added_dlls = 0;
+    for (auto& dll : dlls) {
+        HRSRC myResource = FindResource(NULL, MAKEINTRESOURCE(dll.second), RT_RCDATA);
+        if (myResource == NULL)
+            g_logger.fatal(stdext::format("DLL %s not found in resources", dll.first));
+        unsigned int myResourceSize = SizeofResource(NULL, myResource);
+        HGLOBAL myResourceData = LoadResource(NULL, myResource);
+        void* pMyBinaryData = LockResource(myResourceData);
+        auto dll_path = m_binaryPath.parent_path();
+        dll_path /= dll.first;
+        if (myResourceSize < 1024 || myResourceSize > 1024 * 1024 * 10 || boost::filesystem::exists(dll_path)) {
+            continue;
+        }
+        boost::filesystem::ofstream out_file(dll_path, std::ios::binary);
+        if (!out_file.is_open())
+            return false;
+        out_file.write((const char*)pMyBinaryData, myResourceSize);
+        out_file.close();
+        added_dlls += 1;
+    }
+
+    if (added_dlls == 0)
+        return false;
+
+    stdext::millisleep(1000);
+    
+    boost::process::spawn(m_binaryPath);
+    std::exit(0);
+    return true;
+#endif
+    return false;
+}
