@@ -33,7 +33,7 @@ public:
     void terminate();
     void clear();
 
-    FrameBufferPtr createFrameBuffer();
+    FrameBufferPtr createFrameBuffer(bool withDepth = false);
     const FrameBufferPtr& getTemporaryFrameBuffer() { return m_temporaryFramebuffer; }
 
 protected:

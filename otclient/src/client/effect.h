@@ -36,6 +36,7 @@ class Effect : public Thing
 
 public:
     void drawEffect(const Point& dest, float scaleFactor, bool animate, int offsetX = 0, int offsetY = 0, LightView *lightView = nullptr, bool lightOnly = false);
+    void newDrawEffect(const Point& dest, int offsetX, int offsetY, DrawQueue& drawQueue, LightView* lightView);
 
     void setId(uint32 id);
     uint32 getId() { return m_id; }

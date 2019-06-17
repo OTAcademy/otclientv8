@@ -65,7 +65,6 @@ private:
     int m_maxFps = 100;
     stdext::boolean<false> m_onInputEvent;
     stdext::boolean<false> m_mustRepaint;
-    TexturePtr m_foreground;
 };
 
 extern GraphicalApplication g_app;

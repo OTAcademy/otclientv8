@@ -18,6 +18,10 @@ hidePartyButton = nil
 
 updateEvent = nil
 
+hoveredCreature = nil
+newHoveredCreature = nil
+prevCreature = nil
+
 function init()  
   g_ui.importStyle('battlebutton')
   battleButton = modules.client_topmenu.addRightGameToggleButton('battleButton', tr('Battle') .. ' (Ctrl+B)', '/images/topbuttons/battle', toggle)
@@ -71,6 +75,10 @@ function init()
   connect(LocalPlayer, {
     onPositionChange = onCreaturePositionChange
   })
+  connect(Creature, {
+    onAppear = onCreatureAppear,
+    onDisappear = onCreatureDisappear
+  })  
 end
 
 function terminate()
@@ -87,6 +95,10 @@ function terminate()
   disconnect(LocalPlayer, {
     onPositionChange = onCreaturePositionChange
   })
+  disconnect(Creature, {
+    onAppear = onCreatureAppear,
+    onDisappear = onCreatureDisappear
+  })  
 
   if updateEvent ~= nil then
 	  removeEvent(updateEvent)
@@ -220,43 +232,41 @@ function checkCreatures()
     end
   end
   
-  local following = g_game.getFollowingCreature()
-  local attacking = g_game.getAttackingCreature()
+  updateSquare()
   
   -- sorting
   local creature_i = 0
   sortCreatures(creatures)
   for i=1, #creatures do
-	  creature_i = i
+    if creature_i > 20 then
+      break
+    end
+  
+	  creature_i = i  
+	  local creature = creatures[creature_i]
 	  local battleButton = battleButtonsList[creature_i]
+    
 	  if battleButton == nil then
 	    battleButton = g_ui.createWidget('BattleButton')
       battleButton.onHoverChange = onBattleButtonHoverChange
       battleButton.onMouseRelease = onBattleButtonMouseRelease
+      battleButton:setup(creature)
       table.insert(battleButtonsList, battleButton)
       battlePanel:addChild(battleButton)
  	  end
 	  
-	  local creature = creatures[creature_i]
 	  if isSortAsc() then
       creature = creatures[#creatures - creature_i + 1]
 	  end
 	  battleButton:newSetup(creature)
-	  
-	  local isTarget = creature == attacking
-	  local isFollowed = creature == following
-	  if isTarget ~= battleButton.isTarget or isFollowed ~= battleButton.isFollowed then
-		  battleButton.isTarget = isTarget
-		  battleButton.isFollowed = isFollowed
-		  battleButton:update(creature)
-	  end
-	  
-	  battleButton:setVisible(player:hasSight(creature:getPosition()) and creature:canBeSeen())
   end
-  creature_i = creature_i + 1
-  while creature_i <= #battleButtonsList do
-    battleButtonsList[creature_i]:setVisible(false)
-    creature_i = creature_i + 1
+  
+  local height = 0
+  if creature_i > 0 then
+    height = 25 * creature_i
+  end
+  if battlePanel:getHeight() ~= height then
+    battlePanel:setHeight(height)
   end
 end
 
@@ -340,10 +350,16 @@ function onBattleButtonMouseRelease(self, mousePosition, mouseButton)
 end
 
 function onBattleButtonHoverChange(battleButton, hovered)
+  if not hovered then
+    newHoveredCreature = nil    
+  else
+    newHoveredCreature = battleButton.creature
+  end
   if battleButton.isHovered ~= hovered then
     battleButton.isHovered = hovered
     battleButton:update()
   end
+  updateSquare()
 end
 
 function onCreaturePositionChange(creature, newPos, oldPos)
@@ -352,4 +368,66 @@ function onCreaturePositionChange(creature, newPos, oldPos)
       checkCreatures()
     end
   end
+end
+
+local CreatureButtonColors = {
+  onIdle = {notHovered = '#888888', hovered = '#FFFFFF' },
+  onTargeted = {notHovered = '#FF0000', hovered = '#FF8888' },
+  onFollowed = {notHovered = '#00FF00', hovered = '#88FF88' }
+}
+
+function updateSquare()
+  local following = g_game.getFollowingCreature()
+  local attacking = g_game.getAttackingCreature()
+  
+  -- alternative bug fix for invisible monster
+  --if attacking and attacking:isRemoved() then    
+  --  attacking = nil
+  --  g_game.cancelAttack()
+  --end
+  
+  if newHoveredCreature == nil then
+    if hoveredCreature ~= nil then
+      hoveredCreature:hideStaticSquare()
+      hoveredCreature = nil
+    end
+  else
+    if hoveredCreature ~= nil then
+      hoveredCreature:hideStaticSquare()
+    end
+    hoveredCreature = newHoveredCreature
+    hoveredCreature:showStaticSquare(CreatureButtonColors.onIdle.hovered)
+  end
+  
+  local color = CreatureButtonColors.onIdle
+  local creature = nil
+  if attacking then
+    color = CreatureButtonColors.onTargeted
+    creature = attacking
+  elseif following then
+    color = CreatureButtonColors.onFollowed
+    creature = following
+  end
+
+  if prevCreature ~= creature then
+    if prevCreature ~= nil then
+      prevCreature:hideStaticSquare()
+    end
+    prevCreature = creature
+  end
+  
+  if not creature then
+    return
+  end
+  
+  color = creature == hoveredCreature and color.hovered or color.notHovered
+  creature:showStaticSquare(color)
+end
+
+function onCreatureAppear(creature)
+  
+end
+
+function onCreatureDisappear(creature)
+  updateSquare()
 end

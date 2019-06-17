@@ -38,6 +38,8 @@ public:
 
     static Color getColor(int color);
 
+    void newDraw(Point dest, DrawQueue& drawQueue, LightView* lightView);
+
     void setId(int id) { m_id = id; }
     void setAuxId(int id) { m_auxId = id; }
     void setHead(int head) { m_head = head; m_headColor = getColor(head); }
@@ -47,6 +49,8 @@ public:
     void setAddons(int addons) { m_addons = addons; }
     void setMount(int mount) { m_mount = mount; }
     void setCategory(ThingCategory category) { m_category = category; }
+    void setAnimationPhase(int animationPhase) { m_animationPhase = animationPhase; }
+    void setXPattern(int xPattern) { m_xPattern = xPattern; }
 
     void resetClothes();
 
@@ -65,10 +69,16 @@ public:
     Color getLegsColor() const { return m_legsColor; }
     Color getFeetColor() const { return m_feetColor; }
 
+    size_t hash() const {
+        return (m_id << 26) + (m_auxId << 22) + (m_xPattern << 18) + (m_animationPhase << 14) + (m_head << 10) + (m_body << 8) + (m_legs << 6) + (m_feet << 4) + (m_addons << 2) + m_mount +
+            (m_headColor.hash() << 20) + (m_bodyColor.hash() << 15) + (m_legsColor.hash() << 10) + (m_feetColor.hash() << 5);
+    }
+
 private:
     ThingCategory m_category;
     int m_id, m_auxId, m_head, m_body, m_legs, m_feet, m_addons, m_mount;
     Color m_headColor, m_bodyColor, m_legsColor, m_feetColor;
+    int m_xPattern, m_animationPhase;
 };
 
 #endif

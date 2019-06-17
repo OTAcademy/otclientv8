@@ -304,10 +304,14 @@ void WIN32Window::internalCreateGLContext()
 {
 #ifdef OPENGL_ES
     m_eglDisplay = eglGetDisplay(m_deviceContext);
+    /*std::vector<EGLint> display_attribs;
+    display_attribs.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
+    display_attribs.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE);
+    display_attribs.push_back(EGL_NONE);
+    m_eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, m_deviceContext, display_attribs.data());
+    */
     if (m_eglDisplay == EGL_NO_DISPLAY) {
-        if (!g_resources.installDlls()) {
-            g_logger.fatal("EGL not supported, try to use OpenGL version");
-        }
+        g_logger.fatal("EGL not supported, try to use OpenGL version, install directx drivers or update libEGL.dll and libGLESv2.dll");
     }
 
     if(!eglInitialize(m_eglDisplay, NULL, NULL))
@@ -319,7 +323,6 @@ void WIN32Window::internalCreateGLContext()
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
 
@@ -359,7 +362,7 @@ void WIN32Window::internalCreateGLContext()
                                          0,                          // Shift Bit Ignored
                                          0,                          // No Accumulation Buffer
                                          0, 0, 0, 0,                 // Accumulation Bits Ignored
-                                         24,                         // Z-Buffer (Depth Buffer)
+                                         0,                         // Z-Buffer (Depth Buffer)
                                          0,                          // No Stencil Buffer
                                          0,                          // No Auxiliary Buffer
                                          PFD_MAIN_PLANE,             // Main Drawing Layer

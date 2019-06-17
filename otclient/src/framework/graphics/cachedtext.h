@@ -25,6 +25,7 @@
 
 #include "declarations.h"
 #include "coordsbuffer.h"
+#include "drawqueue.h"
 
 class CachedText
 {

@@ -64,10 +64,8 @@ public:
     void setMapShader(const PainterShaderProgramPtr& shader, float fadeout, float fadein) { m_mapView->setShader(shader, fadein, fadeout); }
     void setMinimumAmbientLight(float intensity) { m_mapView->setMinimumAmbientLight(intensity); }
     void setLimitVisibleRange(bool limitVisibleRange) { m_limitVisibleRange = limitVisibleRange; updateVisibleDimension(); }
-    void setAddLightMethod(bool add) { m_mapView->setAddLightMethod(add); }
     void setFloorFading(int value) { m_mapView->setFloorFading(value); }
     void setCrosshair(const std::string& type) { m_mapView->setCrosshair(type); }
-
     bool isMultifloor() { return m_mapView->isMultifloor(); }
     bool isDrawingTexts() { return m_mapView->isDrawingTexts(); }
     bool isDrawingNames() { return m_mapView->isDrawingNames(); }

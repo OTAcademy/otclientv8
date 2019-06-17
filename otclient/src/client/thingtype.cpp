@@ -371,7 +371,7 @@ void ThingType::unserializeOtml(const OTMLNodePtr& node)
     }
 }
 
-void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView, bool lightOnly)
+void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView, bool lightOnly, Color* markColor)
 {
     if(m_null)
         return;
@@ -400,11 +400,17 @@ void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPatte
     Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * 32) * scaleFactor,
                     textureRect.size() * scaleFactor);
 
-    if(lightView && hasLight()) {
-        Light light = getLight();
-        if(light.intensity > 0)
-            lightView->addLightSource(screenRect.center(), scaleFactor, light);
+    if (markColor) {
+        Color c = g_painter->getColor();
+        auto composition = g_painter->getCompositionMode();
+        g_painter->setColor(*markColor);
+        g_painter->setCompositionMode(Painter::CompositionMode_Normal);
+        g_painter->drawColorOnTexturedRect(screenRect, texture, textureRect);
+        g_painter->setCompositionMode(composition);
+        g_painter->setColor(c);
+        return;
     }
+
     if (lightOnly)
         return;
 
@@ -414,9 +420,51 @@ void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPatte
         g_painter->setColor(Color(1.0f,1.0f,1.0f,m_opacity));
 
     g_painter->drawTexturedRect(screenRect, texture, textureRect);
-
     if(useOpacity)
         g_painter->setColor(Color::white);
+}
+
+void ThingType::newDraw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, DrawQueue& drawQueue, LightView* lightView, NewDrawType type)
+{
+    if(m_null)
+        return;
+
+    if(animationPhase >= m_animationPhases)
+        return;
+
+    const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
+    if(!texture)
+        return;
+
+    uint frameIndex = getTextureIndex(layer, xPattern, yPattern, zPattern);
+    if(frameIndex >= m_texturesFramesRects[animationPhase].size())
+        return;
+
+    Point textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
+    Rect textureRect = m_texturesFramesRects[animationPhase][frameIndex];
+
+    Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * 32), textureRect.size());
+
+    if(lightView && hasLight()) {
+        Light light = getLight();
+        if(light.intensity > 0) 
+            lightView->addLightSource(Rect(dest - m_displacement  - (m_size.toPoint() - Point(1, 1)) * 32, texture->getSize()).center(), light, type != NewDrawNormal);
+    }
+
+    if (drawQueue.isBlocked())
+        return;
+
+    if (type == NewDrawNormal || type == NewDrawMissle) {
+        drawQueue.add(screenRect, texture, textureRect);
+    } if (type == NewDrawMount) {
+        drawQueue.getLastOutfit().mount = { screenRect, texture, textureRect, Color::white, 0 };
+    } if (type == NewDrawOutfit) {
+        drawQueue.getLastOutfit().textures.push_back(DrawQueueOutfitTextures());
+        drawQueue.getLastOutfit().textures.back().texture = { screenRect, texture, textureRect, Color::white, 0 };
+    } if (type == NewDrawOutfitLayers) {
+        assert(!drawQueue.getLastOutfit().textures.empty());
+        drawQueue.getLastOutfit().textures.back().layers.push_back({ screenRect, texture, textureRect, Color::white, 0 });
+    }
 }
 
 const TexturePtr& ThingType::getTexture(int animationPhase)
@@ -439,6 +487,11 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
         int indexSize = textureLayers * m_numPatternX * m_numPatternY * m_numPatternZ;
         Size textureSize = getBestTextureDimension(m_size.width(), m_size.height(), indexSize);
         ImagePtr fullImage;
+
+        //if (textureSize.width() > 8 || textureSize.height() > 8) {
+        //    stdext::throw_exception(stdext::format("For compability reasons sprite sizes are limited to 256x256px.\nSprite: %i, size: %ix%i\nContact with kondrah (otclient.ovh) if you need help",
+        //                                           m_id, textureSize.width() * 32, textureSize.height() * 32));
+        //}
 
         if(useCustomImage)
             fullImage = Image::load(m_customImage);

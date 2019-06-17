@@ -14,8 +14,7 @@ local defaultOptions = {
   showLevelsInConsole = true,
   showPrivateMessagesInConsole = true,
   showPrivateMessagesOnScreen = true,
-  showLeftPanel = false,
-  showExtraPanels = true,
+  panels = 6,
   openContainersInThirdPanel = true,
   backgroundFrameRate = 100,
   enableAudio = false,
@@ -31,6 +30,7 @@ local defaultOptions = {
   displayMana = true,
   showHealthManaCircle = true,
   hidePlayerBars = true,
+  highlightThingsUnderCursor = true,
   topHealtManaBar = true,
   displayText = true,
   dontStretchShrink = false,
@@ -44,6 +44,7 @@ local optionsTabBar
 local options = {}
 local extraOptions = {}
 local generalPanel
+local interfacePanel
 local consolePanel
 local graphicsPanel
 local soundPanel
@@ -71,6 +72,9 @@ function init()
 
   generalPanel = g_ui.loadUI('game')
   optionsTabBar:addTab(tr('Game'), generalPanel, '/images/optionstab/game')
+  
+  interfacePanel = g_ui.loadUI('interface')
+  optionsTabBar:addTab(tr('Interface'), interfacePanel, '/images/optionstab/game')  
 
   consolePanel = g_ui.loadUI('console')
   optionsTabBar:addTab(tr('Console'), consolePanel, '/images/optionstab/console')
@@ -83,11 +87,12 @@ function init()
 
   extrasPanel = g_ui.createWidget('Panel')
   for _, v in ipairs(g_extras.getAll()) do
-	local extrasButton = g_ui.createWidget('OptionCheckBox')
-	extrasButton:setId(v)
-	extrasButton:setText(g_extras.getDescription(v))
-	extrasPanel:addChild(extrasButton)
-  end	
+    local extrasButton = g_ui.createWidget('OptionCheckBox')
+    extrasButton:setId(v)
+    extrasButton:setText(g_extras.getDescription(v))
+    extrasPanel:addChild(extrasButton)
+  end
+  
   optionsTabBar:addTab(tr('Extras'), extrasPanel, '/images/optionstab/extras')
 
   optionsButton = modules.client_topmenu.addLeftButton('optionsButton', tr('Options'), '/images/topbuttons/options', toggle)
@@ -201,11 +206,6 @@ function setOption(key, value, force)
     modules.game_interface.healthCircleFront:setVisible(value)
     modules.game_interface.manaCircle:setVisible(value)
     modules.game_interface.manaCircleFront:setVisible(value)
-  elseif key == 'showLeftPanel' then
-    modules.game_interface.getLeftPanel():setOn(value)
-  elseif key == 'showExtraPanels' then
-    modules.game_interface.getThirdPanel():setOn(value)
-    modules.game_interface.getForthPanel():setOn(value)
   elseif key == 'classicView' and not force then
     local viewMode = 1
     if value then
@@ -223,12 +223,8 @@ function setOption(key, value, force)
     graphicsPanel:getChildById('ambientLightLabel'):setEnabled(value)
   elseif key == 'floorFading' then
     gameMapPanel:setFloorFading(value)
-    graphicsPanel:getChildById('floorFadingLabel'):setText(tr('Floor fading: %s ms', value))
+    interfacePanel:getChildById('floorFadingLabel'):setText(tr('Floor fading: %s ms', value))
   elseif key == 'crosshair' then
-    local crosshair = graphicsPanel:getChildById('crosshair')
-    if crosshair.currentIndex ~= value then
-      crosshair:setCurrentIndex(value)
-    end
     if value == 1 then
       gameMapPanel:setCrosshair("")    
     elseif value == 2 then
@@ -241,10 +237,6 @@ function setOption(key, value, force)
     gameMapPanel:setMinimumAmbientLight(value/100)
     gameMapPanel:setDrawLights(options['enableLights'] and value < 100)
   elseif key == 'optimizationLevel' then
-    local optlvl = graphicsPanel:getChildById('optimizationLevel')
-    if optlvl.currentIndex ~= value then
-      optlvl:setCurrentIndex(value)
-    end
     g_adaptiveRenderer.setLevel(value - 2)
   elseif key == 'displayNames' then
     gameMapPanel:setDrawNames(value)
@@ -293,13 +285,24 @@ function setOption(key, value, force)
         widget:setChecked(value)
       elseif widget:getStyle().__class == 'UIScrollBar' then
         widget:setValue(value)
-      end
+      elseif widget:getStyle().__class == 'UIComboBox' then
+        if valur ~= nil or value < 1 then 
+          value = 1
+        end
+        if widget.currentIndex ~= value then
+          widget:setCurrentIndex(value)
+        end
+      end      
       break
     end
   end
   
   g_settings.set(key, value)
   options[key] = value
+  
+  if key == 'panels' and modules.game_interface ~= nil then
+    modules.game_interface.refreshViewMode()
+  end
 end
 
 function getOption(key)

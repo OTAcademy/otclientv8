@@ -64,11 +64,10 @@ public:
 
     void draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView = nullptr);
 
-    void drawBottom(const Point & dest, float scaleFactor, LightView * lightView, bool lightOnly);
+    void calculateTopDepth();
 
-    void drawCreatues(const Point & dest, float scaleFactor, LightView * lightView, bool lightOnly);
-
-    void drawTop(const Point & dest, float scaleFactor, LightView * lightView, bool lightOnly);
+    void drawItems(const Point & dest, DrawQueue& drawQueue, LightView *lightView);
+    void drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView);
 
 public:
     void clean();
@@ -141,6 +140,20 @@ public:
         m_blocking = blocking;
     }
 
+    void setDepth(float depth) {
+        m_depth = depth;
+        m_topDepth = depth;
+    }
+    void setTopDepth(float depth) {
+        m_topDepth = depth;
+    }
+    float getDepth() {
+        return m_depth;
+    }
+    float getTopDepth() {
+        return m_topDepth;
+    }
+         
 private:
     void checkTranslucentLight();
 
@@ -153,7 +166,9 @@ private:
     uint32 m_flags, m_houseId;
     uint16 m_speed = 150;
     uint8 m_blocking = 0;
-
+    float m_depth = 0;
+    float m_topDepth = 0;
+    
     stdext::boolean<false> m_selected;
 };
 

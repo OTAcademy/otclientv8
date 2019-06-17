@@ -8,6 +8,10 @@ Panel
     !text: tr('Allow auto chase override')
 
   OptionCheckBox
+    id: displayText
+    !text: tr('Display text messages')
+
+  OptionCheckBox
     id: extentedPreWalking
     !text: tr('Enable extented pre walking')
     !tooltip: tr('Allows to execute next move without confirmation of previous one')
@@ -16,51 +20,6 @@ Panel
     id: smartWalk
     !text: tr('Enable smart walking')
     !tooltip: tr('Will detect when to use diagonal step based on the\nkeys you are pressing')
-
-  OptionCheckBox
-    id: showPing
-    !text: tr('Show connection ping')
-    !tooltip: tr('Display connection speed to the server (milliseconds)')
-
-  OptionCheckBox
-    id: showLeftPanel
-    !text: tr('Show left panel')
-
-  OptionCheckBox
-    id: showExtraPanels
-    !text: tr('Enable two extra transparent panels (left and right)')
-
-  OptionCheckBox
-    id: openContainersInThirdPanel
-    !text: tr('Open contrainers in transparent right panel')
-
-  OptionCheckBox
-    id: displayNames
-    !text: tr('Display creature names')
-
-  OptionCheckBox
-    id: displayHealth
-    !text: tr('Display creature health bars')
-
-  OptionCheckBox
-    id: displayMana
-    !text: tr('Display player mana bar')
-
-  OptionCheckBox
-    id: hidePlayerBars
-    !text: tr('Hide player health and mana bar')
-
-  OptionCheckBox
-    id: topHealtManaBar
-    !text: tr('Show top health and mana bar')
-
-  OptionCheckBox
-    id: showHealthManaCircle
-    !text: tr('Show healt/mana circle')
-
-  OptionCheckBox
-    id: displayText
-    !text: tr('Display text messages')
 
   Label
     id: turnDelayLabel

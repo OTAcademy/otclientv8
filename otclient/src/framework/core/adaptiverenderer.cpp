@@ -43,7 +43,7 @@ void AdaptiveRenderer::refresh() {
 }
 
 int AdaptiveRenderer::effetsLimit() {
-    static int limits[RenderSpeeds] = { 20, 10, 5, 3, 2 };
+    static int limits[RenderSpeeds] = { 20, 10, 7, 5, 3 };
     return limits[m_speed];
 }
 
@@ -58,13 +58,18 @@ int AdaptiveRenderer::itemsLimit() {
 }
 
 int AdaptiveRenderer::mapRenderInterval() {
-    static int limits[RenderSpeeds] = { 0, 10, 20, 30, 50 };
+    static int limits[RenderSpeeds] = { 0, 10, 20, 50, 100 };
+    return limits[m_speed];
+}
+
+int AdaptiveRenderer::textsLimit() {
+    static int limits[RenderSpeeds] = { 1000, 50, 30, 15, 7 };
     return limits[m_speed];
 }
 
 int AdaptiveRenderer::creaturesRenderInterval() {
     // not working yet
-    static int limits[RenderSpeeds] = { 0, 0, 0, 0, 0 };
+    static int limits[RenderSpeeds] = { 0, 0, 10, 15, 20 };
     return limits[m_speed];
 }
 
@@ -72,6 +77,10 @@ bool AdaptiveRenderer::allowFading() {
     return m_speed <= 2;
 }
 
+int AdaptiveRenderer::lightScaling() {
+    static int limits[RenderSpeeds] = { 4, 4, 4, 8, 16 };
+    return limits[m_speed];
+}
 
 int AdaptiveRenderer::foregroundUpdateInterval() {
     static int limits[RenderSpeeds] = { 10, 30, 40, 50, 60 };

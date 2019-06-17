@@ -29,8 +29,9 @@
 
 uint FrameBuffer::boundFbo = 0;
 
-FrameBuffer::FrameBuffer()
+FrameBuffer::FrameBuffer(bool withDepth)
 {
+    m_depth = withDepth;
     internalCreate();
 }
 
@@ -38,14 +39,10 @@ void FrameBuffer::internalCreate()
 {
     m_prevBoundFbo = 0;
     m_fbo = 0;
-    m_depthRbo = 0;
     if (g_graphics.canUseFBO()) {
         glGenFramebuffers(1, &m_fbo);
-        glGenRenderbuffers(1,&m_depthRbo);
         if(!m_fbo)
             g_logger.fatal("Unable to create framebuffer object");
-        if(!m_depthRbo)
-            g_logger.fatal("Unable to create renderbuffer");
     }
 }
 
@@ -57,8 +54,6 @@ FrameBuffer::~FrameBuffer()
     if (g_graphics.ok() && m_fbo != 0) {
         if(m_fbo != 0)
             glDeleteFramebuffers(1, &m_fbo);
-        if(m_depthRbo != 0)
-            glDeleteRenderbuffers(1, &m_depthRbo);
     }
 }
 
@@ -73,19 +68,21 @@ void FrameBuffer::resize(const Size& size)
     m_texture->setSmooth(m_smooth);
     m_texture->setUpsideDown(true);
 
-    //if(m_depthRbo){
-    //    glBindRenderbuffer(GL_RENDERBUFFER,m_depthRbo);
-    //    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH_COMPONENT16,size.width(),size.height());
-    //}
+    if(m_depth) {
+        m_depthTexture = TexturePtr(new Texture(size, true));
+        m_depthTexture->setSmooth(false);
+        m_depthTexture->setUpsideDown(true);
+    }
 
     if(m_fbo) {
         internalBind();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture->getId(), 0);
-        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRbo);
+        if(m_depthTexture)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture->getId(), 0);
 
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
-            g_logger.fatal(stdext::format("Unable to setup framebuffer object %i - %i %i", status, size.width(), size.height()));
+            g_logger.fatal(stdext::format("Unable to setup framebuffer object - %i - %ix%i %s", status, size.width(), size.height(), m_depthTexture ? "(depth)" : ""));
         internalRelease();
     } else {
         if(m_backuping) {
@@ -95,15 +92,23 @@ void FrameBuffer::resize(const Size& size)
     }
 }
 
-void FrameBuffer::bind()
+void FrameBuffer::bind(TexturePtr depthTexture)
 {
     g_painter->saveAndResetState();
     internalBind();
     g_painter->setResolution(m_texture->getSize());
+    if (!m_depth && depthTexture) {
+        m_depthTexture = depthTexture;        
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture->getId(), 0);
+    }
 }
 
 void FrameBuffer::release()
 {
+    if (!m_depth && m_depthTexture) {
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+        m_depthTexture = nullptr;
+    }
     internalRelease();
     g_painter->restoreSavedState();
 }
@@ -123,16 +128,6 @@ void FrameBuffer::draw(const Rect& dest)
 {
     g_painter->drawTexturedRect(dest, m_texture, Rect(0,0, getSize()));
 }
-
-#ifndef OPENGL_ES
-void FrameBuffer::copy(const Rect& dest, const Rect& src)
-{
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, boundFbo);
-    glBlitFramebuffer(src.left(), src.top(), src.right(), src.bottom(), dest.left(), dest.top(), dest.right(), dest.bottom(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, boundFbo);
-}
-#endif
 
 void FrameBuffer::internalBind()
 {

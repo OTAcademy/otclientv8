@@ -47,7 +47,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../src;</IncludePath>
-    <TargetName>otclient</TargetName>
+    <TargetName>otclient_gl</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DirectX|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../src;</IncludePath>
@@ -55,7 +55,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;NDEBUG</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
@@ -78,7 +78,7 @@
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <OmitFramePointers>true</OmitFramePointers>
+      <OmitFramePointers>false</OmitFramePointers>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -95,7 +95,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DirectX|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;OPENGL_ES</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;OPENGL_ES;NDEBUG</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
@@ -118,7 +118,7 @@
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <OmitFramePointers>true</OmitFramePointers>
+      <OmitFramePointers>false</OmitFramePointers>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -201,16 +201,17 @@
     <ClCompile Include="..\src\framework\core\timer.cpp" />
     <ClCompile Include="..\src\framework\graphics\animatedtexture.cpp" />
     <ClCompile Include="..\src\framework\graphics\apngloader.cpp" />
+    <ClCompile Include="..\src\framework\graphics\atlas.cpp" />
     <ClCompile Include="..\src\framework\graphics\bitmapfont.cpp" />
     <ClCompile Include="..\src\framework\graphics\cachedtext.cpp" />
     <ClCompile Include="..\src\framework\graphics\coordsbuffer.cpp" />
+    <ClCompile Include="..\src\framework\graphics\drawqueue.cpp" />
     <ClCompile Include="..\src\framework\graphics\fontmanager.cpp" />
     <ClCompile Include="..\src\framework\graphics\framebuffer.cpp" />
     <ClCompile Include="..\src\framework\graphics\framebuffermanager.cpp" />
     <ClCompile Include="..\src\framework\graphics\graphics.cpp" />
     <ClCompile Include="..\src\framework\graphics\hardwarebuffer.cpp" />
     <ClCompile Include="..\src\framework\graphics\image.cpp" />
-    <ClCompile Include="..\src\framework\graphics\ogl\painterogl.cpp" />
     <ClCompile Include="..\src\framework\graphics\painter.cpp" />
     <ClCompile Include="..\src\framework\graphics\paintershaderprogram.cpp" />
     <ClCompile Include="..\src\framework\graphics\particle.cpp" />
@@ -351,10 +352,14 @@
     <ClInclude Include="..\src\framework\global.h" />
     <ClInclude Include="..\src\framework\graphics\animatedtexture.h" />
     <ClInclude Include="..\src\framework\graphics\apngloader.h" />
+    <ClInclude Include="..\src\framework\graphics\atlas.h" />
     <ClInclude Include="..\src\framework\graphics\bitmapfont.h" />
     <ClInclude Include="..\src\framework\graphics\cachedtext.h" />
+    <ClInclude Include="..\src\framework\graphics\colorarray.h" />
     <ClInclude Include="..\src\framework\graphics\coordsbuffer.h" />
     <ClInclude Include="..\src\framework\graphics\declarations.h" />
+    <ClInclude Include="..\src\framework\graphics\deptharray.h" />
+    <ClInclude Include="..\src\framework\graphics\drawqueue.h" />
     <ClInclude Include="..\src\framework\graphics\fontmanager.h" />
     <ClInclude Include="..\src\framework\graphics\framebuffer.h" />
     <ClInclude Include="..\src\framework\graphics\framebuffermanager.h" />
@@ -362,7 +367,7 @@
     <ClInclude Include="..\src\framework\graphics\graphics.h" />
     <ClInclude Include="..\src\framework\graphics\hardwarebuffer.h" />
     <ClInclude Include="..\src\framework\graphics\image.h" />
-    <ClInclude Include="..\src\framework\graphics\ogl\painterogl.h" />
+    <ClInclude Include="..\src\framework\graphics\ogl\newshader.h" />
     <ClInclude Include="..\src\framework\graphics\ogl\shadersources.h" />
     <ClInclude Include="..\src\framework\graphics\painter.h" />
     <ClInclude Include="..\src\framework\graphics\paintershaderprogram.h" />
@@ -466,10 +471,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\otclient.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\src\libEGL.dll" />
-    <None Include="..\src\libGLESv2.dll" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\src\otcicon.ico" />

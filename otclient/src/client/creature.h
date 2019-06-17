@@ -45,11 +45,12 @@ public:
     Creature();
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
-    void drawLight(const Point& dest, float scaleFactor, LightView *lightView);
+    virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
+    virtual void drawOutfit(const Rect& destRect, bool resize);
 
-    void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr);
-    void drawOutfit(const Rect& destRect, bool resize);
-    void drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags);
+    void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr, bool lightOnly = false);
+    void newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
+    void drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags, DrawQueue& drawQueue);
 
     void setId(uint32 id) { m_id = id; }
     void setName(const std::string& name);
@@ -166,6 +167,7 @@ protected:
     std::string m_name;
     uint8 m_healthPercent;
     Otc::Direction m_direction;
+    Otc::Direction m_walkDirection;
     Outfit m_outfit;
     Light m_light;
     int m_speed;
@@ -195,8 +197,6 @@ protected:
     Timer m_outfitColorTimer;
 
     static std::array<double, Otc::LastSpeedFormula> m_speedFormula;
-    uint16 m_nextStepSpeed = 0;
-    uint16 m_stepDuration = 0;
 
     // walk related
     int m_walkAnimationPhase;
@@ -218,6 +218,8 @@ protected:
     Position m_lastStepToPosition;
     Position m_oldPosition;
     uint8 m_elevation = 0;
+    uint16 m_nextStepSpeed = 0;
+    uint16 m_stepDuration = 0;
 
     // jump related
     float m_jumpHeight;

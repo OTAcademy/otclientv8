@@ -165,81 +165,79 @@ void Tile::draw(const Point& dest, float scaleFactor, int drawFlags, LightView *
             if(thing->isOnTop())
                 thing->draw(dest, scaleFactor, animate, lightView);
 
-    // draw translucent light (for tiles beneath holes)
-    if(hasTranslucentLight() && lightView) {
-        Light light;
-        light.intensity = 1;
-        lightView->addLightSource(dest + Point(16,16) * scaleFactor, scaleFactor, light);
+}
+
+void Tile::calculateTopDepth() {
+    int redrawPreviousTopW = 0, redrawPreviousTopH = 0;
+    for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+        const ThingPtr& thing = *it;
+        if(!thing->isLyingCorpse()) {
+            continue;
+        }
+        redrawPreviousTopW = std::max<int>(thing->getWidth() - 1, redrawPreviousTopW);
+        redrawPreviousTopH = std::max<int>(thing->getHeight() - 1, redrawPreviousTopH);
+    }
+
+    for (int x = -redrawPreviousTopW; x <= 0; ++x) {
+        for (int y = -redrawPreviousTopH; y <= 0; ++y) {
+            if (x == 0 && y == 0)
+                continue;
+            const TilePtr& tile = g_map.getTile(m_position.translated(x,y));
+            if (tile && tile->getTopDepth() > m_depth) {
+                tile->setTopDepth(m_depth);
+            }
+        }
     }
 }
 
-void Tile::drawBottom(const Point& dest, float scaleFactor, LightView *lightView, bool lightOnly)
+void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightView)
 {
-    bool animate = true;
-
-    /* Flags to be checked for.  */
-    static const tileflags_t flags[] = {
-        TILESTATE_HOUSE,
-        TILESTATE_PROTECTIONZONE,
-        TILESTATE_OPTIONALZONE,
-        TILESTATE_HARDCOREZONE,
-        TILESTATE_REFRESH,
-        TILESTATE_NOLOGOUT,
-        TILESTATE_LAST
-    };
+    drawQueue.setDepth(m_depth);
+    m_drawElevation = 0;
 
     // first bottom items
-        m_drawElevation = 0;
-        for(const ThingPtr& thing : m_things) {
-            if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
-                break;
+    for(const ThingPtr& thing : m_things) {
+        if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
+            break;
 
-            bool restore = false;
-            if(!lightOnly && g_map.showZones() && thing->isGround()) {
-                for(unsigned int i = 0; i < sizeof(flags) / sizeof(tileflags_t); ++i) {
-                    tileflags_t flag = flags[i];
-                    if(hasFlag(flag) && g_map.showZone(flag)) {
-                        g_painter->setOpacity(g_map.getZoneOpacity());
-                        g_painter->setColor(g_map.getZoneColor(flag));
-                        restore = true;
-                        break;
-                    }
-                }
-            }
-            if(!lightOnly && m_selected)
-                g_painter->setColor(Color::teal);
+        thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+    }
 
-            thing->draw(dest - m_drawElevation*scaleFactor, scaleFactor, animate, lightView, lightOnly);
+    // now common items in reverse order
+    for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+        const ThingPtr& thing = *it;
+        if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
+            break;
 
-            if(restore) {
-                g_painter->resetOpacity();
-                g_painter->resetColor();
-            }
-            if(!lightOnly && m_selected)
-                g_painter->resetColor();
+        thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+    }
 
-            m_drawElevation += thing->getElevation();
-            if(m_drawElevation > Otc::MAX_ELEVATION)
-                m_drawElevation = Otc::MAX_ELEVATION;
-        }
+    // top
+    drawQueue.setDepth(m_topDepth - 1);
 
-        // now common items in reverse order
-        for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
-            const ThingPtr& thing = *it;
-            if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
-                break;
-            thing->draw(dest - m_drawElevation*scaleFactor, scaleFactor, animate, lightView, lightOnly);
+    int limit = g_adaptiveRenderer.effetsLimit();
+    for (auto i = (int)m_effects.size() > limit ?  m_effects.size() - limit : 0; i < m_effects.size(); ++i)
+        m_effects[i]->newDrawEffect(dest - m_drawElevation, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, drawQueue, lightView);
 
-            m_drawElevation += thing->getElevation();
-            if(m_drawElevation > Otc::MAX_ELEVATION)
-                m_drawElevation = Otc::MAX_ELEVATION;
-        }
+    for(const ThingPtr& thing : m_things)
+        if(thing->isOnTop())
+            thing->newDraw(dest, drawQueue, lightView);
+
+    if(hasTranslucentLight() && lightView) {
+        Light light;
+        light.intensity = 1;
+        lightView->addLightSource(dest + Point(16,16), light);
+    }
 }
 
-void Tile::drawCreatues(const Point& dest, float scaleFactor, LightView *lightView, bool lightOnly) {
+void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView) {
+    drawQueue.setDepth(m_topDepth);
+
     for(const CreaturePtr& creature : m_walkingCreatures) {
-        creature->draw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor,
-                                dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)*scaleFactor), scaleFactor, true, lightView, lightOnly);
+        creature->newDraw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x)*Otc::TILE_PIXELS - m_drawElevation),
+                                dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y)*Otc::TILE_PIXELS - m_drawElevation)), drawQueue, lightView);
     }
 
     std::vector<CreaturePtr> toDraw;
@@ -255,26 +253,7 @@ void Tile::drawCreatues(const Point& dest, float scaleFactor, LightView *lightVi
     int limit = g_adaptiveRenderer.creaturesLimit();
     for (auto i = (int)toDraw.size() > limit ? toDraw.size() - limit : 0; i < toDraw.size(); ++i) {
         CreaturePtr& creature = toDraw[i];
-        creature->draw(dest - m_drawElevation * scaleFactor, scaleFactor, true, lightView, lightOnly);
-    }
-}
-
-void Tile::drawTop(const Point& dest, float scaleFactor, LightView *lightView, bool lightOnly) {
-    // effects
-    int limit = g_adaptiveRenderer.effetsLimit();
-    for (auto i = (int)m_effects.size() > limit ?  m_effects.size() - limit : 0; i < m_effects.size(); ++i)
-        m_effects[i]->drawEffect(dest - m_drawElevation * scaleFactor, scaleFactor, true, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, lightView, lightOnly);
-
-    // top items
-    for(const ThingPtr& thing : m_things)
-        if(thing->isOnTop())
-            thing->draw(dest, scaleFactor, true, lightView, lightOnly);
-
-    // draw translucent light (for tiles beneath holes)
-    if(hasTranslucentLight() && lightView) {
-        Light light;
-        light.intensity = 1;
-        lightView->addLightSource(dest + Point(16,16) * scaleFactor, scaleFactor, light);
+        creature->newDraw(dest - m_drawElevation, drawQueue, lightView);
     }
 }
 

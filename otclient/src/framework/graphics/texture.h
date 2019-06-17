@@ -29,7 +29,7 @@ class Texture : public stdext::shared_object
 {
 public:
     Texture();
-    Texture(const Size& size);
+    Texture(const Size& size, bool depthTexture = false);
     Texture(const ImagePtr& image, bool buildMipmaps = false, bool compress = false);
     virtual ~Texture();
 
@@ -51,6 +51,7 @@ public:
     const Size& getGlSize() { return m_glSize; }
     const Matrix3& getTransformMatrix() { return m_transformMatrix; }
     bool isEmpty() { return m_id == 0; }
+    bool isDepthTexture() { return m_depth; }
     bool hasRepeat() { return m_repeat; }
     bool hasMipmaps() { return m_hasMipmaps; }
     virtual bool isAnimatedTexture() { return false; }
@@ -72,6 +73,7 @@ protected:
     stdext::boolean<false> m_smooth;
     stdext::boolean<false> m_upsideDown;
     stdext::boolean<false> m_repeat;
+    stdext::boolean<false> m_depth;
 };
 
 #endif

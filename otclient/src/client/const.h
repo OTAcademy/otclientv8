@@ -44,6 +44,13 @@ namespace Otc
         MAX_AUTOWALK_DIST = 127
     };
 
+    enum DepthConst {
+        MAX_DEPTH = 16384 - 2048,
+        DIAGONAL_DEPTH = 20,
+        TILE_CREATURES_DEPTH = 10,
+        TILE_TOP_DEPTH = 20
+    };
+
     enum DrawFlags {
         DrawGround = 1,
         DrawGroundBorders = 2,

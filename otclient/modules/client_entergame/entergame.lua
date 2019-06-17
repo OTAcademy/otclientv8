@@ -133,7 +133,6 @@ local function onPost(operationId, url, err, data)
   if err:len() > 0 then
     return onError(nil, err, 1)
   end
-  
   print(data)
   local status, result = pcall(function() return json.decode(data) end)
   if not status then
@@ -599,6 +598,7 @@ function EnterGame.doLogin()
 
   g_game.setClientVersion(clientVersion)
   g_game.setProtocolVersion(g_game.getClientProtocolVersion(clientVersion))
+  g_game.setCustomProtocolVersion(0)
   g_game.chooseRsa(G.host)
   
   g_game.enableFeature(GameBot)

@@ -31,6 +31,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/util/point.h
     ${CMAKE_CURRENT_LIST_DIR}/util/rect.h
     ${CMAKE_CURRENT_LIST_DIR}/util/size.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/stats.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/stats.h
 
     # stdext
     ${CMAKE_CURRENT_LIST_DIR}/stdext/any.h
@@ -65,6 +67,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/core/application.h
     ${CMAKE_CURRENT_LIST_DIR}/core/adaptativeframecounter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/adaptativeframecounter.h
+    ${CMAKE_CURRENT_LIST_DIR}/core/adaptativerenderer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/core/adaptativerenderer.h
     ${CMAKE_CURRENT_LIST_DIR}/core/asyncdispatcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/asyncdispatcher.h
     ${CMAKE_CURRENT_LIST_DIR}/core/binarytree.cpp

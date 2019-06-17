@@ -64,9 +64,9 @@ void LocalPlayer::lockWalk(int millis)
     g_game.cancelWalkEvent();
 }
 
-bool LocalPlayer::canWalk(Otc::Direction direction) {
+bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
     // cannot walk while locked
-    if (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration)
+    if ((m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration) && !ignoreLock)
         return false;
 
     // paralyzed
@@ -92,14 +92,24 @@ bool LocalPlayer::canWalk(Otc::Direction direction) {
     if ((m_walking && !isAutoWalking()) && (!prewalkTimeouted || m_secondPreWalk) && (!isNewPreWalking() || !m_newLastPrewalkingDone))
         return false;
 
-    if (m_newPreWalkingPositions.size() >= 3) // max 3 extra steps
+    if (m_newPreWalkingPositions.size() >= 2) // max 3 extra steps
         return false;
+
+    if (!m_newPreWalkingPositions.empty()) { // disallow diagonal extented walking
+        auto dir = m_position.getDirectionFromPosition(m_newPreWalkingPositions.back());
+        if ((dir == Otc::NorthWest || dir == Otc::NorthEast || dir == Otc::SouthWest || dir == Otc::SouthEast)) {
+            return false;
+        }
+        if (!g_map.getTile(getNewPreWalkingPosition())->isWalkable())
+            return false;
+    }
 
     return true;
 }
 
 void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
 {
+    m_lastAutoRetries = 0;
     // a prewalk was going on
     if (isNewPreWalking()) {
         for (auto it = m_newPreWalkingPositions.begin(); it != m_newPreWalkingPositions.end(); ++it) {
@@ -215,12 +225,12 @@ void LocalPlayer::cancelWalk(Otc::Direction direction)
 void LocalPlayer::cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir)     
 {
     m_newPreWalkingPositions.clear();
+    g_map.requestVisibleTilesCacheUpdate();
 
     if (m_position != pos) {
-        //allowAppearWalk(0);
+        m_allowAppearWalk = false;
         g_map.removeThing(this);
         g_map.addThing(this, pos, stackpos);
-        g_map.requestVisibleTilesCacheUpdate();
     }
 
     m_idleTimer.restart();
@@ -299,7 +309,8 @@ bool LocalPlayer::autoWalk(Position destination, bool retry)
         g_game.autoWalk(limitedPath, self->getNewPreWalkingPosition(true));
     });
 
-    lockWalk();
+    if(!retry)
+        lockWalk();
     return true;
 }
 
@@ -308,9 +319,10 @@ void LocalPlayer::stopAutoWalk()
     m_autoWalkDestination = Position();
     m_lastAutoWalkPosition = Position();
 
-    if (m_autoWalkContinueEvent)
+    if (m_autoWalkContinueEvent) {
         m_autoWalkContinueEvent->cancel();
-    m_autoWalkContinueEvent = nullptr;
+        m_autoWalkContinueEvent = nullptr;
+    }
 }
 
 void LocalPlayer::stopWalk(bool teleport) {

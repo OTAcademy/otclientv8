@@ -91,7 +91,6 @@ UIWidget
     focusable: false
     visible: true
     on: false
-    image-color: alpha
     $!on:
       width: 0
       visible: false
@@ -104,7 +103,6 @@ UIWidget
     focusable: false
     visible: true
     on: false
-    image-color: alpha
     $!on:
       width: 0
       visible: false

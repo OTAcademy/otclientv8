@@ -25,6 +25,7 @@
 #include "crashhandler.h"
 #include <framework/global.h>
 #include <framework/core/application.h>
+#include <framework/core/resourcemanager.h>
 
 #include <winsock2.h>
 #include <windows.h>
@@ -185,7 +186,7 @@ LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
 
 #define TRACE_MAX_FUNCTION_NAME_LENGTH 1024
 #define TRACE_LOG_ERRORS FALSE
-#define TRACE_DUMP_NAME "Exception.dmp"
+#define TRACE_DUMP_NAME "exception.dmp"
 
 LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
 {
@@ -224,6 +225,20 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
 #else
 #error "This platform is not supported."
 #endif
+
+    auto dumpFilePath = g_resources.getWriteDir();
+    dumpFilePath /= TRACE_DUMP_NAME;
+    MessageBoxA(NULL, dumpFilePath.string().c_str(), "Crash. Log file saved to:", 0);
+    HANDLE dumpFile = CreateFileA(dumpFilePath.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
+    exceptionInformation.ThreadId = GetCurrentThreadId();
+    exceptionInformation.ExceptionPointers = exception;
+    exceptionInformation.ClientPointers = FALSE;
+    if (MiniDumpWriteDump(process, GetProcessId(process), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL))
+    {
+        printf("Wrote a dump.");
+    }
+
     SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO)+(TRACE_MAX_FUNCTION_NAME_LENGTH - 1) * sizeof(TCHAR));
     symbol->MaxNameLen = TRACE_MAX_FUNCTION_NAME_LENGTH;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
@@ -257,15 +272,6 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
     {
         sprintf(buf, "Error from StackWalk64: %lu.\n", error);
         MessageBoxA(NULL, buf, "Exc", 0);
-    }
-    HANDLE dumpFile = CreateFileA(TRACE_DUMP_NAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
-    exceptionInformation.ThreadId = GetCurrentThreadId();
-    exceptionInformation.ExceptionPointers = exception;
-    exceptionInformation.ClientPointers = FALSE;
-    if (MiniDumpWriteDump(process, GetProcessId(process), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL))
-    {
-        printf("Wrote a dump.");
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }

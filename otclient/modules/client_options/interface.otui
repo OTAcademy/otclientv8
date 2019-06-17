@@ -1,0 +1,116 @@
+Panel
+  OptionCheckBox
+    id: classicView
+    !text: tr('Classic view')
+
+  OptionCheckBox
+    id: showPing
+    !text: tr('Show connection ping')
+    !tooltip: tr('Display connection speed to the server (milliseconds)')
+
+  OptionCheckBox
+    id: displayNames
+    !text: tr('Display creature names')
+
+  OptionCheckBox
+    id: displayHealth
+    !text: tr('Display creature health bars')
+
+  OptionCheckBox
+    id: displayMana
+    !text: tr('Display player mana bar')
+
+  OptionCheckBox
+    id: hidePlayerBars
+    !text: tr('Hide player health and mana bar')
+
+  OptionCheckBox
+    id: topHealtManaBar
+    !text: tr('Show top health and mana bar')
+
+  OptionCheckBox
+    id: showHealthManaCircle
+    !text: tr('Show healt/mana circle')
+
+  OptionCheckBox
+    id: highlightThingsUnderCursor
+    !text: tr('Highlight things under cursor')
+
+  OptionCheckBox
+    id: openContainersInThirdPanel
+    !text: tr('Open containers in central right panel')
+
+  Label
+    margin-top: 12
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    id: panelsLabel
+    !text: tr("Panels")
+    
+  ComboBox
+    id: panels
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    margin-right: 2
+    margin-left: 2
+    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onSetup: |
+      self:addOption("Right")
+      self:addOption("Left, Right")
+      self:addOption("2x Right")
+      self:addOption("Left, 2x Right")
+      self:addOption("2x Left, 2x Right")
+      self:addOption("Right + transparent left and right panels")
+      self:addOption("Left, Right + transparent left and right panels")
+
+  Label
+    margin-top: 12
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    id: crosshairLabel
+    !text: tr("Crosshair")
+    
+  ComboBox
+    id: crosshair
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    margin-right: 2
+    margin-left: 2
+    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onSetup: |
+      self:addOption("None")
+      self:addOption("Default")
+      self:addOption("Full")
+
+  Label
+    id: floorFadingLabel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 6
+    @onSetup: |
+      local value = modules.client_options.getOption('floorFading')
+      self:setText(tr('Floor fading: %s ms', value))
+
+  OptionScrollbar
+    id: floorFading
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    minimum: 0
+    maximum: 2000
+
+  Label
+    id: floorFadingLabel2
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 6
+    !text: (tr('Floor fading doesn\'t work with enabled light'))

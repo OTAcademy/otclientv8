@@ -108,8 +108,6 @@ public:
     void setFloorFading(int value) { m_floorFading = value; }
     void setCrosshair(const std::string& file);
 
-    void setAddLightMethod(bool add) { m_lightView->setBlendEquation(add ? Painter::BlendEquation_Add : Painter::BlendEquation_Max); }
-
     void setShader(const PainterShaderProgramPtr& shader, float fadein, float fadeout);
     PainterShaderProgramPtr getShader() { return m_shader; }
 
@@ -128,6 +126,10 @@ private:
 
     stdext::timer m_mapRenderTimer;
     stdext::timer m_creaturesRenderTimer;
+
+    DrawQueue drawQueueMap{ DRAW_QUEUE_MAP };
+    DrawQueue drawQueueCreatures{ DRAW_QUEUE_CREATURES };
+    DrawQueue drawQueueCreaturesInfo{ DRAW_QUEUE_CREATURES_INFO };
 
     int m_lockedFirstVisibleFloor;
     int m_cachedFirstVisibleFloor;
@@ -156,18 +158,16 @@ private:
     bool m_drawPlayerBars = true;
     stdext::boolean<true> m_smooth;
 
-
     stdext::timer m_fadingFloorTimers[Otc::MAX_Z + 1];
+    float m_floorDepth[Otc::MAX_Z + 1];
 
     stdext::boolean<true> m_follow;
     std::vector<std::pair<TilePtr, bool>> m_cachedVisibleTiles;
-    std::vector<CreaturePtr> m_cachedFloorVisibleCreatures;
     CreaturePtr m_followingCreature;
     FrameBufferPtr m_framebuffer;
     FrameBufferPtr m_mapbuffer;
     PainterShaderProgramPtr m_shader;
     Otc::DrawFlags m_drawFlags;
-    std::vector<Point> m_spiral;
     LightViewPtr m_lightView;
     float m_minimumAmbientLight;
     Timer m_fadeTimer;

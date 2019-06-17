@@ -33,10 +33,11 @@ Texture::Texture()
     m_time = 0;
 }
 
-Texture::Texture(const Size& size)
+Texture::Texture(const Size& size, bool depthTexture)
 {
     m_id = 0;
     m_time = 0;
+    m_depth = depthTexture;
 
     if(!setupSize(size))
         return;
@@ -188,7 +189,7 @@ void Texture::setupWrap()
 {
     int texParam;
     if(!m_repeat && g_graphics.canUseClampToEdge())
-        texParam = GL_CLAMP_TO_EDGE;
+        texParam = m_depth ? GL_MIRRORED_REPEAT : GL_CLAMP_TO_EDGE;
     else
         texParam = GL_REPEAT;
 
@@ -200,15 +201,18 @@ void Texture::setupFilters()
 {
     int minFilter;
     int magFilter;
-    if(m_smooth) {
+    if(m_smooth && !m_depth) {
         minFilter = m_hasMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
         magFilter = GL_LINEAR;
     } else {
-        minFilter = m_hasMipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
+        minFilter = m_hasMipmaps && !m_depth ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
         magFilter = GL_NEAREST;
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+    if (m_depth) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_EXT, GL_NONE);
+    }
 }
 
 void Texture::setupTranformMatrix()
@@ -247,9 +251,11 @@ void Texture::setupPixels(int level, const Size& size, uchar* pixels, int channe
 #ifdef OPENGL_ES
     //TODO
 #else
-    if(compress)
-        internalFormat = GL_COMPRESSED_RGBA;
+    //if(compress)
+    //    internalFormat = GL_COMPRESSED_RGBA;
 #endif
-
-    glTexImage2D(GL_TEXTURE_2D, level, internalFormat, size.width(), size.height(), 0, format, GL_UNSIGNED_BYTE, pixels);
+    if(m_depth)
+        glTexImage2D(GL_TEXTURE_2D, level, GL_DEPTH_COMPONENT, size.width(), size.height(), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
+    else
+        glTexImage2D(GL_TEXTURE_2D, level, internalFormat, size.width(), size.height(), 0, format, GL_UNSIGNED_BYTE, pixels);
 }

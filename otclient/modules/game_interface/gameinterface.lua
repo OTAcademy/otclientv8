@@ -26,6 +26,7 @@ healthCircle = nil
 healthCircleFront = nil
 manaCircle = nil
 manaCircleFront = nil
+markedThing = nil
 
 function init()
   g_ui.importStyle('styles/countwindow')
@@ -155,7 +156,8 @@ function terminate()
   hide()
 
   hookedMenuOptions = {}
-
+  markThing = nil
+  
   stopSmartWalk()
 
   disconnect(g_game, {
@@ -660,18 +662,19 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     end
   end
 
-  if g_game.getFeature(GameBot) and useThing then
+  --if g_game.getFeature(GameBot) and useThing then
     menu:addSeparator()
     menu:addOption(tr("ID: " .. useThing:getId()))
-    menu:addOption(tr("ID: " .. tostring(useThing:isGround())))
-  end
+    menu:addOption(tr("ID: " .. tostring(useThing:isTranslucent())))    
+    menu:addOption(tr("ID: " .. tostring(useThing:isGround())))    
+  --end
 
   menu:display(menuPosition)
 end
 
-function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature)
+function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature, marking)
   local keyboardModifiers = g_keyboard.getModifiers()
-
+  
   if not modules.client_options.getOption('classicControl') then
     if keyboardModifiers == KeyboardNoModifier and mouseButton == MouseRightButton then
       createThingMenu(menuPosition, lookThing, useThing, creatureThing)
@@ -884,19 +887,29 @@ function onThirdPanelVisibilityChange(thirdPanel, visible)
   end
 end
 
+function refreshViewMode()
+  setupViewMode(currentViewMode)
+end
+
 function setupViewMode(mode)
   if not g_settings.getBoolean("allowFullView") then
     mode = 0
   end
+  
+  --[[
+      self:addOption("Right")
+      self:addOption("Left, Right")
+      self:addOption("2x Right")
+      self:addOption("Left, 2x Right")
+      self:addOption("2x Left, 2x Right")
+      self:addOption("Right + transparent left and right panels")
+      self:addOption("Left, Right + transparent left and right panels")  
+  ]]--
+  
+  local panels = modules.client_options.getOption('panels')
 
   if mode == 0 then
-    gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
-    gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
-    gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)
     gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
-    gameLeftPanel:setOn(modules.client_options.getOption('showLeftPanel'))
-    gameThirdPanel:setOn(modules.client_options.getOption('showExtraPanels'))
-    gameForthPanel:setOn(modules.client_options.getOption('showExtraPanels'))
     gameLeftPanel:setImageColor('white')
     gameRightPanel:setImageColor('white')
     gameLeftPanel:setMarginTop(0)
@@ -905,7 +918,45 @@ function setupViewMode(mode)
     gameForthPanel:setMarginTop(0)
     gameBottomPanel:setImageColor('white')
     modules.client_topmenu.getTopMenu():setImageColor('white')
+    
+    
+    gameThirdPanel:setImageColor('white')
+    gameForthPanel:setImageColor('white')      
+    gameLeftPanel:setOn(false)
+    gameThirdPanel:setOn(false)
+    gameForthPanel:setOn(false)
+    gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
+    gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
+    gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)    
 
+    if panels == 2 then
+        gameLeftPanel:setOn(true)
+    elseif panels == 3 then
+        gameThirdPanel:setOn(true)
+        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorRight)
+    elseif panels == 4 then
+        gameLeftPanel:setOn(true)
+        gameThirdPanel:setOn(true)
+        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorRight)
+    elseif panels == 5 then
+        gameLeftPanel:setOn(true)
+        gameThirdPanel:setOn(true)
+        gameForthPanel:setOn(true)
+        gameMapPanel:addAnchor(AnchorLeft, 'gameForthPanel', AnchorLeft)
+        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorRight)
+    elseif panels == 6 then
+        gameLeftPanel:setOn(false)
+        gameThirdPanel:setOn(true)
+        gameForthPanel:setOn(true)
+        gameThirdPanel:setImageColor('alpha')
+        gameForthPanel:setImageColor('alpha')
+    elseif panels == 7 then
+        gameLeftPanel:setOn(true)
+        gameThirdPanel:setOn(true)
+        gameForthPanel:setOn(true)
+        gameThirdPanel:setImageColor('alpha')
+        gameForthPanel:setImageColor('alpha')
+    end    
     gameMapPanel:setMarginLeft(0)
     gameMapPanel:setMarginRight(0)
     gameBottomPanel:setMarginLeft(0)
@@ -914,6 +965,10 @@ function setupViewMode(mode)
     gameMapPanel:setLimitVisibleRange(false)
     gameMapPanel:setZoom(11)
     gameMapPanel:setVisibleDimension({ width = 15, height = 11 })
+    
+    healthBar:setMarginTop(0)
+    manaBar:setMarginTop(0)
+
     g_game.changeMapAwareRange(22, 18)
   elseif mode == 1 then
     gameMapPanel:setKeepAspectRatio(false)
@@ -924,6 +979,8 @@ function setupViewMode(mode)
     gameRootPanel:fill('parent')
     gameLeftPanel:setImageColor('alpha')
     gameRightPanel:setImageColor('alpha')
+    gameThirdPanel:setImageColor('alpha')
+    gameForthPanel:setImageColor('alpha')
     gameLeftPanel:setMarginTop(modules.client_topmenu.getTopMenu()
       :getHeight() - gameLeftPanel:getPaddingTop())
     gameRightPanel:setMarginTop(modules.client_topmenu.getTopMenu()
@@ -933,11 +990,17 @@ function setupViewMode(mode)
     gameForthPanel:setMarginTop(modules.client_topmenu.getTopMenu()
       :getHeight() - gameForthPanel:getPaddingTop())
     gameLeftPanel:setOn(true)
-    gameLeftPanel:setVisible(true)
     gameRightPanel:setOn(true)
-    gameMapPanel:setOn(true)
+    gameThirdPanel:setOn(true)
+    gameForthPanel:setOn(true)    
     gameBottomPanel:setImageColor('#ffffff88')
     modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')
+    
+    healthBar:setMarginTop(modules.client_topmenu.getTopMenu():getHeight())
+    manaBar:setMarginTop(modules.client_topmenu.getTopMenu():getHeight())
+    healthBar:setMarginLeft(200)
+    manaBar:setMarginRight(200)
+
     g_game.changeMapAwareRange(30, 20)
   end
   currentViewMode = mode
@@ -955,8 +1018,10 @@ function updateSize()
   local dheight = dimenstion.height
   local dwidth = dimenstion.width
   local realWidth = math.floor(math.min(width, height * dwidth / dheight))
-  healthBar:setMarginLeft(math.max(0, (width - realWidth) / 2 + 2))
-  manaBar:setMarginRight(math.max(0, (width - realWidth) / 2 + 2))
+  if currentViewMode == 0 then
+    healthBar:setMarginLeft(math.max(0, (width - realWidth) / 2 + 2))
+    manaBar:setMarginRight(math.max(0, (width - realWidth) / 2 + 2))
+  end
 
   if currentViewMode ~= 1 then
     return

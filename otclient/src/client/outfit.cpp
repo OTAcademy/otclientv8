@@ -22,12 +22,53 @@
 
 #include "outfit.h"
 
+#include <framework/graphics/painter.h>
+
 Outfit::Outfit()
 {
     m_category = ThingCategoryCreature;
     m_id = 128;
     m_auxId = 0;
     resetClothes();
+}
+
+void Outfit::newDraw(Point dest, DrawQueue& drawQueue, LightView* lightView) 
+{
+    assert(m_category == ThingCategoryCreature);
+
+    drawQueue.addOutfit(hash(), dest);
+    dest = Point(32, 32);
+
+    auto type = g_things.rawGetThingType(getId(), ThingCategoryCreature);
+
+    int zPattern = 0;
+    if(getMount() != 0) {
+        auto datType = g_things.rawGetThingType(getMount(), ThingCategoryCreature);
+        dest -= datType->getDisplacement();
+
+        datType->newDraw(dest, 0, m_xPattern, 0, 0, m_animationPhase, drawQueue, lightView, NewDrawMount);
+        dest += type->getDisplacement();
+        zPattern = std::min<int>(1, type->getNumPatternZ() - 1);
+    }
+
+    for(int yPattern = 0; yPattern < type->getNumPatternY(); yPattern++) {
+        if(yPattern > 0 && !(getAddons() & (1 << (yPattern-1))))
+            continue;
+        type->newDraw(dest, 0, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfit);
+        if(type->getLayers() > 1) {
+            type->newDraw(dest, SpriteMaskYellow, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
+            type->newDraw(dest, SpriteMaskRed, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
+            type->newDraw(dest, SpriteMaskGreen, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
+            type->newDraw(dest, SpriteMaskBlue, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
+            auto& layers = drawQueue.getLastOutfit().textures.back().layers;
+            if (layers.size() == 4) {
+                layers[0].color = getHeadColor();
+                layers[1].color = getBodyColor();
+                layers[2].color = getLegsColor();
+                layers[3].color = getFeetColor();
+            }
+        }
+    }
 }
 
 Color Outfit::getColor(int color)

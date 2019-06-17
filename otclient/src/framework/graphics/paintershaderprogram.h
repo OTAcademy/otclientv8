@@ -33,6 +33,9 @@ protected:
     enum {
         VERTEX_ATTR = 0,
         TEXCOORD_ATTR = 1,
+        DEPTH_ATTR = 2,
+        COLOR_ATTR = 3,
+        DEPTH_TEXCOORD_ATTR = 4,
         PROJECTION_MATRIX_UNIFORM = 0,
         TEXTURE_MATRIX_UNIFORM = 1,
         COLOR_UNIFORM = 2,
@@ -42,13 +45,19 @@ protected:
         TEX1_UNIFORM = 6,
         TEX2_UNIFORM = 7,
         TEX3_UNIFORM = 8,
-        RESOLUTION_UNIFORM = 9,
-        TRANSFORM_MATRIX_UNIFORM = 10,
-        GLOBALOPACITY_UNIFORM = 11,
-        DEPTH_UNIFORM = 12
+        TEX4_UNIFORM = 9,
+        TEX5_UNIFORM = 10,
+        TEX6_UNIFORM = 11,
+        TEX7_UNIFORM = 12,
+        RESOLUTION_UNIFORM = 13,
+        TRANSFORM_MATRIX_UNIFORM = 14,
+        GLOBALOPACITY_UNIFORM = 15,
+        DEPTH_UNIFORM = 16,
+        DEPTH_TEXTURE_MATRIX_UNIFORM = 17,
+        SCALING_UNIFORM = 18
     };
 
-    friend class PainterOGL;
+    friend class Painter;
 
     virtual void setupUniforms();
 
@@ -60,15 +69,18 @@ public:
     void setTransformMatrix(const Matrix3& transformMatrix);
     void setProjectionMatrix(const Matrix3& projectionMatrix);
     void setTextureMatrix(const Matrix3& textureMatrix);
+    void setDepthTextureMatrix(const Matrix3& textureMatrix);
     void setColor(const Color& color);
     void setOpacity(float opacity);
     void setGlobalOpacity(float opacity);
     void setDepth(float depth);
     void setResolution(const Size& resolution);
+    void setScaling(const SizeF& scaling);
     void updateTime();
 
-    void addMultiTexture(const std::string& file);
+    void addMultiTexture(const TexturePtr& texture);
     void bindMultiTextures();
+    void clearMultiTextures();
 
 private:
     float m_startTime;

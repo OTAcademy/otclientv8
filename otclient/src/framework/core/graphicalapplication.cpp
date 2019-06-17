@@ -32,6 +32,7 @@
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/painter.h>
 #include <framework/graphics/framebuffermanager.h>
+#include <framework/graphics/atlas.h>
 #include <framework/input/mouse.h>
 #include <framework/util/extras.h>
 #include <framework/util/stats.h>
@@ -68,6 +69,8 @@ void GraphicalApplication::init(std::vector<std::string>& args)
     // initialize sound
     g_sounds.init();
 #endif
+
+    g_atlas.init();
 }
 
 void GraphicalApplication::deinit()
@@ -97,9 +100,10 @@ void GraphicalApplication::terminate()
     g_mouse.terminate();
 
     // terminate graphics
-    m_foreground = nullptr;
     g_graphics.terminate();
     g_window.terminate();
+
+    g_atlas.terminate();
 
 
     m_terminated = true;
@@ -130,7 +134,6 @@ void GraphicalApplication::run()
 
     auto lastRender = stdext::micros();
     auto lastForegroundRender = stdext::millis();
-    bool cacheForeground = g_graphics.canCacheBackbuffer();
 
     g_window.setVerticalSync(false);
 
@@ -153,6 +156,7 @@ void GraphicalApplication::run()
         int frameDelay = getMaxFps() <= 0 ? 0 : (1000000 / getMaxFps()) - 2000;
 
         if (lastRender + frameDelay > stdext::micros()) {
+            g_atlas.clean(false);
             stdext::microsleep(2000);
             continue;
         }
@@ -167,36 +171,34 @@ void GraphicalApplication::run()
             updateForeground = true;
         }
 
-        if(cacheForeground) {
-            if(updateForeground) {
-                AutoStat s(STATS_MAIN, "RenderForeground");
-                foregoundBuffer->resize(g_painter->getResolution());
-                foregoundBuffer->bind();
-                g_painter->setAlphaWriting(true);
-                g_painter->clear(Color::alpha);
-                g_ui.render(Fw::ForegroundPane);
-                foregoundBuffer->release();
-            }
 
-            g_painter->clear(Color::black);
-            g_painter->setAlphaWriting(false);
+        if(updateForeground) {
+            AutoStat s(STATS_MAIN, "RenderForeground");
+            foregoundBuffer->resize(g_painter->getResolution());
+            foregoundBuffer->bind();
+            g_painter->setAlphaWriting(true);
+            g_painter->clear(Color::alpha);
+            g_ui.render(Fw::ForegroundPane);
+            foregoundBuffer->release();
+        }
 
-            {
-                AutoStat s(STATS_MAIN, "RenderBackground");
-                g_ui.render(Fw::BackgroundPane);
-            }
+        g_painter->clear(Color::black);
+        g_painter->setAlphaWriting(false);
 
-            g_painter->setColor(Color::white);
-            g_painter->setOpacity(1.0);
-            foregoundBuffer->draw(Rect(0, 0, g_painter->getResolution()));
-        } else {
-            AutoStat s(STATS_MAIN, "RenderBothPanes");
-            g_ui.render(Fw::BothPanes);
-        } 
+        {
+            AutoStat s(STATS_MAIN, "RenderBackground");
+            g_ui.render(Fw::BackgroundPane);
+        }
+
+        g_painter->setColor(Color::white);
+        g_painter->setOpacity(1.0);
+        foregoundBuffer->draw(Rect(0, 0, g_painter->getResolution()));
+        
 
         {
             AutoStat s(STATS_MAIN, "SwapBuffers");
             g_window.swapBuffers();
+            g_atlas.clean(true);
         }
     }
 
@@ -231,10 +233,6 @@ void GraphicalApplication::resize(const Size& size)
     g_ui.resize(size);
     m_onInputEvent = false;
 
-    if(g_graphics.canCacheBackbuffer()) {
-        m_foreground = TexturePtr(new Texture(size));
-        m_foreground->setUpsideDown(true);
-    }
     m_mustRepaint = true;
 }
 

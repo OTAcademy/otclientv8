@@ -39,7 +39,7 @@ public:
     void lockWalk(int millis = 250);
     void stopAutoWalk();
     bool autoWalk(Position destination, bool retry = false);
-    bool canWalk(Otc::Direction direction);
+    bool canWalk(Otc::Direction direction, bool ignoreLock = false);
     bool isWalkLocked() {
         return (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration);
     }

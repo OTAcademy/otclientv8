@@ -45,6 +45,10 @@ MainWindow
       id: render
       text: -
 
+    DebugText
+      id: atlas
+      text: -
+
     DebugLabel
       !text: tr('Main')
 

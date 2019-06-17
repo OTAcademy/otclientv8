@@ -312,6 +312,11 @@ public:
     TRect<T>& operator|=(const TRect<T>& other) { *this = united(other); return *this; }
     TRect<T>& operator&=(const TRect<T>& other) { *this = intersection(other); return *this; }
 
+    TRect<T> operator+(TPoint<T> other) const { return translated(other); }
+    TRect<T>& operator+=(TPoint<T> other) { x1 += other.x; x2 += other.x; y1 += other.y; y2 += other.y; return *this; }
+
+    TRect<T> operator*(float num) const { return TRect<T>(x1 * num, y1 * num, (x2 - x1) * num, (y2 - y1) * num); }
+ 
 private:
     T x1, y1, x2, y2;
 };

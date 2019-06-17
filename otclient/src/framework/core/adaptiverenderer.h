@@ -17,11 +17,16 @@ public:
 
     int itemsLimit();
 
+    int textsLimit();
+
     int mapRenderInterval();
 
     int creaturesRenderInterval();
 
+
     bool allowFading();
+
+    int lightScaling();
 
     int getLevel() {
         return m_speed;

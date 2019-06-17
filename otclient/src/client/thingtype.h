@@ -30,8 +30,17 @@
 #include <framework/otml/declarations.h>
 #include <framework/graphics/texture.h>
 #include <framework/graphics/coordsbuffer.h>
+#include <framework/graphics/drawqueue.h>
 #include <framework/luaengine/luaobject.h>
 #include <framework/net/server.h>
+
+enum NewDrawType : uint8 {
+    NewDrawNormal = 0,
+    NewDrawMount = 5,
+    NewDrawOutfit = 6,
+    NewDrawOutfitLayers = 7,
+    NewDrawMissle = 10
+};
 
 enum FrameGroupType : uint8 {
     FrameGroupDefault = 0,
@@ -131,7 +140,8 @@ public:
     void serialize(const FileStreamPtr& fin);
     void exportImage(std::string fileName);
 
-    void draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView = nullptr, bool lightOnly = false);
+    void draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView = nullptr, bool lightOnly = false, Color* markColor = nullptr);
+    void newDraw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, DrawQueue& drawQueue, LightView* lightView, NewDrawType type = NewDrawNormal);
 
     uint16 getId() { return m_id; }
     ThingCategory getCategory() { return m_category; }

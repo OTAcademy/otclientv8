@@ -16,6 +16,7 @@
         BUILD_TYPE="RelWithDebInfo";
         BUILD_COMMIT="alpha";
         BUILD_REVISION="0";
+        FW_CAM;
         AB;
     </PREPROCESSOR_DEFS>
     

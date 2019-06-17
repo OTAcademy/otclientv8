@@ -58,6 +58,33 @@ void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int 
     rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, 0, animationPhase, lightView, lightOnly);
 }
 
+void Effect::newDrawEffect(const Point& dest, int offsetX, int offsetY, DrawQueue& drawQueue, LightView* lightView) {
+    if(m_id == 0)
+        return;
+
+    int animationPhase = 0;
+    if(g_game.getFeature(Otc::GameEnhancedAnimations)) {
+        animationPhase = rawGetThingType()->getAnimator()->getPhaseAt(m_animationTimer.ticksElapsed());
+    } else {
+        int ticks = EFFECT_TICKS_PER_FRAME;
+        if (m_id == 33) {
+            ticks <<= 2;
+        }
+        animationPhase = std::min<int>((int)(m_animationTimer.ticksElapsed() / ticks), getAnimationPhases() - 1);
+    }
+
+    int xPattern = offsetX % getNumPatternX();
+    if(xPattern < 0)
+        xPattern += getNumPatternX();
+
+    int yPattern = offsetY % getNumPatternY();
+    if(yPattern < 0)
+        yPattern += getNumPatternY();
+
+    rawGetThingType()->newDraw(dest, 0, xPattern, yPattern, 0, animationPhase, drawQueue, lightView);
+}
+
+
 void Effect::onAppear()
 {
     m_animationTimer.restart();

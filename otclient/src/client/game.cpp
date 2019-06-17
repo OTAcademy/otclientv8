@@ -547,7 +547,7 @@ void Game::processModalDialog(uint32 id, std::string title, std::string message,
 
 void Game::processAttackCancel(uint seq)
 {
-    if(isAttacking() && (seq == 0 || m_seq == seq))
+    if(seq == 0 || m_seq == seq)
         cancelAttack();
 }
 
@@ -817,6 +817,8 @@ void Game::turn(Otc::Direction direction)
     if(!canPerformGameAction())
         return;
 
+    m_localPlayer->setDirection(direction);
+
     switch(direction) {
     case Otc::North:
         m_protocolGame->sendTurnNorth();
@@ -1002,7 +1004,7 @@ void Game::refreshContainer(const ContainerPtr& container)
     m_protocolGame->sendRefreshContainer(container->getId());
 }
 
-void Game::attack(CreaturePtr creature)
+void Game::attack(CreaturePtr creature, bool cancel)
 {
     if(!canPerformGameAction() || creature == m_localPlayer)
         return;
@@ -1023,7 +1025,8 @@ void Game::attack(CreaturePtr creature)
     } else
         m_seq++;
 
-    m_protocolGame->sendAttack(creature ? creature->getId() : 0, m_seq);
+    if(!cancel)
+        m_protocolGame->sendAttack(creature ? creature->getId() : 0, m_seq);
 }
 
 void Game::follow(CreaturePtr creature)
@@ -1096,14 +1099,14 @@ void Game::talkChannel(Otc::MessageMode mode, int channelId, const std::string& 
         }            
     }
         
-    m_protocolGame->sendTalk(mode, channelId, "", message);
+    m_protocolGame->sendTalk(mode, channelId, "", message, m_localPlayer->getDirection());
 }
 
 void Game::talkPrivate(Otc::MessageMode mode, const std::string& receiver, const std::string& message)
 {
     if(!canPerformGameAction() || receiver.empty() || message.empty())
         return;
-    m_protocolGame->sendTalk(mode, 0, receiver, message);
+    m_protocolGame->sendTalk(mode, 0, receiver, message, m_localPlayer->getDirection());
 }
 
 void Game::openPrivateChannel(const std::string& receiver)

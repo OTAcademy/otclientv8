@@ -912,7 +912,19 @@ void ProtocolGame::parseSay(NetworkMessage& msg)
 		return;
 	}
 
-	addGameTask(&Game::playerSay, player->getID(), channelId, type, receiver, text);
+    Direction dir = DIRECTION_NONE;
+    if(otclientV8) {
+		uint8_t rawdir = msg.getByte();
+		switch (rawdir) {
+			case 1: dir = DIRECTION_EAST; break;
+			case 3: dir = DIRECTION_NORTH; break;
+			case 5: dir = DIRECTION_WEST; break;
+			case 7: dir = DIRECTION_SOUTH; break;
+			default: break;
+		}        
+    }
+
+	addGameTask(&Game::playerSay, player->getID(), channelId, type, receiver, text, dir);
 }
 
 void ProtocolGame::parseFightModes(NetworkMessage& msg)
@@ -3179,6 +3191,9 @@ void ProtocolGame::parseNewWalk(NetworkMessage& msg)
 }
 
 void ProtocolGame::sendNewPingBack(uint32_t pingId) {
+    if(!otclientV8)
+        return;
+    
 	NetworkMessage msg;
 	msg.addByte(0x37);
 	msg.add<uint32_t>(pingId);
@@ -3186,6 +3201,9 @@ void ProtocolGame::sendNewPingBack(uint32_t pingId) {
 }
 
 void ProtocolGame::updateAndSendAwareRange(int width, int height) {
+    if(!otclientV8)
+        return;
+
 	awareRange.width = std::min(29, std::max(15, width));
 	awareRange.height = std::min(21, std::max(11, height));
 	
@@ -3200,6 +3218,9 @@ void ProtocolGame::updateAndSendAwareRange(int width, int height) {
 
 void ProtocolGame::sendNewCancelWalk()
 {
+    if(!otclientV8)
+        return;
+
 	NetworkMessage msg;
 	msg.addByte(0x41);
     

@@ -64,6 +64,10 @@ public:
     void setRGBA(uint8 r, uint8 g, uint8 b, uint8 a = 0xFF) { m_r = r/255.0f; m_g = g/255.0f; m_b = b/255.0f; m_a = a/255.0f; }
     void setRGBA(uint32 rgba) { setRGBA((rgba >> 0) & 0xff, (rgba >> 8) & 0xff, (rgba >> 16) & 0xff, (rgba >> 24) & 0xff); }
 
+    Color opacity(float opacity) {
+        return Color(m_r, m_g, m_b, m_a * opacity);
+    }
+
     Color operator+(const Color& other) const { return Color(m_r + other.m_r, m_g + other.m_g, m_b + other.m_b, m_a + other.m_a); }
     Color operator-(const Color& other) const { return Color(m_r - other.m_r, m_g - other.m_g, m_b - other.m_b, m_a - other.m_a); }
 
@@ -93,6 +97,10 @@ public:
         int g = int(color / 6) % 6 * 51;
         int b = color % 6 * 51;
         return Color(r, g, b);
+    }
+
+    size_t hash() const {
+        return ((m_r + 10) * (m_g + 20) * (m_b + 30) * (m_a)) * 1024;
     }
 
     static const Color alpha;

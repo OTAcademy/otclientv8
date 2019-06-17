@@ -49,6 +49,7 @@ public:
 
     const PainterShaderProgramPtr& getDefaultItemShader() { return m_defaultItemShader; }
     const PainterShaderProgramPtr& getDefaultMapShader() { return m_defaultMapShader; }
+    const PainterShaderProgramPtr& getEmptyShader() { return m_emptyShader; }
 
     PainterShaderProgramPtr getShader(const std::string& name);
 
@@ -58,6 +59,7 @@ private:
 
     PainterShaderProgramPtr m_defaultItemShader;
     PainterShaderProgramPtr m_defaultMapShader;
+    PainterShaderProgramPtr m_emptyShader;
     std::unordered_map<std::string, PainterShaderProgramPtr> m_shaders;
 };
 

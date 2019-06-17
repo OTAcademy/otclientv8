@@ -22,7 +22,7 @@
 
 #include "fontmanager.h"
 
-#include "ogl/painterogl.h"
+#include "painter.h"
 
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/texture.h>
@@ -59,14 +59,11 @@ void Graphics::init()
         glGenerateMipmap = glGenerateMipmapEXT;
     }
 #endif
-    m_painterOGL = new PainterOGL;
+    m_painter = new Painter;
 
     // blending is always enabled
     glEnable(GL_BLEND);
     // depth test
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(FALSE);  
-    glDepthFunc(GL_ALWAYS);
 
     // hints, 
 #ifndef OPENGL_ES
@@ -103,9 +100,9 @@ void Graphics::terminate()
     g_framebuffers.terminate();
     g_textures.terminate();
 
-    if(m_painterOGL) {
-        delete m_painterOGL;
-        m_painterOGL = nullptr;
+    if(m_painter) {
+        delete m_painter;
+        m_painter = nullptr;
     }
 
     g_painter = nullptr;
@@ -144,7 +141,7 @@ bool Graphics::parseOption(const std::string& option)
 
 bool Graphics::isPainterEngineAvailable(Graphics::PainterEngine painterEngine)
 {
-    if(m_painterOGL && painterEngine == Painter_OpenGL2)
+    if(m_painter)
         return true;
 
     return false;
@@ -156,12 +153,12 @@ bool Graphics::selectPainterEngine(PainterEngine painterEngine)
     Painter *fallbackPainter = nullptr;
     PainterEngine fallbackPainterEngine = Painter_Any;
 
-    if(m_painterOGL) {
+    if(m_painter) {
         if(!painter && (painterEngine == Painter_OpenGL2 || painterEngine == Painter_Any)) {
             m_selectedPainterEngine = Painter_OpenGL2;
-            painter = m_painterOGL;
+            painter = m_painter;
         }
-        fallbackPainter = m_painterOGL;
+        fallbackPainter = m_painter;
         fallbackPainterEngine = Painter_OpenGL2;
     }
 
@@ -191,8 +188,8 @@ bool Graphics::selectPainterEngine(PainterEngine painterEngine)
 void Graphics::resize(const Size& size)
 {
     m_viewportSize = size;
-    if(m_painterOGL)
-        m_painterOGL->setResolution(size);
+    if(m_painter)
+        m_painter->setResolution(size);
 }
 
 bool Graphics::canUseDrawArrays()
@@ -239,14 +236,7 @@ bool Graphics::canUseHardwareMipmaps()
 
 bool Graphics::canUseClampToEdge()
 {
-#ifdef OPENGL_ES
     return m_useClampToEdge;
-#else
-    // GL_CLAMP_TO_EDGE is present in OpenGL 1.2
-    if(!GLEW_VERSION_1_2)
-        return false;
-    return m_useClampToEdge;
-#endif
 }
 
 bool Graphics::canUseBlendFuncSeparate()

@@ -3341,7 +3341,7 @@ void Game::playerShowQuestLine(uint32_t playerId, uint16_t questId)
 }
 
 void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type,
-                     const std::string& receiver, const std::string& text)
+                     const std::string& receiver, const std::string& text, Direction dir)
 {
 	Player* player = getPlayerByID(playerId);
 	if (!player) {
@@ -3349,6 +3349,9 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type,
 	}
 
 	player->resetIdleTime();
+    
+    if(dir != DIRECTION_NONE)
+        internalCreatureTurn(player, dir);
 
 	if (playerSaySpell(player, type, text)) {
 		return;

@@ -40,8 +40,8 @@ public:
     bool isEmpty() const { return wd<1 || ht<1; }
     bool isValid() const { return wd>=0 && ht>=0; }
 
-    int width() const { return wd; }
-    int height() const { return ht; }
+    T width() const { return wd; }
+    T height() const { return ht; }
 
     void resize(T w, T h) { wd = w; ht = h; }
     void setWidth(T w) { wd = w; }

@@ -26,12 +26,17 @@
 
 #ifdef OPENGL_ES
 #define EGL_EGL_PROTOTYPES 1
+#define GL_GLEXT_PROTOTYPES 1
+#define EGL_EGLEXT_PROTOTYPES 1
 // for static linking
 #define GL_APICALL
 #define EGLAPI
 
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <EGL/eglext_angle.h>
 #else
 #ifndef _MSC_VER
 #define GLEW_STATIC

@@ -60,6 +60,10 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
     const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
     if (!localDir)
         return 0;
+    
+    auto fileName2 = m_binaryPath.stem().string();
+    fileName2 = stdext::split(fileName2, "-")[0];
+    stdext::tolower(fileName2);
 
     boost::filesystem::path path(localDir);
     time_t lastWrite = boost::filesystem::last_write_time(m_binaryPath);
@@ -67,6 +71,13 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
     for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) {
         if (boost::filesystem::is_directory(entry.path()))
             continue;
+
+        auto fileName1 = entry.path().stem().string();
+        fileName1 = stdext::split(fileName1, "-")[0];
+        stdext::tolower(fileName1);
+        if (fileName1 != fileName2)
+            continue;
+
         if (entry.path().extension() == m_binaryPath.extension()) {
             auto writeTime = boost::filesystem::last_write_time(entry.path());
             if (writeTime > lastWrite) {
@@ -78,6 +89,13 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
     for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) { // remove old
         if (boost::filesystem::is_directory(entry.path()))
             continue;
+
+        auto fileName1 = entry.path().stem().string();
+        fileName1 = stdext::split(fileName1, "-")[0];
+        stdext::tolower(fileName1);
+        if (fileName1 != fileName2)
+            continue;
+
         if (entry.path().extension() == m_binaryPath.extension()) {
             if (binary == entry.path())
                 continue;
@@ -112,6 +130,7 @@ bool ResourceManager::setupWriteDir(const std::string& app) {
         g_logger.fatal(stdext::format("Unable to set write dir '%s': %s", localDir, PHYSFS_getLastError()));
         return false;
     }
+    m_writeDir = boost::filesystem::path(localDir);
     return true;
 }
 
@@ -242,7 +261,7 @@ std::string ResourceManager::readFileContents(const std::string& fileName)
     PHYSFS_read(file, (void*)&buffer[0], 1, fileSize);
     PHYSFS_close(file);
 
-    static std::string unencryptedFiles[] = { "/config.otml", "/minimap.otmm", "/bot.otml" };
+    static std::string unencryptedFiles[] = { "/config.otml", "/minimap.otmm", "/bot.otml", "/exception.dmp" };
 
     if (!decryptBuffer(buffer)) {
         bool ignore = false;
@@ -429,6 +448,20 @@ std::string ResourceManager::selfChecksum() {
     return g_crypt.md5Encode(buffer, false);
 }
 
+std::string ResourceManager::readCrashLog() 
+{
+    try {
+        return readFileContents("/exception.dmp");
+    } catch (stdext::exception&) {
+    }
+    return "";
+}
+
+void ResourceManager::deleteCrashLog() 
+{
+    deleteFile("/exception.dmp");
+}
+
 void ResourceManager::updateClient(const std::vector<std::string>& files, const std::string& binaryName) {
     if (!m_loadedFromArchive)
         return g_logger.fatal("Client can be updated only while running from archive (data.zip)");
@@ -524,7 +557,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
             return g_logger.fatal("Can't find new binary data in downloads");
 
         boost::filesystem::path path(binaryName);
-        auto newBinary = path.stem().string() + std::to_string(time(nullptr)) + path.extension().string();
+        auto newBinary = path.stem().string() + "-" + std::to_string(time(nullptr)) + path.extension().string();
         file = PHYSFS_openWrite(newBinary.c_str());
         if (!file)
             return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getLastError()));
@@ -532,6 +565,8 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
         PHYSFS_close(file);
 
         std::vector<boost::filesystem::path> outDir = { boost::filesystem::path(PHYSFS_getRealDir(newBinary.c_str())) };
+        installDlls(outDir[0]);
+        stdext::millisleep(500);
         boost::process::spawn(boost::process::search_path(newBinary, outDir));
         return;
     }    
@@ -581,6 +616,7 @@ void ResourceManager::encrypt() {
             g_logger.info(stdext::format("%s - already encrypted", it.string()));
             continue;
         }
+
         boost::filesystem::ofstream out_file(it, std::ios::binary);
         if (!out_file.is_open())
             continue;
@@ -659,43 +695,27 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
 }
 #endif
 
-bool ResourceManager::installDlls()     
+void ResourceManager::installDlls(boost::filesystem::path dest)     
 {
 #ifdef WIN32
-    static std::map<std::string, short> dlls = {
-        {"libEGL.dll", IDR_LIBEGL},
-        {"libGLESv2.dll", IDR_LIBGLESV2}
+    static std::list<std::string> dlls = {
+        {"libEGL.dll"},
+        {"libGLESv2.dll"}
     };
 
     int added_dlls = 0;
     for (auto& dll : dlls) {
-        HRSRC myResource = FindResource(NULL, MAKEINTRESOURCE(dll.second), RT_RCDATA);
-        if (myResource == NULL)
-            g_logger.fatal(stdext::format("DLL %s not found in resources", dll.first));
-        unsigned int myResourceSize = SizeofResource(NULL, myResource);
-        HGLOBAL myResourceData = LoadResource(NULL, myResource);
-        void* pMyBinaryData = LockResource(myResourceData);
         auto dll_path = m_binaryPath.parent_path();
-        dll_path /= dll.first;
-        if (myResourceSize < 1024 || myResourceSize > 1024 * 1024 * 10 || boost::filesystem::exists(dll_path)) {
+        dll_path /= dll;
+        if (!boost::filesystem::exists(dll_path)) {
             continue;
         }
-        boost::filesystem::ofstream out_file(dll_path, std::ios::binary);
-        if (!out_file.is_open())
-            return false;
-        out_file.write((const char*)pMyBinaryData, myResourceSize);
-        out_file.close();
-        added_dlls += 1;
+        auto out_path = dest;
+        out_path /= dll;
+        if (boost::filesystem::exists(out_path)) {
+            continue;
+        }
+        boost::filesystem::copy_file(dll_path, out_path);
     }
-
-    if (added_dlls == 0)
-        return false;
-
-    stdext::millisleep(1000);
-    
-    boost::process::spawn(m_binaryPath);
-    std::exit(0);
-    return true;
 #endif
-    return false;
 }

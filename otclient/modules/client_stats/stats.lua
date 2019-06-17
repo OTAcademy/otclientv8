@@ -6,6 +6,7 @@ local luaCallback = nil
 local mainStats = nil
 local dispatcherStats = nil
 local render = nil
+local atlas = nil
 local adaptiveRender = nil
 local slowMain = nil
 
@@ -36,6 +37,7 @@ function init()
   mainStats = statsWindow:recursiveGetChildById('mainStats')
   dispatcherStats = statsWindow:recursiveGetChildById('dispatcherStats')
   render = statsWindow:recursiveGetChildById('render')
+  atlas = statsWindow:recursiveGetChildById('atlas')
   adaptiveRender = statsWindow:recursiveGetChildById('adaptiveRender')
   slowMain = statsWindow:recursiveGetChildById('slowMain')
   
@@ -98,6 +100,7 @@ function sendStats()
       graphics_version = g_graphics.getVersion(),
       painter_engine = g_graphics.getPainterEngine(),
       fps = g_app.getFps(),
+      atlas = g_atlas.getStats(),
       fullscreen = tostring(g_window.isFullscreen()),
       window_width = g_window.getWidth(),
       window_height = g_window.getHeight(),
@@ -115,7 +118,7 @@ function sendStats()
       display_height = g_window.getDisplayHeight(),
       cpu = g_platform.getCPUName(),
       mem = g_platform.getTotalSystemMemory(),
-      os_name = g_platform.getOSName()    
+      os_name = g_platform.getOSName()
     }
   } 
   for i = 1, g_stats.types() do
@@ -124,8 +127,10 @@ function sendStats()
     g_stats.clear(i - 1)
     g_stats.clearSlow(i - 1)
   end
-  data = json.encode(data)
-  g_http.post(Services.stats, data)
+  if Services.stats ~= nil and Services.stats:len() > 3 then
+    data = json.encode(data)
+    g_http.post(Services.stats, data)
+  end
 end
 
 function update()
@@ -139,8 +144,9 @@ function update()
   end
   
   local adaptive = "Adaptive: " .. g_adaptiveRenderer.getLevel() .. " | " .. g_adaptiveRenderer.getDebugInfo()
-  render:setText(g_stats.get(2, 10, true))  
   adaptiveRender:setText(adaptive)
+  atlas:setText("Atlas: " .. g_atlas.getStats())
+  render:setText(g_stats.get(2, 10, true))  
   mainStats:setText(g_stats.get(1, 5, true))
   dispatcherStats:setText(g_stats.get(3, 5, true))
   luaStats:setText(g_stats.get(4, 5, true))

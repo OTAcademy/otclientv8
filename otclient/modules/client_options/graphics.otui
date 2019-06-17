@@ -1,7 +1,26 @@
 Panel
-  OptionCheckBox
-    id: classicView
-    !text: tr('Classic view')
+  Label
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    text-wrap: false
+    @onSetup: |
+      self:setText(tr("GPU: ") .. g_graphics.getRenderer())      
+
+  Label
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    text-wrap: false
+    @onSetup: |
+      self:setText(tr("Version: ") .. g_graphics.getVersion())      
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin: 5 5 5 5
 
   OptionCheckBox
     id: showFps
@@ -15,28 +34,6 @@ Panel
     id: fullscreen
     !text: tr('Fullscreen')
     tooltip: Ctrl+Shift+F
-
-  Label
-    margin-top: 12
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    id: crosshairLabel
-    !text: tr("Crosshair")
-    
-  ComboBox
-    id: crosshair
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 3
-    margin-right: 2
-    margin-left: 2
-    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
-    @onSetup: |
-      self:addOption("None")
-      self:addOption("Default")
-      self:addOption("Full")
 
   Label
     margin-top: 12
@@ -86,25 +83,6 @@ Panel
     margin-top: 3
     minimum: 10
     maximum: 201
-
-  Label
-    id: floorFadingLabel
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 6
-    @onSetup: |
-      local value = modules.client_options.getOption('floorFading')
-      self:setText(tr('Floor fading: %s ms', value))
-
-  OptionScrollbar
-    id: floorFading
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 3
-    minimum: 0
-    maximum: 2000
 
   Label
     id: ambientLightLabel

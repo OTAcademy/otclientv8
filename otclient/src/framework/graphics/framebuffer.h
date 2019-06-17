@@ -29,7 +29,7 @@
 class FrameBuffer : public stdext::shared_object
 {
 protected:
-    FrameBuffer();
+    FrameBuffer(bool withDepth = false);
 
     friend class FrameBufferManager;
 
@@ -37,14 +37,12 @@ public:
     virtual ~FrameBuffer();
 
     void resize(const Size& size);
-    void bind();
+    void bind(TexturePtr depthTexture = nullptr);
     void release();
     void draw();
     void draw(const Rect& dest);
     void draw(const Rect& dest, const Rect& src);
-#ifndef OPENGL_ES
     void copy(const Rect& dest, const Rect& src);
-#endif
 
     void setBackuping(bool enabled) { m_backuping = enabled; }
     void setSmooth(bool enabled) { m_smooth = enabled; }
@@ -54,19 +52,22 @@ public:
     bool isBackuping() { return m_backuping; }
     bool isSmooth() { return m_smooth; }
 
+    TexturePtr getDepthTexture() { return m_depthTexture; }
+
 private:
     void internalCreate();
     void internalBind();
     void internalRelease();
 
     TexturePtr m_texture;
+    TexturePtr m_depthTexture;
     TexturePtr m_screenBackup;
     Size m_oldViewportSize;
     uint m_fbo;
     uint m_prevBoundFbo;
-    uint m_depthRbo;
     stdext::boolean<true> m_backuping;
-    stdext::boolean<true> m_smooth;
+    stdext::boolean<false> m_smooth;
+    stdext::boolean<false> m_depth;
 
     static uint boundFbo;
 };

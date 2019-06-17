@@ -66,6 +66,46 @@ void Missile::draw(const Point& dest, float scaleFactor, bool animate, LightView
     rawGetThingType()->draw(dest + m_delta * fraction * scaleFactor, scaleFactor, 0, xPattern, yPattern, 0, 0, lightView, lightOnly);
 }
 
+void Missile::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView) 
+{
+    if(m_id == 0)
+        return;
+
+    int xPattern = 0, yPattern = 0;
+    if(m_direction == Otc::NorthWest) {
+        xPattern = 0;
+        yPattern = 0;
+    } else if(m_direction == Otc::North) {
+        xPattern = 1;
+        yPattern = 0;
+    } else if(m_direction == Otc::NorthEast) {
+        xPattern = 2;
+        yPattern = 0;
+    } else if(m_direction == Otc::East) {
+        xPattern = 2;
+        yPattern = 1;
+    } else if(m_direction == Otc::SouthEast) {
+        xPattern = 2;
+        yPattern = 2;
+    } else if(m_direction == Otc::South) {
+        xPattern = 1;
+        yPattern = 2;
+    } else if(m_direction == Otc::SouthWest) {
+        xPattern = 0;
+        yPattern = 2;
+    } else if(m_direction == Otc::West) {
+        xPattern = 0;
+        yPattern = 1;
+    } else {
+        xPattern = 1;
+        yPattern = 1;
+    }
+
+    float fraction = m_animationTimer.ticksElapsed() / m_duration;
+    rawGetThingType()->newDraw(dest + m_delta * fraction, 0, xPattern, yPattern, 0, 0, drawQueue, lightView, NewDrawMissle);
+}
+
+
 void Missile::setPath(const Position& fromPosition, const Position& toPosition)
 {
     m_direction = fromPosition.getDirectionFromPosition(toPosition);

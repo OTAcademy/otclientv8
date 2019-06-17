@@ -225,7 +225,7 @@ const MinimapTile& Minimap::getTile(const Position& pos)
     return nulltile;
 }
 
-std::pair<MinimapBlock_ptr, const MinimapTile&> Minimap::threadGetTile(const Position& pos) {
+std::pair<MinimapBlock_ptr, MinimapTile> Minimap::threadGetTile(const Position& pos) {
     std::lock_guard<std::mutex> lock(m_lock);
     static MinimapTile nulltile;
     

@@ -47,6 +47,7 @@
 
 #ifdef FW_GRAPHICS
 #include <framework/graphics/graphics.h>
+#include <framework/graphics/atlas.h>
 #include <framework/platform/platformwindow.h>
 #include <framework/graphics/particlemanager.h>
 #include <framework/graphics/fontmanager.h>
@@ -204,6 +205,10 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
     g_lua.bindSingletonFunction("g_http", "getProgress", &Http::getProgress, &g_http);
 
+    g_lua.registerSingletonClass("g_atlas");
+    g_lua.bindSingletonFunction("g_atlas", "getStats", &Atlas::getStats, &g_atlas);
+    g_lua.bindSingletonFunction("g_atlas", "reset", &Atlas::reset, &g_atlas);
+
     // ModuleManager
     g_lua.registerSingletonClass("g_modules");
     g_lua.bindSingletonFunction("g_modules", "discoverModules", &ModuleManager::discoverModules, &g_modules);
@@ -226,7 +231,6 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_resources", "fileExists", &ResourceManager::fileExists, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "directoryExists", &ResourceManager::directoryExists, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "getWorkDir", &ResourceManager::getWorkDir, &g_resources);
-    g_lua.bindSingletonFunction("g_resources", "getWriteDir", &ResourceManager::getWriteDir, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "getBinaryName", &ResourceManager::getBinaryName, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "listDirectoryFiles", &ResourceManager::listDirectoryFiles, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "isFileType", &ResourceManager::isFileType, &g_resources);
@@ -236,6 +240,9 @@ void Application::registerLuaFunctions()
     //g_lua.bindSingletonFunction("g_resources", "guessFilePath", &ResourceManager::guessFilePath, &g_resources);
     //g_lua.bindSingletonFunction("g_resources", "makeDir", &ResourceManager::makeDir, &g_resources);
     //g_lua.bindSingletonFunction("g_resources", "deleteFile", &ResourceManager::deleteFile, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "readCrashLog", &ResourceManager::readCrashLog, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "deleteCrashLog", &ResourceManager::deleteCrashLog, &g_resources);
+
     g_lua.bindSingletonFunction("g_resources", "resolvePath", &ResourceManager::resolvePath, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "isLoadedFromMemory", &ResourceManager::isLoadedFromMemory, &g_resources);    
     g_lua.bindSingletonFunction("g_resources", "isLoadedFromArchive", &ResourceManager::isLoadedFromArchive, &g_resources);    
@@ -790,7 +797,7 @@ void Application::registerLuaFunctions()
 
     g_lua.registerClass<ShaderProgram>();
     g_lua.registerClass<PainterShaderProgram>();
-    g_lua.bindClassMemberFunction<PainterShaderProgram>("addMultiTexture", &PainterShaderProgram::addMultiTexture);
+    //g_lua.bindClassMemberFunction<PainterShaderProgram>("addMultiTexture", &PainterShaderProgram::addMultiTexture);
 
     // ParticleEffect
     g_lua.registerClass<ParticleEffectType>();

@@ -94,3 +94,10 @@ ThingType* Thing::rawGetThingType()
 {
     return g_things.getNullThingType().get();
 }
+
+Color Thing::updatedMarkedColor() {
+    if (!m_marked)
+        return Color::white;
+    m_markedColor.setAlpha(0.1f + std::abs(500 - g_clock.millis() % 1000) / 1000.0f); // 0.1-0.6
+    return m_markedColor;
+}

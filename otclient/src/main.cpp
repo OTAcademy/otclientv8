@@ -40,7 +40,7 @@ int main(int argc, const char* argv[]) {
     }
 
 #ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1559918640) {
+    if (time(nullptr) > 1563018640) {
         control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
     }
 #endif
@@ -64,11 +64,6 @@ int main(int argc, const char* argv[]) {
 #endif
         return 0;
     }
-#endif
-
-#ifdef OPENGL_ES
-    // will add angle dlls and restart otclient or do nothing if dlls exist
-    g_resources.installDlls();
 #endif
 
     int launchCorrect = control_thread ? 0 : g_resources.launchCorrect(g_app.getCompactName());

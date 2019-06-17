@@ -199,6 +199,9 @@ function gotStatus(data, err)
     return updateError("Error while parsing json from server:\n" .. result)  
   end
   statusData = result
+  if statusData["error"] ~= nil and statusData["error"]:len() > 0 then
+    return updateError(statusData["error"])     
+  end
   if statusData["url"] == nil or statusData["files"] == nil or statusData["binary"] == nil then
     return updateError("Invalid json data from server:\n" .. data)    
   end  

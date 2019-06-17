@@ -60,3 +60,10 @@ g_modules.ensureModuleLoaded("game_interface")
 
 -- mods 1000-9999
 g_modules.autoLoadModules(9999)
+
+-- crash report
+local crashLog = g_resources.readCrashLog()
+if crashLog:len() > 0 and Services.crash ~= nil and Services.crash:len() > 4 then
+  g_http.post(Services.crash, crashLog)
+  g_resources.deleteCrashLog()
+end

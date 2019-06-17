@@ -490,7 +490,7 @@ void ProtocolGame::sendLookCreature(uint32 creatureId)
     send(msg);
 }
 
-void ProtocolGame::sendTalk(Otc::MessageMode mode, int channelId, const std::string& receiver, const std::string& message)
+void ProtocolGame::sendTalk(Otc::MessageMode mode, int channelId, const std::string& receiver, const std::string& message, Otc::Direction dir)
 {
     if(message.empty())
         return;
@@ -521,6 +521,42 @@ void ProtocolGame::sendTalk(Otc::MessageMode mode, int channelId, const std::str
     }
 
     msg->addString(message);
+
+    if(g_game.getFeature(Otc::GameNewWalking)) {
+        // fix for spell direction
+        uint8 byte;
+        switch(dir) {
+            case Otc::East:
+                byte = 1;
+                break;
+            case Otc::NorthEast:
+                byte = 2;
+                break;
+            case Otc::North:
+                byte = 3;
+                break;
+            case Otc::NorthWest:
+                byte = 4;
+                break;
+            case Otc::West:
+                byte = 5;
+                break;
+            case Otc::SouthWest:
+                byte = 6;
+                break;
+            case Otc::South:
+                byte = 7;
+                break;
+            case Otc::SouthEast:
+                byte = 8;
+                break;
+            default:
+                byte = 0;
+                break;
+        }
+        msg->addU8(byte);
+    }
+
     send(msg);
 }
 

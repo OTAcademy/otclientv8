@@ -37,7 +37,8 @@ void ShaderManager::init()
     setupItemShader(m_defaultItemShader);
 
     m_defaultMapShader = createFragmentShaderFromCode("Map", glslMainFragmentShader + glslTextureSrcFragmentShader);
-
+    m_emptyShader = createShader("emptyShader");
+        
     PainterShaderProgram::release();
 }
 
@@ -45,6 +46,7 @@ void ShaderManager::terminate()
 {
     m_defaultItemShader = nullptr;
     m_defaultMapShader = nullptr;
+    m_emptyShader = nullptr;
     m_shaders.clear();
 }
 

@@ -42,7 +42,6 @@ modules/.project/modules.sublime-workspace
 vc14/.vs/
 vc14/DirectX/
 vc14/OpenGL/
-/*.dll
 /*.lib
 *.exp
 *.zip

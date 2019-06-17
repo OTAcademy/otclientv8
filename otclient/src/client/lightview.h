@@ -29,13 +29,6 @@
 #include <set>
 #include "thingtype.h"
 
-struct LightSource {
-    Color color;
-    Point center;
-    int radius;
-    uint8 floor;
-};
-
 class LightView : public LuaObject
 {
 public:
@@ -44,33 +37,26 @@ public:
     void reset();
     void resetMapLight();
     void resetCreaturesLight();
-    void setGlobalLight(const Light& light);
-    void addLightSource(const Point& center, float scaleFactor, const Light& light, bool fromCreature = false);
-    void hideTile(const Point& pos);
-    void setFloor(uint8_t floor, float fading) { m_floor = stdext::clamp<uint8_t>(floor, 0, Otc::MAX_Z); m_fading[m_floor] = fading; }
-
+    void setGlobalLight(const Light& light, int lightScaling);
+    void addLightSource(const Point& center, const Light& light, bool fromCreature = false);
     void resize(const Size& size);
-    void draw(const Rect& dest, const Rect& src);
-
-    void setBlendEquation(Painter::BlendEquation blendEquation) { m_blendEquation = blendEquation; }
+    void draw(const Rect& dest, const Rect& src, TexturePtr depthTexture);
+    void setDepth(float depth) { m_depth = depth; }
 
 private:
     void drawGlobalLight(const Light& light);
-    void drawLightSource(const Point& center, const Color& color, int radius, float brightness);
     TexturePtr generateLightBubble(float centerFactor);
 
-    TexturePtr generateTileLightTexture();
-
-    Painter::BlendEquation m_blendEquation;
-    TexturePtr m_lightTexture;
-    TexturePtr m_tileLightTexture;
-    FrameBufferPtr m_lightbuffer;
     Light m_globalLight;
-    uint8_t m_floor = 0;
-    std::vector<LightSource> m_lightMap[Otc::MAX_Z + 1];
-    std::vector<LightSource> m_creaturesLightMap[Otc::MAX_Z + 1];
-    std::set<Point> m_hideTiles[Otc::MAX_Z + 1];
-    float m_fading[Otc::MAX_Z + 1] = { 1 };
+    TexturePtr m_lightTexture;
+    FrameBufferPtr m_lightbuffer;
+    FrameBufferPtr m_lightbuffer2;
+    FrameBufferPtr m_lightbuffer3;
+    std::map<Point, LightSource> m_lightMap;
+    std::map<Point, LightSource> m_creaturesLightMap;
+    float m_depth = 0;
+    int m_scaling = 1;
+    bool m_updateDepth = false;
 };
 
 #endif

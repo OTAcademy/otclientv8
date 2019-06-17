@@ -192,8 +192,8 @@ public:
     void refreshContainer(const ContainerPtr& container);
 
     // attack/follow related
-    void attack(CreaturePtr creature);
-    void cancelAttack() { attack(nullptr); }
+    void attack(CreaturePtr creature, bool cancel = false);
+    void cancelAttack() { attack(nullptr, true); }
     void follow(CreaturePtr creature);
     void cancelFollow() { follow(nullptr); }
     void cancelAttackAndFollow();

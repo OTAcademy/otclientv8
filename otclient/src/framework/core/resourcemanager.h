@@ -65,7 +65,7 @@ public:
     std::list<std::string> listDirectoryFiles(const std::string & directoryPath = "", bool fullPath = false, bool raw = false);
 
     std::string resolvePath(std::string path);
-    std::string getWriteDir() { return "/"; }
+    boost::filesystem::path getWriteDir() { return m_writeDir; }
     std::string getWorkDir() { return "/"; }
     std::string getBinaryName() { return m_binaryPath.filename().string(); }
 
@@ -80,6 +80,9 @@ public:
 
     std::string selfChecksum();
 
+    std::string readCrashLog();
+    void deleteCrashLog();
+
     void updateClient(const std::vector<std::string>& files, const std::string& binaryName);
 #ifdef WITH_ENCRYPTION
     void encrypt();
@@ -87,11 +90,11 @@ public:
 #endif
     bool decryptBuffer(std::string & buffer);
 
-    bool installDlls();
+    void installDlls(boost::filesystem::path dest);
 
 
 private:
-    boost::filesystem::path m_binaryPath;
+    boost::filesystem::path m_binaryPath, m_writeDir;
     bool m_loadedFromMemory = false;
     bool m_loadedFromArchive = false;
     char* m_memoryDataBuffer = nullptr;

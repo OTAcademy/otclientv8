@@ -26,7 +26,7 @@
 #include "declarations.h"
 #include "painter.h"
 
-class PainterOGL;
+class Painter;
 
 // @bindsingleton g_graphics
 class Graphics
@@ -98,7 +98,7 @@ private:
     PainterEngine m_prefferedPainterEngine;
     PainterEngine m_selectedPainterEngine;
 
-    PainterOGL* m_painterOGL;
+    Painter* m_painter;
 };
 
 extern Graphics g_graphics;

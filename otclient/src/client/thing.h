@@ -27,6 +27,7 @@
 #include "thingtype.h"
 #include "thingtypemanager.h"
 #include <framework/luaengine/luaobject.h>
+#include <framework/graphics/drawqueue.h>
 
 // @bindclass
 #pragma pack(push,1) // disable memory alignment
@@ -37,6 +38,7 @@ public:
     virtual ~Thing() { }
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false) { }
+    virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView) { }
 
     virtual void setId(uint32 id) { }
     void setPosition(const Position& position);
@@ -47,6 +49,16 @@ public:
     virtual const TilePtr& getTile();
     ContainerPtr getParentContainer();
     int getStackPos();
+
+    void setMarked(const std::string& color) {
+        if (color.empty()) {
+            m_marked = false;
+            return;
+        }
+        m_marked = true;
+        m_markedColor = Color(color);
+    }
+    Color updatedMarkedColor();
 
     virtual bool isItem() { return false; }
     virtual bool isEffect() { return false; }
@@ -130,6 +142,8 @@ public:
 protected:
     Position m_position;
     uint16 m_datId;
+    bool m_marked = false;
+    Color m_markedColor;
 };
 #pragma pack(pop)
 

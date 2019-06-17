@@ -2,8 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by otclient.rc
 //
-#define IDR_LIBEGL                     102
-#define IDR_LIBGLESV2                  103
 #define IDI_ICON1                      104
 
 // Next default values for new objects

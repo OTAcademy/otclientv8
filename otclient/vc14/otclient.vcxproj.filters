@@ -31,9 +31,6 @@
     <Filter Include="Source Files\framework\graphics">
       <UniqueIdentifier>{18bfca39-a00b-49f3-b749-94db8eee6b2f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\framework\graphics\ogl">
-      <UniqueIdentifier>{2de19ef3-85cf-4081-b79d-82800bdb057b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\framework\input">
       <UniqueIdentifier>{1f73f301-1d35-408a-b566-0d52b6820292}</UniqueIdentifier>
     </Filter>
@@ -230,9 +227,6 @@
     </ClCompile>
     <ClCompile Include="..\src\framework\graphics\texturemanager.cpp">
       <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\ogl\painterogl.cpp">
-      <Filter>Source Files\framework\graphics\ogl</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\input\mouse.cpp">
       <Filter>Source Files\framework\input</Filter>
@@ -540,6 +534,12 @@
     <ClCompile Include="..\src\framework\http\session.cpp">
       <Filter>Source Files\framework\http</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\framework\graphics\drawqueue.cpp">
+      <Filter>Source Files\framework\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\graphics\atlas.cpp">
+      <Filter>Source Files\framework\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework\const.h">
@@ -682,9 +682,6 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\vertexarray.h">
       <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\ogl\painterogl.h">
-      <Filter>Header Files\framework\graphics\ogl</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\input\mouse.h">
       <Filter>Header Files\framework\input</Filter>
@@ -1073,19 +1070,26 @@
     <ClInclude Include="..\src\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\colorarray.h">
+      <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\ogl\newshader.h">
+      <Filter>Header Files\framework\graphics\ogl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\deptharray.h">
+      <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\drawqueue.h">
+      <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\atlas.h">
+      <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\otclient.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\src\libEGL.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\src\libGLESv2.dll">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\src\otcicon.ico">

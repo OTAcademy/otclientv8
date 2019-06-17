@@ -36,6 +36,7 @@ class Missile : public Thing
 
 public:
     void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
+    void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
 
     void setId(uint32 id);
     void setPath(const Position& fromPosition, const Position& toPosition);
