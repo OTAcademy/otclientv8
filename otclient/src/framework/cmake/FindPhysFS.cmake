@@ -1,16 +1,36 @@
-# Try to find the PHYSFS library
-#  PHYSFS_FOUND - system has PHYSFS
-#  PHYSFS_INCLUDE_DIR - the PHYSFS include directory
-#  PHYSFS_LIBRARY - the PHYSFS library
+# PHYSFS_FOUND
+# PHYSFS_INCLUDE_PATH
+# PHYSFS_LIBRARY
+#
 
-FIND_PATH(PHYSFS_INCLUDE_DIR physfs.h PATH_SUFFIXES physfs)
-SET(_PHYSFS_STATIC_LIBS libphysfs.a)
-SET(_PHYSFS_SHARED_LIBS libphysfs.dll.a physfs)
-IF(USE_STATIC_LIBS)
-    FIND_LIBRARY(PHYSFS_LIBRARY NAMES ${_PHYSFS_STATIC_LIBS} ${_PHYSFS_SHARED_LIBS})
-ELSE()
-    FIND_LIBRARY(PHYSFS_LIBRARY NAMES ${_PHYSFS_SHARED_LIBS} ${_PHYSFS_STATIC_LIBS})
-ENDIF()
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(PHYSFS DEFAULT_MSG PHYSFS_LIBRARY PHYSFS_INCLUDE_DIR)
-MARK_AS_ADVANCED(PHYSFS_LIBRARY PHYSFS_INCLUDE_DIR)
+IF (WIN32)
+    FIND_PATH( PHYSFS_INCLUDE_PATH physfs.h
+                DOC "The directory where physfs.h resides")
+    FIND_LIBRARY( PHYSFS_LIBRARY
+                    NAMES physfs physfs-static
+                    PATHS /mingw/lib
+                    DOC "The PhysFS library")
+ELSE (WIN32)
+    FIND_PATH( PHYSFS_INCLUDE_PATH physfs.h
+        /usr/include
+        /usr/local/include
+        /opt/local/include
+        DOC "The directory where physfs.h resides")
+    FIND_LIBRARY( PHYSFS_LIBRARY
+        NAMES physfs
+        PATHS
+        /usr/lib64
+        /usr/lib
+        /usr/local/lib64
+        /usr/local/lib
+        /opt/local/lib
+        DOC "The PhysFS library")
+ENDIF (WIN32)
+
+IF (PHYSFS_INCLUDE_PATH)
+    SET( PHYSFS_FOUND 1 CACHE STRING "Set to 1 if PhysFS is found, 0 otherwise")
+ELSE (GLEW_INCLUDE_PATH)
+    SET( PHYSFS_FOUND 0 CACHE STRING "Set to 1 if PhysFS is found, 0 otherwise")
+ENDIF (PHYSFS_INCLUDE_PATH)
+
+MARK_AS_ADVANCED( PHYSFS_FOUND )
