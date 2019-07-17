@@ -62,8 +62,6 @@ public:
 
     Tile(const Position& position);
 
-    void draw(const Point& dest, float scaleFactor, int drawFlags, LightView *lightView = nullptr);
-
     void calculateTopDepth();
 
     void drawItems(const Point & dest, DrawQueue& drawQueue, LightView *lightView);

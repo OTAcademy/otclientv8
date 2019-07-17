@@ -39,6 +39,9 @@ Texture::Texture(const Size& size, bool depthTexture)
     m_time = 0;
     m_depth = depthTexture;
 
+    if (depthTexture && !g_graphics.canUseDepth())
+        g_logger.fatal("Depth texture is not supported");
+
     if(!setupSize(size))
         return;
 
@@ -189,7 +192,7 @@ void Texture::setupWrap()
 {
     int texParam;
     if(!m_repeat && g_graphics.canUseClampToEdge())
-        texParam = m_depth ? GL_MIRRORED_REPEAT : GL_CLAMP_TO_EDGE;
+        texParam = GL_CLAMP_TO_EDGE;
     else
         texParam = GL_REPEAT;
 
@@ -210,9 +213,9 @@ void Texture::setupFilters()
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-    if (m_depth) {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_EXT, GL_NONE);
-    }
+    //if (m_depth) {
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_EXT, GL_NONE);
+    //}
 }
 
 void Texture::setupTranformMatrix()
@@ -255,7 +258,7 @@ void Texture::setupPixels(int level, const Size& size, uchar* pixels, int channe
     //    internalFormat = GL_COMPRESSED_RGBA;
 #endif
     if(m_depth)
-        glTexImage2D(GL_TEXTURE_2D, level, GL_DEPTH_COMPONENT, size.width(), size.height(), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.width(), size.height(), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
     else
         glTexImage2D(GL_TEXTURE_2D, level, internalFormat, size.width(), size.height(), 0, format, GL_UNSIGNED_BYTE, pixels);
 }

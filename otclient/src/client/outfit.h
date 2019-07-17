@@ -70,8 +70,7 @@ public:
     Color getFeetColor() const { return m_feetColor; }
 
     size_t hash() const {
-        return (m_id << 26) + (m_auxId << 22) + (m_xPattern << 18) + (m_animationPhase << 14) + (m_head << 10) + (m_body << 8) + (m_legs << 6) + (m_feet << 4) + (m_addons << 2) + m_mount +
-            (m_headColor.hash() << 20) + (m_bodyColor.hash() << 15) + (m_legsColor.hash() << 10) + (m_feetColor.hash() << 5);
+        return (m_id << 22) + (m_auxId << 18) + (m_xPattern << 14) + (m_animationPhase << 8) + (m_head << 24) + (m_body << 16) + (m_legs << 10) + (m_feet << 4) + (m_addons << 2) + m_mount;
     }
 
 private:

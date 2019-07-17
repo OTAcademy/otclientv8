@@ -87,7 +87,7 @@ inline std::string format(const std::string& format) { return format; }
 // Format strings with the sprintf style, accepting std::string and string convertible types for %s
 template<typename... Args>
 std::string format(const std::string& format, const Args&... args) {
-    int n, size = 1024;
+    int n, size = 8192;
     std::string str;
     while(true) {
         str.resize(size);

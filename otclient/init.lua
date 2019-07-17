@@ -23,20 +23,18 @@ Services = {
   updater = "http://otclient.ovh/api/updater.php",
   news = "http://otclient.ovh/api/news.php",
 --  newLogin = "http://otclient.ovh/api/newlogin.php", -- password less login, will be added in future (may)
-  stats = "http://otclient.ovh/api/stats.php",
+  stats = "",
   crash = "http://otclient.ovh/api/crash.php",
   feedback = "http://otclient.ovh/api/feedback.php"
 }
 
 Servers = {
-  MasterBaiak = "http://baiak-master.com/login.php",
   OTClientV8 = "http://otclient.ovh/api/login.php",
-  Wartera = "https://wartera.online/login.php",
-  KasteriaTest = "https://www.xavato.eu/login.php",
-  Kasteria = "http://login.otupdate.ovh/login.php",
   Xavato = "https://www.xavato.eu/login2.php",
-  TestBloodWar = "http://168.228.157.20/login.php",
-  Tibijka = "http://54.36.184.164/login.php"
+  BaiakStar = "http://baiak-star.com/login.php",
+  Nostalrius = "https://fearless.nostalrius.com.br/login.php",
+  NostalriusTest = "http://158.69.63.220/login.php",
+  Kasteria = "https://login.kasteria.pl/login.php"
 }
 
 -- settings

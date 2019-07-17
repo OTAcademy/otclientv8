@@ -56,7 +56,11 @@ void Client::registerLuaFunctions()
 {
     g_lua.registerSingletonClass("g_things");
     g_lua.bindSingletonFunction("g_things", "loadDat", &ThingTypeManager::loadDat, &g_things);
+#ifdef WITH_ENCRYPTION
     g_lua.bindSingletonFunction("g_things", "saveDat", &ThingTypeManager::saveDat, &g_things);
+    g_lua.bindSingletonFunction("g_things", "dumpTextures", &ThingTypeManager::dumpTextures, &g_things);
+    g_lua.bindSingletonFunction("g_things", "replaceTextures", &ThingTypeManager::replaceTextures, &g_things);
+#endif
     g_lua.bindSingletonFunction("g_things", "loadOtb", &ThingTypeManager::loadOtb, &g_things);
     g_lua.bindSingletonFunction("g_things", "loadXml", &ThingTypeManager::loadXml, &g_things);
     g_lua.bindSingletonFunction("g_things", "loadOtml", &ThingTypeManager::loadOtml, &g_things);
@@ -96,7 +100,10 @@ void Client::registerLuaFunctions()
 
     g_lua.registerSingletonClass("g_sprites");
     g_lua.bindSingletonFunction("g_sprites", "loadSpr", &SpriteManager::loadSpr, &g_sprites);
+#ifdef WITH_ENCRYPTION
     g_lua.bindSingletonFunction("g_sprites", "saveSpr", &SpriteManager::saveSpr, &g_sprites);
+    g_lua.bindSingletonFunction("g_sprites", "dumpSprites", &SpriteManager::dumpSprites, &g_sprites);
+#endif
     g_lua.bindSingletonFunction("g_sprites", "unload", &SpriteManager::unload, &g_sprites);
     g_lua.bindSingletonFunction("g_sprites", "isLoaded", &SpriteManager::isLoaded, &g_sprites);
     g_lua.bindSingletonFunction("g_sprites", "getSprSignature", &SpriteManager::getSignature, &g_sprites);
@@ -122,6 +129,7 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_map", "getCreatureById", &Map::getCreatureById, &g_map);
     g_lua.bindSingletonFunction("g_map", "removeCreatureById", &Map::removeCreatureById, &g_map);
     g_lua.bindSingletonFunction("g_map", "getSpectators", &Map::getSpectators, &g_map);
+    g_lua.bindSingletonFunction("g_map", "getSpectatorsInRange", &Map::getSpectatorsInRange, &g_map);
     g_lua.bindSingletonFunction("g_map", "findPath", &Map::findPath, &g_map);
     g_lua.bindSingletonFunction("g_map", "loadOtbm", &Map::loadOtbm, &g_map);
     g_lua.bindSingletonFunction("g_map", "saveOtbm", &Map::saveOtbm, &g_map);
@@ -308,11 +316,10 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "openStore", &Game::openStore, &g_game);
     g_lua.bindSingletonFunction("g_game", "transferCoins", &Game::transferCoins, &g_game);
     g_lua.bindSingletonFunction("g_game", "openTransactionHistory", &Game::openTransactionHistory, &g_game);
-    /*
-    g_lua.bindSingletonFunction("g_game", "hasExtentedView", &Game::getWalkDelay, &g_game);    
-    g_lua.bindSingletonFunction("g_game", "setExtendedView", &Game::getWalkDelay, &g_game);    
-    */
-
+    
+    g_lua.bindSingletonFunction("g_game", "getMaxPreWalkingSteps", &Game::getMaxPreWalkingSteps, &g_game);
+    g_lua.bindSingletonFunction("g_game", "setMaxPreWalkingSteps", &Game::setMaxPreWalkingSteps, &g_game);
+    
     g_lua.registerSingletonClass("g_shaders");
     g_lua.bindSingletonFunction("g_shaders", "createShader", &ShaderManager::createShader, &g_shaders);
     g_lua.bindSingletonFunction("g_shaders", "createFragmentShader", &ShaderManager::createFragmentShader, &g_shaders);

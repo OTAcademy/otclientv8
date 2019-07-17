@@ -47,7 +47,7 @@ private:
     int m_cyclesExecuted;
 };
 
-struct lessScheduledEvent : std::binary_function<ScheduledEventPtr, ScheduledEventPtr&, bool> {
+struct lessScheduledEvent {
     bool operator()(const ScheduledEventPtr& a, const ScheduledEventPtr& b) {
         return  b->ticks() < a->ticks();
     }

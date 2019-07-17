@@ -43,6 +43,7 @@ public:
     bool isWalkLocked() {
         return (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration);
     }
+    void turn(Otc::Direction);
 
     void setStates(int states);
     void setSkill(Otc::Skill skill, int level, int levelPercent);

@@ -105,7 +105,7 @@ void SoundManager::poll()
         StreamSoundSourcePtr source = it->first;
         auto& future = it->second;
 
-        if(future.is_ready()) {
+        if(future.valid()) {
             SoundFilePtr sound = future.get();
             if(sound)
                 source->setSoundFile(sound);

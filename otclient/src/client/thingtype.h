@@ -139,6 +139,7 @@ public:
 
     void serialize(const FileStreamPtr& fin);
     void exportImage(std::string fileName);
+    void replaceSprites(std::map<uint32_t, ImagePtr>& replacements, std::string fileName);
 
     void draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView = nullptr, bool lightOnly = false, Color* markColor = nullptr);
     void newDraw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, DrawQueue& drawQueue, LightView* lightView, NewDrawType type = NewDrawNormal);

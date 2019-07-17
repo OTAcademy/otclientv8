@@ -50,23 +50,6 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
     const static std::string logPrefixes[] = { "", "", "WARNING: ", "ERROR: ", "FATAL ERROR: " };
 
     std::string outmsg = logPrefixes[level] + message;
-
-    /*
-#if !defined(NDEBUG) && !defined(WIN32)
-    // replace paths for improved debug with vim
-    std::stringstream tmp;
-    boost::smatch m;
-    boost::regex e ("/[^ :]+");
-    while(boost::regex_search(outmsg,m,e)) {
-        tmp << m.prefix().str();
-        tmp << g_resources.getRealDir(m.str()) << m.str();
-        outmsg = m.suffix().str();
-    }
-    if(!tmp.str().empty())
-        outmsg = tmp.str();
-#endif
-    */
-
     std::cout << outmsg << std::endl;
 
     if(m_outFile.good()) {
@@ -92,7 +75,7 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
         g_window.displayFatalError(message);
 #endif
         ignoreLogs = true;
-        exit(-1);
+        quick_exit(-1);
     }
 }
 

@@ -11,6 +11,10 @@ function setMusic(filename)
 end
 
 function reloadScripts()
+  if g_game.getFeature(GameNoDebug) then
+    return
+  end
+  
   g_textures.clearCache()
   g_modules.reloadModules()
 

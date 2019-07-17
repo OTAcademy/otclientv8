@@ -32,7 +32,6 @@ PainterShaderProgram::PainterShaderProgram()
 {
     m_startTime = g_clock.seconds();
     m_opacity = 1;
-    m_globalOpacity = 1;
     m_depth = 0;
     m_color = Color::white;
     m_time = 0;
@@ -43,40 +42,41 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(TRANSFORM_MATRIX_UNIFORM, "u_TransformMatrix");
     bindUniformLocation(PROJECTION_MATRIX_UNIFORM, "u_ProjectionMatrix");
     bindUniformLocation(TEXTURE_MATRIX_UNIFORM, "u_TextureMatrix");
-    bindUniformLocation(DEPTH_TEXTURE_MATRIX_UNIFORM, "u_DepthTextureMatrix");
+
     bindUniformLocation(COLOR_UNIFORM, "u_Color");
     bindUniformLocation(OPACITY_UNIFORM, "u_Opacity");
+    bindUniformLocation(DEPTH_UNIFORM, "u_Depth");
     bindUniformLocation(TIME_UNIFORM, "u_Time");
+
     bindUniformLocation(TEX0_UNIFORM, "u_Tex0");
     bindUniformLocation(TEX1_UNIFORM, "u_Tex1");
     bindUniformLocation(TEX2_UNIFORM, "u_Tex2");
     bindUniformLocation(TEX3_UNIFORM, "u_Tex3");
-    bindUniformLocation(TEX4_UNIFORM, "u_Atlas0");
-    bindUniformLocation(TEX5_UNIFORM, "u_Atlas1");
-    bindUniformLocation(TEX6_UNIFORM, "u_Atlas2");
-    bindUniformLocation(TEX7_UNIFORM, "u_TexDepth");
+    bindUniformLocation(ATLAS_TEX_UNIFORM, "u_Atlas");
+    bindUniformLocation(DEPTH_TEX_UNIFORM, "u_TexDepth");
+    
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
-    bindUniformLocation(GLOBALOPACITY_UNIFORM, "u_GlobalOpacity");
-    bindUniformLocation(DEPTH_UNIFORM, "u_Depth");
     bindUniformLocation(SCALING_UNIFORM, "u_Scaling");
+
+    // VALUES
 
     setUniformValue(TRANSFORM_MATRIX_UNIFORM, m_transformMatrix);
     setUniformValue(PROJECTION_MATRIX_UNIFORM, m_projectionMatrix);
     setUniformValue(TEXTURE_MATRIX_UNIFORM, m_textureMatrix);
+
     setUniformValue(COLOR_UNIFORM, m_color);
     setUniformValue(OPACITY_UNIFORM, m_opacity);
     setUniformValue(TIME_UNIFORM, m_time);
+    setUniformValue(DEPTH_UNIFORM, m_depth);
+
     setUniformValue(TEX0_UNIFORM, 0);
     setUniformValue(TEX1_UNIFORM, 1);
     setUniformValue(TEX2_UNIFORM, 2);
     setUniformValue(TEX3_UNIFORM, 3);
-    setUniformValue(TEX4_UNIFORM, 4);
-    setUniformValue(TEX5_UNIFORM, 5);
-    setUniformValue(TEX6_UNIFORM, 6);
-    setUniformValue(TEX7_UNIFORM, 7);
+    setUniformValue(ATLAS_TEX_UNIFORM, 6);
+    setUniformValue(DEPTH_TEX_UNIFORM, 7);
+
     setUniformValue(RESOLUTION_UNIFORM, (float)m_resolution.width(), (float)m_resolution.height());
-    setUniformValue(GLOBALOPACITY_UNIFORM, m_globalOpacity);    
-    setUniformValue(DEPTH_UNIFORM, m_depth);    
 }
 
 bool PainterShaderProgram::link()
@@ -126,12 +126,6 @@ void PainterShaderProgram::setTextureMatrix(const Matrix3& textureMatrix)
     m_textureMatrix = textureMatrix;
 }
 
-void PainterShaderProgram::setDepthTextureMatrix(const Matrix3& textureMatrix)
-{
-    bind();
-    setUniformValue(DEPTH_TEXTURE_MATRIX_UNIFORM, textureMatrix);
-}
-
 void PainterShaderProgram::setColor(const Color& color)
 {
     if(color == m_color)
@@ -152,18 +146,11 @@ void PainterShaderProgram::setOpacity(float opacity)
     m_opacity = opacity;
 }
 
-void PainterShaderProgram::setGlobalOpacity(float opacity)
-{
-    if(m_globalOpacity == opacity)
-        return;
-
-    bind();
-    setUniformValue(GLOBALOPACITY_UNIFORM, opacity);
-    m_globalOpacity = opacity;
-}
-
 void PainterShaderProgram::setDepth(float depth)
 {
+    if (!g_graphics.canUseDepth())
+        return;
+
     if (depth < 0.)
         depth = 0.;
 
@@ -203,11 +190,12 @@ void PainterShaderProgram::updateTime()
     m_time = time;
 }
 
-void PainterShaderProgram::addMultiTexture(const TexturePtr& texture)
+void PainterShaderProgram::addMultiTexture(const std::string& file)
 {
     if(m_multiTextures.size() > 3)
         g_logger.error("cannot add more multi textures to shader, the max is 3");
 
+    TexturePtr texture = g_textures.getTexture(file);
     if(!texture)
         return;
 

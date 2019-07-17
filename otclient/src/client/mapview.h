@@ -37,9 +37,9 @@ public:
     MapView();
     ~MapView();
     void draw(const Rect& rect, const TilePtr& crosshairTile = nullptr);
-    void drawTiles(bool map, bool creatures, bool isFading, const TilePtr& crosshairTile);
 
 private:
+    void drawTiles(bool map, bool creatures, bool isFading, const TilePtr& crosshairTile, bool draw = true);
     void updateGeometry(const Size& visibleDimension, const Size& optimizedSize);
     void updateVisibleTilesCache();
     void requestVisibleTilesCacheUpdate() { m_mustUpdateVisibleTilesCache = true; }
@@ -63,7 +63,6 @@ public:
     void setVisibleDimension(const Size& visibleDimension);
     void optimizeForSize(const Size & visibleSize);
     Size getVisibleDimension() { return m_visibleDimension; }
-    int getTileSize() { return m_tileSize; }
     Point getVisibleCenterOffset() { return m_visibleCenterOffset; }
     int getCachedFirstVisibleFloor() { return m_cachedFirstVisibleFloor; }
     int getCachedLastVisibleFloor() { return m_cachedLastVisibleFloor; }
@@ -119,13 +118,9 @@ private:
     Rect calcFramebufferSource(const Size& destSize);
     int calcFirstVisibleFloor(bool forFading = false);
     int calcLastVisibleFloor();
-    Point transformPositionTo2D(const Position& position, const Position& relativePosition) {
-        return Point((m_virtualCenterOffset.x + (position.x - relativePosition.x) - (relativePosition.z - position.z)) * m_tileSize,
-                     (m_virtualCenterOffset.y + (position.y - relativePosition.y) - (relativePosition.z - position.z)) * m_tileSize);
-    }
+    Point transformPositionTo2D(const Position& position, const Position& relativePosition);
 
     stdext::timer m_mapRenderTimer;
-    stdext::timer m_creaturesRenderTimer;
 
     DrawQueue drawQueueMap{ DRAW_QUEUE_MAP };
     DrawQueue drawQueueCreatures{ DRAW_QUEUE_CREATURES };
@@ -135,7 +130,6 @@ private:
     int m_cachedFirstVisibleFloor;
     int m_cachedFirstFadingFloor;
     int m_cachedLastVisibleFloor;
-    int m_tileSize;
     int m_updateTilesPos;
     int m_floorFading = 500;
     TexturePtr m_crosshair = nullptr;

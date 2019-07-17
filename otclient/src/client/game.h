@@ -180,9 +180,9 @@ public:
     void moveToParentContainer(const ThingPtr& thing, int count);
     void rotate(const ThingPtr& thing);
     void use(const ThingPtr& thing);
-    void useWith(const ItemPtr& fromThing, const ThingPtr& toThing);
-    void useInventoryItem(int itemId);
-    void useInventoryItemWith(int itemId, const ThingPtr& toThing);
+    void useWith(const ItemPtr& fromThing, const ThingPtr& toThing, int subType = 0);
+    void useInventoryItem(int itemId, int subType = 0);
+    void useInventoryItemWith(int itemId, const ThingPtr& toThing, int subType = 0);
     ItemPtr findItemInContainers(uint itemId, int subType);
 
     // container related
@@ -356,6 +356,9 @@ public:
     std::string formatCreatureName(const std::string &name);
     int findEmptyContainerId();
 
+    void setMaxPreWalkingSteps(uint value) { m_maxPreWalkingSteps = value; }
+    uint getMaxPreWalkingSteps() { return m_maxPreWalkingSteps; }
+
 protected:
     void enableBotCall() { m_denyBotCall = false; }
     void disableBotCall() { m_denyBotCall = true; }
@@ -380,6 +383,7 @@ private:
     uint m_pingSent;
     uint m_pingReceived;
     uint m_walkId = 0;
+    uint m_maxPreWalkingSteps = 2;
     stdext::timer m_pingTimer;
     std::map<uint32_t, stdext::timer> m_newPingIds;
     uint m_seq;

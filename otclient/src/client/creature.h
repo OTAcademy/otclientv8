@@ -114,7 +114,7 @@ public:
     void updateShield();
 
     // walk related
-    void turn(Otc::Direction direction);
+    virtual void turn(Otc::Direction direction);
     void jump(int height, int duration);
     virtual void walk(const Position& oldPos, const Position& newPos);
     virtual void stopWalk(bool appear = false);
@@ -212,7 +212,6 @@ protected:
     ScheduledEventPtr m_walkFinishAnimEvent;
     EventPtr m_disappearEvent;
     Point m_walkOffset;
-    Otc::Direction m_walkTurnDirection;
     Otc::Direction m_lastStepDirection;
     Position m_lastStepFromPosition;
     Position m_lastStepToPosition;

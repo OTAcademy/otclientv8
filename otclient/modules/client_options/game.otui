@@ -13,53 +13,13 @@ Panel
 
   OptionCheckBox
     id: extentedPreWalking
-    !text: tr('Enable extented pre walking')
-    !tooltip: tr('Allows to execute next move without confirmation of previous one')
+    !text: tr('Enable smooth walking (DASH)')
+    !tooltip: tr('Allows to execute next move without server confirmation of previous one')
 
   OptionCheckBox
     id: smartWalk
     !text: tr('Enable smart walking')
     !tooltip: tr('Will detect when to use diagonal step based on the\nkeys you are pressing')
-
-  Label
-    id: turnDelayLabel
-    !text: tr('Turn delay: %sms', 30)
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 12
-    @onSetup: |
-      local value = modules.client_options.getOption('turnDelay')
-      self:setText(tr('Turn delay: %dms', value))
-
-  OptionScrollbar
-    id: turnDelay
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 3
-    minimum: 30
-    maximum: 250
-
-  Label
-    id: hotkeyDelayLabel
-    !text: tr('Hotkey delay: %dms', 30)
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 12
-    @onSetup: |
-      local value = modules.client_options.getOption('hotkeyDelay')
-      self:setText(tr('Hotkey delay: %dms', value))
-
-  OptionScrollbar
-    id: hotkeyDelay
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 3
-    minimum: 30
-    maximum: 250
 
   Button
     id: changeLocale

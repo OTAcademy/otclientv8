@@ -369,7 +369,7 @@ namespace Otc
         GameMagicEffectU16 = 16,
         GamePlayerMarket = 17,
         GameSpritesU32 = 18,
-        // 19 unused
+        GameTileAddThingWithStackpos = 19,
         GameOfflineTrainingTime = 20,
         GamePurseSlot = 21,
         GameFormatCreatureName = 22,
@@ -433,6 +433,10 @@ namespace Otc
         GameSlowerManualWalking = 91,
 
         GameBot = 95,
+
+        GameForceLight = 97,
+        GameNoDebug = 98,
+        GameBotProtection = 99,
 
         LastGameFeature = 101
     };

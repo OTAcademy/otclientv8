@@ -34,17 +34,27 @@ Graphics g_graphics;
 
 Graphics::Graphics()
 {
-    m_maxTextureSize = -1;
-    m_selectedPainterEngine = Painter_Any;
+    m_maxTextureSize = 2048;
 }
 
 void Graphics::init()
 {
     g_logger.info(stdext::format("GPU %s", glGetString(GL_RENDERER)));
     g_logger.info(stdext::format("OpenGL %s", glGetString(GL_VERSION)));
-
+    
     // init GL extensions
 #ifndef OPENGL_ES
+    float glVersion = 1.0;
+    try {
+        glVersion = std::atof((const char*)glGetString(GL_VERSION));
+    }
+    catch (std::exception) {}
+
+    if (glVersion < 2.0) {
+        g_logger.fatal(stdext::format("Your device doesn't support OpenGL >= 2.0, try to use DX version or install graphics drivers. GPU: %s OpenGL: %s (%f)",
+            glGetString(GL_RENDERER) ? (const char*)glGetString(GL_RENDERER) : "-", glGetString(GL_VERSION) ? (const char*)glGetString(GL_VERSION) : "-", glVersion));
+    }
+
     GLenum err = glewInit();
     if(err != GLEW_OK)
         g_logger.fatal(stdext::format("Unable to init GLEW: %s", glewGetErrorString(err)));
@@ -59,36 +69,29 @@ void Graphics::init()
         glGenerateMipmap = glGenerateMipmapEXT;
     }
 #endif
-    m_painter = new Painter;
 
     // blending is always enabled
     glEnable(GL_BLEND);
-    // depth test
-
-    // hints, 
-#ifndef OPENGL_ES
-    glHint(GL_FOG_HINT, GL_FASTEST);
-    glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-    glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_FASTEST);
-#endif
-
-    // determine max texture size
-    int maxTextureSize = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
-    if(m_maxTextureSize == -1 || m_maxTextureSize > maxTextureSize)
-        m_maxTextureSize = maxTextureSize;
-
-    if(Size(m_maxTextureSize,m_maxTextureSize) < g_window.getDisplaySize())
-        m_cacheBackbuffer = false;
-
+    
     m_alphaBits = 0;
     glGetIntegerv(GL_ALPHA_BITS, &m_alphaBits);
 
+    int maxTextureSize = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    if (m_maxTextureSize == -1 || m_maxTextureSize < maxTextureSize)
+        m_maxTextureSize = maxTextureSize;
+
+    if (Size(m_maxTextureSize, m_maxTextureSize) < g_window.getDisplaySize())
+        m_cacheBackbuffer = false;
+
+    checkDepthSupport();
+    if (!m_useDepth)
+        g_logger.info("Depth buffer is not supported");
+
     m_ok = true;
 
-    selectPainterEngine(m_prefferedPainterEngine);
+    g_painter = new Painter();
+    g_painter->bind();
 
     g_textures.init();
     g_framebuffers.init();
@@ -100,97 +103,61 @@ void Graphics::terminate()
     g_framebuffers.terminate();
     g_textures.terminate();
 
-    if(m_painter) {
-        delete m_painter;
-        m_painter = nullptr;
+    if (g_painter) {
+        g_painter->unbind();
+        delete g_painter;
+        g_painter = nullptr;
     }
-
-    g_painter = nullptr;
 
     m_ok = false;
 }
 
 bool Graphics::parseOption(const std::string& option)
 {
-    if(option == "-no-draw-arrays")
+    if (option == "-no-draw-arrays")
         m_useDrawArrays = false;
-    else if(option == "-no-fbos")
+    else if (option == "-no-fbos")
         m_useFBO = false;
-    else if(option == "-no-mipmaps")
+    else if (option == "-no-mipmaps")
         m_useMipmaps = false;
-    else if(option == "-no-hardware-mipmaps")
+    else if (option == "-no-hardware-mipmaps")
         m_useHardwareMipmaps = false;
-    else if(option == "-no-smooth")
+    else if (option == "-no-smooth")
         m_useBilinearFiltering = false;
-    else if(option == "-hardware-buffers")
+    else if (option == "-hardware-buffers")
         m_useHardwareBuffers = true;
-    else if(option == "-no-non-power-of-two-textures")
+    else if (option == "-no-non-power-of-two-textures")
         m_useNonPowerOfTwoTextures = false;
-    else if(option == "-no-clamp-to-edge")
+    else if (option == "-no-clamp-to-edge")
         m_useClampToEdge = false;
-    else if(option == "-no-backbuffer-cache")
+    else if (option == "-no-backbuffer-cache")
         m_cacheBackbuffer = false;
-    else if(option == "-opengl1")
-        m_prefferedPainterEngine = Painter_OpenGL1;
-    else if(option == "-opengl2")
-        m_prefferedPainterEngine = Painter_OpenGL2;
     else
         return false;
     return true;
 }
 
-bool Graphics::isPainterEngineAvailable(Graphics::PainterEngine painterEngine)
-{
-    if(m_painter)
-        return true;
-
-    return false;
-}
-
-bool Graphics::selectPainterEngine(PainterEngine painterEngine)
-{
-    Painter *painter = nullptr;
-    Painter *fallbackPainter = nullptr;
-    PainterEngine fallbackPainterEngine = Painter_Any;
-
-    if(m_painter) {
-        if(!painter && (painterEngine == Painter_OpenGL2 || painterEngine == Painter_Any)) {
-            m_selectedPainterEngine = Painter_OpenGL2;
-            painter = m_painter;
-        }
-        fallbackPainter = m_painter;
-        fallbackPainterEngine = Painter_OpenGL2;
-    }
-
-    if(!painter) {
-        painter = fallbackPainter;
-        m_selectedPainterEngine = fallbackPainterEngine;
-    }
-
-    // switch painters GL state
-    if(painter) {
-        if(painter != g_painter) {
-            if(g_painter)
-                g_painter->unbind();
-            painter->bind();
-            g_painter = painter;
-        }
-
-        if(painterEngine == Painter_Any)
-            return true;
-    } else
-        g_logger.fatal("Neither OpenGL 1.0 nor OpenGL 2.0 painter engine is supported by your platform, "
-                       "try updating your graphics drivers or your hardware and then run again.");
-
-    return m_selectedPainterEngine == painterEngine;
-}
-
 void Graphics::resize(const Size& size)
 {
     m_viewportSize = size;
-    if(m_painter)
-        m_painter->setResolution(size);
+    if(g_painter)
+        g_painter->setResolution(size);
 }
+
+void Graphics::checkDepthSupport() 
+{
+    m_useDepth = false;
+    glGetError(); // clear error
+    uint32 rbo = 0;
+    glGenRenderbuffers(1, &rbo);
+    if (!rbo)
+        return;
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 64, 64);
+    glDeleteRenderbuffers(1, &rbo);
+    m_useDepth = glGetError() == GL_NO_ERROR;
+}
+
 
 bool Graphics::canUseDrawArrays()
 {
@@ -254,6 +221,11 @@ bool Graphics::canCacheBackbuffer()
     if(!m_alphaBits)
         return false;
     return m_cacheBackbuffer;
+}
+
+bool Graphics::canUseDepth()
+{
+    return m_useDepth;
 }
 
 bool Graphics::hasScissorBug()

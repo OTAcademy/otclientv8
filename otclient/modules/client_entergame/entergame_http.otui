@@ -29,7 +29,7 @@ EnterGameWindow
     anchors.top: parent.top
     text-auto-resize: true
 
-  PasswordTextEdit
+  TextEdit
     id: accountNameTextEdit
     anchors.left: parent.left
     anchors.right: parent.right

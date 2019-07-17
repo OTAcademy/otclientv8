@@ -617,6 +617,10 @@ bool Game::walk(Otc::Direction direction)
     if(isFollowing())
         cancelFollow();
 
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[ %d ] walk: %d", (int)g_clock.micros(), (int)direction));
+    }
+
     // must cancel auto walking, and wait next try
     if(m_localPlayer->isAutoWalking() || m_localPlayer->isServerWalking()) {
         if (m_localPlayer->isWalkLocked() && !m_localPlayer->isServerWalking())
@@ -629,15 +633,20 @@ bool Game::walk(Otc::Direction direction)
     }
 
     if (m_localPlayer->isWalkLocked()) {
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("[%i] walk locked: %i", (int)g_clock.micros(), (int)direction));
+        }
         return false;
     }
 
     // check we can walk and add new walk event if false
     if(!m_localPlayer->canWalk(direction)) {
+        float ticks = m_localPlayer->getStepTicksLeft();
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("[%i] cant walk: %i - lastDir: %i , ticks: %i", (int)g_clock.micros(), (int)direction, (int)m_lastWalkDir, (int)ticks));
+        }
         if(m_lastWalkDir != direction || !m_waitingForAnotherDir) {
-            // must add a new walk event
-            float ticks = m_localPlayer->getStepTicksLeft();
-            
+            // must add a new walk event            
             if (m_lastWalkDir == direction && ticks >= 100)
                 return false;
 
@@ -649,9 +658,16 @@ bool Game::walk(Otc::Direction direction)
                 m_walkEvent->cancel();
                 m_walkEvent = nullptr;
             }
+            if (g_extras.debugWalking) {
+                g_logger.info(stdext::format("[%d] schedule walk: %d", (int)g_clock.micros(), (int)(ticks + 1)));
+            }
             m_walkEvent = g_dispatcher.scheduleEvent([=] { walk(direction); }, ticks + 1);
         }
         return false;
+    }
+
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] executing walk: %i", (int)g_clock.micros(), (int)direction));
     }
 
     m_waitingForAnotherDir = false;
@@ -849,6 +865,9 @@ void Game::stop()
 }
 
 void Game::cancelWalkEvent() {
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] cancelWalkEvent: %i", (int)g_clock.micros()));
+    }
     if(m_walkEvent) {
         m_walkEvent->cancel();
         m_walkEvent = nullptr;
@@ -914,17 +933,17 @@ void Game::use(const ThingPtr& thing)
     m_protocolGame->sendUseItem(pos, thing->getId(), thing->getStackPos(), findEmptyContainerId());
 }
 
-void Game::useInventoryItem(int itemId)
+void Game::useInventoryItem(int itemId, int subType)
 {
     if(!canPerformGameAction() || !g_things.isValidDatId(itemId, ThingCategoryItem))
         return;
 
     Position pos = Position(0xFFFF, 0, 0); // means that is a item in inventory
 
-    m_protocolGame->sendUseItem(pos, itemId, 0, 0);
+    m_protocolGame->sendUseItem(pos, itemId, 0, subType);
 }
 
-void Game::useWith(const ItemPtr& item, const ThingPtr& toThing)
+void Game::useWith(const ItemPtr& item, const ThingPtr& toThing, int subType)
 {
     if(!canPerformGameAction() || !item || !toThing)
         return;
@@ -934,12 +953,12 @@ void Game::useWith(const ItemPtr& item, const ThingPtr& toThing)
         pos = Position(0xFFFF, 0, 0); // means that is an item in inventory
 
     if(toThing->isCreature())
-        m_protocolGame->sendUseOnCreature(pos, item->getId(), item->getStackPos(), toThing->getId());
+        m_protocolGame->sendUseOnCreature(pos, item->getId(), subType ? subType : item->getStackPos(), toThing->getId());
     else
-        m_protocolGame->sendUseItemWith(pos, item->getId(), item->getStackPos(), toThing->getPosition(), toThing->getId(), toThing->getStackPos());
+        m_protocolGame->sendUseItemWith(pos, item->getId(), subType ? subType : item->getStackPos(), toThing->getPosition(), toThing->getId(), toThing->getStackPos());
 }
 
-void Game::useInventoryItemWith(int itemId, const ThingPtr& toThing)
+void Game::useInventoryItemWith(int itemId, const ThingPtr& toThing, int subType)
 {
     if(!canPerformGameAction() || !toThing)
         return;
@@ -947,9 +966,9 @@ void Game::useInventoryItemWith(int itemId, const ThingPtr& toThing)
     Position pos = Position(0xFFFF, 0, 0); // means that is a item in inventory
 
     if(toThing->isCreature())
-        m_protocolGame->sendUseOnCreature(pos, itemId, 0, toThing->getId());
+        m_protocolGame->sendUseOnCreature(pos, itemId, subType, toThing->getId());
     else
-        m_protocolGame->sendUseItemWith(pos, itemId, 0, toThing->getPosition(), toThing->getId(), toThing->getStackPos());
+        m_protocolGame->sendUseItemWith(pos, itemId, subType, toThing->getPosition(), toThing->getId(), toThing->getStackPos());
 }
 
 ItemPtr Game::findItemInContainers(uint itemId, int subType)
@@ -1099,14 +1118,14 @@ void Game::talkChannel(Otc::MessageMode mode, int channelId, const std::string& 
         }            
     }
         
-    m_protocolGame->sendTalk(mode, channelId, "", message, m_localPlayer->getDirection());
+    m_protocolGame->sendTalk(mode, channelId, "", message, m_localPlayer->getPosition(), m_localPlayer->getDirection());
 }
 
 void Game::talkPrivate(Otc::MessageMode mode, const std::string& receiver, const std::string& message)
 {
     if(!canPerformGameAction() || receiver.empty() || message.empty())
         return;
-    m_protocolGame->sendTalk(mode, 0, receiver, message, m_localPlayer->getDirection());
+    m_protocolGame->sendTalk(mode, 0, receiver, message, m_localPlayer->getPosition(), m_localPlayer->getDirection());
 }
 
 void Game::openPrivateChannel(const std::string& receiver)
@@ -1575,14 +1594,15 @@ void Game::changeMapAwareRange(int xrange, int yrange)
 
 bool Game::checkBotProtection()
 {
-#ifdef BOT_PROTECTION
-    // accepts calls comming from a stacktrace containing only C++ functions,
-    // if the stacktrace contains a lua function, then only accept if the engine is processing an input event
-    if(m_denyBotCall && g_lua.isInCppCallback() && !g_app.isOnInputEvent()) {
-        g_logger.error(g_lua.traceback("caught a lua call to a bot protected game function, the call was cancelled"));
-        return false;
+    if (getFeature(Otc::GameBotProtection)) {
+        // accepts calls comming from a stacktrace containing only C++ functions,
+        // if the stacktrace contains a lua function, then only accept if the engine is processing an input event
+        if (m_denyBotCall && g_lua.isInCppCallback() && !g_app.isOnInputEvent()) {
+            g_logger.error(g_lua.traceback("caught a lua call to a bot protected game function, the call was cancelled"));
+            return false;
+        }
     }
-#endif
+
     return true;
 }
 
@@ -1657,6 +1677,7 @@ void Game::setClientVersion(int version)
     if(version >= 841) {
         enableFeature(Otc::GameChallengeOnLogin);
         enableFeature(Otc::GameMessageSizeCheck);
+        enableFeature(Otc::GameTileAddThingWithStackpos);
     }
 
     if(version >= 854) {

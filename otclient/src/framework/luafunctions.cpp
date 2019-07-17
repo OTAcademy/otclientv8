@@ -364,13 +364,10 @@ void Application::registerLuaFunctions()
 
     // Graphics
     g_lua.registerSingletonClass("g_graphics");
-    g_lua.bindSingletonFunction("g_graphics", "isPainterEngineAvailable", &Graphics::isPainterEngineAvailable, &g_graphics);
-    g_lua.bindSingletonFunction("g_graphics", "selectPainterEngine", &Graphics::selectPainterEngine, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "canCacheBackbuffer", &Graphics::canCacheBackbuffer, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "canUseShaders", &Graphics::canUseShaders, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "shouldUseShaders", &Graphics::shouldUseShaders, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "setShouldUseShaders", &Graphics::setShouldUseShaders, &g_graphics);
-    g_lua.bindSingletonFunction("g_graphics", "getPainterEngine", &Graphics::getPainterEngine, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "getViewportSize", &Graphics::getViewportSize, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "getVendor", &Graphics::getVendor, &g_graphics);
     g_lua.bindSingletonFunction("g_graphics", "getRenderer", &Graphics::getRenderer, &g_graphics);
@@ -797,7 +794,7 @@ void Application::registerLuaFunctions()
 
     g_lua.registerClass<ShaderProgram>();
     g_lua.registerClass<PainterShaderProgram>();
-    //g_lua.bindClassMemberFunction<PainterShaderProgram>("addMultiTexture", &PainterShaderProgram::addMultiTexture);
+    g_lua.bindClassMemberFunction<PainterShaderProgram>("addMultiTexture", &PainterShaderProgram::addMultiTexture);
 
     // ParticleEffect
     g_lua.registerClass<ParticleEffectType>();

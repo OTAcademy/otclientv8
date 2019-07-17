@@ -127,7 +127,7 @@ UIWidget
     anchors.horizontalCenter: gameMapPanel.horizontalCenter
     anchors.verticalCenter: gameMapPanel.verticalCenter
     image-source: /images/game/circle/left_empty
-    margin-right: 134
+    margin-right: 169
     margin-bottom: 16
     opacity: 0.5
     phantom: true
@@ -137,7 +137,7 @@ UIWidget
     anchors.horizontalCenter: gameMapPanel.horizontalCenter
     anchors.verticalCenter: gameMapPanel.verticalCenter
     image-source: /images/game/circle/left_full
-    margin-right: 134
+    margin-right: 169
     margin-bottom: 16
     opacity: 0.5
     phantom: true
@@ -147,7 +147,7 @@ UIWidget
     anchors.horizontalCenter: gameMapPanel.horizontalCenter
     anchors.verticalCenter: gameMapPanel.verticalCenter
     image-source: /images/game/circle/right_empty    
-    margin-left: 110
+    margin-left: 130
     margin-bottom: 16
     opacity: 0.5
     phantom: true
@@ -157,7 +157,7 @@ UIWidget
     anchors.horizontalCenter: gameMapPanel.horizontalCenter
     anchors.verticalCenter: gameMapPanel.verticalCenter
     image-source: /images/game/circle/right_full
-    margin-left: 110
+    margin-left: 130
     margin-bottom: 16    
     opacity: 0.5
     image-color: #0000FFFF

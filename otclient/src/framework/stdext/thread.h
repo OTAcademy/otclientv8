@@ -23,33 +23,9 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#include <boost/thread/future.hpp>
-
-// hack to enable std::thread on mingw32 4.6
-#if !defined(_GLIBCXX_HAS_GTHREADS) && defined(__GNUG__) && !defined(__clang__)
-
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/condition_variable.hpp>
-
-namespace std {
-    using boost::thread;
-    using boost::mutex;
-    using boost::recursive_mutex;
-    using boost::lock_guard;
-    using boost::unique_lock;
-    using boost::condition_variable;
-}
-
-#else
-
 #include <thread>
 #include <condition_variable>
 #include <mutex>
-
-#endif
 
 #endif
 

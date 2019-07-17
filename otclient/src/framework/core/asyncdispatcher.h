@@ -35,12 +35,12 @@ public:
     void stop();
 
     template<class F>
-    boost::shared_future<typename std::result_of<F()>::type> schedule(const F& task) {
+    std::shared_future<typename std::result_of<F()>::type> schedule(const F& task) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        auto prom = std::make_shared<boost::promise<typename std::result_of<F()>::type>>();
+        auto prom = std::make_shared<std::promise<typename std::result_of<F()>::type>>();
         m_tasks.push_back([=]() { prom->set_value(task()); });
         m_condition.notify_all();
-        return boost::shared_future<typename std::result_of<F()>::type>(prom->get_future());
+        return std::shared_future<typename std::result_of<F()>::type>(prom->get_future());
     }
 
     void dispatch(std::function<void()> f) {

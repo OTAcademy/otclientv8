@@ -98,8 +98,16 @@ bool ShaderProgram::link()
     glGetProgramiv(m_programId, GL_LINK_STATUS, &value);
     m_linked = (value != GL_FALSE);
 
-    if(!m_linked)
-        g_logger.traceWarning(log());
+    if (!m_linked) {
+        GLint maxLength = 0;
+        glGetProgramiv(m_programId, GL_INFO_LOG_LENGTH, &maxLength);
+        std::vector<GLchar> infoLog(maxLength);
+        glGetProgramInfoLog(m_programId, maxLength, &maxLength, &infoLog[0]);
+        g_logger.error(stdext::format("Program %i linking error (%i): %s - %s - %s %s", m_programId, infoLog.size(),
+            std::string(infoLog.begin(), infoLog.end()).c_str(), log().c_str(),
+            glGetString(GL_RENDERER), glGetString(GL_VERSION)));
+
+    }
     return m_linked;
 }
 

@@ -104,7 +104,7 @@ void Item::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView
 
     rawGetThingType()->newDraw(dest,  0, xPattern, yPattern, zPattern, animationPhase, drawQueue, lightView);
     if (m_marked)
-        drawQueue.addMarked(false, updatedMarkedColor());
+        drawQueue.setLastItemAsMarked(updatedMarkedColor());
 }
 
 

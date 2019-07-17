@@ -42,7 +42,11 @@ public:
     bool loadSpr(std::string file);
     void unload();
 
+#ifdef WITH_ENCRYPTION
     void saveSpr(std::string fileName);
+    void saveReplacedSpr(std::string fileName, std::map<uint32_t, ImagePtr>& replacements);
+    void dumpSprites(std::string dir);
+#endif
 
     uint32 getSignature() { return m_signature; }
     int getSpritesCount() { return m_spritesCount; }
@@ -50,11 +54,14 @@ public:
     ImagePtr getSpriteImage(int id);
     bool isLoaded() { return m_loaded; }
 
+    int spriteSize() { return m_spriteSize; }
+
 private:
     stdext::boolean<false> m_loaded;
     uint32 m_signature;
     int m_spritesCount;
     int m_spritesOffset;
+    int m_spriteSize = 32;
     FileStreamPtr m_spritesFile;
 };
 

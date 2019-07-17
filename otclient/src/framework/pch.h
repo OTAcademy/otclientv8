@@ -43,8 +43,38 @@
 #include <functional>
 #include <array>
 #include <unordered_map>
+#include <unordered_set>
 #include <tuple>
 #include <iomanip>
 #include <typeinfo>
+
+// new
+#include <thread>
+#include <memory>
+#include <functional>
+#include <condition_variable>
+#include <mutex>
+#include <future>
+#include <chrono>
+#include <filesystem>
+#include <random>
+
+// boost
+#include <boost/system/config.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/asio.hpp>
+#include <boost/beast.hpp>
+
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl.hpp>
+
+#include <boost/beast/core/flat_buffer.hpp>
+#include <boost/beast/http/string_body.hpp>
+#include <boost/beast/http/dynamic_body.hpp>
+#include <boost/beast/http/read.hpp>
+#include <boost/beast/http/write.hpp>
+#include <boost/beast/http/parser.hpp>
+
 
 #endif

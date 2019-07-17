@@ -47,8 +47,6 @@ end
 
 local function onCharacterList(protocol, characters, account, otui)
   if not http then
-    -- Try add server to the server list
-    ServerList.add(G.host, G.port, g_game.getClientVersion())
     -- Save 'Stay logged in' setting
     g_settings.set('staylogged', enterGame:getChildById('stayLoggedBox'):isChecked())
   end
@@ -60,18 +58,7 @@ local function onCharacterList(protocol, characters, account, otui)
 
     g_settings.set('account', account)
     g_settings.set('password', password)
-
-    if not http then
-      ServerList.setServerAccount(G.host, account)
-      ServerList.setServerPassword(G.host, password)
-    end
   else
-    -- reset server list account/password
-    if not http then
-      ServerList.setServerAccount(G.host, '')
-      ServerList.setServerPassword(G.host, '')
-    end
-
     EnterGame.clearAccountFields()
   end
 
@@ -133,7 +120,7 @@ local function onPost(operationId, url, err, data)
   if err:len() > 0 then
     return onError(nil, err, 1)
   end
-  print(data)
+  --print(data)
   local status, result = pcall(function() return json.decode(data) end)
   if not status then
     return onError(nil, "Json parse error: " .. result .. "\n" .. data, 1)
@@ -699,11 +686,6 @@ function EnterGame.setUniqueServer(host, port, protocol, windowWidth, windowHeig
   local clientLabel = enterGame:getChildById('clientLabel')
   clientLabel:setVisible(false)
   clientLabel:setHeight(0)
-
-  local serverListButton = enterGame:getChildById('serverListButton')
-  serverListButton:setVisible(false)
-  serverListButton:setHeight(0)
-  serverListButton:setWidth(0)
 
   local rememberPasswordBox = enterGame:getChildById('rememberPasswordBox')
   rememberPasswordBox:setMarginTop(-8)

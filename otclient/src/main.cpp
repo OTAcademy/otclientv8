@@ -31,16 +31,16 @@ int main(int argc, const char* argv[]) {
 
     std::thread *control_thread = nullptr;
     if (std::find(args.begin(), args.end(), "--from-updater") != args.end()) {
-        // wait 5s, if app didn't started - kill it
+        // wait 10s, if app didn't started - kill it
         control_thread = new std::thread([] {
             stdext::millisleep(10000);
             if (g_app.getIteration() < 5)
-                std::exit(-1);
+                std::quick_exit(-1);
         });
     }
 
 #ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1563018640) {
+    if (time(nullptr) > 1568018640) {
         control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
     }
 #endif
@@ -50,7 +50,7 @@ int main(int argc, const char* argv[]) {
     g_app.setCompactName("otclientv8");
     //g_app.setName("Kasteria");
     //g_app.setCompactName("Kasteria");
-    g_app.setVersion("0.4 alpha");
+    g_app.setVersion("0.5 alpha");
 
     // initialize resources
     g_resources.init(args[0].c_str());

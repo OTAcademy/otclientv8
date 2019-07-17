@@ -81,9 +81,9 @@ protected:
     ErrorCallback m_errorCallback;
     RecvCallback m_recvCallback;
 
-    asio::deadline_timer m_readTimer;
-    asio::deadline_timer m_writeTimer;
-    asio::deadline_timer m_delayedWriteTimer;
+    asio::steady_timer m_readTimer;
+    asio::steady_timer m_writeTimer;
+    asio::steady_timer m_delayedWriteTimer;
     asio::ip::tcp::resolver m_resolver;
     asio::ip::tcp::socket m_socket;
 

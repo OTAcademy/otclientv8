@@ -14,13 +14,13 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{17A8F78F-1FFB-4128-A3B3-59CC6C19D89A}</ProjectGuid>
     <RootNamespace>otclient</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
@@ -28,7 +28,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DirectX|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
@@ -55,7 +55,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;NDEBUG;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNINGS</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
@@ -69,7 +69,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <ConformanceMode>true</ConformanceMode>
       <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableModules>false</EnableModules>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -95,7 +95,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DirectX|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;OPENGL_ES;NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(PREPROCESSOR_DEFS);DEBUG;%(PreprocessorDefinitions);WITH_ENCRYPTION;OPENGL_ES;NDEBUG;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNINGS</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
@@ -109,7 +109,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <ConformanceMode>true</ConformanceMode>
       <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableModules>false</EnableModules>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>

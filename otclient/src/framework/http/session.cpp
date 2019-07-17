@@ -46,7 +46,7 @@ void HttpSession::on_connect(const boost::system::error_code& ec) {
     if (m_url.find("https") == 0)
     {
         //m_context.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::tlsv12_client);
-        m_ssl = std::make_unique<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>>(m_socket, m_context);
+        m_ssl = std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>>(m_socket, m_context);
         m_ssl->set_verify_mode(boost::asio::ssl::verify_peer);
         m_ssl->set_verify_callback([](bool, boost::asio::ssl::verify_context&) { return true; });         
 
@@ -104,7 +104,7 @@ void HttpSession::on_read_header(const boost::system::error_code& ec, size_t byt
     auto location = msg["Location"];
 
     if (!location.empty()) {        
-        auto session = std::make_shared<HttpSession>(m_socket.get_io_context(), location.to_string(), m_timeout, m_result, m_callback);
+        auto session = std::make_shared<HttpSession>(m_service, location.to_string(), m_timeout, m_result, m_callback);
         session->start();
         return close();
     }

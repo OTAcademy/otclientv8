@@ -32,7 +32,6 @@ static const std::string lightVertexShader = "\n\
     uniform mediump mat3 u_ProjectionMatrix;\n\
     uniform mediump mat3 u_TransformMatrix;\n\
     uniform mediump mat3 u_TextureMatrix;\n\
-    uniform mediump mat3 u_DepthTextureMatrix;\n\
     \n\
     varying mediump vec2 v_TexCoord;\n\
     varying mediump vec2 v_DepthTexCoord;\n\
@@ -66,10 +65,10 @@ static const std::string lightDepthScalingVertexShader = "\n\
 static const std::string newFragmentShader = "\n\
     varying mediump vec2 v_TexCoord;\n\
     varying mediump vec4 v_Color;\n\
-    uniform sampler2D u_Atlas0;\n\
+    uniform sampler2D u_Atlas;\n\
     void main()\n\
     {\n\
-        gl_FragColor = texture2D(u_Atlas0, v_TexCoord) * v_Color;\n\
+        gl_FragColor = texture2D(u_Atlas, v_TexCoord) * v_Color;\n\
         if(gl_FragColor.a < 0.01)\n\
             discard;\n\
     }\n";
@@ -81,12 +80,12 @@ static const std::string lightFragmentShader = "\n\
     varying mediump vec4 v_Color;\n\
     varying mediump float v_Depth;\n\
     uniform sampler2D u_Tex0;\n\
-    uniform sampler2D u_TexDepth;\n\
+    //uniform sampler2D u_TexDepth;\n\
     uniform highp vec2 u_Resolution;\n\
     void main()\n\
     {\n\
-        highp vec2 pos = gl_FragCoord.xy / u_Resolution;\n\
-        if(v_Depth > texture2D(u_TexDepth, pos).r) discard;\n\
+        //highp vec2 pos = gl_FragCoord.xy / u_Resolution;\n\
+        //if(v_Depth > texture2D(u_TexDepth, pos).r) discard;\n\
         gl_FragColor = texture2D(u_Tex0, v_TexCoord) * v_Color;\n\
         //gl_FragColor = texture2D(u_TexDepth, pos);\n\
         //gl_FragColor.b = v_Depth;\n\

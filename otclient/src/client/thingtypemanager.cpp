@@ -63,6 +63,7 @@ void ThingTypeManager::terminate()
     m_nullItemType = nullptr;
 }
 
+#ifdef WITH_ENCRYPTION
 void ThingTypeManager::saveDat(std::string fileName)
 {
     if(!m_datLoaded)
@@ -96,6 +97,47 @@ void ThingTypeManager::saveDat(std::string fileName)
         g_logger.error(stdext::format("Failed to save '%s': %s", fileName, e.what()));
     }
 }
+
+void ThingTypeManager::dumpTextures(std::string dir) 
+{
+    if (dir.empty()) {
+        g_logger.error("Empty dir for sprites dump");
+        return;
+    }
+    g_resources.makeDir(dir);
+    for (int category = 0; category < ThingLastCategory; ++category) {
+        g_resources.makeDir(dir + "/" + std::to_string((int)category));
+
+        uint16 firstId = 1;
+        if (category == ThingCategoryItem)
+            firstId = 100;
+
+        for (uint16 id = firstId; id < m_thingTypes[category].size(); ++id)
+            m_thingTypes[category][id]->exportImage(dir + "/" + std::to_string((int)category) + "/" + std::to_string(id) + ".png");
+    }
+}
+
+void ThingTypeManager::replaceTextures(std::string dir) {
+    if (dir.empty()) {
+        g_logger.error("Empty dir for sprites dump");
+        return;
+    }
+
+    std::map<uint32_t, ImagePtr> replacements;
+    for (int category = 0; category < ThingLastCategory; ++category) {
+        uint16 firstId = 1;
+        if (category == ThingCategoryItem)
+            firstId = 100;
+
+        for (uint16 id = firstId; id < m_thingTypes[category].size(); ++id) {
+            std::string fileName = dir + "/" + std::to_string((int)category) + "/" + std::to_string(id) + "_[][x2.000000].png";
+            m_thingTypes[category][id]->replaceSprites(replacements, fileName);
+        }
+    }
+    g_sprites.saveReplacedSpr(dir + "/sprites.spr", replacements);
+}
+
+#endif
 
 bool ThingTypeManager::loadDat(std::string file)
 {

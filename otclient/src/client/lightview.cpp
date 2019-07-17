@@ -22,10 +22,12 @@
 
 #include "lightview.h"
 #include "mapview.h"
+#include "spritemanager.h"
 #include <framework/graphics/framebuffer.h>
 #include <framework/graphics/framebuffermanager.h>
 #include <framework/graphics/painter.h>
 #include <framework/graphics/image.h>
+#include <framework/graphics/graphics.h>
 #include <framework/core/adaptiverenderer.h>
 
 enum {
@@ -100,7 +102,7 @@ void LightView::setGlobalLight(const Light& light, int lightScaling)
 void LightView::addLightSource(const Point& center, const Light& light, bool fromCreature)
 {
     int intensity = std::min<int>(light.intensity, MAX_LIGHT_INTENSITY);
-    int radius = intensity * Otc::TILE_PIXELS;
+    int radius = intensity * g_sprites.spriteSize();
 
     Color color = Color::from8bit(light.color);
     float brightness = 0.5f + (intensity/(float)MAX_LIGHT_INTENSITY)*0.5f;
@@ -119,11 +121,17 @@ void LightView::addLightSource(const Point& center, const Light& light, bool fro
             newLight.radius = source.radius;
             newLight.color = source.color;
         }
+        if (newLight.depth > source.depth) {
+            newLight.depth = source.depth;
+        }
     } else {
         auto& newLight = m_lightMap.emplace(center, source).first->second;
         if (newLight.radius < source.radius) {
             newLight.radius = source.radius;
             newLight.color = source.color;
+        }
+        if (newLight.depth > source.depth) {
+            newLight.depth = source.depth;
         }
     }
 }
@@ -157,7 +165,10 @@ void LightView::draw(const Rect& dest, const Rect& src, TexturePtr depthTexture)
         m_lightbuffer2->bind();
         g_painter->setAlphaWriting(true);
         g_painter->setCompositionMode(Painter::CompositionMode_Replace);
-        g_painter->drawLightDepthTexture(Rect(0, 0, m_lightbuffer2->getSize()), depthTexture, Rect(0, 0, depthTexture->getSize()));
+        if (depthTexture)
+            g_painter->drawLightDepthTexture(Rect(0, 0, m_lightbuffer2->getSize()), depthTexture, Rect(0, 0, depthTexture->getSize()));
+        else
+            g_painter->clear(Color::white);
         m_lightbuffer2->release();
     }
     

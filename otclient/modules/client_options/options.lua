@@ -34,8 +34,8 @@ local defaultOptions = {
   topHealtManaBar = true,
   displayText = true,
   dontStretchShrink = false,
-  turnDelay = 50,
-  hotkeyDelay = 50,
+  turnDelay = 30,
+  hotkeyDelay = 30,
 }
 
 local optionsWindow
@@ -99,9 +99,15 @@ function init()
   audioButton = modules.client_topmenu.addLeftButton('audioButton', tr('Audio'), '/images/topbuttons/audio', function() toggleOption('enableAudio') end)
 
   addEvent(function() setup() end)
+  
+  connect(g_game, { onGameStart = online,
+                     onGameEnd = offline })
 end
 
 function terminate()
+  disconnect(g_game, { onGameStart = online,
+                     onGameEnd = offline })  
+
   g_keyboard.unbindKeyDown('Ctrl+Shift+F')
   g_keyboard.unbindKeyDown('Ctrl+N')
   optionsWindow:destroy()
@@ -120,13 +126,12 @@ function setup()
   end
   
   for _, v in ipairs(g_extras.getAll()) do
-	g_extras.set(v, g_settings.getBoolean("extras_" .. v))
-	local widget = extrasPanel:recursiveGetChildById(v)
-	if widget then
-        widget:setChecked(g_extras.get(v))
+    g_extras.set(v, g_settings.getBoolean("extras_" .. v))
+    local widget = extrasPanel:recursiveGetChildById(v)
+    if widget then
+      widget:setChecked(g_extras.get(v))
     end
-  end
-  
+  end  
 end
 
 function toggle()
@@ -171,6 +176,9 @@ function setOption(key, value, force)
   if extraOptions[key] ~= nil then
     g_extras.set(key, value)
     g_settings.set("extras_" .. key, value)
+    return
+  end
+  if modules.game_interface == nil then
     return
   end
    
@@ -245,7 +253,7 @@ function setOption(key, value, force)
   elseif key == 'displayMana' then
     gameMapPanel:setDrawManaBar(value)
   elseif key == 'hidePlayerBars' then
-    gameMapPanel:setDrawPlayerBars(not value)
+    gameMapPanel:setDrawPlayerBars(value)
   elseif key == 'topHealtManaBar' then
     modules.game_interface.healthBar:setVisible(value)
     modules.game_interface.manaBar:setVisible(value)
@@ -255,27 +263,13 @@ function setOption(key, value, force)
     addEvent(function()
       modules.game_interface.updateStretchShrink()
     end)
-  elseif key == 'turnDelay' then
-    generalPanel:getChildById('turnDelayLabel'):setText(tr('Turn delay: %sms', value))
-  elseif key == 'hotkeyDelay' then
-    generalPanel:getChildById('hotkeyDelayLabel'):setText(tr('Hotkey delay: %sms', value))
-  end
-  if key == 'newWalking' then
-	g_app.setNewWalking(value)
-  elseif key == 'newAutoWalking' then
-    g_app.setNewAutoWalking(value)
-  elseif key == 'newRendering' then
-    g_app.setNewRendering(value)
-  elseif key == 'newTextRendering' then
-    g_app.setNewTextRendering(value)
-  elseif key == 'newBotDetection' then
-    g_app.setNewBotDetection(value)
-  elseif key == 'newQTMLCache' then
-    g_app.setNewQTMLCache(value)
-  elseif key == 'newBattleList' then
-    g_app.setNewBattleList(value)
-  end
-  
+  elseif key == 'extentedPreWalking' then
+    if value then
+      g_game.setMaxPreWalkingSteps(2)
+    else 
+      g_game.setMaxPreWalkingSteps(1)    
+    end
+  end  
 
   -- change value for keybind updates
   for _,panel in pairs(optionsTabBar:getTabsPanel()) do
@@ -315,4 +309,26 @@ end
 
 function addButton(name, func, icon)
   optionsTabBar:addButton(name, func, icon)
+end
+
+-- hide/show
+
+function online()
+  setLightOptionsVisibility(not g_game.getFeature(GameForceLight))
+end
+
+function offline()
+  setLightOptionsVisibility(true)
+end
+
+-- classic view
+
+-- graphics
+function setLightOptionsVisibility(value)
+  graphicsPanel:getChildById('enableLights'):setEnabled(value)
+  graphicsPanel:getChildById('ambientLightLabel'):setEnabled(value)
+  graphicsPanel:getChildById('ambientLight'):setEnabled(value)  
+  interfacePanel:getChildById('floorFading'):setEnabled(value)
+  interfacePanel:getChildById('floorFadingLabel'):setEnabled(value)
+  interfacePanel:getChildById('floorFadingLabel2'):setEnabled(value)  
 end

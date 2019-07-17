@@ -41,7 +41,11 @@ public:
     void loadXml(const std::string& file);
     void parseItemType(uint16 id, TiXmlElement *elem);
 
+#ifdef WITH_ENCRYPTION
     void saveDat(std::string fileName);
+    void dumpTextures(std::string dir);
+    void replaceTextures(std::string dir);
+#endif
 
     void addItemType(const ItemTypePtr& itemType);
     const ItemTypePtr& findItemTypeByClientId(uint16 id);

@@ -1,4 +1,5 @@
 build*
+pdbs
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake

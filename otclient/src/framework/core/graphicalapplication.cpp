@@ -69,8 +69,6 @@ void GraphicalApplication::init(std::vector<std::string>& args)
     // initialize sound
     g_sounds.init();
 #endif
-
-    g_atlas.init();
 }
 
 void GraphicalApplication::deinit()
@@ -126,6 +124,8 @@ void GraphicalApplication::run()
     // run the second poll
     poll();
     g_clock.update();
+
+    g_atlas.init();
 
     g_lua.callGlobalField("g_app", "onRun");
 

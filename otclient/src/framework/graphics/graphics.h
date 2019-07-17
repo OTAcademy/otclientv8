@@ -34,24 +34,15 @@ class Graphics
 public:
     Graphics();
 
-    enum PainterEngine {
-        Painter_Any = 0,
-        Painter_OpenGL1,
-        Painter_OpenGL2,
-    };
-
     // @dontbind
     void init();
     // @dontbind
     void terminate();
 
     bool parseOption(const std::string& option);
-
-    bool isPainterEngineAvailable(PainterEngine painterEngine);
-    bool selectPainterEngine(PainterEngine painterEngine);
-    PainterEngine getPainterEngine() { return m_selectedPainterEngine; }
-
+    
     void resize(const Size& size);
+    void checkDepthSupport();
 
     int getMaxTextureSize() { return m_maxTextureSize; }
     const Size& getViewportSize() { return m_viewportSize; }
@@ -78,6 +69,7 @@ public:
     bool canCacheBackbuffer();
     bool shouldUseShaders() { return m_shouldUseShaders; }
     bool hasScissorBug();
+    bool canUseDepth();
 
 private:
     Size m_viewportSize;
@@ -95,10 +87,7 @@ private:
     stdext::boolean<true> m_useClampToEdge;
     stdext::boolean<true> m_shouldUseShaders;
     stdext::boolean<true> m_cacheBackbuffer;
-    PainterEngine m_prefferedPainterEngine;
-    PainterEngine m_selectedPainterEngine;
-
-    Painter* m_painter;
+    stdext::boolean<true> m_useDepth;
 };
 
 extern Graphics g_graphics;

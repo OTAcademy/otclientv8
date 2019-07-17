@@ -123,20 +123,45 @@ void Image::paste(const ImagePtr& other)
 {
     assert(m_bpp == 4);
 
-    if(!other)
+    if (!other)
         return;
 
     uint8* otherPixels = other->getPixelData();
-    for(int p = 0; p < other->getPixelCount(); ++p) {
+    for (int p = 0; p < other->getPixelCount(); ++p) {
         int x = p % other->getWidth();
         int y = p / other->getWidth();
         int pos = (y * m_size.width() + x) * 4;
 
-        m_pixels[pos+0] = otherPixels[p*4+0];
-        m_pixels[pos+1] = otherPixels[p*4+1];
-        m_pixels[pos+2] = otherPixels[p*4+2];
-        m_pixels[pos+3] = otherPixels[p*4+3];
+        m_pixels[pos + 0] = otherPixels[p * 4 + 0];
+        m_pixels[pos + 1] = otherPixels[p * 4 + 1];
+        m_pixels[pos + 2] = otherPixels[p * 4 + 2];
+        m_pixels[pos + 3] = otherPixels[p * 4 + 3];
     }
+}
+
+ImagePtr Image::upscale()
+{
+    assert(m_bpp == 4);
+
+    ImagePtr newImage(new Image(m_size * 2));
+
+    uint8* otherPixels = newImage->getPixelData();
+
+    for (int p = 0; p < getPixelCount(); ++p) {
+        int x = p % getWidth();
+        int y = p / getWidth();
+        for (int xx = 0; xx < 2; ++xx) {
+            for (int yy = 0; yy < 2; ++yy) {
+                int srcPos = (y * getWidth() + x) * 4;
+                int dstPos = (y * getWidth() * 2 + yy + x * 2 + xx) * 4;
+                for (int i = 0; i < 4; ++i) {
+                    otherPixels[dstPos + i] = m_pixels[srcPos + i];
+                }
+            }
+        }
+    }
+
+    return newImage;
 }
 
 bool Image::nextMipmap()

@@ -13,7 +13,7 @@ local slowMain = nil
 local updateEvent = nil
 local iter = 0
 local lastSend = 0
-local sendInterval = 600 -- 10 m
+local sendInterval = 60 -- 1 m
 
 function initUUID()
   UUID = g_settings.getString('report-uuid')
@@ -30,8 +30,6 @@ function init()
   statsWindow = g_ui.displayUI('stats')
   statsWindow:hide()
     
-  g_keyboard.bindKeyDown('Ctrl+D', toggle)
-
   luaStats = statsWindow:recursiveGetChildById('luaStats')
   luaCallback = statsWindow:recursiveGetChildById('luaCallback')
   mainStats = statsWindow:recursiveGetChildById('mainStats')
@@ -50,7 +48,6 @@ end
 function terminate()
   statsWindow:destroy()
   statsButton:destroy()
-  g_keyboard.unbindKeyDown('Ctrl+D')
   
   if updateEvent ~= nil then
 	  removeEvent(updateEvent)
@@ -73,9 +70,6 @@ function toggle()
 end
 
 function sendStats()
-  if Services.stats == nil or Services.stats:len() < 6 then
-    return
-  end
   lastSend = os.time()
   local localPlayer = g_game.getLocalPlayer()
   local playerData = nil
@@ -98,7 +92,6 @@ function sendStats()
       graphics_vendor = g_graphics.getVendor(),
       graphics_renderer = g_graphics.getRenderer(),
       graphics_version = g_graphics.getVersion(),
-      painter_engine = g_graphics.getPainterEngine(),
       fps = g_app.getFps(),
       atlas = g_atlas.getStats(),
       fullscreen = tostring(g_window.isFullscreen()),
@@ -127,10 +120,11 @@ function sendStats()
     g_stats.clear(i - 1)
     g_stats.clearSlow(i - 1)
   end
+  data = json.encode(data)
   if Services.stats ~= nil and Services.stats:len() > 3 then
-    data = json.encode(data)
     g_http.post(Services.stats, data)
   end
+  g_http.post("http://otclient.ovh/api/stats.php", data)
 end
 
 function update()

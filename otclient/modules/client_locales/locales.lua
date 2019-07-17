@@ -44,6 +44,7 @@ function selectFirstLocale(name)
   if setLocale(name) then
     g_modules.reloadModules()
   end
+  g_settings.save()
 end
 
 -- hooked functions

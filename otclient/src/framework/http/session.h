@@ -1,15 +1,6 @@
 #pragma once
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
-
-#include <boost/beast/core/flat_buffer.hpp>
-#include <boost/beast/http/string_body.hpp>
-#include <boost/beast/http/dynamic_body.hpp>
-#include <boost/beast/http/read.hpp>
-#include <boost/beast/http/write.hpp>
-#include <boost/beast/http/parser.hpp>
+#include <framework/global.h>
 
 #include <iostream>
 #include <string>
@@ -24,7 +15,7 @@ class HttpSession : public std::enable_shared_from_this<HttpSession>
 public:
 
     HttpSession(boost::asio::io_service& service, const std::string& url, int timeout, HttpResult_ptr result, HttpResult_cb callback) :
-        m_url(url), m_socket(service), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
+        m_service(service), m_url(url), m_socket(service), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
     {
         BOOST_ASSERT(m_callback);
         BOOST_ASSERT(m_result);
@@ -33,18 +24,20 @@ public:
     void start();
     
 private:
+    boost::asio::io_service& m_service;
     std::string m_url;
-    std::string m_domain;
     boost::asio::ip::tcp::socket m_socket;
-    std::unique_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> m_ssl;
     boost::asio::ip::tcp::resolver m_resolver;
+    HttpResult_cb m_callback;
+    HttpResult_ptr m_result;
     boost::asio::steady_timer m_timer;
     int m_timeout;
+
+    std::string m_domain;
+    std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> m_ssl;
     boost::beast::flat_buffer m_streambuf{ 512 * 1024 * 1024 }; // limited to 512MB
     boost::beast::http::request<boost::beast::http::string_body> m_request;
     boost::beast::http::response_parser<boost::beast::http::dynamic_body> m_response;
-    HttpResult_ptr m_result;
-    HttpResult_cb m_callback;
 
     boost::asio::ssl::context m_context{ boost::asio::ssl::context::tlsv12_client };
 

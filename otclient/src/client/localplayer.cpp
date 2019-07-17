@@ -92,7 +92,7 @@ bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
     if ((m_walking && !isAutoWalking()) && (!prewalkTimeouted || m_secondPreWalk) && (!isNewPreWalking() || !m_newLastPrewalkingDone))
         return false;
 
-    if (m_newPreWalkingPositions.size() >= 2) // max 3 extra steps
+    if (m_newPreWalkingPositions.size() >= g_game.getMaxPreWalkingSteps()) // max 3 extra steps
         return false;
 
     if (!m_newPreWalkingPositions.empty()) { // disallow diagonal extented walking
@@ -334,8 +334,7 @@ void LocalPlayer::stopWalk(bool teleport) {
 
     if (teleport) {
         lockWalk();
-    } else {
-        lockWalk(50);
+        g_game.cancelWalkEvent();
     }
 }
 
@@ -344,14 +343,14 @@ void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
     // pre walks offsets are calculated in the oposite direction
     if(m_preWalking || isNewPreWalking()) {
         m_walkOffset = Point(0,0);
-        if(m_direction == Otc::North || m_direction == Otc::NorthEast || m_direction == Otc::NorthWest)
+        if(m_walkDirection == Otc::North || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::NorthWest)
             m_walkOffset.y = -totalPixelsWalked;
-        else if(m_direction == Otc::South || m_direction == Otc::SouthEast || m_direction == Otc::SouthWest)
+        else if(m_walkDirection == Otc::South || m_walkDirection == Otc::SouthEast || m_walkDirection == Otc::SouthWest)
             m_walkOffset.y = totalPixelsWalked;
 
-        if(m_direction == Otc::East || m_direction == Otc::NorthEast || m_direction == Otc::SouthEast)
+        if(m_walkDirection == Otc::East || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::SouthEast)
             m_walkOffset.x = totalPixelsWalked;
-        else if(m_direction == Otc::West || m_direction == Otc::NorthWest || m_direction == Otc::SouthWest)
+        else if(m_walkDirection == Otc::West || m_walkDirection == Otc::NorthWest || m_walkDirection == Otc::SouthWest)
             m_walkOffset.x = -totalPixelsWalked;
     } else
         Creature::updateWalkOffset(totalPixelsWalked);
@@ -418,6 +417,13 @@ void LocalPlayer::onPositionChange(const Position& newPos, const Position& oldPo
         stopAutoWalk();
     else if(m_autoWalkDestination.isValid() && newPos == m_lastAutoWalkPosition)
         autoWalk(m_autoWalkDestination);
+}
+
+void LocalPlayer::turn(Otc::Direction direction)
+{
+    if (m_walking && g_game.getFeature(Otc::GameNewWalking))
+        return;
+    Creature::setDirection(direction);
 }
 
 void LocalPlayer::setStates(int states)

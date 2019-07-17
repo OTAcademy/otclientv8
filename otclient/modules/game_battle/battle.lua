@@ -220,7 +220,8 @@ function checkCreatures()
   end
 
   local player = g_game.getLocalPlayer()
-  local spectators = g_map.getSpectators(player:getPosition(), false)
+  local dimension = modules.game_interface.getMapPanel():getVisibleDimension()
+  local spectators = g_map.getSpectatorsInRange(player:getPosition(), false, math.floor(dimension.width / 2) + 1, math.floor(dimension.height / 2) + 1)
   
   creatures = {}
   for _, creature in ipairs(spectators) do

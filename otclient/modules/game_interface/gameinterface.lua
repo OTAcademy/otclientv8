@@ -119,12 +119,11 @@ function bindKeys()
   bindTurnKey('Ctrl+Numpad4', West)
 
   g_keyboard.bindKeyPress('Escape', function() g_game.cancelAttackAndFollow() end, gameRootPanel)
-  g_keyboard.bindKeyPress('Ctrl+=', function() gameMapPanel:zoomIn() end, gameRootPanel)
-  g_keyboard.bindKeyPress('Ctrl+-', function() gameMapPanel:zoomOut() end, gameRootPanel)
+  g_keyboard.bindKeyPress('Ctrl+=', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomIn() end, gameRootPanel)
+  g_keyboard.bindKeyPress('Ctrl+-', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomOut() end, gameRootPanel)
   g_keyboard.bindKeyDown('Ctrl+Q', function() tryLogout(false) end, gameRootPanel)
   g_keyboard.bindKeyDown('Ctrl+L', function() tryLogout(false) end, gameRootPanel)
   g_keyboard.bindKeyDown('Ctrl+W', function() g_map.cleanTexts() modules.game_textmessage.clearMessages() end, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+.', nextViewMode, gameRootPanel)
 end
 
 function bindWalkKey(key, dir)
@@ -141,15 +140,18 @@ end
 
 function bindTurnKey(key, dir)
   local function callback(widget, code, repeatTicks)
-    if g_clock.millis() - lastDirTime >= modules.client_options.getOption('turnDelay') then
+    if g_clock.millis() - lastDirTime >= 30 then
         g_game.turn(dir)
         changeWalkDir(dir)
-
         lastDirTime = g_clock.millis()
     end
   end
 
   g_keyboard.bindKeyPress(key, callback, gameRootPanel)
+end
+
+function unbindTurnKey(key)
+  g_keyboard.unbindKeyPress(key, gameRootPanel)
 end
 
 function terminate()
@@ -370,10 +372,6 @@ function changeWalkDir(dir, pop)
 end
 
 function smartWalk(dir)
-  local localPlayer = g_game.getLocalPlayer()
-  if localPlayer:isPreWalking() and not g_settings.getBoolean('extentedPreWalking') then
-    return false
-  end
   if g_keyboard.getModifiers() == KeyboardNoModifier then
     local dire = smartWalkDir or dir
     g_game.walk(dire)
@@ -415,17 +413,17 @@ function onUseWith(clickedWidget, mousePosition)
     local tile = clickedWidget:getTile(mousePosition)
     if tile then
       if selectedThing:isFluidContainer() or selectedThing:isMultiUse() then
-        g_game.useWith(selectedThing, tile:getTopMultiUseThing())
+        g_game.useWith(selectedThing, tile:getTopMultiUseThing(), selectedSubtype)
       else
-        g_game.useWith(selectedThing, tile:getTopUseThing())
+        g_game.useWith(selectedThing, tile:getTopUseThing(), selectedSubtype)
       end
     end
   elseif clickedWidget:getClassName() == 'UIItem' and not clickedWidget:isVirtual() then
-    g_game.useWith(selectedThing, clickedWidget:getItem())
+    g_game.useWith(selectedThing, clickedWidget:getItem(), selectedSubtype)
   elseif clickedWidget:getClassName() == 'UICreatureButton' then
     local creature = clickedWidget:getCreature()
     if creature then
-      g_game.useWith(selectedThing, creature)
+      g_game.useWith(selectedThing, creature, selectedSubtype)
     end
   end
 end
@@ -444,7 +442,7 @@ function onTradeWith(clickedWidget, mousePosition)
   end
 end
 
-function startUseWith(thing)
+function startUseWith(thing, subType)
   if not thing then return end
   if g_ui.isMouseGrabbed() then
     if selectedThing then
@@ -455,6 +453,7 @@ function startUseWith(thing)
   end
   selectedType = 'use'
   selectedThing = thing
+  selectedSubtype = subType or 0
   mouseGrabberWidget:grabMouse()
   g_mouse.pushCursor('target')
 end
@@ -662,12 +661,10 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     end
   end
 
-  --if g_game.getFeature(GameBot) and useThing then
+  if g_game.getFeature(GameBot) and useThing then
     menu:addSeparator()
     menu:addOption(tr("ID: " .. useThing:getId()))
-    menu:addOption(tr("ID: " .. tostring(useThing:isTranslucent())))    
-    menu:addOption(tr("ID: " .. tostring(useThing:isGround())))    
-  --end
+  end
 
   menu:display(menuPosition)
 end
@@ -928,22 +925,22 @@ function setupViewMode(mode)
     gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
     gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
     gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)    
-
+    
     if panels == 2 then
         gameLeftPanel:setOn(true)
     elseif panels == 3 then
         gameThirdPanel:setOn(true)
-        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorRight)
+        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorLeft)
     elseif panels == 4 then
         gameLeftPanel:setOn(true)
         gameThirdPanel:setOn(true)
-        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorRight)
+        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorLeft)
     elseif panels == 5 then
         gameLeftPanel:setOn(true)
         gameThirdPanel:setOn(true)
         gameForthPanel:setOn(true)
-        gameMapPanel:addAnchor(AnchorLeft, 'gameForthPanel', AnchorLeft)
-        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorRight)
+        gameMapPanel:addAnchor(AnchorLeft, 'gameForthPanel', AnchorRight)
+        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorLeft)
     elseif panels == 6 then
         gameLeftPanel:setOn(false)
         gameThirdPanel:setOn(true)
@@ -969,7 +966,7 @@ function setupViewMode(mode)
     healthBar:setMarginTop(0)
     manaBar:setMarginTop(0)
 
-    g_game.changeMapAwareRange(22, 18)
+    g_game.changeMapAwareRange(20, 16)
   elseif mode == 1 then
     gameMapPanel:setKeepAspectRatio(false)
     gameMapPanel:setLimitVisibleRange(false)

@@ -40,17 +40,19 @@ void ModuleManager::discoverModules()
     // remove modules that are not loaded
     m_autoLoadModules.clear();
 
-    auto filesAndDirs = g_resources.listDirectoryFiles("/", true);
-    while (!filesAndDirs.empty()) {
-        if (g_resources.directoryExists(filesAndDirs.front())) {
-            auto subFilesAndDirs = g_resources.listDirectoryFiles(filesAndDirs.front(), true);
-            filesAndDirs.insert(filesAndDirs.end(), subFilesAndDirs.begin(), subFilesAndDirs.end());
-        } else if(g_resources.isFileType(filesAndDirs.front(), "otmod")) {
-               ModulePtr module = discoverModule(filesAndDirs.front());
-               if(module && module->isAutoLoad())
-                   m_autoLoadModules.insert(std::make_pair(module->getAutoLoadPriority(), module));
+    auto dirs = g_resources.listDirectoryFiles("/modules", true);
+    std::list<std::string> modules;
+    for (auto& dir : dirs) {
+        auto subFilesAndDirs = g_resources.listDirectoryFiles(dir, true);
+        modules.insert(modules.end(), subFilesAndDirs.begin(), subFilesAndDirs.end());
+    }
+
+    for (auto& mod : modules) {
+        if (g_resources.isFileType(mod, "otmod")) {
+            ModulePtr module = discoverModule(mod);
+            if (module && module->isAutoLoad())
+                m_autoLoadModules.insert(std::make_pair(module->getAutoLoadPriority(), module));
         }
-        filesAndDirs.pop_front();
     }
 }
 

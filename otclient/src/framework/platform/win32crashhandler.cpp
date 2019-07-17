@@ -131,9 +131,8 @@ void Stacktrace(LPEXCEPTION_POINTERS e, std::stringstream& ss)
     GlobalFree(pSym);
 }
 
-LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
+LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS e)
 {
-    MessageBoxA(NULL, "exc", "e", 0);
     // generate crash report
     SymInitialize(GetCurrentProcess(), 0, TRUE);
     std::stringstream ss;
@@ -148,10 +147,8 @@ LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
     ss << stdext::format("exception: %s (0x%08lx)\n", getExceptionName(e->ExceptionRecord->ExceptionCode), e->ExceptionRecord->ExceptionCode);
     ss << stdext::format("exception address: 0x%08lx\n", (size_t)e->ExceptionRecord->ExceptionAddress);
     ss << stdext::format("  backtrace:\n");
-    MessageBoxA(NULL, ss.str().c_str(), "e", 0);
     Stacktrace(e, ss);
     ss << "\n";
-    MessageBoxA(NULL, ss.str().c_str(), "e", 0);
     SymCleanup(GetCurrentProcess());
 
     // print in stdout
@@ -174,8 +171,10 @@ LONG CALLBACK ExceptionHandler(LPEXCEPTION_POINTERS e)
         "The application has crashed.\n\n"
         "A crash report has been written to:\n"
         "%s", fileName.c_str());
-    MessageBoxA(NULL, msg.c_str(), "Application crashed", 0);
-
+    if(!g_app.isStopping()) {
+        MessageBoxA(NULL, msg.c_str(), "Application crashed", 0);
+    }
+    
     // this seems to silently close the application
     //return EXCEPTION_EXECUTE_HANDLER;
 
@@ -196,6 +195,7 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
     STACKFRAME frame;
     memset(&frame, 0, sizeof(STACKFRAME));
     DWORD image;
+
 #ifdef _M_IX86
     image = IMAGE_FILE_MACHINE_I386;
     frame.AddrPC.Offset = context.Eip;
@@ -228,7 +228,7 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
 
     auto dumpFilePath = g_resources.getWriteDir();
     dumpFilePath /= TRACE_DUMP_NAME;
-    MessageBoxA(NULL, dumpFilePath.string().c_str(), "Crash. Log file saved to:", 0);
+    //MessageBoxA(NULL, dumpFilePath.string().c_str(), "Crash. Log file saved to:", 0);
     HANDLE dumpFile = CreateFileA(dumpFilePath.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
     exceptionInformation.ThreadId = GetCurrentThreadId();
@@ -239,6 +239,9 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
         printf("Wrote a dump.");
     }
 
+    ExceptionHandler(exception);
+
+    /*
     SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO)+(TRACE_MAX_FUNCTION_NAME_LENGTH - 1) * sizeof(TCHAR));
     symbol->MaxNameLen = TRACE_MAX_FUNCTION_NAME_LENGTH;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
@@ -272,7 +275,7 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
     {
         sprintf(buf, "Error from StackWalk64: %lu.\n", error);
         MessageBoxA(NULL, buf, "Exc", 0);
-    }
+    } */
     return EXCEPTION_CONTINUE_SEARCH;
 }
 

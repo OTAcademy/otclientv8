@@ -37,12 +37,11 @@ public:
     virtual ~FrameBuffer();
 
     void resize(const Size& size);
-    void bind(TexturePtr depthTexture = nullptr);
+    void bind(const FrameBufferPtr& depthFramebuffer = nullptr);
     void release();
     void draw();
     void draw(const Rect& dest);
     void draw(const Rect& dest, const Rect& src);
-    void copy(const Rect& dest, const Rect& src);
 
     void setBackuping(bool enabled) { m_backuping = enabled; }
     void setSmooth(bool enabled) { m_smooth = enabled; }
@@ -52,7 +51,8 @@ public:
     bool isBackuping() { return m_backuping; }
     bool isSmooth() { return m_smooth; }
 
-    TexturePtr getDepthTexture() { return m_depthTexture; }
+    uint getDepthRenderBuffer() { return m_depthRbo; }
+    bool hasDepth() { return m_depth; }
 
 private:
     void internalCreate();
@@ -60,10 +60,10 @@ private:
     void internalRelease();
 
     TexturePtr m_texture;
-    TexturePtr m_depthTexture;
     TexturePtr m_screenBackup;
     Size m_oldViewportSize;
     uint m_fbo;
+    uint m_depthRbo = 0;
     uint m_prevBoundFbo;
     stdext::boolean<true> m_backuping;
     stdext::boolean<false> m_smooth;

@@ -56,7 +56,6 @@ Creature::Creature() : Thing()
     m_walkDirection = Otc::South;
     m_walkAnimationPhase = 0;
     m_walkedPixels = 0;
-    m_walkTurnDirection = Otc::InvalidDirection;
     m_skull = Otc::SkullNone;
     m_shield = Otc::ShieldNone;
     m_emblem = Otc::EmblemNone;
@@ -98,6 +97,11 @@ void Creature::draw(const Point& dest, float scaleFactor, bool animate, LightVie
 void Creature::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView) {
     if(!canBeSeen())
         return;
+
+    if (m_showTimedSquare)
+        drawQueue.addBoundingRect(Rect(dest + m_walkOffset - getDisplacement() + 2, Size(g_sprites.spriteSize() - 4, g_sprites.spriteSize() - 4)), m_timedSquareColor, 2);
+    if (m_showStaticSquare)
+        drawQueue.addBoundingRect(Rect(dest + m_walkOffset - getDisplacement(), Size(g_sprites.spriteSize(), g_sprites.spriteSize())), m_staticSquareColor, 2);
 
     newDrawOutfit(dest + m_walkOffset, drawQueue, lightView);
     m_footStepDrawn = true;
@@ -233,8 +237,8 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
             animationPhase = std::min<int>(animationPhase+1, animationPhases);
 
         size_t hash = (m_outfit.getAuxId() << 16) + (m_outfit.getCategory() << 8) + animationPhase;
-        drawQueue.addOutfit(hash, dest - getDisplacement());
-        type->newDraw(Point(32, 32), 0, 0, 0, 0, animationPhase, drawQueue, lightView, NewDrawOutfit);
+        auto outfit = drawQueue.addOutfit(hash, Rect(dest - getDisplacement() - Point(g_sprites.spriteSize(), g_sprites.spriteSize()), Size(g_sprites.spriteSize() * 2, g_sprites.spriteSize() * 2)));
+        type->newDraw(Point(g_sprites.spriteSize(), g_sprites.spriteSize()), 0, 0, 0, 0, animationPhase, drawQueue, lightView, NewDrawOutfit);
     } else {
         int animationPhase = m_walkAnimationPhase;
 
@@ -244,13 +248,14 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
         }
 
         // xPattern => creature direction
+        Otc::Direction dir = m_walking ? m_walkDirection : m_direction;
         int xPattern;
-        if (m_direction == Otc::NorthEast || m_direction == Otc::SouthEast)
+        if (dir == Otc::NorthEast || dir == Otc::SouthEast)
             xPattern = Otc::East;
-        else if (m_direction == Otc::NorthWest || m_direction == Otc::SouthWest)
+        else if (dir == Otc::NorthWest || dir == Otc::SouthWest)
             xPattern = Otc::West;
         else
-            xPattern = m_direction;
+            xPattern = dir;
 
         m_outfit.setAnimationPhase(animationPhase);
         m_outfit.setXPattern(xPattern);
@@ -261,16 +266,8 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
     if (drawQueue.isBlocked())
         return;
 
-    auto& outfit = drawQueue.getLastOutfit();
-    if (m_showTimedSquare) {
-        outfit.addBoundingRect(Rect(dest - getDisplacement() + 2, Size(Otc::TILE_PIXELS - 4, Otc::TILE_PIXELS - 4)), m_timedSquareColor, 2);
-    }
-    if (m_showStaticSquare) {
-        outfit.addBoundingRect(Rect(dest - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS)), m_staticSquareColor, 2);
-    }
-
     if (m_marked)
-        drawQueue.addMarked(true, updatedMarkedColor());
+        drawQueue.setLastItemAsMarked(updatedMarkedColor());
 }
 
 void Creature::drawOutfit(const Rect& destRect, bool resize)
@@ -401,12 +398,7 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
 
 void Creature::turn(Otc::Direction direction)
 {
-    // if is not walking change the direction right away
-    if(!m_walking)
-        setDirection(direction);
-    // schedules to set the new direction when walk ends
-    else
-        m_walkTurnDirection = direction;
+    setDirection(direction);
 }
 
 void Creature::walk(const Position& oldPos, const Position& newPos)
@@ -434,8 +426,6 @@ void Creature::walk(const Position& oldPos, const Position& newPos)
     }
 
     // no direction need to be changed when the walk ends
-    m_walkTurnDirection = Otc::InvalidDirection;
-
     m_stepDuration = 0;
     if (m_nextStepSpeed > 0) {
         m_stepDuration = m_nextStepSpeed;
@@ -581,7 +571,7 @@ void Creature::updateWalkAnimation(int totalPixelsWalked)
     // Since mount is a different outfit we need to get the mount animation phases
     if(m_outfit.getMount() != 0) {
         ThingType *type = g_things.rawGetThingType(m_outfit.getMount(), m_outfit.getCategory());
-        footAnimPhases = type->getAnimationPhases() - 1;
+        footAnimPhases = std::min<int>(footAnimPhases, type->getAnimationPhases() - 1);
     }
     if(footAnimPhases == 0)
         m_walkAnimationPhase = 0;
@@ -624,12 +614,12 @@ void Creature::updateWalkingTile()
 {
     // determine new walking tile
     TilePtr newWalkingTile;
-    Rect virtualCreatureRect(Otc::TILE_PIXELS + (m_walkOffset.x - getDisplacementX()),
-                             Otc::TILE_PIXELS + (m_walkOffset.y - getDisplacementY()),
-                             Otc::TILE_PIXELS, Otc::TILE_PIXELS);
+    Rect virtualCreatureRect(g_sprites.spriteSize() + (m_walkOffset.x - getDisplacementX()),
+        g_sprites.spriteSize() + (m_walkOffset.y - getDisplacementY()),
+        g_sprites.spriteSize(), g_sprites.spriteSize());
     for(int xi = -1; xi <= 1 && !newWalkingTile; ++xi) {
         for(int yi = -1; yi <= 1 && !newWalkingTile; ++yi) {
-            Rect virtualTileRect((xi+1)*Otc::TILE_PIXELS, (yi+1)*Otc::TILE_PIXELS, Otc::TILE_PIXELS, Otc::TILE_PIXELS);
+            Rect virtualTileRect((xi+1)* g_sprites.spriteSize(), (yi+1)* g_sprites.spriteSize(), g_sprites.spriteSize(), g_sprites.spriteSize());
 
             // only render creatures where bottom right is inside tile rect
             if(virtualTileRect.contains(virtualCreatureRect.bottomRight())) {
@@ -695,12 +685,6 @@ void Creature::terminateWalk()
     if(m_walkUpdateEvent) {
         m_walkUpdateEvent->cancel();
         m_walkUpdateEvent = nullptr;
-    }
-
-    // now the walk has ended, do any scheduled turn
-    if(m_walkTurnDirection != Otc::InvalidDirection)  {
-        setDirection(m_walkTurnDirection);
-        m_walkTurnDirection = Otc::InvalidDirection;
     }
 
     if(m_walkingTile) {

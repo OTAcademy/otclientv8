@@ -841,7 +841,7 @@ void ProtocolGame::parseTileAddThing(const InputMessagePtr& msg)
     Position pos = getPosition(msg);
     int stackPos = -1;
 
-    if(g_game.getClientVersion() >= 841)
+    if(g_game.getFeature(Otc::GameTileAddThingWithStackpos))
         stackPos = msg->getU8();
 
     ThingPtr thing = getThing(msg);

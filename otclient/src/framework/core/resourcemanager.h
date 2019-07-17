@@ -25,9 +25,7 @@
 
 #include "declarations.h"
 
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 // @bindsingleton g_resources
 class ResourceManager
@@ -65,7 +63,7 @@ public:
     std::list<std::string> listDirectoryFiles(const std::string & directoryPath = "", bool fullPath = false, bool raw = false);
 
     std::string resolvePath(std::string path);
-    boost::filesystem::path getWriteDir() { return m_writeDir; }
+    std::filesystem::path getWriteDir() { return m_writeDir; }
     std::string getWorkDir() { return "/"; }
     std::string getBinaryName() { return m_binaryPath.filename().string(); }
 
@@ -90,11 +88,11 @@ public:
 #endif
     bool decryptBuffer(std::string & buffer);
 
-    void installDlls(boost::filesystem::path dest);
+    void installDlls(std::filesystem::path dest);
 
 
 private:
-    boost::filesystem::path m_binaryPath, m_writeDir;
+    std::filesystem::path m_binaryPath, m_writeDir;
     bool m_loadedFromMemory = false;
     bool m_loadedFromArchive = false;
     char* m_memoryDataBuffer = nullptr;

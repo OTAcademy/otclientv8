@@ -41,7 +41,7 @@ ResourceManager g_resources;
 
 void ResourceManager::init(const char *argv0)
 {
-    m_binaryPath = boost::filesystem::system_complete(argv0);
+    m_binaryPath = std::filesystem::absolute(argv0);
     PHYSFS_init(argv0);
     PHYSFS_permitSymbolicLinks(1);
 }
@@ -54,7 +54,7 @@ void ResourceManager::terminate()
 int ResourceManager::launchCorrect(const std::string& app) { // curently works only on windows
     auto init_path = m_binaryPath.parent_path();
     init_path /= "init.lua";
-    if (boost::filesystem::exists(init_path)) // debug version
+    if (std::filesystem::exists(init_path)) // debug version
         return 0;
 
     const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
@@ -65,11 +65,11 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
     fileName2 = stdext::split(fileName2, "-")[0];
     stdext::tolower(fileName2);
 
-    boost::filesystem::path path(localDir);
-    time_t lastWrite = boost::filesystem::last_write_time(m_binaryPath);
-    boost::filesystem::path binary = m_binaryPath;
-    for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) {
-        if (boost::filesystem::is_directory(entry.path()))
+    std::filesystem::path path(localDir);
+    auto lastWrite = std::filesystem::last_write_time(m_binaryPath);
+    std::filesystem::path binary = m_binaryPath;
+    for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(path), {})) {
+        if (std::filesystem::is_directory(entry.path()))
             continue;
 
         auto fileName1 = entry.path().stem().string();
@@ -79,15 +79,15 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
             continue;
 
         if (entry.path().extension() == m_binaryPath.extension()) {
-            auto writeTime = boost::filesystem::last_write_time(entry.path());
+            auto writeTime = std::filesystem::last_write_time(entry.path());
             if (writeTime > lastWrite) {
                 lastWrite = writeTime;
                 binary = entry.path();
             }
         }
     }
-    for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) { // remove old
-        if (boost::filesystem::is_directory(entry.path()))
+    for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(path), {})) { // remove old
+        if (std::filesystem::is_directory(entry.path()))
             continue;
 
         auto fileName1 = entry.path().stem().string();
@@ -99,12 +99,12 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
         if (entry.path().extension() == m_binaryPath.extension()) {
             if (binary == entry.path())
                 continue;
-            boost::system::error_code ec;
-            boost::filesystem::remove(entry.path(), ec);
+            std::error_code ec;
+            std::filesystem::remove(entry.path(), ec);
         }
     }
 
-    boost::process::child c(binary, "--from-updater");
+    boost::process::child c(binary.string(), "--from-updater");
     std::error_code ec;
     if (c.wait_for(std::chrono::seconds(15), ec)) {
         return c.exit_code() == 0 ? 1 : -1;
@@ -117,20 +117,20 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
 bool ResourceManager::setupWriteDir(const std::string& app) {
     const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
     if (!localDir) {
-        g_logger.fatal(stdext::format("Unable to get local dir, error: %s", PHYSFS_getLastError()));
+        g_logger.fatal(stdext::format("Unable to get local dir, error: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         return false;
     }
 
     if (!PHYSFS_mount(localDir, NULL, 0)) {
-        g_logger.fatal(stdext::format("Unable to mount local directory '%s': %s", localDir, PHYSFS_getLastError()));
+        g_logger.fatal(stdext::format("Unable to mount local directory '%s': %s", localDir, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         return false;
     }
 
     if (!PHYSFS_setWriteDir(localDir)) {
-        g_logger.fatal(stdext::format("Unable to set write dir '%s': %s", localDir, PHYSFS_getLastError()));
+        g_logger.fatal(stdext::format("Unable to set write dir '%s': %s", localDir, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         return false;
     }
-    m_writeDir = boost::filesystem::path(localDir);
+    m_writeDir = std::filesystem::path(localDir);
     return true;
 }
 
@@ -199,14 +199,14 @@ bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
 
     m_memoryDataBuffer = new char[m_memoryDataBufferSize];
     memcpy(m_memoryDataBuffer, &buffer[pos], m_memoryDataBufferSize);
-    if (PHYSFS_mountMemory(m_memoryDataBuffer, m_memoryDataBufferSize, [](void* pointer) { delete[] pointer; }, "data.zip", NULL, 0)) {
+    if (PHYSFS_mountMemory(m_memoryDataBuffer, m_memoryDataBufferSize, [](void* pointer) { delete[] (char*)pointer; }, "memory_data.zip", NULL, 0)) {
         if (PHYSFS_exists(existentFile.c_str())) {
             g_logger.debug("Found work dir in memory");
             m_loadedFromMemory = true;
             m_loadedFromArchive = true;
             return true;
         }
-        PHYSFS_unmount("data.zip");
+        PHYSFS_unmount("memory_data.zip");
         return false;
     }
     
@@ -254,11 +254,11 @@ std::string ResourceManager::readFileContents(const std::string& fileName)
 
     PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
     if(!file)
-        stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getLastError()));
+        stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
 
     int fileSize = PHYSFS_fileLength(file);
     std::string buffer(fileSize, 0);
-    PHYSFS_read(file, (void*)&buffer[0], 1, fileSize);
+    PHYSFS_readBytes(file, (void*)&buffer[0], fileSize);
     PHYSFS_close(file);
 
     static std::string unencryptedFiles[] = { "/config.otml", "/minimap.otmm", "/bot.otml", "/exception.dmp" };
@@ -281,11 +281,11 @@ bool ResourceManager::writeFileBuffer(const std::string& fileName, const uchar* 
 {
     PHYSFS_file* file = PHYSFS_openWrite(fileName.c_str());
     if(!file) {
-        g_logger.error(stdext::format("unable to open file for writing '%s': %s", fileName, PHYSFS_getLastError()));
+        g_logger.error(stdext::format("unable to open file for writing '%s': %s", fileName, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         return false;
     }
 
-    PHYSFS_write(file, (void*)data, size, 1);
+    PHYSFS_writeBytes(file, (void*)data, size);
     PHYSFS_close(file);
     return true;
 }
@@ -318,7 +318,7 @@ FileStreamPtr ResourceManager::appendFile(const std::string& fileName)
 {
     PHYSFS_File* file = PHYSFS_openAppend(fileName.c_str());
     if(!file)
-        stdext::throw_exception(stdext::format("failed to append file '%s': %s", fileName, PHYSFS_getLastError()));
+        stdext::throw_exception(stdext::format("failed to append file '%s': %s", fileName, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
     return FileStreamPtr(new FileStream(fileName, file, true));
 }
 
@@ -326,7 +326,7 @@ FileStreamPtr ResourceManager::createFile(const std::string& fileName)
 {
     PHYSFS_File* file = PHYSFS_openWrite(fileName.c_str());
     if(!file)
-        stdext::throw_exception(stdext::format("failed to create file '%s': %s", fileName, PHYSFS_getLastError()));
+        stdext::throw_exception(stdext::format("failed to create file '%s': %s", fileName, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
     return FileStreamPtr(new FileStream(fileName, file, true));
 }
 
@@ -345,6 +345,9 @@ std::list<std::string> ResourceManager::listDirectoryFiles(const std::string& di
     std::list<std::string> files;
     auto path = raw ? directoryPath : resolvePath(directoryPath);
     auto rc = PHYSFS_enumerateFiles(path.c_str());
+
+    if (!rc)
+        return files;
 
     for (int i = 0; rc[i] != NULL; i++) {
         if(fullPath)
@@ -428,7 +431,7 @@ std::string ResourceManager::fileChecksum(const std::string& path) {
 
     int fileSize = PHYSFS_fileLength(file);
     std::string buffer(fileSize, 0);
-    PHYSFS_read(file, (void*)&buffer[0], 1, fileSize);
+    PHYSFS_readBytes(file, (void*)&buffer[0], fileSize);
     PHYSFS_close(file);
 
     auto checksum = g_crypt.md5Encode(buffer, false);
@@ -480,7 +483,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
 
         m_memoryDataBufferSize = PHYSFS_fileLength(file);
         m_memoryDataBuffer = new char[m_memoryDataBufferSize];
-        PHYSFS_read(file, m_memoryDataBuffer, 1, m_memoryDataBufferSize);
+        PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
         PHYSFS_close(file);        
     }
 
@@ -531,11 +534,11 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
         return g_logger.fatal(stdext::format("can't open source: %s", zip_error_strerror(zip_source_error(src))));
 
     if (!m_loadedFromMemory && !PHYSFS_unmount((m_dataDir + "/data.zip").c_str()))
-        return g_logger.fatal(stdext::format("can't unmount data.zip: %s", PHYSFS_getLastError()));
+        return g_logger.fatal(stdext::format("can't unmount data.zip: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
 
     PHYSFS_file* file = PHYSFS_openWrite("data.zip");
     if(!file)
-        return g_logger.fatal(stdext::format("can't open data.zip for writing: %s", PHYSFS_getLastError()));
+        return g_logger.fatal(stdext::format("can't open data.zip for writing: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
 
     const size_t chunk_size = 1024 * 1024;
     std::vector<char> chunk(chunk_size);
@@ -543,7 +546,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
         size_t currentChunk = std::min<size_t>(zipSize, chunk_size);
         if ((zip_uint64_t)zip_source_read(src, chunk.data(), currentChunk) < currentChunk)
             return g_logger.fatal(stdext::format("can't read data from source: %s", zip_error_strerror(zip_source_error(src))));
-        PHYSFS_write(file, chunk.data(), currentChunk, 1);
+        PHYSFS_writeBytes(file, chunk.data(), currentChunk);
         zipSize -= currentChunk;
     }
 
@@ -556,22 +559,23 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
         if (it == downloads.end())
             return g_logger.fatal("Can't find new binary data in downloads");
 
-        boost::filesystem::path path(binaryName);
+        std::filesystem::path path(binaryName);
         auto newBinary = path.stem().string() + "-" + std::to_string(time(nullptr)) + path.extension().string();
         file = PHYSFS_openWrite(newBinary.c_str());
         if (!file)
-            return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getLastError()));
-        PHYSFS_write(file, it->second->response.data(), it->second->response.size(), 1);
+            return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
+        PHYSFS_writeBytes(file, it->second->response.data(), it->second->response.size());
         PHYSFS_close(file);
 
-        std::vector<boost::filesystem::path> outDir = { boost::filesystem::path(PHYSFS_getRealDir(newBinary.c_str())) };
-        installDlls(outDir[0]);
+        std::filesystem::path newBinaryPath(PHYSFS_getRealDir(newBinary.c_str()));
+        installDlls(newBinaryPath);
+        newBinaryPath /= newBinary;
         stdext::millisleep(500);
-        boost::process::spawn(boost::process::search_path(newBinary, outDir));
+        boost::process::spawn(newBinaryPath.string());
         return;
     }    
 
-    boost::process::spawn(m_binaryPath);
+    boost::process::spawn(m_binaryPath.string());
 }
 
 #ifdef WITH_ENCRYPTION
@@ -582,10 +586,15 @@ void ResourceManager::encrypt() {
     g_logger.setLogFile("encryption.log");
     g_logger.info("----------------------");
 
-    std::queue<boost::filesystem::path> toEncrypt;
+    std::queue<std::filesystem::path> toEncrypt;
+    // you can add custom files here
+    toEncrypt.push(std::filesystem::path("init.lua"));
+
     for (auto& dir : dirsToCheck) {
-        for(auto&& entry : boost::filesystem::recursive_directory_iterator(boost::filesystem::path(dir))) {
-            if (!boost::filesystem::is_regular_file(entry.path()))
+        if (!std::filesystem::exists(dir))
+            continue;
+        for(auto&& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path(dir))) {
+            if (!std::filesystem::is_regular_file(entry.path()))
                 continue;
             toEncrypt.push(entry.path());
         }
@@ -594,7 +603,7 @@ void ResourceManager::encrypt() {
     while (!toEncrypt.empty()) {
         auto it = toEncrypt.front();
         toEncrypt.pop();
-        boost::filesystem::ifstream in_file(it, std::ios::binary);
+        std::ifstream in_file(it, std::ios::binary);
         if (!in_file.is_open())
             continue;
         std::string buffer(std::istreambuf_iterator<char>(in_file), {});
@@ -617,7 +626,7 @@ void ResourceManager::encrypt() {
             continue;
         }
 
-        boost::filesystem::ofstream out_file(it, std::ios::binary);
+        std::ofstream out_file(it, std::ios::binary);
         if (!out_file.is_open())
             continue;
         out_file.write(buffer.data(), buffer.size());
@@ -695,27 +704,28 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
 }
 #endif
 
-void ResourceManager::installDlls(boost::filesystem::path dest)     
+void ResourceManager::installDlls(std::filesystem::path dest)     
 {
 #ifdef WIN32
     static std::list<std::string> dlls = {
         {"libEGL.dll"},
-        {"libGLESv2.dll"}
+        {"libGLESv2.dll"},
+        {"d3dcompiler_46.dll"}
     };
 
     int added_dlls = 0;
     for (auto& dll : dlls) {
         auto dll_path = m_binaryPath.parent_path();
         dll_path /= dll;
-        if (!boost::filesystem::exists(dll_path)) {
+        if (!std::filesystem::exists(dll_path)) {
             continue;
         }
         auto out_path = dest;
         out_path /= dll;
-        if (boost::filesystem::exists(out_path)) {
+        if (std::filesystem::exists(out_path)) {
             continue;
         }
-        boost::filesystem::copy_file(dll_path, out_path);
+        std::filesystem::copy_file(dll_path, out_path);
     }
 #endif
 }

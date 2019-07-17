@@ -43,7 +43,7 @@ void AdaptiveRenderer::refresh() {
 }
 
 int AdaptiveRenderer::effetsLimit() {
-    static int limits[RenderSpeeds] = { 20, 10, 7, 5, 3 };
+    static int limits[RenderSpeeds] = { 20, 10, 7, 4, 2 };
     return limits[m_speed];
 }
 
@@ -63,7 +63,7 @@ int AdaptiveRenderer::mapRenderInterval() {
 }
 
 int AdaptiveRenderer::textsLimit() {
-    static int limits[RenderSpeeds] = { 1000, 50, 30, 15, 7 };
+    static int limits[RenderSpeeds] = { 1000, 50, 30, 15, 5 };
     return limits[m_speed];
 }
 
@@ -89,6 +89,6 @@ int AdaptiveRenderer::foregroundUpdateInterval() {
 
 std::string AdaptiveRenderer::getDebugInfo() {
     std::stringstream ss;
-    ss << "Frames: " << m_frames.size();
+    ss << "Frames: " << m_frames.size() << "|" << m_speed << "|" << m_forcedSpeed;
     return ss.str();
 }

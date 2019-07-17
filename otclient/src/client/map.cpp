@@ -740,7 +740,7 @@ std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const
         Otc::Direction dir;
     };
 
-    struct LessNode : std::binary_function<std::pair<SNode*, float>, std::pair<SNode*, float>, bool> {
+    struct LessNode {
         bool operator()(std::pair<SNode*, float> a, std::pair<SNode*, float> b) const {
             return b.second < a.second;
         }
@@ -910,7 +910,7 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
         return ret;
     }
 
-    struct LessNode : std::binary_function<Node*, Node*, bool> {
+    struct LessNode {
         bool operator()(Node* a, Node* b) const {
             return b->totalCost < a->totalCost;
         }

@@ -154,7 +154,10 @@ GameIngameStoreHighlights = 74
 GameIngameStoreServiceType = 75
 GameAdditionalSkills = 76
 GameBot = 95
-
+GameForceLight = 97
+GameNoDebug = 98
+GameBotProtection = 99
+        
 TextColors = {
   red       = '#f55e5e', --'#c83200'
   orange    = '#f36500', --'#c87832'

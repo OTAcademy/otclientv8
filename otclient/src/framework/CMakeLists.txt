@@ -33,6 +33,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/util/size.h
     ${CMAKE_CURRENT_LIST_DIR}/util/stats.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/stats.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/extras.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/extras.h
 
     # stdext
     ${CMAKE_CURRENT_LIST_DIR}/stdext/any.h
@@ -65,10 +67,8 @@ set(framework_SOURCES ${framework_SOURCES}
     # core
     ${CMAKE_CURRENT_LIST_DIR}/core/application.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/application.h
-    ${CMAKE_CURRENT_LIST_DIR}/core/adaptativeframecounter.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/core/adaptativeframecounter.h
-    ${CMAKE_CURRENT_LIST_DIR}/core/adaptativerenderer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/core/adaptativerenderer.h
+    ${CMAKE_CURRENT_LIST_DIR}/core/adaptiverenderer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/core/adaptiverenderer.h
     ${CMAKE_CURRENT_LIST_DIR}/core/asyncdispatcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/asyncdispatcher.h
     ${CMAKE_CURRENT_LIST_DIR}/core/binarytree.cpp
@@ -142,7 +142,7 @@ set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/luafunctions.cpp
                             PROPERTIES LANGUAGE CXX COMPILE_FLAGS "-g0 -Os")
 
 # some build options
-option(LUAJIT "Use lua jit" OFF)
+option(LUAJIT "Use lua jit" ON)
 if(NOT APPLE)
     option(CRASH_HANDLER "Generate crash reports" ON)
     option(USE_STATIC_LIBS "Don't use shared libraries (dlls)" ON)
@@ -158,14 +158,14 @@ set(BUILD_REVISION "0" CACHE "Git revision string (intended for releases)" STRIN
 
 # default build type
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+    set(CMAKE_BUILD_TYPE "release")
 endif()
 
-include(FindCXX11)
+set (CMAKE_CXX_STANDARD 17)
 
 # gcc compile flags
-set(WARNS_FLAGS "-Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-unused-result")
-set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} ${CPP2011_FLAGS} -pipe")
+set(WARNS_FLAGS "-Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-unused-result -Wno-deprecated-copy -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -pipe -no-pie")
 set(CMAKE_CXX_FLAGS_COMPILESPEED      "-O0")
 set(CMAKE_CXX_FLAGS_DEBUG             "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO    "-O1 -g -fno-omit-frame-pointer")
@@ -198,16 +198,17 @@ add_definitions(-D"BUILD_COMMIT=\\\"${BUILD_COMMIT}\\\"")
 message(STATUS "Build revision: ${BUILD_REVISION}")
 add_definitions(-D"BUILD_REVISION=\\\"${BUILD_REVISION}\\\"")
 
+message(STATUS "Build with encryption")
+add_definitions(-D"WITH_ENCRYPTION")
+
 # find boost
-set(REQUIRED_BOOST_COMPONENTS system thread filesystem)
-if(WIN32)
-    set(Boost_THREADAPI win32)
-    set(framework_DEFINITIONS ${framework_DEFINITIONS} -DBOOST_THREAD_USE_LIB) # fix boost thread linkage
-endif()
+set(REQUIRED_BOOST_COMPONENTS system)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS ${USE_STATIC_LIBS})
-find_package(Boost 1.48.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
+find_package(Boost 1.67.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
 
+#find zip
+find_package(LibZip REQUIRED)        
 #find lua
 if(LUAJIT)
     find_package(LuaJIT REQUIRED)
@@ -232,6 +233,7 @@ set(framework_LIBRARIES ${framework_LIBRARIES}
     ${PHYSFS_LIBRARY}
     ${OPENSSL_LIBRARIES}
     ${ZLIB_LIBRARY}
+    ${LIBZIP_LIBRARY}
 )
 
 set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
@@ -240,6 +242,8 @@ set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
     ${PHYSFS_INCLUDE_DIR}
     ${OPENSSL_INCLUDE_DIR}
     ${framework_INCLUDE_DIRS}
+    ${LIBZIP_INCLUDE_DIR_ZIP}
+    ${LIBZIP_INCLUDE_DIR_ZIPCONF}
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -327,25 +331,13 @@ if(FRAMEWORK_GRAPHICS)
             set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -mwindows")
             message(STATUS "Windows console: OFF")
         endif()
-
-        # native dx9 support while its under development
-        option(DIRECTX "Use DX9 support" OFF)
-        if(DIRECTX)
-            find_package(DirectX REQUIRED)
-            set(framework_DEFINITIONS ${framework_DEFINITIONS} -DDIRECTX)
-            set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS} ${DirectX_INCLUDE_DIR})
-            set(framework_LIBRARIES ${framework_LIBRARIES} ${DirectX_LIBRARY} ${DirectX_LIBRARIES})
-            set(framework_SOURCES ${framework_SOURCES}
-                ${CMAKE_CURRENT_LIST_DIR}/graphics/dx/painterdx9.cpp
-                ${CMAKE_CURRENT_LIST_DIR}/graphics/dx/painterdx9.h
-            )
-        endif()
-
     else()
         set(framework_LIBRARIES ${framework_LIBRARIES} X11)
     endif()
 
     set(framework_SOURCES ${framework_SOURCES}
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/atlas.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/atlas.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/animatedtexture.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/animatedtexture.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/cachedtext.cpp
@@ -355,6 +347,8 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/graphics/declarations.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/bitmapfont.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/bitmapfont.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/drawqueue.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/drawqueue.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/fontmanager.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/fontmanager.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/framebuffer.cpp
@@ -370,13 +364,6 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/graphics/image.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/painter.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/painter.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl1.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl1.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl2.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl2.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/painterogl2_shadersources.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/paintershaderprogram.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/paintershaderprogram.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/particleaffector.cpp
@@ -404,6 +391,8 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/graphics/vertexarray.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/apngloader.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/apngloader.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/newshader.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/shadersources.h
 
         # ui
         ${CMAKE_CURRENT_LIST_DIR}/ui/declarations.h
@@ -512,10 +501,13 @@ if(FRAMEWORK_NET)
         ${CMAKE_CURRENT_LIST_DIR}/net/outputmessage.h
         ${CMAKE_CURRENT_LIST_DIR}/net/protocol.cpp
         ${CMAKE_CURRENT_LIST_DIR}/net/protocol.h
-        ${CMAKE_CURRENT_LIST_DIR}/net/protocolhttp.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/net/protocolhttp.h
         ${CMAKE_CURRENT_LIST_DIR}/net/server.cpp
         ${CMAKE_CURRENT_LIST_DIR}/net/server.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/http.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/http/http.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/session.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/http/session.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/result.h
     )
     set(framework_DEFINITIONS ${framework_DEFINITIONS} -DFW_NET)
 endif()

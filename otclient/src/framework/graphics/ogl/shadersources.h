@@ -40,22 +40,6 @@ static const std::string glslMainWithTexCoordsVertexShader = "\n\
         v_TexCoord = (u_TextureMatrix * vec3(a_TexCoord,1.0)).xy;\n\
     }\n";
 
-static const std::string glslLightVertexShader = "\n\
-    attribute highp vec4 a_Color;\n\
-    varying highp vec4 v_Color;\n\
-    attribute highp vec2 a_TexCoord;\n\
-    uniform highp mat3 u_TextureMatrix;\n\
-    uniform highp mat3 u_DepthTextureMatrix;\n\
-    varying highp vec2 v_TexCoord;\n\
-    varying highp vec2 v_DepthTexCoord;\n\
-    highp vec4 calculatePosition();\n\
-    void main() {\n\
-        gl_Position = calculatePosition();\n\
-        v_Color = a_Color;\n\
-        v_TexCoord = (u_TextureMatrix * vec3(a_TexCoord,1.0)).xy;\n\
-        v_DepthTexCoord = (u_DepthTextureMatrix * vec3(a_TexCoord,1.0)).xy;\n\
-    }\n";
-
 static std::string glslPositionOnlyVertexShader = "\n\
     attribute highp vec2 a_Vertex;\n\
     uniform highp mat3 u_TransformMatrix;\n\
@@ -67,14 +51,12 @@ static std::string glslPositionOnlyVertexShader = "\n\
 
 static const std::string glslMainFragmentShader = "\n\
     uniform lowp float u_Opacity;\n\
-    uniform lowp float u_GlobalOpacity;\n\
     uniform highp float u_Depth;\n\
     highp vec4 calculatePixel();\n\
     void main()\n\
     {\n\
         gl_FragColor = calculatePixel();\n\
         gl_FragColor.a *= u_Opacity;\n\
-        gl_FragColor.a *= u_GlobalOpacity;\n\
         if(gl_FragColor.a < 0.01 && u_Depth > 0.0)\n\
 	        discard;\n\
     }\n";
@@ -103,19 +85,5 @@ static const std::string glslSolidColorOnTextureFragmentShader = "\n\
             return u_Color;\n\
         return vec4(0,0,0,0);\n\
     }\n";
-
-static const std::string glslLightFragmentShader = "\n\
-    varying highp vec4 v_Color;\n\
-    varying mediump vec2 v_TexCoord;\n\
-    varying mediump vec2 v_DepthTexCoord;\n\
-    uniform sampler2D u_Tex0;\n\
-    uniform sampler2D u_TexDepth;\n\
-    highp vec4 calculatePixel() {\n\
-        //return texture2D(u_Tex0, vec2(v_TexCoord.xy) * v_Color;\n\
-        //if(texture2D(u_TexDepth, v_TexCoord.xy).r >= u_Depth)\n\
-        //    return texture2D(u_Tex0, v_TexCoord) * v_Color;\n\
-        return texture2D(u_TexDepth, v_DepthTexCoord);\n\
-    }\n";
-
 
 #endif

@@ -178,11 +178,11 @@ function toggleChat()
   if consoleToggleChat:isChecked() then
     disableChat()
   else
-    enableChat()
+    enableChat(false)
   end
 end
 
-function enableChat()
+function enableChat(temporarily)
   local gameInterface = modules.game_interface
 
   consoleTextEdit:setVisible(true)
@@ -190,12 +190,29 @@ function enableChat()
 
   g_keyboard.unbindKeyUp("Space")
   g_keyboard.unbindKeyUp("Enter")
-  g_keyboard.unbindKeyUp("Escape")
+  
+  if temporarily then
+    local quickFunc = function()
+      g_keyboard.unbindKeyUp("Enter")
+      g_keyboard.unbindKeyUp("Escape")
+      if not consoleToggleChat:isChecked() then
+        consoleToggleChat:setChecked(true)
+      end
+      disableChat()
+    end
+    g_keyboard.bindKeyUp("Enter", quickFunc)
+    g_keyboard.bindKeyUp("Escape", quickFunc)  
+  end
 
   gameInterface.unbindWalkKey("W")
   gameInterface.unbindWalkKey("D")
   gameInterface.unbindWalkKey("S")
   gameInterface.unbindWalkKey("A")
+
+  gameInterface.unbindTurnKey("Ctrl+W")
+  gameInterface.unbindTurnKey("Ctrl+D")
+  gameInterface.unbindTurnKey("Ctrl+S")
+  gameInterface.unbindTurnKey("Ctrl+A")
 
   gameInterface.unbindWalkKey("E")
   gameInterface.unbindWalkKey("Q")
@@ -215,16 +232,20 @@ function disableChat()
     if consoleToggleChat:isChecked() then
       consoleToggleChat:setChecked(false)
     end
-    enableChat()
+    enableChat(true)
   end
   g_keyboard.bindKeyUp("Space", quickFunc)
   g_keyboard.bindKeyUp("Enter", quickFunc)
-  g_keyboard.bindKeyUp("Escape", quickFunc)
 
   gameInterface.bindWalkKey("W", North)
   gameInterface.bindWalkKey("D", East)
   gameInterface.bindWalkKey("S", South)
   gameInterface.bindWalkKey("A", West)
+
+  gameInterface.bindTurnKey("Ctrl+W", North)
+  gameInterface.bindTurnKey("Ctrl+D", East)
+  gameInterface.bindTurnKey("Ctrl+S", South)
+  gameInterface.bindTurnKey("Ctrl+A", West)
 
   gameInterface.bindWalkKey("E", NorthEast)
   gameInterface.bindWalkKey("Q", NorthWest)

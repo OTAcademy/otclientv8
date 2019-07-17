@@ -39,7 +39,6 @@ Painter::Painter()
     m_oldStateIndex = 0;
     m_color = Color::white;
     m_opacity = 1.0f;
-    m_globalOpacity = 1.0f;
     m_depth = 0;
     m_compositionMode = CompositionMode_Normal;
     m_blendEquation = BlendEquation_Add;
@@ -183,7 +182,11 @@ void Painter::restoreSavedState()
 void Painter::clear(const Color& color)
 {
     glClearColor(color.rF(), color.gF(), color.bF(), color.aF());
+#ifdef OPENGL_ES
     glClearDepthf(0.99f);
+#else
+    glClearDepth(0.99f);
+#endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -192,7 +195,11 @@ void Painter::clearRect(const Color& color, const Rect& rect)
     Rect oldClipRect = m_clipRect;
     setClipRect(rect);
     glClearColor(color.rF(), color.gF(), color.bF(), color.aF());
+#ifdef OPENGL_ES
     glClearDepthf(0.99f);
+#else
+    glClearDepth(0.99f);
+#endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     setClipRect(oldClipRect);
 }
@@ -215,6 +222,8 @@ void Painter::setBlendEquation(Painter::BlendEquation blendEquation)
 
 void Painter::setDepthFunc(DepthFunc func) 
 {
+    if (!g_graphics.canUseDepth())
+        return;
     if (m_depthFunc == func)
         return;
     m_depthFunc = func;
@@ -251,10 +260,10 @@ void Painter::setTexture(Texture* texture)
 
 void Painter::setDepthTexture(Texture* texture)
 {
+    if (!g_graphics.canUseDepth())
+        return;
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_2D, texture ? texture->getId() : 0);
-    if (texture)
-        m_drawLightProgram->setDepthTextureMatrix(texture->getTransformMatrix());
     glActiveTexture(GL_TEXTURE0);
 }
 
@@ -399,40 +408,44 @@ void Painter::updateGlBlendEquation()
 
 void Painter::updateDepthFunc()
 {
-    if (m_depthFunc == DepthFunc_None) {
-        glDisable(GL_DEPTH_TEST);
+    if (!g_graphics.canUseDepth())
         return;
+
+    if (m_depthFunc != DepthFunc_None) {
+        glEnable(GL_DEPTH_TEST);
     }
-    glEnable(GL_DEPTH_TEST);
 
     switch (m_depthFunc) {
+        case DepthFunc_None:
+            glDisable(GL_DEPTH_TEST);
+            break;
         case DepthFunc_ALWAYS:
             glDepthFunc(GL_ALWAYS);
-            glDepthMask(TRUE);  
+            glDepthMask(GL_TRUE);  
             break;
         case DepthFunc_ALWAYS_READ:
             glDepthFunc(GL_ALWAYS);
-            glDepthMask(FALSE);  
+            glDepthMask(GL_FALSE);  
             break;
         case DepthFunc_EQUAL:
             glDepthFunc(GL_EQUAL);
-            glDepthMask(TRUE);  
+            glDepthMask(GL_TRUE);  
             break;
         case DepthFunc_LEQUAL:
             glDepthFunc(GL_LEQUAL);
-            glDepthMask(TRUE);  
+            glDepthMask(GL_TRUE);  
             break;
         case DepthFunc_LEQUAL_READ:
             glDepthFunc(GL_LEQUAL);
-            glDepthMask(FALSE);  
+            glDepthMask(GL_FALSE);  
             break;
         case DepthFunc_LESS:
             glDepthFunc(GL_LESS);
-            glDepthMask(TRUE);  
+            glDepthMask(GL_TRUE);  
             break;
         case DepthFunc_LESS_READ:
             glDepthFunc(GL_LESS);
-            glDepthMask(FALSE);  
+            glDepthMask(GL_FALSE);  
             break;
     }
 }
@@ -484,7 +497,6 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
 
     m_drawProgram->setOpacity(m_opacity);
     m_drawProgram->setDepth(m_depth);
-    m_drawProgram->setGlobalOpacity(m_globalOpacity);
     m_drawProgram->setColor(m_color);
     m_drawProgram->setResolution(m_resolution);
     m_drawProgram->updateTime();
@@ -521,6 +533,8 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     else if(drawMode == TriangleStrip)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+    m_draws += vertexCount / 6;
+    m_calls += 1;
 
     if(!textured)
         PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
@@ -635,11 +649,11 @@ void Painter::drawBoundingRect(const Rect& dest, int innerLineWidth)
 
 // new render
 void Painter::setAtlasTextures(const TexturePtr& atlas) {
-    static int activeTexture = 0;
+    static uint activeTexture = 0;
     if (activeTexture == atlas->getId())
         return;
     activeTexture = atlas ? atlas->getId() : 0;
-    glActiveTexture(GL_TEXTURE4);
+    glActiveTexture(GL_TEXTURE6); // atlas
     glBindTexture(GL_TEXTURE_2D, activeTexture);
     if (atlas)
         m_atlasTextureMatrix = atlas->getTransformMatrix();
@@ -681,24 +695,24 @@ void Painter::drawQueue(DrawQueue& drawqueue) {
     static std::vector<float> depthBuffer(8192 * 6);
     static std::vector<float> colorBuffer(8192 * 4 * 6);
 
-    if (!drawqueue.atlas())
+    if (!drawqueue.getAtlas())
         return;
 
-    setAtlasTextures(drawqueue.atlas());
+    setAtlasTextures(drawqueue.getAtlas());
 
     size_t size = 0;
 
     for(auto& item : drawqueue.items()) {        
-        if (!item.cached)
+        if (!item->cached)
             continue;
-        addRect(&destCoords[size * 12], item.dest);
-        addRect(&texCoords[size * 12], item.src);
+        addRect(&destCoords[size * 12], item->dest);
+        addRect(&texCoords[size * 12], item->src);
         for (int j = 0; j < 6; ++j) {
-            depthBuffer[size * 6 + j] = item.depth;
-            colorBuffer[size * 24 + j * 4] = item.color.rF();
-            colorBuffer[size * 24 + j * 4 + 1] = item.color.gF();
-            colorBuffer[size * 24 + j * 4 + 2] = item.color.bF();
-            colorBuffer[size * 24 + j * 4 + 3] = item.color.aF();
+            depthBuffer[size * 6 + j] = item->depth;
+            colorBuffer[size * 24 + j * 4] = item->color.rF();
+            colorBuffer[size * 24 + j * 4 + 1] = item->color.gF();
+            colorBuffer[size * 24 + j * 4 + 2] = item->color.bF();
+            colorBuffer[size * 24 + j * 4 + 3] = item->color.aF();
         }
         if (++size >= 8192)
             break;
@@ -719,6 +733,8 @@ void Painter::drawQueue(DrawQueue& drawqueue) {
     m_drawNewProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, colorBuffer.data(), 4);
 
     glDrawArrays(GL_TRIANGLES, 0, size * 6);
+    m_draws += size;
+    m_calls += 1;
 
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
@@ -736,7 +752,7 @@ void Painter::drawLights(const std::map<Point, LightSource>& lights, const Textu
 
     size_t size = std::min<size_t>(1024, lights.size());
 
-    int i = 0;
+    size_t i = 0;
     for(auto& it : lights) {
         auto& light = it.second;
         addRect(&destCoords[i * 12], RectF(PointF(it.first.x - light.radius, it.first.y - light.radius), SizeF(light.radius * 2, light.radius * 2)) * (1. / scaling));
@@ -769,6 +785,8 @@ void Painter::drawLights(const std::map<Point, LightSource>& lights, const Textu
     m_drawLightProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, colorBuffer.data(), 4);
 
     glDrawArrays(GL_TRIANGLES, 0, size * 6);
+    m_draws += size;
+    m_calls += 1;
 
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
@@ -795,4 +813,6 @@ void Painter::drawLightDepthTexture(const Rect& dest, const TexturePtr& depthTex
     m_drawLightDepthScalingProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, texCoords.data(), 2);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    m_draws += 1;
+    m_calls += 1;
 }

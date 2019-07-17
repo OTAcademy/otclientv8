@@ -51,7 +51,7 @@ public:
 
     void clearAll();
 
-    std::string getSlow(int type, int limit, int minTime, bool pretty);
+    std::string getSlow(int type, int limit, unsigned int minTime, bool pretty);
     void clearSlow(int type);
 
     int types() { return STATS_LAST + 1; }
@@ -81,8 +81,8 @@ public:
     AutoStat & operator=(const AutoStat&) = delete;
 
 private:
-    Stat* m_stat;
     int m_type;
+    Stat* m_stat;
 
 protected:
     uint64_t m_minusTime = 0;

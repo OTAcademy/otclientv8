@@ -1,9 +1,7 @@
 #ifndef  HTTP_H
 #define HTTP_H
 
-#include <thread>
-#include <boost/asio.hpp>
-#include <map>
+#include <framework/global.h>
 #include "result.h"
 
 class Http {

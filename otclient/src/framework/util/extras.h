@@ -8,17 +8,16 @@
 
 constexpr bool default_value = true;
 
-#define DEFINE_OPTION(option, description) m_options[#option] = std::make_pair(description, &(this->option##));
+#define DEFINE_OPTION(option, description) { m_options[ #option ] = std::make_pair(description, &(this -> option )); }
 
 class Extras {
 public:
     Extras() {
-        //DEFINE_OPTION(botDetection, "Bot detection");
-
         DEFINE_OPTION(limitedPolling, "Limited polling");
 
         DEFINE_OPTION(debugWalking, "Debbug walking");
         DEFINE_OPTION(debugPathfinding, "Debbug path finding");
+        DEFINE_OPTION(debugRender, "Debbug render");
     }
 
     bool botDetection = default_value;
@@ -28,6 +27,7 @@ public:
 
     bool debugWalking  = false;
     bool debugPathfinding  = false;
+    bool debugRender = false;
 
     int testMode = 0;
 
@@ -46,14 +46,14 @@ public:
             g_logger.fatal(std::string("Invalid extraOptions key:") + key);
             return false;
         }
-        return *it->second.second;
+        return *(it->second.second);
     }
 
     std::string getDescription(const std::string& key) {
         auto it = m_options.find(key);
         if (it == m_options.end()) {
             g_logger.fatal(std::string("Invalid extraOptions key:") + key);
-            return false;
+            return "";
         }
         return it->second.first;
     }

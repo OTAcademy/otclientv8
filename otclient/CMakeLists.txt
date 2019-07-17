@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(otclient)
 
 set(VERSION "0.6.6")
+set(CMAKE_CXX_STANDARD 17)
 
 option(FRAMEWORK_SOUND "Use SOUND " ON)
 option(FRAMEWORK_GRAPHICS "Use GRAPHICS " ON)
@@ -14,7 +15,7 @@ include(src/client/CMakeLists.txt)
 
 # functions map for reading backtraces
 if(NOT APPLE)
-    set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,-Map=${PROJECT_NAME}.map")
+    set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie -Wl,-Map=${PROJECT_NAME}.map")
 endif()
 
 option(USE_PCH "Use precompiled header (speed up compile)" OFF)
@@ -22,6 +23,7 @@ option(USE_PCH "Use precompiled header (speed up compile)" OFF)
 set(executable_SOURCES
     src/main.cpp
 )
+
 
 # add executable icon for win32 platforms
 if(WIN32)

@@ -303,19 +303,42 @@ void WIN32Window::internalCreateWindow()
 void WIN32Window::internalCreateGLContext()
 {
 #ifdef OPENGL_ES
-    m_eglDisplay = eglGetDisplay(m_deviceContext);
-    /*std::vector<EGLint> display_attribs;
-    display_attribs.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
-    display_attribs.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE);
-    display_attribs.push_back(EGL_NONE);
-    m_eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, m_deviceContext, display_attribs.data());
+
+#ifdef WIN32
+    /*
+    const EGLint displayAttributes[] =
+    {
+        EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE,
+        EGL_PLATFORM_ANGLE_MAX_VERSION_MAJOR_ANGLE, 0,
+        EGL_PLATFORM_ANGLE_MAX_VERSION_MINOR_ANGLE, 0,
+        EGL_NONE,
+    };
+
+    PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT = reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(eglGetProcAddress("eglGetPlatformDisplayEXT"));
+
+    if (eglGetPlatformDisplayEXT)
+        m_eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, displayAttributes);
     */
-    if (m_eglDisplay == EGL_NO_DISPLAY) {
-        g_logger.fatal("EGL not supported, try to use OpenGL version, install directx drivers or update libEGL.dll and libGLESv2.dll");
+    if (!m_eglDisplay)
+        m_eglDisplay = eglGetDisplay(m_deviceContext);
+
+    if (m_eglDisplay == EGL_NO_DISPLAY)
+    {
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. (m_eglDisplay == EGL_NO_DISPLAY)");
     }
 
     if(!eglInitialize(m_eglDisplay, NULL, NULL))
-        g_logger.fatal("Unable to initialize EGL");
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. (eglInitialize)");
+#else
+    m_eglDisplay = eglGetDisplay(m_deviceContext);
+
+    if (m_eglDisplay == EGL_NO_DISPLAY) {
+        g_logger.fatal("EGL is not supported, try to use OpenGL version.");
+    }
+
+    if (!eglInitialize(m_eglDisplay, NULL, NULL))
+        g_logger.fatal("EGL is not supported, try to use OpenGL version.");
+#endif
 
     static int configList[] = {
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -362,7 +385,7 @@ void WIN32Window::internalCreateGLContext()
                                          0,                          // Shift Bit Ignored
                                          0,                          // No Accumulation Buffer
                                          0, 0, 0, 0,                 // Accumulation Bits Ignored
-                                         0,                         // Z-Buffer (Depth Buffer)
+                                         0,                          // Z-Buffer (Depth Buffer)
                                          0,                          // No Stencil Buffer
                                          0,                          // No Auxiliary Buffer
                                          PFD_MAIN_PLANE,             // Main Drawing Layer
@@ -772,7 +795,7 @@ void WIN32Window::hideMouse()
 
 void WIN32Window::displayFatalError(const std::string& message)
 {
-    MessageBoxW(m_window, stdext::latin1_to_utf16(message).c_str(), L"FATAL ERROR", MB_OK | MB_ICONERROR);
+    MessageBoxW(m_window, stdext::latin1_to_utf16(message).c_str(), L"FATAL ERROR", MB_OK | MB_ICONERROR | MB_TOPMOST);
 }
 
 int WIN32Window::internalLoadMouseCursor(const ImagePtr& image, const Point& hotSpot)

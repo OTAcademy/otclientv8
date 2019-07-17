@@ -91,7 +91,7 @@ void Effect::onAppear()
 
     int duration = 0;
     if(g_game.getFeature(Otc::GameEnhancedAnimations)) {
-        duration = getThingType()->getAnimator()->getTotalDuration();
+        duration = getThingType()->getAnimator() ? getThingType()->getAnimator()->getTotalDuration() : 1000;
     } else {
         duration = EFFECT_TICKS_PER_FRAME;
 

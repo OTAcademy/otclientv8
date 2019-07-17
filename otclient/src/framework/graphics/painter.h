@@ -170,7 +170,6 @@ public:
     void rotate(const Point& p, float angle) { rotate(p.x, p.y, angle); }
 
     void setOpacity(float opacity) { m_opacity = opacity; }
-    void setGlobalOpacity(float opacity) { m_globalOpacity = opacity; }
 
     void setDepth(float depth) { m_depth = depth; }
     float getDepth() { return m_depth; }
@@ -178,7 +177,6 @@ public:
     Size getResolution() { return m_resolution; }
     Color getColor() { return m_color; }
     float getOpacity() { return m_opacity; }
-    float getGlobalOpacity() { return m_globalOpacity; }
     Rect getClipRect() { return m_clipRect; }
     CompositionMode getCompositionMode() { return m_compositionMode; }
 
@@ -186,12 +184,19 @@ public:
 
     void resetClipRect() { setClipRect(Rect()); }
     void resetOpacity() { setOpacity(1.0f); }
-    void resetGlobalOpacity() { setGlobalOpacity(1.0f); }
     void resetDepth() { return setDepth(0.0f); }
     void resetCompositionMode() { setCompositionMode(CompositionMode_Normal); }
     void resetColor() { setColor(Color::white); }
     void resetShaderProgram() { setShaderProgram(nullptr); }
     void resetDepthFunc() { setDepthFunc(DepthFunc_None); }
+
+    int draws() { return m_draws; }
+    int calls() { return m_calls; }
+    void resetDraws() { m_draws = m_calls = 0; }
+
+    void setDrawColorOnTextureShaderProgram() {
+        setShaderProgram(m_drawSolidColorOnTextureProgram);
+    }
 
 protected:
     void updateGlTexture();
@@ -226,9 +231,10 @@ protected:
     Color m_color;
     Size m_resolution;
     float m_opacity;
-    float m_globalOpacity;
     float m_depth;
     Rect m_clipRect;
+    int m_draws = 0;
+    int m_calls = 0;
 
 private:
     PainterShaderProgram *m_drawProgram;

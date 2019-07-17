@@ -353,6 +353,7 @@ std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)
 
     int outTextPos = 0, lastSeparator = 0, lineLength = 0, wordLength = 0;
     for (size_t i = 0; i < text.size(); ++i) {
+        uchar glyph = (uchar)text[i];
         if (text[i] == '\n' || text[i] == ' ') {
             lineLength += wordLength;
             if (lineLength > maxWidth) { // too long line with this word
@@ -370,16 +371,16 @@ std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)
                 lineLength = 0;
                 lastSeparator = i + 1;
             } else { // space
-                wordLength = m_glyphsSize[text[i]].width() + m_glyphSpacing.width(); // space
+                wordLength = m_glyphsSize[glyph].width() + m_glyphSpacing.width(); // space
                 lastSeparator = i;
             }
             continue;
         }
 
-        if (text[i] < 32 || text[i] > 126) // not ascii character
+        if (glyph < 32 || glyph > 126) // not ascii character
             continue; 
 
-        wordLength += m_glyphsSize[text[i]].width() + m_glyphSpacing.width();
+        wordLength += m_glyphsSize[glyph].width() + m_glyphSpacing.width();
         if (wordLength > maxWidth) { // too long word, split it
             if(lineLength != 0) // add new line if current one is not empty
                 outText += '\n';
@@ -391,7 +392,7 @@ std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)
             outText += '-'; // word continuation
             outText += '\n'; // new line
 
-            wordLength = m_glyphsSize[text[i]].width() + m_glyphSpacing.width();
+            wordLength = m_glyphsSize[glyph].width() + m_glyphSpacing.width();
             lineLength = 0;
             lastSeparator = i;
         }

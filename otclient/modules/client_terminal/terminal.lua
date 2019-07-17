@@ -140,7 +140,7 @@ function init()
 
   terminalWindow.onDoubleClick = popWindow
 
-  terminalButton = modules.client_topmenu.addLeftButton('terminalButton', tr('Terminal') .. ' (Ctrl + T)', '/images/topbuttons/terminal', toggle)
+  --terminalButton = modules.client_topmenu.addLeftButton('terminalButton', tr('Terminal') .. ' (Ctrl + T)', '/images/topbuttons/terminal', toggle)
   g_keyboard.bindKeyDown('Ctrl+T', toggle)
 
   commandHistory = g_settings.getList('terminal-history')
@@ -197,13 +197,13 @@ function terminate()
   g_keyboard.unbindKeyDown('Ctrl+T')
   g_logger.setOnLog(nil)
   terminalWindow:destroy()
-  terminalButton:destroy()
+  --terminalButton:destroy()
   commandEnv = nil
   _G.terminalLines = allLines
 end
 
 function hideButton()
-  terminalButton:hide()
+  --terminalButton:hide()
 end
 
 function popWindow()
@@ -265,7 +265,7 @@ function hide()
 end
 
 function disable()
-  terminalButton:hide()
+  --terminalButton:hide()
   g_keyboard.unbindKeyDown('Ctrl+T')
   disabled = true
 end
@@ -317,6 +317,10 @@ function executeCommand(command)
 
   -- add command line
   addLine("> " .. command, "#ffffff")
+  if g_game.getFeature(GameNoDebug) then
+    addLine("Terminal is disabled on this server", "#ff8888")
+    return    
+  end
 
   -- reset current history index
   currentHistoryIndex = 0

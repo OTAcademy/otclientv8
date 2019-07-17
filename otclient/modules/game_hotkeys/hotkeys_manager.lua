@@ -376,11 +376,11 @@ function doKeyCombo(keyCombo)
   local hotKey = hotkeyList[keyCombo]
   if not hotKey then return end
 
-  if g_clock.millis() - lastHotkeyTime < modules.client_options.getOption('hotkeyDelay') then
+  if g_clock.millis() - lastHotkeyTime < 20 then
     return
   end
   lastHotkeyTime = g_clock.millis()
-
+	
   if hotKey.itemId == nil then
     if not hotKey.value or #hotKey.value == 0 then return end
     if hotKey.autoSend then
@@ -389,7 +389,7 @@ function doKeyCombo(keyCombo)
       modules.game_console.setTextEditText(hotKey.value)
     end
   elseif hotKey.useType == HOTKEY_MANAGER_USE then
-    if g_game.getClientVersion() < 780 or hotKey.subType then
+    if g_game.getClientVersion() < 740 then
       local item = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
       if item then
         g_game.use(item)
@@ -398,45 +398,45 @@ function doKeyCombo(keyCombo)
       g_game.useInventoryItem(hotKey.itemId)
     end
   elseif hotKey.useType == HOTKEY_MANAGER_USEONSELF then
-    if g_game.getClientVersion() < 780 or hotKey.subType then
+    if g_game.getClientVersion() < 740 then
       local item = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
       if item then
         g_game.useWith(item, g_game.getLocalPlayer())
       end
     else
-      g_game.useInventoryItemWith(hotKey.itemId, g_game.getLocalPlayer())
+      g_game.useInventoryItemWith(hotKey.itemId, g_game.getLocalPlayer(), hotKey.subType or -1)
     end
   elseif hotKey.useType == HOTKEY_MANAGER_USEONTARGET then
     local attackingCreature = g_game.getAttackingCreature()
     if not attackingCreature then
       local item = Item.create(hotKey.itemId)
-      if g_game.getClientVersion() < 780 or hotKey.subType then
+      if g_game.getClientVersion() < 740 then
         local tmpItem = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
         if not tmpItem then return end
         item = tmpItem
       end
 
-      modules.game_interface.startUseWith(item)
+      modules.game_interface.startUseWith(item, hotKey.subType or - 1)
       return
     end
 
     if not attackingCreature:getTile() then return end
-    if g_game.getClientVersion() < 780 or hotKey.subType then
+    if g_game.getClientVersion() < 740 then
       local item = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
       if item then
-        g_game.useWith(item, attackingCreature)
+        g_game.useWith(item, attackingCreature, hotKey.subType or -1)
       end
     else
-      g_game.useInventoryItemWith(hotKey.itemId, attackingCreature)
+      g_game.useInventoryItemWith(hotKey.itemId, attackingCreature, hotKey.subType or -1)
     end
   elseif hotKey.useType == HOTKEY_MANAGER_USEWITH then
     local item = Item.create(hotKey.itemId)
-    if g_game.getClientVersion() < 780 or hotKey.subType then
+    if g_game.getClientVersion() < 740 then
       local tmpItem = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
       if not tmpItem then return true end
       item = tmpItem
     end
-    modules.game_interface.startUseWith(item)
+    modules.game_interface.startUseWith(item, hotKey.subType or - 1)
   end
 end
 

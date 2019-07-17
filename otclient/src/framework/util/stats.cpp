@@ -79,7 +79,7 @@ void Stats::clearAll() {
     }
 }
 
-std::string Stats::getSlow(int type, int limit, int minTime, bool pretty) {
+std::string Stats::getSlow(int type, int limit, unsigned int minTime, bool pretty) {
     if (type > STATS_LAST)
         return "";
 

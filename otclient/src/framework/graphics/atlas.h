@@ -6,6 +6,14 @@
 #include <map>
 #include <vector>
 
+struct CachedAtlasObject {
+    CachedAtlasObject(Point& _position, uint32_t _lastUsed, int _index) :
+        position(_position), lastUsed(_lastUsed), index(_index) {}
+    Point position;
+    uint32_t lastUsed;
+    int index;
+};
+
 class Atlas {
 public:
     void init();
@@ -21,9 +29,9 @@ private:
     void drawOutfit(const Point& location, const DrawQueueOutfit& outfit);
 
     FrameBufferPtr m_atlas[2];
-    std::map<TexturePtr, std::pair<Point, uint32_t>> m_textures[2];
-    std::map<size_t, std::pair<Point, uint32_t>> m_outfits[2];
-    std::list<Point> m_locations[2][4];
+    std::map<TexturePtr, CachedAtlasObject> m_textures[2];
+    std::map<size_t, CachedAtlasObject> m_outfits[2];
+    std::list<Point> m_locations[2][5];
     size_t m_size;
 };
 
