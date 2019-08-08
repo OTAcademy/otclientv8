@@ -23,6 +23,11 @@ Panel
     margin: 5 5 5 5
 
   OptionCheckBox
+    id: vsync
+    !text: tr('Enable vertical synchronization')
+    !tooltip: tr('Limits FPS (usually to 60)')
+
+  OptionCheckBox
     id: showFps
     !text: tr('Show frame rate')
 
@@ -102,4 +107,14 @@ Panel
     margin-top: 3
     minimum: 0
     maximum: 100
-
+  
+  Label
+    id: tips
+    margin-top: 20
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    text-auto-resize: true
+    text-align: left
+    text-wrap: true
+    !text: tr("If you have FPS issues:\n- Use OpenGL version (_gl)\n- Disable vertical synchronization\n- Set higher optimization level\n- Lower screen resolution\nOr report it via email to otclient@otclient.ovh")

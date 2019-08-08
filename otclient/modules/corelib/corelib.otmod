@@ -26,5 +26,8 @@ Module
 
     dofile 'inputmessage'
     dofile 'outputmessage'
-    dofile 'json'
     dofile 'orderedtable'
+    
+    dofile 'json'
+    dofile 'http'
+    

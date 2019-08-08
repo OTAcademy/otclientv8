@@ -135,8 +135,6 @@ void GraphicalApplication::run()
     auto lastRender = stdext::micros();
     auto lastForegroundRender = stdext::millis();
 
-    g_window.setVerticalSync(false);
-
     while(!m_stopping) {
         m_iteration += 1;
 
@@ -148,7 +146,7 @@ void GraphicalApplication::run()
         g_clock.update();
 
         if (!g_window.isVisible()) {
-            stdext::microsleep(1000);
+            stdext::millisleep(1);
             g_adaptiveRenderer.refresh();
             continue;
         }
@@ -156,8 +154,7 @@ void GraphicalApplication::run()
         int frameDelay = getMaxFps() <= 0 ? 0 : (1000000 / getMaxFps()) - 2000;
 
         if (lastRender + frameDelay > stdext::micros()) {
-            g_atlas.clean(false);
-            stdext::microsleep(2000);
+            stdext::millisleep(1);
             continue;
         }
         lastRender = stdext::micros();
@@ -198,7 +195,6 @@ void GraphicalApplication::run()
         {
             AutoStat s(STATS_MAIN, "SwapBuffers");
             g_window.swapBuffers();
-            g_atlas.clean(true);
         }
     }
 

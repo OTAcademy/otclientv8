@@ -58,6 +58,9 @@ ConsoleTabBarButton < MoveableTabBarButton
 Panel
   id: consolePanel
   anchors.fill: parent
+  image-source: /images/ui/panel_bottom
+  image-border: 4
+  phantom: false
 
   CheckBox
     id: toggleChat
@@ -150,6 +153,7 @@ Panel
     margin-top: 4
     padding: 1
     focusable: false
+    phantom: true
 
   TabButton
     id: sayModeButton

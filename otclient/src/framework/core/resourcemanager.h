@@ -32,14 +32,16 @@ class ResourceManager
 {
 public:
     // @dontbind
-    void init(const char *argv0);
+    void init(const char *argv0, bool failsafe);
     // @dontbind
     void terminate();
 
-    int launchCorrect(const std::string& app);
-    bool setupWriteDir(const std::string& app);
+    int launchCorrect(const std::string& product, const std::string& app);
+    void launchFailsafe();
+    bool setupWriteDir(const std::string& product, const std::string& app);
     bool setup(const std::string& existentFile);
 
+    std::string getCompactName(const std::string& existentFile);
     bool loadDataFromSelf(const std::string & existentFile);
 
     bool fileExists(const std::string& fileName);
@@ -95,6 +97,7 @@ private:
     std::filesystem::path m_binaryPath, m_writeDir;
     bool m_loadedFromMemory = false;
     bool m_loadedFromArchive = false;
+    bool m_failsafe = false;
     char* m_memoryDataBuffer = nullptr;
     size_t m_memoryDataBufferSize = 0;
     std::string m_dataDir;

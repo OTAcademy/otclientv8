@@ -12,9 +12,6 @@ HOW IT WORKS:
 6. call c++ update function
 ]]--
 
-local getStatusId = 0
-local downloadId = 0
-local downloadRetries = 0
 local filesUrl = ""
 
 local updaterWindow = nil
@@ -36,37 +33,63 @@ local aborted = false
 local statusData = nil
 local thingsUpdate = {}
 local toUpdate = {}
+local thingsUpdateOptionalError = nil
 
-
-local function onGet(operationId, url, err, data)
+local function onDownload(path, checksum, err)
   if aborted then
     return
   end
-  if(operationId == getStatusId) then
-    gotStatus(data, err)
+  
+  if err then
+    if downloadRetries > Updater.maxRetries then
+      return updateError("Can't download file: " .. path .. ".\nError: " .. err)
+    else
+      downloadRetries = downloadRetries + 1
+      return downloadNextFile(true)
+    end
   end
+  if statusData["files"][path] == nil then
+      return updateError("Invalid file path: " .. path)    
+  elseif statusData["files"][path] ~= checksum then
+      return updateError("Invalid file checksum.\nFile: " .. path .. "\nShould be:\n" .. statusData["files"][path] .. "\nIs:\n" .. checksum)  
+  end
+  downloadIter = downloadIter + 1
+  updateProgressBar:setPercent(math.ceil((100 * downloadIter) / #toUpdate))
+  downloadProgressBar:setPercent(100)
+  downloadProgressBar:setText("")
+  downloadNextFile(false)
 end
 
-local function onGetProgress(operationId, url, progress)
-
+local function onDownloadProgress(progress, speed)
+  downloadProgressBar:setPercent(progress)
+  downloadProgressBar:setText(speed .. " kbps")  
 end
 
-local function onDownload(operationId, url, err, path, checksum)
-  if aborted then
-    return
+local function gotStatus(data, err)
+  if err then
+    return updateError(err)
   end
-  if downloadId == operationId then
-    downloadedFile(path, err, checksum)
+  if data["error"] ~= nil and data["error"]:len() > 0 then
+    return updateError(data["error"])     
   end
-end
-
-local function onDownloadProgress(operationId, url, progress, speed)  
-  if aborted then
-    return
+  if data["url"] == nil or data["files"] == nil or data["binary"] == nil then
+    return updateError("Invalid json data from server")    
   end
-  if downloadId == operationId then
-    print("Download speed: " .. speed .. " kbps")
-    downloadProgressBar:setPercent(progress)
+  if data["things"] ~= nil then
+    for file, checksum in pairs(data["things"]) do
+      if #checksum > 1 then
+        for thingtype, thingdata in pairs(thingsUpdate) do
+          if string.match(file:lower(), thingdata[1]:lower()) then
+            data["files"][file] = checksum
+            break
+          end
+        end    
+      end
+    end
+  end  
+  statusData = data
+  if checksumIter == 100 then
+    compareChecksums()
   end
 end
 
@@ -81,40 +104,21 @@ function Updater.init()
   updateProgressBar = updatePanel:getChildById('updateProgressBar')
   downloadStatusLabel = updatePanel:getChildById('downloadStatusLabel')
   downloadProgressBar = updatePanel:getChildById('downloadProgressBar')
-  
   updatePanel:hide()
-  
-  scheduleEvent(Updater.show, 50)
-  
-  connect(g_http, {
-    onGet = onGet,
-    onGetProgess = onGetProgress,
-    onDownload = onDownload,
-    onDownloadProgress = onDownloadProgress
-  })
+    
+  scheduleEvent(Updater.show, 200)
 end
 
 function Updater.terminate()
-  disconnect(g_http, {
-    onGet = onGet,
-    onGetProgess = onGetProgress,
-    onDownload = onDownload,
-    onDownloadProgress = onDownloadProgress
-  })
   updaterWindow:destroy()
   updaterWindow = nil
   
-  if generateChecksumsEvent ~= nil then
-	  removeEvent(generateChecksumsEvent)
-	  generateChecksumsEvent = nil
-  end  
+  removeEvent(generateChecksumsEvent)
 end
 
 local function clear()
-  if generateChecksumsEvent ~= nil then
-	  removeEvent(generateChecksumsEvent)
-	  generateChecksumsEvent = nil
-  end  
+  removeEvent(generateChecksumsEvent)
+
   updateableFiles = nil
   binaryChecksum = nil
   binaryFile = ""
@@ -127,15 +131,23 @@ local function clear()
   progressBar:setPercent(0)
   updateProgressBar:setPercent(0)
   downloadProgressBar:setPercent(0)
+  downloadProgressBar:setText("")
 end
 
 function Updater.show()
   if not g_resources.isLoadedFromArchive() or Services.updater == nil or Services.updater:len() < 4 then
-    Updater.hide()
-    return EnterGame.firstShow()
+    return Updater.hide()
+  end  
+  if updaterWindow:isVisible() then
+    return
   end
-  updaterWindow:show()
-  
+  updaterWindow:show()  
+  updaterWindow:raise()
+  updaterWindow:focus()
+  if EnterGame then
+    EnterGame.hide()
+  end
+
   clear()
   
   updateableFiles = g_resources.listUpdateableFiles()
@@ -147,25 +159,40 @@ function Updater.show()
     return updateError("Invalid binary checksum: " .. binaryChecksum)  
   end
   
-  getStatusId = g_http.get(Services.updater .. "?platform=" .. g_window.getPlatformType())
+  local data = {
+    version = APP_VERSION,
+    platform = g_window.getPlatformType()
+  }
+  HTTP.postJSON(Services.updater, data, gotStatus)
   if generateChecksumsEvent == nil then
 	  generateChecksumsEvent = scheduleEvent(generateChecksum, 5)
   end
 end
 
-function Updater.updateThings(things)
+function Updater.isVisible()
+  return updaterWindow:isVisible()
+end
+
+function Updater.updateThings(things, optionalError)
   thingsUpdate = things
+  thingsUpdateOptionalError = optionalError
   Updater:show()
 end
 
 function Updater.hide()
   updaterWindow:hide()
+  if thingsUpdateOptionalError then
+    local msgbox = displayErrorBox("Updater error", thingsUpdateOptionalError:trim())
+    msgbox.onOk = function() if EnterGame then EnterGame.show() end end
+    thingsUpdateOptionalError = nil
+  elseif EnterGame then
+    EnterGame.show()
+  end
 end
 
 function Updater.abort()
   aborted = true
   Updater:hide()
-  EnterGame.firstShow()
 end
 
 function generateChecksum()
@@ -187,36 +214,6 @@ function generateChecksum()
   else
     progressBar:setPercent(math.ceil(checksumIter * 0.95))
     generateChecksumsEvent = scheduleEvent(generateChecksum, 5)
-  end
-end
-
-function gotStatus(data, err)
-  if err:len() > 0 then
-    return updateError(err)
-  end
-  local status, result = pcall(function() return json.decode(data) end)
-  if not status then
-    return updateError("Error while parsing json from server:\n" .. result)  
-  end
-  statusData = result
-  if statusData["error"] ~= nil and statusData["error"]:len() > 0 then
-    return updateError(statusData["error"])     
-  end
-  if statusData["url"] == nil or statusData["files"] == nil or statusData["binary"] == nil then
-    return updateError("Invalid json data from server:\n" .. data)    
-  end  
-  if statusData["things"] ~= nil then
-    for file, checksum in pairs(statusData["things"]) do
-      for thingtype, thingdata in pairs(thingsUpdate) do
-        if string.match(file:lower(), thingdata[1]:lower()) then
-          statusData["files"][file] = checksum
-          break
-        end
-      end    
-    end
-  end  
-  if checksumIter == 100 then
-    compareChecksums()
   end
 end
 
@@ -255,14 +252,13 @@ function compareChecksums()
 end
 
 function upToDate()
-  EnterGame.firstShow()
   Updater.hide()
 end
 
 function updateError(err)
-  updaterWindow:hide()
+  Updater.hide()
   local msgbox = displayErrorBox("Updater error", err)
-  msgbox.onOk = function() EnterGame.firstShow() end
+  msgbox.onOk = function() if EnterGame then EnterGame.show() end end
 end
 
 function urlencode(url)
@@ -277,9 +273,10 @@ function downloadNextFile(retry)
     return
   end
   
-  updaterWindow:show() -- fix window hide bug
-  EnterGame.hide()
-  
+  updaterWindow:show()
+  updaterWindow:raise()
+  updaterWindow:focus()
+ 
   if downloadIter == #toUpdate then    
     return downloadingFinished()
   end
@@ -293,37 +290,20 @@ function downloadNextFile(retry)
   local file = toUpdate[downloadIter + 1]
   downloadStatusLabel:setText(tr("Downloading %i of %i%s:\n%s", downloadIter + 1, #toUpdate, retry, file))
   downloadProgressBar:setPercent(0)
-  downloadId = g_http.download(filesUrl .. urlencode(file), file)
-end
-
-function downloadedFile(path, err, checksum)
-  if err:len() > 0 then
-    if downloadRetries > Updater.maxRetries then
-      return updateError("Can't download file: " .. path .. ".\nError: " .. err)
-    else
-      downloadRetries = downloadRetries + 1
-      return downloadNextFile(true)
-    end
-  end
-  if statusData["files"][path] == nil then
-      return updateError("Invalid file path: " .. path)    
-  elseif statusData["files"][path] ~= checksum then
-      return updateError("Invalid file checksum.\nFile: " .. path .. "\nShould be:\n" .. statusData["files"][path] .. "\nIs:\n" .. checksum)  
-  end
-  downloadIter = downloadIter + 1
-  updateProgressBar:setPercent(math.ceil((100 * downloadIter) / #toUpdate))
-  downloadProgressBar:setPercent(100)
-  downloadNextFile(false)
+  downloadProgressBar:setText("")
+  HTTP.download(filesUrl .. urlencode(file), file, onDownload, onDownloadProgress)
 end
 
 function downloadingFinished()
-  UIMessageBox.display(tr("Success"), tr("Download complate.\nUpdating client..."), {}, nil, nil)  
+  thingsUpdateOptionalError = nil
+  UIMessageBox.display(tr("Success"), tr("Download complate.\nUpdating client..."), {}, nil, nil) 
   scheduleEvent(function()
       local files = {}
       for file, checksum in pairs(statusData["files"]) do
         table.insert(files, file)
       end
+      g_settings.save()
       g_resources.updateClient(files, binaryFile) 
-      g_app.exit()
-    end, 500)
+      g_app.quick_exit()
+    end, 1000)
 end

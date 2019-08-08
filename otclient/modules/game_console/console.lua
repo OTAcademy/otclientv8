@@ -12,7 +12,7 @@ SpeakTypesSettings = {
   channelYellow = { speakType = MessageModes.Channel, color = '#FFFF00' },
   channelWhite = { speakType = MessageModes.ChannelManagement, color = '#FFFFFF' },
   channelRed = { speakType = MessageModes.GamemasterChannel, color = '#F55E5E' },
-  channelOrange = { speakType = MessageModes.ChannelHighlight, color = '#FE6500' },
+  channelOrange = { speakType = MessageModes.ChannelHighlight, color = '#F6A731' },
   monsterSay = { speakType = MessageModes.MonsterSay, color = '#FE6500', hideInConsole = true},
   monsterYell = { speakType = MessageModes.MonsterYell, color = '#FE6500', hideInConsole = true},
   rvrAnswerFrom = { speakType = MessageModes.RVRAnswer, color = '#FE6500' },
@@ -82,6 +82,8 @@ violationReportTab = nil
 ignoredChannels = {}
 filters = {}
 
+floatingMode = false
+
 local communicationSettings = {
   useIgnoreList = true,
   useWhiteList = true,
@@ -115,7 +117,11 @@ function init()
   consoleTabBar = consolePanel:getChildById('consoleTabBar')
   consoleTabBar:setContentWidget(consoleContentPanel)
   channels = {}
-
+    
+  consolePanel.onDragEnter = onDragEnter
+  consolePanel.onDragLeave = onDragLeave
+  consolePanel.onDragMove = onDragMove
+  
   consolePanel.onKeyPress = function(self, keyCode, keyboardModifiers)
     if not (keyboardModifiers == KeyboardCtrlModifier and keyCode == KeyC) then return false end
 
@@ -204,20 +210,7 @@ function enableChat(temporarily)
     g_keyboard.bindKeyUp("Escape", quickFunc)  
   end
 
-  gameInterface.unbindWalkKey("W")
-  gameInterface.unbindWalkKey("D")
-  gameInterface.unbindWalkKey("S")
-  gameInterface.unbindWalkKey("A")
-
-  gameInterface.unbindTurnKey("Ctrl+W")
-  gameInterface.unbindTurnKey("Ctrl+D")
-  gameInterface.unbindTurnKey("Ctrl+S")
-  gameInterface.unbindTurnKey("Ctrl+A")
-
-  gameInterface.unbindWalkKey("E")
-  gameInterface.unbindWalkKey("Q")
-  gameInterface.unbindWalkKey("C")
-  gameInterface.unbindWalkKey("Z")
+  modules.game_walking.disableWSAD()
 
   consoleToggleChat:setTooltip(tr("Disable chat mode, allow to walk using ASDW"))
 end
@@ -237,20 +230,7 @@ function disableChat()
   g_keyboard.bindKeyUp("Space", quickFunc)
   g_keyboard.bindKeyUp("Enter", quickFunc)
 
-  gameInterface.bindWalkKey("W", North)
-  gameInterface.bindWalkKey("D", East)
-  gameInterface.bindWalkKey("S", South)
-  gameInterface.bindWalkKey("A", West)
-
-  gameInterface.bindTurnKey("Ctrl+W", North)
-  gameInterface.bindTurnKey("Ctrl+D", East)
-  gameInterface.bindTurnKey("Ctrl+S", South)
-  gameInterface.bindTurnKey("Ctrl+A", West)
-
-  gameInterface.bindWalkKey("E", NorthEast)
-  gameInterface.bindWalkKey("Q", NorthWest)
-  gameInterface.bindWalkKey("C", SouthEast)
-  gameInterface.bindWalkKey("Z", SouthWest)
+  modules.game_walking.enableWSAD()
 
   consoleToggleChat:setTooltip(tr("Enable chat mode"))
 end
@@ -382,6 +362,52 @@ function clear()
   end
 end
 
+function switchMode(floating)
+  if floating then
+    consolePanel:setImageColor('#ffffff88')  
+    consolePanel:removeAnchor(AnchorRight)    
+    consolePanel:setWidth(600)
+    consolePanel:setDraggable(true)
+    if not floatingMode then
+      local savedMargin = g_settings.get("consoleLeftMargin")
+      local newMargin = 150
+      if savedMargin and #savedMargin > 0 then
+        newMargin = tonumber(savedMargin)
+      end
+      newMargin = math.max(0, newMargin)
+      newMargin = math.min(consolePanel:getParent():getWidth() - consolePanel:getWidth(), newMargin)
+      consolePanel:setMarginLeft(newMargin)
+    end
+  else
+    consolePanel:setImageColor('white')  
+    consolePanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)    
+    consolePanel:addAnchor(AnchorRight, 'parent', AnchorRight)    
+    consolePanel:setDraggable(false)
+    consolePanel:setMarginLeft(0)
+  end
+  floatingMode = floating
+end
+
+function onDragEnter(widget, pos)
+  return floatingMode
+end
+
+function onDragMove(widget, pos, moved)
+  if not floatingMode then
+    return
+  end
+  local newMargin = consolePanel:getMarginLeft() + moved.x
+  newMargin = math.max(0, newMargin)
+  newMargin = math.min(consolePanel:getParent():getWidth() - consolePanel:getWidth(), newMargin)
+  consolePanel:setMarginLeft(newMargin)
+  g_settings.set("consoleLeftMargin", newMargin)
+  return true
+end
+
+function onDragLeave(widget, pos)
+  return floatingMode
+end
+
 function clearChannel(consoleTabBar)
   consoleTabBar:getCurrentTab().tabPanel:getChildById('consoleBuffer'):destroyChildren()
 end
@@ -495,7 +521,7 @@ end
 
 function addPrivateChannel(receiver)
   channels[receiver] = receiver
-  return addTab(receiver, false)
+  return addTab(receiver, true)
 end
 
 function addPrivateText(text, speaktype, name, isPrivateCommand, creatureName)
@@ -1285,6 +1311,7 @@ end
 function addIgnoredPlayer(name)
   if isIgnored(name) then return end
   table.insert(communicationSettings.ignoredPlayers, name)
+  communicationSettings.useIgnoreList = true
 end
 
 function removeIgnoredPlayer(name)

@@ -17,8 +17,8 @@ ContainerWindow < MiniWindow
 
   UIButton
     id: upButton
-    anchors.top: minimizeButton.top
-    anchors.right: minimizeButton.left
+    anchors.top: lockButton.top
+    anchors.right: lockButton.left
     margin-right: 3
     size: 14 14
     image-source: /images/ui/miniwindow_buttons

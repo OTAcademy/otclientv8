@@ -153,21 +153,25 @@ void Atlas::update(int location, DrawQueue& queue) {
     queue.setAtlas(m_atlas[location]->getTexture());
 }
 
-bool Atlas::findSpace(int location, int index) {
+bool Atlas::findSpace(int location, int index, bool tryCleaning) {
     static const size_t sizes[5] = { 32, 64, 128, 256, 512 };
-    if (location < 2 && index < 4) {
-        if (m_locations[location][index + 1].size() == 0 && !findSpace(location, index + 1)) {
-            return false;
-        }
-        auto pos = m_locations[location][index + 1].front();
-        m_locations[location][index + 1].pop_front();
-        m_locations[location][index].push_back(pos);
-        m_locations[location][index].push_back(Point(pos.x, pos.y + sizes[index]));
-        m_locations[location][index].push_back(Point(pos.x + sizes[index], pos.y));
-        m_locations[location][index].push_back(Point(pos.x + sizes[index], pos.y + sizes[index]));
-        return true;
+    if (location >= 2 || index >= 4) {
+        return false;
     }
-    return false;
+    if (m_locations[location][index + 1].size() == 0 && !findSpace(location, index + 1, false)) {
+        if (tryCleaning) {
+            g_atlas.clean(false);
+            return findSpace(location, index, false);
+        }
+        return false;
+    }
+    auto pos = m_locations[location][index + 1].front();
+    m_locations[location][index + 1].pop_front();
+    m_locations[location][index].push_back(pos);
+    m_locations[location][index].push_back(Point(pos.x, pos.y + sizes[index]));
+    m_locations[location][index].push_back(Point(pos.x + sizes[index], pos.y));
+    m_locations[location][index].push_back(Point(pos.x + sizes[index], pos.y + sizes[index]));
+    return true;
 }
 
 void Atlas::clean(bool fastClean) {

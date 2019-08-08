@@ -252,6 +252,7 @@ public:
     void setAwareRange(const AwareRange& range);
     void resetAwareRange();
     AwareRange getAwareRange() { return m_awareRange; }
+    Size getAwareRangeAsSize() { return Size(m_awareRange.horizontal(), m_awareRange.vertical()); }
 
     Light getLight() { return m_light; }
     Position getCentralPosition() { return m_centralPosition; }

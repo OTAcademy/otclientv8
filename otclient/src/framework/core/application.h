@@ -38,6 +38,7 @@ public:
     virtual void run() = 0;
     virtual void poll();
     virtual void exit();
+    virtual void quick_exit();
     virtual void close();
 
     void setName(const std::string& name) { m_appName = name; }
@@ -58,7 +59,7 @@ public:
     std::string getBuildCommit() { return BUILD_COMMIT; }
     std::string getBuildType() { return BUILD_TYPE; }
     std::string getBuildArch() { return BUILD_ARCH; }
-    std::string getAuthor() { return "Made by:\notclient.ovh\notclient@otclient.ovh"; }
+    std::string getAuthor() { return "otclient.ovh"; }
     std::string getOs();
     std::string getStartupOptions() { return m_startupOptions; }
 

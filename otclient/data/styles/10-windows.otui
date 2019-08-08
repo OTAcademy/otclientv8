@@ -26,3 +26,10 @@ HeadlessWindow < UIWindow
 
 MainWindow < Window
   anchors.centerIn: parent
+
+StaticWindow < Window
+  &static: true
+
+StaticMainWindow < StaticWindow
+  anchors.centerIn: parent
+  

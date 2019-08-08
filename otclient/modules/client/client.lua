@@ -42,30 +42,6 @@ function startup()
         --musicChannel:enqueue(musicFilename, 3)
       end
   end })
-
-  -- Check for startup errors
-  local errtitle = nil
-  local errmsg = nil
-
-  if g_graphics.getRenderer():lower():match('gdi generic') then
-    errtitle = tr('Graphics card driver not detected')
-    errmsg = tr('No graphics card detected, everything will be drawn using the CPU,\nthus the performance will be really bad.\nPlease update your graphics driver to have a better performance.')
-  end
-
-  -- Show updater/entergame
-  if Updater ~= nil then
-    if errmsg or errtitle then
-      local msgbox = displayErrorBox(errtitle, errmsg)
-      msgbox.onOk = function() Updater.show() end
-    end
-  else 
-    if errmsg or errtitle then
-      local msgbox = displayErrorBox(errtitle, errmsg)
-      msgbox.onOk = function() EnterGame.firstShow() end
-    else
-      EnterGame.firstShow()
-    end
-  end
 end
 
 function init()

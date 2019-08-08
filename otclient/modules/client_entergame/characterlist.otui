@@ -41,7 +41,7 @@ CharacterWidget < UIWidget
     $on:
       color: #ffffff
 
-MainWindow
+StaticMainWindow
   id: charactersWindow
   !text: tr('Character List')
   visible: false

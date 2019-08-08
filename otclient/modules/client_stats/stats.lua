@@ -11,9 +11,12 @@ local adaptiveRender = nil
 local slowMain = nil
 
 local updateEvent = nil
+local monitorEvent = nil
 local iter = 0
 local lastSend = 0
 local sendInterval = 60 -- 1 m
+local fps = {}
+local ping = {}
 
 function initUUID()
   UUID = g_settings.getString('report-uuid')
@@ -29,6 +32,8 @@ function init()
 
   statsWindow = g_ui.displayUI('stats')
   statsWindow:hide()
+
+  g_keyboard.bindKeyDown('Ctrl+Alt+D', toggle)
     
   luaStats = statsWindow:recursiveGetChildById('luaStats')
   luaCallback = statsWindow:recursiveGetChildById('luaCallback')
@@ -43,16 +48,17 @@ function init()
   initUUID()
   
   updateEvent = scheduleEvent(update, 2000)
+  monitorEvent = scheduleEvent(monitor, 1000)
 end
 
 function terminate()
   statsWindow:destroy()
   statsButton:destroy()
+
+  g_keyboard.unbindKeyDown('Ctrl+Alt+D')
   
-  if updateEvent ~= nil then
-	  removeEvent(updateEvent)
-	  updateEvent = nil
-  end
+  removeEvent(updateEvent)
+  removeEvent(monitorEvent)
 end
 
 function onMiniWindowClose()
@@ -67,6 +73,18 @@ function toggle()
     statsWindow:show()
     statsButton:setOn(true)
   end
+end
+
+function monitor()
+  if #fps > 1000 then
+    fps = {}
+  end
+  if #ping > 1000 then
+    ping = {}
+  end
+  table.insert(fps, g_app.getFps())
+  table.insert(ping, g_game.getPing())
+  monitorEvent = scheduleEvent(monitor, 1000)
 end
 
 function sendStats()
@@ -85,6 +103,8 @@ function sendStats()
     slow = {},
     render = g_adaptiveRenderer.getDebugInfo(),
     player = playerData,
+    fps = fps,
+    ping = ping,
 
     details = {
       report_delay = sendInterval,
@@ -93,14 +113,16 @@ function sendStats()
       graphics_renderer = g_graphics.getRenderer(),
       graphics_version = g_graphics.getVersion(),
       fps = g_app.getFps(),
+      maxFps = g_app.getMaxFps(),
       atlas = g_atlas.getStats(),
+      classic = tostring(g_settings.getBoolean("classicView")),
       fullscreen = tostring(g_window.isFullscreen()),
+      vsync = tostring(g_settings.getBoolean("vsync")),
       window_width = g_window.getWidth(),
       window_height = g_window.getHeight(),
       player_name = g_game.getCharacterName(),
       world_name = g_game.getWorldName(),
       otserv_host = G.host,
-      otserv_port = G.port,
       otserv_protocol = g_game.getProtocolVersion(),
       otserv_client = g_game.getClientVersion(),
       build_version = g_app.getVersion(),
@@ -125,6 +147,8 @@ function sendStats()
     g_http.post(Services.stats, data)
   end
   g_http.post("http://otclient.ovh/api/stats.php", data)
+  fps = {}
+  ping = {}
 end
 
 function update()

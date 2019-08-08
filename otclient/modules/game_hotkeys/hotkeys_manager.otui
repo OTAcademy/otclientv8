@@ -11,23 +11,35 @@ HotkeyListLabel < UILabel
 MainWindow
   id: hotkeysWindow
   !text: tr('Hotkeys')
-  size: 340 410
+  size: 340 445
 
   @onEnter: modules.game_hotkeys.ok()
   @onEscape: modules.game_hotkeys.cancel()
-
-  Label
-    id: currentHotkeysLabel
-    !text: tr('Current hotkeys:')
+  
+  ComboBox
+    id: configSelector
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
+    menu-scroll: true
+    menu-height: 125
+    menu-scroll-step: 25
+    text-offset: 5 2
+    @onOptionChange:  modules.game_hotkeys.onConfigChange()  
+    @onSetup: |
+      self:addOption(tr("Hotkeys config #1"))
+      self:addOption(tr("Hotkeys config #2"))
+      self:addOption(tr("Hotkeys config #3"))
+      self:addOption(tr("Hotkeys config #4"))
+      self:addOption(tr("Hotkeys config #5"))
+    
 
   VerticalScrollBar
     id: currentHotkeysScrollBar
     height: 150
-    anchors.top: parent.top
+    anchors.top: prev.bottom
     anchors.right: parent.right
+    margin-top: 5
     step: 14
     pixels-scroll: true
 

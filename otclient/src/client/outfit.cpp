@@ -39,10 +39,10 @@ void Outfit::newDraw(Point dest, DrawQueue& drawQueue, LightView* lightView)
     assert(m_category == ThingCategoryCreature);
 
     
-    auto outfit = drawQueue.addOutfit(hash(), Rect(dest - Point(g_sprites.spriteSize(), g_sprites.spriteSize()), Size(g_sprites.spriteSize() * 4, g_sprites.spriteSize() * 4)));
+    auto outfit = drawQueue.addOutfit(hash(), Rect(dest - Point(g_sprites.spriteSize() * 3, g_sprites.spriteSize() * 3), Size(g_sprites.spriteSize() * 4, g_sprites.spriteSize() * 4)));
     if (!outfit)
         return;
-    dest = Point(Otc::TILE_PIXELS, Otc::TILE_PIXELS);
+    dest = Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3);
 
     auto type = g_things.rawGetThingType(getId(), ThingCategoryCreature);
 

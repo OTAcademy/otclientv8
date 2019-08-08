@@ -25,7 +25,7 @@ public:
     TexturePtr getAtlas(int location) { return m_atlas[location]->getTexture(); }
 
 private:
-    bool findSpace(int location, int index);
+    bool findSpace(int location, int index, bool tryCleaning = true);
     void drawOutfit(const Point& location, const DrawQueueOutfit& outfit);
 
     FrameBufferPtr m_atlas[2];

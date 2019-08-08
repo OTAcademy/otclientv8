@@ -30,6 +30,7 @@ Module
     - game_cooldown
     - game_modaldialog
     - game_unjustifiedpoints
-    - game_bot
+    - game_walking
+    - game_shop
   @onLoad: init()
   @onUnload: terminate()

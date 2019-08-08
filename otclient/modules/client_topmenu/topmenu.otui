@@ -30,16 +30,6 @@ TopMenuPanel
     anchors.top: fpsLabel.bottom
     anchors.left: fpsLabel.left
 
-  Button
-    color: white
-    id: feedbackButton
-    text: Send feedback/Report bug
-    text-auto-resize: true
-    anchors.verticalCenter: parent.verticalCenter
-    anchors.left: leftGameButtonsPanel.right
-    margin-left: 85
-    @onClick: modules.client_feedback.show()
-
   TopMenuButtonsPanel
     id: rightButtonsPanel
     anchors.top: parent.top

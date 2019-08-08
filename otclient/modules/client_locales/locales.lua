@@ -70,7 +70,7 @@ function init()
     pdebug('Using configured locale: ' .. userLocaleName)
   else
     setLocale(defaultLocaleName)
-    connect(g_app, { onRun = createWindow })
+    --connect(g_app, { onRun = createWindow })
   end
 
   ProtocolGame.registerExtendedOpcode(ExtendedIds.Locale, onExtendedLocales)

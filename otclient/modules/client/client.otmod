@@ -18,5 +18,6 @@ Module
     - client_entergame
     - client_terminal
     - client_stats
+    - client_news
     - client_feedback
-    - updater
+    - client_updater

@@ -173,7 +173,7 @@ bool Protocol::xteaDecrypt(const InputMessagePtr& inputMessage)
 {
     uint16 encryptedSize = inputMessage->getUnreadSize();
     if(encryptedSize % 8 != 0) {
-        g_logger.traceError("invalid encrypted network message");
+        g_logger.traceError(stdext::format("invalid encrypted network message %i", (int)encryptedSize));
         return false;
     }
 

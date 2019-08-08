@@ -1,30 +1,9 @@
-EnterGameWindow < MainWindow
+EnterGameWindow < StaticMainWindow
   !text: tr('Enter Game')
-  size: 236 298
-
-EnterGameButton < Button
-  width: 64
-
-ServerListButton < UIButton
-  size: 17 17
-  image-source: /images/topbuttons/minimap
-  image-color: #ffffffff
-
-  $hover !disabled:
-    image-color: #ffffff99
-
-  $pressed:
-    image-color: #ffffff44
-
-  $disabled:
-    image-color: #ffffff55
+  size: 240 353
 
 EnterGameWindow
   id: enterGame
-  &authenticatorEnabled: false
-  &authenticatorHeight: 44
-  &stayLoggedBoxEnabled: false
-  &stayLoggedBoxHeight: 24
   @onEnter: EnterGame.doLogin()
 
   MenuLabel
@@ -33,7 +12,7 @@ EnterGameWindow
     anchors.top: parent.top
     text-auto-resize: true
 
-  PasswordTextEdit
+  TextEdit
     id: accountNameTextEdit
     anchors.left: parent.left
     anchors.right: parent.right
@@ -60,12 +39,8 @@ EnterGameWindow
     anchors.left: prev.left
     anchors.top: prev.bottom
     text-auto-resize: true
-    margin-top: -12
-    visible: false
-
-    $on:
-      visible: true
-      margin-top: 8
+    visible: true
+    margin-top: 8
 
   TextEdit
     id: authenticatorTokenTextEdit
@@ -73,94 +48,116 @@ EnterGameWindow
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: -22
-    visible: false
-    max-length: 8
-
-    $on:
-      visible: true
-      margin-top: 2
-
-  CheckBox
-    id: stayLoggedBox
-    !text: tr('Stay logged during session')
+    visible: true
+    margin-top: 2
+    
+  Panel
+    id: serverSelectorPanel
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    margin-top: 6
-    margin-top: -16
-    visible: false
-
+    height: 52
+    on: true
+    focusable: false
+    
     $on:
       visible: true
+      margin-top: 0
+    
+    $!on:
+      visible: false
+      margin-top: -52
+      
+    HorizontalSeparator
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+      margin-top: 10
+
+    MenuLabel
+      id: serverLabel
+      !text: tr('Server')
+      anchors.left: parent.left
+      anchors.top: prev.bottom
+      text-auto-resize: true    
+      margin-top: 5
+
+    ComboBox
+      id: serverSelector
+      anchors.left: prev.left
+      anchors.right: parent.right
+      anchors.top: serverLabel.bottom
+      margin-top: 2
+      margin-right: 3
+      menu-scroll: true
+      menu-height: 125
+      menu-scroll-step: 25
+      text-offset: 5 2
+      @onOptionChange: EnterGame.onServerChange()
+    
+  Panel
+    id: customServerSelectorPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    height: 52
+    on: true
+    focusable: true
+    
+    $on:
+      visible: true
+      margin-top: 0
+    
+    $!on:
+      visible: false
+      margin-top: -52
+    
+    HorizontalSeparator
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
       margin-top: 8
 
+    MenuLabel
+      id: serverLabel
+      !text: tr('IP:PORT or url')
+      anchors.left: prev.left
+      anchors.top: prev.bottom
+      margin-top: 8
+      text-auto-resize: true
+
+    TextEdit
+      id: serverHostTextEdit
+      !tooltip: tr('Make sure that your client uses\nthe correct game client version')
+      anchors.left: parent.left
+      anchors.top: serverLabel.bottom
+      margin-top: 2
+      width: 130
+
+    MenuLabel
+      id: clientLabel
+      !text: tr('Version')
+      anchors.left: serverHostTextEdit.right
+      anchors.top: serverLabel.top
+      text-auto-resize: true
+      margin-left: 10
+
+    ComboBox
+      id: clientVersionSelector
+      anchors.top: serverHostTextEdit.top
+      anchors.bottom: serverHostTextEdit.bottom
+      anchors.left: prev.left
+      anchors.right: parent.right
+      menu-scroll: true
+      menu-height: 125
+      menu-scroll-step: 25
+      margin-right: 3
+      
   HorizontalSeparator
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    margin-top: 8
-
-  MenuLabel
-    id: serverLabel
-    !text: tr('Server')
-    anchors.left: prev.left
-    anchors.top: prev.bottom
-    margin-top: 8
-    text-auto-resize: true
-
-  ServerListButton
-    id: serverListButton
-    !tooltip: tr('Server list')
-    anchors.right: parent.right
-    anchors.top: serverLabel.bottom
-    margin-top: 3
-    @onClick: ServerList.show()
-
-  TextEdit
-    id: serverHostTextEdit
-    !tooltip: tr('Make sure that your client uses\nthe correct game client version')
-    anchors.left: parent.left
-    anchors.right: serverListButton.left
-    anchors.top: serverLabel.bottom
-    margin-top: 2
-    margin-right: 4
-
-  MenuLabel
-    id: clientLabel
-    !text: tr('Client Version')
-    anchors.left: parent.left
-    anchors.top: serverHostTextEdit.bottom
-    text-auto-resize: true
-    margin-right: 10
-    margin-top: 8
-
-  ComboBox
-    id: clientComboBox
-    anchors.left: parent.left
-    anchors.right: parent.horizontalCenter
-    anchors.top: clientLabel.bottom
-    margin-top: 2
-    margin-right: 3
-    width: 90
-    menu-scroll: true
-    menu-height: 125
-    menu-scroll-step: 25
-
-  MenuLabel
-    id: portLabel
-    !text: tr('Port')
-    anchors.left: serverPortTextEdit.left
-    anchors.top: serverHostTextEdit.bottom
-    margin-top: 8
-    text-auto-resize: true
-
-  TextEdit
-    id: serverPortTextEdit
-    text: 7171
-    anchors.right: parent.right
-    anchors.left: parent.horizontalCenter
-    anchors.top: clientComboBox.top
-    margin-left: 3
+    margin-top: 10
 
   CheckBox
     id: rememberPasswordBox
@@ -169,30 +166,22 @@ EnterGameWindow
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    margin-top: 10
-    @onCheckChange: self:getParent():getChildById('autoLoginBox'):setEnabled(self:isChecked())
-
-  CheckBox
-    id: autoLoginBox
-    enabled: false
-    !text: tr('Auto login')
-    !tooltip: tr('Open charlist automatically when starting client')
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: 2
+    margin-top: 9
 
   HorizontalSeparator
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    margin-top: 6
+    margin-top: 9
 
-  EnterGameButton
-    !text: tr('Ok')
+  Button
+    !text: tr('Login')
+    anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    margin-top: 4
+    margin-top: 10
+    margin-left: 50
+    margin-right: 50
     @onClick: EnterGame.doLogin()
 
   Label

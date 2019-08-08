@@ -10,8 +10,14 @@ AdaptiveRenderer g_adaptiveRenderer;
 void AdaptiveRenderer::newFrame() {
     auto now = stdext::millis();
     m_frames.push_back(now);
-    while (m_frames.front() + 5000 < now)
+    while (m_frames.front() + 5000 < now) {
         m_frames.pop_front();
+    }
+
+    m_shortframes.push_back(now);
+    while (m_shortframes.front() + 1000 < now) {
+        m_shortframes.pop_front();
+    }
 
     if (m_forcedSpeed >= 0 && m_forcedSpeed <= 4) {
         m_speed = m_forcedSpeed;
@@ -20,6 +26,7 @@ void AdaptiveRenderer::newFrame() {
 
     if (m_update + 5000 > now)
         return;
+
     m_update = stdext::millis();
 
     if (m_speed < 1)

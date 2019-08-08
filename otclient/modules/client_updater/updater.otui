@@ -1,7 +1,7 @@
-MainWindow
+StaticMainWindow
   id: updaterWindow
   !text: tr('Updater')
-  height: 130
+  height: 125
   width: 300
   
   Panel

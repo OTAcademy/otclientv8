@@ -204,6 +204,8 @@ void UIMap::updateVisibleDimension()
 
     if(m_keepAspectRatio)
         updateMapSize();
+
+    callLuaField("onVisibleDimensionChange", dimensionWidth, dimensionHeight);
 }
 
 void UIMap::updateMapSize()

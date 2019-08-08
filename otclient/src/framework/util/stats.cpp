@@ -13,7 +13,6 @@ void Stats::add(int type, Stat* stat) {
     if (type > STATS_LAST)
         return;
 
-
     auto it = stats[type].data.emplace(stat->description, StatsData(0, 0, stat->extraDescription)).first;
     it->second.calls += 1;
     it->second.executionTime += stat->executionTime;

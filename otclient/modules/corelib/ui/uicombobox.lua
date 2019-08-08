@@ -19,6 +19,10 @@ function UIComboBox:clearOptions()
   self:clearText()
 end
 
+function UIComboBox:getOptionsCount()
+  return #self.options
+end
+
 function UIComboBox:isOption(text)
   if not self.options then return false end
   for i,v in ipairs(self.options) do
@@ -66,12 +70,14 @@ function UIComboBox:setCurrentOptionByData(data, dontSignal)
   end
 end
 
-function UIComboBox:setCurrentIndex(index)
+function UIComboBox:setCurrentIndex(index, dontSignal)
   if index >= 1 and index <= #self.options then
     local v = self.options[index]
     self.currentIndex = index
     self:setText(v.text)
-    signalcall(self.onOptionChange, self, v.text, v.data)
+    if not dontSignal then
+      signalcall(self.onOptionChange, self, v.text, v.data)
+    end
   end
 end
 

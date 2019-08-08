@@ -68,10 +68,6 @@ void Application::init(std::vector<std::string>& args)
     signal(SIGTERM, exitSignalHandler);
     signal(SIGINT, exitSignalHandler);
 
-#ifdef CRASH_HANDLER
-    installCrashHandler();
-#endif
-
     // setup locale
     std::locale::global(std::locale());
 
@@ -160,6 +156,11 @@ void Application::exit()
 {
     g_lua.callGlobalField<bool>("g_app", "onExit");
     m_stopping = true;
+}
+
+void Application::quick_exit()
+{
+    ::quick_exit(0);
 }
 
 void Application::close()

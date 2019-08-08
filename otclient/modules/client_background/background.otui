@@ -1,20 +1,3 @@
-NewsLabel < Label
-  text-wrap: false
-  text-auto-resize: true
-  text-align: center
-  font: terminus-14px-bold
-  
-NewsText < Label
-  text-wrap: true
-  text-auto-resize: true
-  text-align: left
-  margin-bottom: 10
-
-NewsImage < Label
-  text-wrap: true
-  margin-bottom: 5
-  text-align: center
-
 Panel
   id: background
   image-source: /images/background
@@ -39,47 +22,3 @@ Panel
     padding: 2
     color: #ffffff
     font: terminus-14px-bold
-    
-  Panel
-    margin-top: 10
-    margin-left: 20
-    margin-bottom: 10
-    id: newsPanelHolder
-    anchors.left: parent.left
-    anchors.top: parent.top    
-    anchors.bottom: parent.bottom    
-    vertical-scrollbar: itemsPanelListScrollBar
-    width: 300        
-    font: verdana-11px-antialised
-    opacity: 1
-    color: #dfdfdf
-    !text: tr('News')
-    text-offset: 0 6
-    text-align: top
-    image-source: /images/ui/window
-    image-border: 6
-    image-border-top: 27
-    padding-top: 36
-    padding-left: 16
-    padding-right: 20
-    padding-bottom: 16
-    
-    ScrollablePanel
-      id: newsPanel
-      layout:
-        type: verticalBox
-      vertical-scrollbar: newsScroll      
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: parent.top    
-      anchors.bottom: parent.bottom 
-      padding-right: 15
-
-    VerticalScrollBar
-      id: newsScroll
-      anchors.top: newsPanel.top
-      anchors.bottom: newsPanel.bottom
-      anchors.left: newsPanel.right
-      wodth: 5
-      step: 14
-      pixels-scroll: true

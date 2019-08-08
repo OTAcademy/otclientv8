@@ -1,15 +1,8 @@
-WALK_STEPS_RETRY = 10
-
 gameRootPanel = nil
 gameMapPanel = nil
-gameRightPanel = nil
-gameLeftPanel = nil
-gameThirdPanel = nil
-gameForthPanel = nil
+gameRightPanels = nil
+gameLeftPanels = nil
 gameBottomPanel = nil
-healthBar = nil
-manaBar = nil
-showTopMenuButton = nil
 logoutButton = nil
 mouseGrabberWidget = nil
 countWindow = nil
@@ -17,16 +10,8 @@ logoutWindow = nil
 exitWindow = nil
 bottomSplitter = nil
 limitedZoom = false
-currentViewMode = 0
-smartWalkDirs = {}
-smartWalkDir = nil
 hookedMenuOptions = {}
 lastDirTime = g_clock.millis()
-healthCircle = nil
-healthCircleFront = nil
-manaCircle = nil
-manaCircleFront = nil
-markedThing = nil
 
 function init()
   g_ui.importStyle('styles/countwindow')
@@ -50,43 +35,29 @@ function init()
   gameRootPanel:hide()
   gameRootPanel:lower()
   gameRootPanel.onGeometryChange = updateStretchShrink
-  gameRootPanel.onFocusChange = stopSmartWalk
 
   mouseGrabberWidget = gameRootPanel:getChildById('mouseGrabber')
   mouseGrabberWidget.onMouseRelease = onMouseGrabberRelease
 
   bottomSplitter = gameRootPanel:getChildById('bottomSplitter')
   gameMapPanel = gameRootPanel:getChildById('gameMapPanel')
-  gameRightPanel = gameRootPanel:getChildById('gameRightPanel')
-  gameLeftPanel = gameRootPanel:getChildById('gameLeftPanel')
+  gameRightPanels = gameRootPanel:getChildById('gameRightPanels')
+  gameLeftPanels = gameRootPanel:getChildById('gameLeftPanels')
   gameBottomPanel = gameRootPanel:getChildById('gameBottomPanel')
-  gameThirdPanel = gameRootPanel:getChildById('gameThirdPanel')
-  gameForthPanel = gameRootPanel:getChildById('gameForthPanel')
   connect(gameLeftPanel, { onVisibilityChange = onLeftPanelVisibilityChange })
-  connect(gameThirdPanel, { onVisibilityChange = onThirdPanelVisibilityChange })
-  connect(gameForthPanel, { onVisibilityChange = onForthPanelVisibilityChange })
-
-  healthBar = gameMapPanel:getChildById('healthBar')
-  manaBar = gameMapPanel:getChildById('manaBar')
-
-  healthCircle = gameRootPanel:getChildById('healthCircle')
-  healthCircleFront = gameRootPanel:getChildById('healthCircleFront')
-  manaCircle = gameRootPanel:getChildById('manaCircle')
-  manaCircleFront = gameRootPanel:getChildById('manaCircleFront')
 
   logoutButton = modules.client_topmenu.addLeftButton('logoutButton', tr('Exit'),
     '/images/topbuttons/logout', tryLogout, true)
 
-  showTopMenuButton = gameMapPanel:getChildById('showTopMenuButton')
-  showTopMenuButton.onClick = function()
-    modules.client_topmenu.toggle()
-  end
-  
-  setupViewMode(0)
+
+  gameRightPanels:addChild(g_ui.createWidget('GameSidePanel'))
+ 
+  refreshViewMode()
 
   bindKeys()
   
-  connect(gameMapPanel, { onGeometryChange = updateSize })
+  connect(gameMapPanel, { onGeometryChange = updateSize, onVisibleDimensionChange = updateSize })
+  connect(g_game, { onMapChangeAwareRange = updateSize })
 
   if g_game.isOnline() then
     show()
@@ -94,29 +65,7 @@ function init()
 end
 
 function bindKeys()
-  gameRootPanel:setAutoRepeatDelay(200)
-
-  bindWalkKey('Up', North)
-  bindWalkKey('Right', East)
-  bindWalkKey('Down', South)
-  bindWalkKey('Left', West)
-  bindWalkKey('Numpad8', North)
-  bindWalkKey('Numpad9', NorthEast)
-  bindWalkKey('Numpad6', East)
-  bindWalkKey('Numpad3', SouthEast)
-  bindWalkKey('Numpad2', South)
-  bindWalkKey('Numpad1', SouthWest)
-  bindWalkKey('Numpad4', West)
-  bindWalkKey('Numpad7', NorthWest)
-
-  bindTurnKey('Ctrl+Up', North)
-  bindTurnKey('Ctrl+Right', East)
-  bindTurnKey('Ctrl+Down', South)
-  bindTurnKey('Ctrl+Left', West)
-  bindTurnKey('Ctrl+Numpad8', North)
-  bindTurnKey('Ctrl+Numpad6', East)
-  bindTurnKey('Ctrl+Numpad2', South)
-  bindTurnKey('Ctrl+Numpad4', West)
+  gameRootPanel:setAutoRepeatDelay(100)
 
   g_keyboard.bindKeyPress('Escape', function() g_game.cancelAttackAndFollow() end, gameRootPanel)
   g_keyboard.bindKeyPress('Ctrl+=', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomIn() end, gameRootPanel)
@@ -126,41 +75,12 @@ function bindKeys()
   g_keyboard.bindKeyDown('Ctrl+W', function() g_map.cleanTexts() modules.game_textmessage.clearMessages() end, gameRootPanel)
 end
 
-function bindWalkKey(key, dir)
-  g_keyboard.bindKeyDown(key, function() changeWalkDir(dir) end, gameRootPanel, true)
-  g_keyboard.bindKeyUp(key, function() changeWalkDir(dir, true) end, gameRootPanel, true)
-  g_keyboard.bindKeyPress(key, function() smartWalk(dir) end, gameRootPanel)
-end
-
-function unbindWalkKey(key)
-  g_keyboard.unbindKeyDown(key, gameRootPanel)
-  g_keyboard.unbindKeyUp(key, gameRootPanel)
-  g_keyboard.unbindKeyPress(key, gameRootPanel)
-end
-
-function bindTurnKey(key, dir)
-  local function callback(widget, code, repeatTicks)
-    if g_clock.millis() - lastDirTime >= 30 then
-        g_game.turn(dir)
-        changeWalkDir(dir)
-        lastDirTime = g_clock.millis()
-    end
-  end
-
-  g_keyboard.bindKeyPress(key, callback, gameRootPanel)
-end
-
-function unbindTurnKey(key)
-  g_keyboard.unbindKeyPress(key, gameRootPanel)
-end
-
 function terminate()
   hide()
 
   hookedMenuOptions = {}
   markThing = nil
   
-  stopSmartWalk()
 
   disconnect(g_game, {
     onGameStart = onGameStart,
@@ -168,18 +88,17 @@ function terminate()
     onLoginAdvice = onLoginAdvice
   })
 
-  disconnect(gameLeftPanel, { onVisibilityChange = onLeftPanelVisibilityChange })
-  disconnect(gameThirdPanel, { onVisibilityChange = onThirdPanelVisibilityChange })
-  disconnect(gameForthPanel, { onVisibilityChange = onForthPanelVisibilityChange })
   disconnect(gameMapPanel, { onGeometryChange = updateSize })
+  connect(gameMapPanel, { onGeometryChange = updateSize, onVisibleDimensionChange = updateSize })
 
   logoutButton:destroy()
   gameRootPanel:destroy()
 end
 
 function onGameStart()
+  refreshViewMode()
   show()
-
+  
   -- open tibia has delay in auto walking
   if not g_game.isOfficialTibia() then
     g_game.enableFeature(GameForceFirstAutoWalkStep)
@@ -189,8 +108,8 @@ function onGameStart()
 end
 
 function onGameEnd()
-  setupViewMode(0)
   hide()
+  modules.client_topmenu.getTopMenu():setImageColor('white')
 end
 
 function show()
@@ -203,13 +122,6 @@ function show()
   updateStretchShrink()
   logoutButton:setTooltip(tr('Logout'))
   
-  local classicView = g_settings.getBoolean('classicView')
-  if classicView then
-    setupViewMode(0)
-  else
-    setupViewMode(1)  
-  end  
-
   addEvent(function()
     if not limitedZoom or g_game.isGM() then
       gameMapPanel:setMaxZoomOut(513)
@@ -333,51 +245,6 @@ function tryLogout(prompt)
   else
      yesCallback()
   end
-end
-
-function stopSmartWalk()
-  smartWalkDirs = {}
-  smartWalkDir = nil
-end
-
-function changeWalkDir(dir, pop)
-  while table.removevalue(smartWalkDirs, dir) do end
-  if pop then
-    if #smartWalkDirs == 0 then
-      stopSmartWalk()
-      return
-    end
-  else
-    table.insert(smartWalkDirs, 1, dir)
-  end
-
-  smartWalkDir = smartWalkDirs[1]
-  if modules.client_options.getOption('smartWalk') and #smartWalkDirs > 1 then
-    for _,d in pairs(smartWalkDirs) do
-      if (smartWalkDir == North and d == West) or (smartWalkDir == West and d == North) then
-        smartWalkDir = NorthWest
-        break
-      elseif (smartWalkDir == North and d == East) or (smartWalkDir == East and d == North) then
-        smartWalkDir = NorthEast
-        break
-      elseif (smartWalkDir == South and d == West) or (smartWalkDir == West and d == South) then
-        smartWalkDir = SouthWest
-        break
-      elseif (smartWalkDir == South and d == East) or (smartWalkDir == East and d == South) then
-        smartWalkDir = SouthEast
-        break
-      end
-    end
-  end
-end
-
-function smartWalk(dir)
-  if g_keyboard.getModifiers() == KeyboardNoModifier then
-    local dire = smartWalkDir or dir
-    g_game.walk(dire)
-    return true
-  end
-  return false
 end
 
 function updateStretchShrink()
@@ -843,164 +710,178 @@ function getMapPanel()
 end
 
 function getRightPanel()
-  return gameRightPanel
+  if gameRightPanels:getChildCount() == 0 then
+    addRightPanel()
+  end
+  return gameRightPanels:getChildByIndex(-1)
 end
 
-function getLeftPanel()
-  return gameLeftPanel
+function getContainerPanel()
+  local containerPanel = g_settings.getNumber("containerPanel")
+  if containerPanel >= 5 then
+    containerPanel = containerPanel - 4
+    return gameRightPanels:getChildByIndex(math.min(containerPanel, gameRightPanels:getChildCount()))
+  end
+  if gameLeftPanels:getChildCount() == 0 then
+    return getRightPanel()
+  end
+  return gameLeftPanels:getChildByIndex(math.min(containerPanel, gameLeftPanels:getChildCount()))
+end
+
+local function addRightPanel()
+  if gameRightPanels:getChildCount() >= 4 then
+    return
+  end
+  local panel = g_ui.createWidget('GameSidePanel')
+  panel:setId("rightPanel" .. (gameRightPanels:getChildCount() + 1))
+  gameRightPanels:insertChild(1, panel)
+end
+
+local function addLeftPanel()
+  if gameLeftPanels:getChildCount() >= 4 then
+    return
+  end
+  local panel = g_ui.createWidget('GameSidePanel')
+  panel:setId("leftPanel" .. (gameLeftPanels:getChildCount() + 1))
+  gameLeftPanels:addChild(panel)
+end
+
+local function removeRightPanel()
+  if gameRightPanels:getChildCount() <= 1 then
+    return
+  end
+  local panel = gameRightPanels:getChildByIndex(1)
+  panel:moveTo(gameRightPanels:getChildByIndex(2))
+  gameRightPanels:removeChild(panel)
+end
+
+local function removeLeftPanel()
+  if gameLeftPanels:getChildCount() == 0 then
+    return
+  end
+  local panel = gameLeftPanels:getChildByIndex(-1)
+  if gameLeftPanels:getChildCount() >= 2 then
+    panel:moveTo(gameLeftPanels:getChildByIndex(-2))
+  else
+    panel:moveTo(gameRightPanels:getChildByIndex(1))
+  end
+  gameLeftPanels:removeChild(panel)
 end
 
 function getBottomPanel()
   return gameBottomPanel
 end
 
-function getThirdPanel()
-  return gameThirdPanel
-end
+function refreshViewMode()  
+  local classic = g_settings.getBoolean("classicView")
+  local rightPanels = g_settings.getNumber("rightPanels") - gameRightPanels:getChildCount()
+  local leftPanels = g_settings.getNumber("leftPanels") - 1 - gameLeftPanels:getChildCount()
 
-function getForthPanel()
-  return gameForthPanel
-end
-
-function getShowTopMenuButton()
-  return showTopMenuButton
-end
-
-function onLeftPanelVisibilityChange(leftPanel, visible)
-  if not visible and g_game.isOnline() then
-    local children = leftPanel:getChildren()
-    for i=1,#children do
-      children[i]:setParent(gameRightPanel)
+  while rightPanels ~= 0 do
+    if rightPanels > 0 then
+      addRightPanel()
+      rightPanels = rightPanels - 1
+    else
+      removeRightPanel()
+      rightPanels = rightPanels + 1
     end
   end
-end
-
-function onThirdPanelVisibilityChange(thirdPanel, visible)
-  if not visible and g_game.isOnline() then
-    local children = thirdPanel:getChildren()
-    for i=1,#children do
-      children[i]:setParent(gameRightPanel)
+  while leftPanels ~= 0 do
+    if leftPanels > 0 then
+      addLeftPanel()
+      leftPanels = leftPanels - 1
+    else
+      removeLeftPanel()
+      leftPanels = leftPanels + 1
     end
   end
-end
+  
+  if not g_game.isOnline() then
+    return
+  end
 
-function refreshViewMode()
-  setupViewMode(currentViewMode)
-end
+  local minimumWidth = (g_settings.getNumber("rightPanels") + g_settings.getNumber("leftPanels") - 1) * 200
+  if classic then
+    minimumWidth = minimumWidth + 300
+  end
+  minimumWidth = math.max(minimumWidth, 800)
+  g_window.setMinimumSize({ width = minimumWidth, height = 480 })
+  if g_window.getWidth() < minimumWidth then
+    local oldPos = g_window.getPosition()
+    local size = { width = minimumWidth, height = g_window.getHeight() }
+    g_window.resize(size)
+    g_window.move(oldPos)
+  end
 
-function setupViewMode(mode)
-  if not g_settings.getBoolean("allowFullView") then
-    mode = 0
+  for i=1,gameRightPanels:getChildCount()+gameLeftPanels:getChildCount() do
+    local panel
+    if i > gameRightPanels:getChildCount() then
+      panel = gameLeftPanels:getChildByIndex(i - gameRightPanels:getChildCount())
+    else
+      panel = gameRightPanels:getChildByIndex(i)
+    end
+    if classic then
+      panel:setImageColor('white')
+    else
+      panel:setImageColor('alpha')
+    end
   end
   
-  --[[
-      self:addOption("Right")
-      self:addOption("Left, Right")
-      self:addOption("2x Right")
-      self:addOption("Left, 2x Right")
-      self:addOption("2x Left, 2x Right")
-      self:addOption("Right + transparent left and right panels")
-      self:addOption("Left, Right + transparent left and right panels")  
-  ]]--
-  
-  local panels = modules.client_options.getOption('panels')
-
-  if mode == 0 then
-    gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
-    gameLeftPanel:setImageColor('white')
-    gameRightPanel:setImageColor('white')
-    gameLeftPanel:setMarginTop(0)
-    gameRightPanel:setMarginTop(0)
-    gameThirdPanel:setMarginTop(0)
-    gameForthPanel:setMarginTop(0)
-    gameBottomPanel:setImageColor('white')
-    modules.client_topmenu.getTopMenu():setImageColor('white')
-    
-    
-    gameThirdPanel:setImageColor('white')
-    gameForthPanel:setImageColor('white')      
-    gameLeftPanel:setOn(false)
-    gameThirdPanel:setOn(false)
-    gameForthPanel:setOn(false)
-    gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
-    gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
-    gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)    
-    
-    if panels == 2 then
-        gameLeftPanel:setOn(true)
-    elseif panels == 3 then
-        gameThirdPanel:setOn(true)
-        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorLeft)
-    elseif panels == 4 then
-        gameLeftPanel:setOn(true)
-        gameThirdPanel:setOn(true)
-        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorLeft)
-    elseif panels == 5 then
-        gameLeftPanel:setOn(true)
-        gameThirdPanel:setOn(true)
-        gameForthPanel:setOn(true)
-        gameMapPanel:addAnchor(AnchorLeft, 'gameForthPanel', AnchorRight)
-        gameMapPanel:addAnchor(AnchorRight, 'gameThirdPanel', AnchorLeft)
-    elseif panels == 6 then
-        gameLeftPanel:setOn(false)
-        gameThirdPanel:setOn(true)
-        gameForthPanel:setOn(true)
-        gameThirdPanel:setImageColor('alpha')
-        gameForthPanel:setImageColor('alpha')
-    elseif panels == 7 then
-        gameLeftPanel:setOn(true)
-        gameThirdPanel:setOn(true)
-        gameForthPanel:setOn(true)
-        gameThirdPanel:setImageColor('alpha')
-        gameForthPanel:setImageColor('alpha')
-    end    
+  if classic then
+    gameRightPanels:setMarginTop(0)
+    gameLeftPanels:setMarginTop(0)
     gameMapPanel:setMarginLeft(0)
     gameMapPanel:setMarginRight(0)
-    gameBottomPanel:setMarginLeft(0)
-    gameBottomPanel:setMarginRight(0)
+  else
+    gameLeftPanels:setMarginTop(modules.client_topmenu.getTopMenu():getHeight() - gameLeftPanels:getPaddingTop())
+    gameRightPanels:setMarginTop(modules.client_topmenu.getTopMenu():getHeight() - gameRightPanels:getPaddingTop())
+  end
+
+  gameMapPanel:setVisibleDimension({ width = 17, height = 13 })
+  
+  if classic then  
+    gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
+    gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
+    gameMapPanel:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
+    gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)    
     gameMapPanel:setKeepAspectRatio(true)
     gameMapPanel:setLimitVisibleRange(false)
     gameMapPanel:setZoom(11)
-    gameMapPanel:setVisibleDimension({ width = 15, height = 11 })
-    
-    healthBar:setMarginTop(0)
-    manaBar:setMarginTop(0)
 
+    gameBottomPanel:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
+    gameBottomPanel:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
+    bottomSplitter:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
+    bottomSplitter:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
+
+    modules.client_topmenu.getTopMenu():setImageColor('white')
+    gameBottomPanel:setImageColor('white')
     g_game.changeMapAwareRange(20, 16)
-  elseif mode == 1 then
-    gameMapPanel:setKeepAspectRatio(false)
-    gameMapPanel:setLimitVisibleRange(false)
-    gameMapPanel:setZoom(13)
-    gameMapPanel:setVisibleDimension({ width = 25, height = 15 })
+  
+    if modules.game_console then
+      modules.game_console.switchMode(false)
+    end
+  else
+    g_game.changeMapAwareRange(30, 20)
     gameMapPanel:fill('parent')
     gameRootPanel:fill('parent')
-    gameLeftPanel:setImageColor('alpha')
-    gameRightPanel:setImageColor('alpha')
-    gameThirdPanel:setImageColor('alpha')
-    gameForthPanel:setImageColor('alpha')
-    gameLeftPanel:setMarginTop(modules.client_topmenu.getTopMenu()
-      :getHeight() - gameLeftPanel:getPaddingTop())
-    gameRightPanel:setMarginTop(modules.client_topmenu.getTopMenu()
-      :getHeight() - gameRightPanel:getPaddingTop())
-    gameThirdPanel:setMarginTop(modules.client_topmenu.getTopMenu()
-      :getHeight() - gameThirdPanel:getPaddingTop())
-    gameForthPanel:setMarginTop(modules.client_topmenu.getTopMenu()
-      :getHeight() - gameForthPanel:getPaddingTop())
-    gameLeftPanel:setOn(true)
-    gameRightPanel:setOn(true)
-    gameThirdPanel:setOn(true)
-    gameForthPanel:setOn(true)    
-    gameBottomPanel:setImageColor('#ffffff88')
-    modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')
+    gameMapPanel:setKeepAspectRatio(false)
+    gameMapPanel:setLimitVisibleRange(false)
+    if g_game.getFeature(GameChangeMapAwareRange) then
+      gameMapPanel:setZoom(13)
+    else
+      gameMapPanel:setZoom(11)    
+    end
     
-    healthBar:setMarginTop(modules.client_topmenu.getTopMenu():getHeight())
-    manaBar:setMarginTop(modules.client_topmenu.getTopMenu():getHeight())
-    healthBar:setMarginLeft(200)
-    manaBar:setMarginRight(200)
-
-    g_game.changeMapAwareRange(30, 20)
+    gameBottomPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+    gameBottomPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
+    bottomSplitter:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+    bottomSplitter:addAnchor(AnchorRight, 'parent', AnchorRight)
+           
+    modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')  
+    if modules.game_console then
+      modules.game_console.switchMode(true)
+    end
   end
-  currentViewMode = mode
 end
 
 function limitZoom()
@@ -1008,30 +889,34 @@ function limitZoom()
 end
 
 function updateSize() 
+  local classic = g_settings.getBoolean("classicView")
   local height = gameMapPanel:getHeight()
   local width = gameMapPanel:getWidth()
-   
-  local dimenstion = gameMapPanel:getVisibleDimension()
-  local dheight = dimenstion.height
-  local dwidth = dimenstion.width
-  local realWidth = math.floor(math.min(width, height * dwidth / dheight))
-  if currentViewMode == 0 then
-    healthBar:setMarginLeft(math.max(0, (width - realWidth) / 2 + 2))
-    manaBar:setMarginRight(math.max(0, (width - realWidth) / 2 + 2))
-  end
 
-  if currentViewMode ~= 1 then
-    return
+  if not classic and modules.game_console then
+    local newMargin = modules.game_console.consolePanel:getMarginLeft()
+    newMargin = math.max(0, newMargin)
+    newMargin = math.min(modules.game_console.consolePanel:getParent():getWidth() - modules.game_console.consolePanel:getWidth(), newMargin)
+    modules.game_console.consolePanel:setMarginLeft(newMargin)
   end
-  height = gameRootPanel:getHeight()
-  width = gameRootPanel:getWidth()
-  if width < 400 or height < 400 then
-    gameMapPanel:setMarginLeft(0)
-    gameMapPanel:setMarginRight(0)
-    gameBottomPanel:setMarginLeft(0)
-    gameBottomPanel:setMarginRight(0)
-    return
+     
+  if not classic then
+    local rheight = gameRootPanel:getHeight()
+    local rwidth = gameRootPanel:getWidth()
+
+    local dimenstion = gameMapPanel:getVisibleDimension()  
+    local zoom = gameMapPanel:getZoom()  
+    local awareRange = g_map.getAwareRange()
+    local dheight = dimenstion.height
+    local dwidth = dimenstion.width
+    local tileSize = rheight / dheight    
+    local maxWidth = tileSize * (awareRange.width - 4)
+    local margin =  math.max(0, math.floor((rwidth - maxWidth) / 2))
+    gameMapPanel:setMarginLeft(margin)
+    gameMapPanel:setMarginRight(margin)
   end
+  
+    --[[
   local maxWidth = math.floor(height * 2)
   local extraMargin = 0
   if width >= maxWidth then
@@ -1043,7 +928,5 @@ function updateSize()
     bottomMargin = math.ceil((width - bottomMaxWidth) / 2)
   end
   gameMapPanel:setMarginLeft(extraMargin)
-  gameMapPanel:setMarginRight(extraMargin)
-  gameBottomPanel:setMarginLeft(bottomMargin)
-  gameBottomPanel:setMarginRight(bottomMargin)
+  gameMapPanel:setMarginRight(extraMargin) ]]
 end

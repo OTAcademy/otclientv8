@@ -30,8 +30,10 @@
 #include <framework/util/crypt.h>
 #include <framework/http/http.h>
 #include <queue>
+#include <regex>
 
 #include <boost/process.hpp>
+#include <locale>
 
 #include <physfs.h>
 #include <zip.h>
@@ -39,7 +41,7 @@
 
 ResourceManager g_resources;
 
-void ResourceManager::init(const char *argv0)
+void ResourceManager::init(const char *argv0, bool failsafe)
 {
     m_binaryPath = std::filesystem::absolute(argv0);
     PHYSFS_init(argv0);
@@ -51,13 +53,13 @@ void ResourceManager::terminate()
     PHYSFS_deinit();
 }
 
-int ResourceManager::launchCorrect(const std::string& app) { // curently works only on windows
+int ResourceManager::launchCorrect(const std::string& product, const std::string& app) { // curently works only on windows
     auto init_path = m_binaryPath.parent_path();
     init_path /= "init.lua";
     if (std::filesystem::exists(init_path)) // debug version
         return 0;
 
-    const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
+    const char* localDir = PHYSFS_getPrefDir(product.c_str(), app.c_str());
     if (!localDir)
         return 0;
     
@@ -65,7 +67,7 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
     fileName2 = stdext::split(fileName2, "-")[0];
     stdext::tolower(fileName2);
 
-    std::filesystem::path path(localDir);
+    std::filesystem::path path(std::filesystem::u8path(localDir));
     auto lastWrite = std::filesystem::last_write_time(m_binaryPath);
     std::filesystem::path binary = m_binaryPath;
     for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(path), {})) {
@@ -104,18 +106,48 @@ int ResourceManager::launchCorrect(const std::string& app) { // curently works o
         }
     }
 
-    boost::process::child c(binary.string(), "--from-updater");
+    if (binary == m_binaryPath)
+        return 0;
+
+    boost::process::child c(binary.string());
     std::error_code ec;
-    if (c.wait_for(std::chrono::seconds(15), ec)) {
-        return c.exit_code() == 0 ? 1 : -1;
+    if (c.wait_for(std::chrono::seconds(5), ec)) {
+        return c.exit_code() != 0 ? -1 : 1;
     }
 
     c.detach();
     return 1;
 }
 
-bool ResourceManager::setupWriteDir(const std::string& app) {
-    const char* localDir = PHYSFS_getPrefDir(app.c_str(), app.c_str());
+void ResourceManager::launchFailsafe() {
+    static bool launched = false;
+    if (launched || m_failsafe)
+        return;
+
+    // check if has failsafe
+    std::ifstream file(m_binaryPath.string(), std::ios::binary);
+    if (!file.is_open())
+        return;
+
+    std::string buffer(std::istreambuf_iterator<char>(file), {});
+    file.close();
+
+    if (buffer.size() < 1024 * 1024) // less then 1 MB
+        return;
+
+    std::string toFind = { 0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x01 }; // zip header
+    toFind[toFind.size() - 1] = 0; // otherwhise toFind would find toFind in buffer
+    size_t pos = buffer.find(toFind);
+    if (pos == std::string::npos)
+        return;
+
+    launched = true;
+    boost::process::spawn(m_binaryPath.string(), "--failsafe");
+    stdext::millisleep(100);
+}
+
+bool ResourceManager::setupWriteDir(const std::string& product, const std::string& app) {
+    const char* localDir = PHYSFS_getPrefDir(product.c_str(), app.c_str());
     if (!localDir) {
         g_logger.fatal(stdext::format("Unable to get local dir, error: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         return false;
@@ -130,7 +162,7 @@ bool ResourceManager::setupWriteDir(const std::string& app) {
         g_logger.fatal(stdext::format("Unable to set write dir '%s': %s", localDir, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         return false;
     }
-    m_writeDir = std::filesystem::path(localDir);
+    m_writeDir = std::filesystem::path(std::filesystem::u8path(localDir));
     return true;
 }
 
@@ -174,6 +206,47 @@ bool ResourceManager::setup(const std::string& existentFile)
 
     g_logger.fatal("Unable to find working directory (or data.zip)");
     return false;
+}
+
+std::string ResourceManager::getCompactName(const std::string& existentFile) {
+    // search for modules directory
+    std::vector<std::string> possiblePaths = { g_platform.getCurrentDir() };
+    const char* baseDir = PHYSFS_getBaseDir();
+    if (baseDir)
+        possiblePaths.push_back(baseDir);
+
+    std::string fileData;
+    if (loadDataFromSelf(existentFile)) {
+        fileData = readFileContents(existentFile);
+        PHYSFS_unmount("memory_data.zip");
+        m_loadedFromMemory = false;
+        m_loadedFromArchive = false;
+    }
+
+    if (fileData.empty()) {
+        try {
+            for (const std::string& dir : possiblePaths) {
+                if (!PHYSFS_mount(dir.c_str(), NULL, 0))
+                    continue;
+
+                if (PHYSFS_exists(existentFile.c_str())) {
+                    fileData = readFileContents(existentFile);
+                    PHYSFS_unmount(dir.c_str());
+                    break;
+                }
+                PHYSFS_unmount(dir.c_str());
+            }
+        }
+        catch (...) {}
+    }
+
+    std::smatch regex_match;
+    if (std::regex_search(fileData, regex_match, std::regex("APP_NAME[^\"]+\"([^\"]+)"))) {
+        if (regex_match.size() == 2 && regex_match[1].str().length() > 0 && regex_match[1].str().length() < 30) {
+            return regex_match[1].str();
+        }
+    }
+    return "otclientv8";
 }
 
 bool ResourceManager::loadDataFromSelf(const std::string& existentFile) {
@@ -261,12 +334,12 @@ std::string ResourceManager::readFileContents(const std::string& fileName)
     PHYSFS_readBytes(file, (void*)&buffer[0], fileSize);
     PHYSFS_close(file);
 
-    static std::string unencryptedFiles[] = { "/config.otml", "/minimap.otmm", "/bot.otml", "/exception.dmp" };
+    static std::string unencryptedExtensions[] = { ".otml", ".otmm", ".dmp", ".log", ".dll", ".exe", ".zip" };
 
     if (!decryptBuffer(buffer)) {
-        bool ignore = false;
-        for (auto& it : unencryptedFiles) {
-            if (fileName == it) {
+        bool ignore = !isLoadedFromArchive();
+        for (auto& it : unencryptedExtensions) {
+            if (fileName.find(it) == fileName.size() - it.size()) {
                 ignore = true;
             }
         }
@@ -474,6 +547,8 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
     if (!m_loadedFromMemory) {
         g_logger.info("Updating client, loading data.zip");
 
+        if (!PHYSFS_unmount((m_dataDir + "/data.zip").c_str()))
+            return g_logger.fatal(stdext::format("can't unmount data.zip: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         if(!PHYSFS_mount(m_dataDir.c_str(), NULL, 0))
             return g_logger.fatal(stdext::format("Can't mount dir with data: %s", m_dataDir));
 
@@ -482,8 +557,10 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
             return g_logger.fatal(stdext::format("Can't open data.zip"));
 
         m_memoryDataBufferSize = PHYSFS_fileLength(file);
-        m_memoryDataBuffer = new char[m_memoryDataBufferSize];
-        PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
+        if (m_memoryDataBufferSize > 0) {
+            m_memoryDataBuffer = new char[m_memoryDataBufferSize];
+            PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
+        }
         PHYSFS_close(file);        
     }
 
@@ -497,7 +574,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
     zip_error_t error;
     zip_error_init(&error);
 
-    if ((src = zip_source_buffer_create(m_memoryDataBuffer, m_memoryDataBufferSize, 1, &error)) == NULL)
+    if ((src = zip_source_buffer_create(m_memoryDataBuffer, m_memoryDataBufferSize, 0, &error)) == NULL)
         return g_logger.fatal(stdext::format("can't create source: %s", zip_error_strerror(&error)));
 
     if ((za = zip_open_from_source(src, 0, &error)) == NULL)
@@ -533,9 +610,6 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
     if (zip_source_open(src) < 0)
         return g_logger.fatal(stdext::format("can't open source: %s", zip_error_strerror(zip_source_error(src))));
 
-    if (!m_loadedFromMemory && !PHYSFS_unmount((m_dataDir + "/data.zip").c_str()))
-        return g_logger.fatal(stdext::format("can't unmount data.zip: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-
     PHYSFS_file* file = PHYSFS_openWrite("data.zip");
     if(!file)
         return g_logger.fatal(stdext::format("can't open data.zip for writing: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
@@ -567,15 +641,18 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
         PHYSFS_writeBytes(file, it->second->response.data(), it->second->response.size());
         PHYSFS_close(file);
 
-        std::filesystem::path newBinaryPath(PHYSFS_getRealDir(newBinary.c_str()));
+        std::filesystem::path newBinaryPath(std::filesystem::u8path(PHYSFS_getWriteDir()));
         installDlls(newBinaryPath);
         newBinaryPath /= newBinary;
-        stdext::millisleep(500);
+        stdext::millisleep(250);
         boost::process::spawn(newBinaryPath.string());
+        stdext::millisleep(250);
         return;
     }    
 
+    stdext::millisleep(250);
     boost::process::spawn(m_binaryPath.string());
+    stdext::millisleep(250);
 }
 
 #ifdef WITH_ENCRYPTION
@@ -611,7 +688,7 @@ void ResourceManager::encrypt() {
         if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
             continue; // already encrypted
 
-        if (it.extension().string() == luaExtension) {
+        if (it.extension().string() == luaExtension && it.filename().string() != "init.lua") {
             std::string bytecode = g_lua.generateByteCode(buffer, it.string());
             if (bytecode.length() > 10) {
                 buffer = bytecode;
@@ -640,11 +717,7 @@ bool ResourceManager::decryptBuffer(std::string& buffer) {
     if (buffer.size() < 5)
         return true;
     if (buffer.substr(0, 4).compare("ENC3") != 0) {
-#ifdef WITH_ENCRYPTION
-        return true;
-#else
         return false;
-#endif
     }
 
     uint64_t key = *(uint64_t*)&buffer[4];

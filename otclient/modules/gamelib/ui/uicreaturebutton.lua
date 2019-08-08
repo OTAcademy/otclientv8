@@ -35,23 +35,17 @@ function UICreatureButton:getCreatureId()
     return self.creature:getId()
 end
 
-function UICreatureButton:setup(creature)
+function UICreatureButton:setup(creature, id)
+  if not id then
+    id = 0
+  end
+  self:setId('CreatureButton_' .. id)
+
   self.lifeBarWidget = self:getChildById('lifeBar')
   self.creatureWidget = self:getChildById('creature')
   self.labelWidget = self:getChildById('label')
   self.skullWidget = self:getChildById('skull')
   self.emblemWidget = self:getChildById('emblem')
-
-  self.creature = creature
-
-  self.labelWidget:setText(creature:getName())
-  self.creatureWidget:setCreature(creature)
-
-  self:setId('CreatureButton_' .. creature:getName():gsub('%s','_'))
-  self:setLifeBarPercent(creature:getHealthPercent())
-
-  self:updateSkull(creature:getSkull())
-  self:updateEmblem(creature:getEmblem())
 end
 
 function UICreatureButton:update()
@@ -59,14 +53,17 @@ function UICreatureButton:update()
   local show = false
   if self.creature == g_game.getAttackingCreature() then
     color = CreatureButtonColors.onTargeted
-    show = true
   elseif self.creature == g_game.getFollowingCreature() then
     color = CreatureButtonColors.onFollowed
-    show = true
   end
   color = self.isHovered and color.hovered or color.notHovered
 
-  if self.isHovered or show then
+  if self.color == color then
+    return
+  end
+  self.color = color
+
+  if color ~= CreatureButtonColors.onIdle.notHovered then
     self.creatureWidget:setBorderWidth(1)
     self.creatureWidget:setBorderColor(color)
     self.labelWidget:setColor(color)
@@ -76,24 +73,31 @@ function UICreatureButton:update()
   end
 end
 
-function UICreatureButton:newSetup(creature)
+function UICreatureButton:creatureSetup(creature)
 	if self.creature ~= creature then
 		self.creature = creature
 		self.creatureWidget:setCreature(creature)	
-		self.labelWidget:setText(creature:getName())
+    if self.creatureName ~= creature:getName() then
+      self.creatureName = creature:getName()
+      self.labelWidget:setText(creature:getName())
+    end
 	end
 
-	self:setLifeBarPercent(creature:getHealthPercent())
-	self:updateSkull(creature:getSkull())
-	self:updateEmblem(creature:getEmblem())
+	self:updateLifeBarPercent()
+	self:updateSkull()
+	self:updateEmblem()
   self:update()
 end
 
-function UICreatureButton:updateSkull(skullId)
+function UICreatureButton:updateSkull()
   if not self.creature then
     return
   end
-  local skullId = skullId or self.creature:getSkull()
+  local skullId = self.creature:getSkull()
+  if skullId == self.skullId then
+    return
+  end
+  self.skullId = skullId
 
   if skullId ~= SkullNone then
     self.skullWidget:setWidth(self.skullWidget:getHeight())
@@ -108,11 +112,16 @@ function UICreatureButton:updateSkull(skullId)
   end
 end
 
-function UICreatureButton:updateEmblem(emblemId)
+function UICreatureButton:updateEmblem()
   if not self.creature then
     return
   end
-  local emblemId = emblemId or self.creature:getEmblem()
+  local emblemId = self.creature:getEmblem()
+  if self.emblemId == emblemId then
+    return
+  end
+  self.emblemId = emblemId
+
   if emblemId ~= EmblemNone then
     self.emblemWidget:setWidth(self.emblemWidget:getHeight())
     local imagePath = getEmblemImagePath(emblemId)
@@ -128,7 +137,16 @@ function UICreatureButton:updateEmblem(emblemId)
   end
 end
 
-function UICreatureButton:setLifeBarPercent(percent)
+function UICreatureButton:updateLifeBarPercent()
+  if not self.creature then
+    return
+  end
+  local percent = self.creature:getHealthPercent()
+  if self.percent == percent then
+    return
+  end
+
+  self.percent = percent
   self.lifeBarWidget:setPercent(percent)
 
   local color

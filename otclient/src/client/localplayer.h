@@ -36,7 +36,7 @@ public:
     LocalPlayer();
 
     void unlockWalk() { m_walkLockExpiration = 0; }
-    void lockWalk(int millis = 250);
+    void lockWalk(int millis = 200);
     void stopAutoWalk();
     bool autoWalk(Position destination, bool retry = false);
     bool canWalk(Otc::Direction direction, bool ignoreLock = false);
@@ -123,13 +123,14 @@ public:
         return m_newPreWalkingPositions;
     };
 
-protected:
-    void walk(const Position& oldPos, const Position& newPos);
     void preWalk(Otc::Direction direction);
     void newPreWalk(Otc::Direction direction);
+
+protected:
+    void walk(const Position& oldPos, const Position& newPos);
     void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);
     void cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir);
-    void stopWalk(bool teleport = false);
+    void stopWalk();
 
     friend class Game;
 

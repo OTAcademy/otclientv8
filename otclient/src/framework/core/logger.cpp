@@ -23,8 +23,8 @@
 #include "logger.h"
 #include "eventdispatcher.h"
 
-//#include <boost/regex.hpp>
 #include <framework/core/resourcemanager.h>
+#include <framework/core/graphicalapplication.h>
 
 #ifdef FW_GRAPHICS
 #include <framework/platform/platformwindow.h>
@@ -75,7 +75,10 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
         g_window.displayFatalError(message);
 #endif
         ignoreLogs = true;
-        quick_exit(-1);
+        if (g_app.getIteration() < 5) {
+            g_resources.launchFailsafe();
+        }
+        std::quick_exit(-1);
     }
 }
 

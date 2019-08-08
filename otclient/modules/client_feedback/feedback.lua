@@ -6,21 +6,6 @@ local postId = 0
 local tries = 0
 local replyEvent = nil
 
-local function onPost(operationId, url, err, data)
-  if operationId ~= postId then
-    return
-  end
-  if err:len() > 0 then
-    print("Sending feedback error: " .. err)
-    tries = tries + 1
-    if tries < 3 then 
-      replyEvent = scheduleEvent(send, 1000)
-    end
-  else
-    print("Feedback has been sent!")
-  end
-end
-
 function init()
   feedbackWindow = g_ui.displayUI('feedback')
   feedbackWindow:hide()
@@ -31,20 +16,19 @@ function init()
 
   okButton.onClick = send
   cancelButton.onClick = hide
-  feedbackWindow.onEscape = hide  
-  
-  connect(g_http, {onPost = onPost})
+  feedbackWindow.onEscape = hide    
 end
 
 function terminate()
   feedbackWindow:destroy()
-  disconnect(g_http, {onPost = onPost})
-  if replyEvent ~= nil then
-    removeEvent(replyEvent)
-  end
+  removeEvent(replyEvent)
 end
 
 function show()
+  if Services.feedback == nil or Services.feedback:len() < 4 then
+    return
+  end
+
   feedbackWindow:show()
   feedbackWindow:raise()
   feedbackWindow:focus()
@@ -81,7 +65,14 @@ function send()
       host = g_settings.get('host'),
       player = playerData
     })
-    postId = g_http.post(Services.feedback, data)
+    postId = HTTP.post(Services.feedback, data, function(ret, err) 
+      if err then
+        tries = tries + 1
+        if tries < 3 then 
+          replyEvent = scheduleEvent(send, 1000)
+        end
+      end
+    end)
   end 
   hide()
 end

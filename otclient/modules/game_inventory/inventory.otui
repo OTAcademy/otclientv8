@@ -87,7 +87,22 @@ CombatBox < UICheckBox
 
   $checked:
     image-clip: 0 20 20 20
-    
+
+
+InventoryButton < Button
+  font: verdana-11px-antialised
+  height: 20
+
+SoulCapLabel < GameLabel
+  text-align: center
+  color: #FFFFFF
+  font: cipsoftFont
+  margin-top: 4
+  text-offset: 0 3
+  width: 36
+  height: 20
+  icon-source: /images/game/slots/soulcap
+      
 FightOffensiveBox < CombatBox
   image-source: /images/game/combatmodes/fightoffensive
 FightBalancedBox < CombatBox
@@ -106,17 +121,18 @@ MiniWindow
   id: inventoryWindow
   !text: tr('Inventory')
   icon: /images/topbuttons/inventory
-  height: 215
+  height: 200
   @onClose: modules.game_inventory.onMiniWindowClose()
   &save: true
+  &forceOpen: true
 
   MiniWindowContents
     anchors.left: parent.left
         
     Panel
       id: inventoryPanel
-      margin-right: 53
-      margin-bottom: 40
+      margin-right: 63
+      margin-top: 2
       anchors.fill: parent
       
       HeadSlot
@@ -154,7 +170,7 @@ MiniWindow
         anchors.top: prev.bottom
         anchors.horizontalCenter: prev.horizontalCenter
         margin-top: 3
-
+        
       BackSlot
         anchors.top: slot1.top
         anchors.left: slot1.right
@@ -171,21 +187,40 @@ MiniWindow
         anchors.horizontalCenter: prev.horizontalCenter
         margin-top: 3
 
-      PurseButton
-        margin-top: 3
-        anchors.top: prev.bottom
-        anchors.horizontalCenter: prev.horizontalCenter
+      SoulCapLabel
+        id: soulLabel
+        anchors.top: slot10.bottom
+        anchors.horizontalCenter: slot10.horizontalCenter
+        
+      SoulCapLabel
+        id: capLabel
+        anchors.top: slot9.bottom
+        anchors.horizontalCenter: slot9.horizontalCenter
+
+      Panel
+        id: conditionPanel
+        layout:
+          type: horizontalBox
+        height: 22
+        padding: 2
+        anchors.top: slot8.bottom
+        anchors.left: slot6.left
+        anchors.right: slot5.right
+        margin-top: 4
+        border-width: 1
+        border-color: #00000077
+        background-color: #ffffff11
         
     Panel
       margin-top: 5
       anchors.fill: parent
       anchors.left: prev.right
-      margin-bottom: 40
         
       FightOffensiveBox
         id: fightOffensiveBox
         anchors.left: parent.left
-        anchors.top: parent.top
+        anchors.top: parent.top        
+        margin-left: 8
 
       ChaseModeBox
         id: chaseModeBox
@@ -194,99 +229,54 @@ MiniWindow
 
       FightBalancedBox
         id: fightBalancedBox
-        margin-top: 26
+        margin-top: 22
         anchors.left: parent.left
         anchors.top: parent.top
+        margin-left: 8
         
       SafeFightBox
         id: safeFightBox
-        margin-top: 26
+        margin-top: 22
         anchors.left: prev.right
         anchors.top: parent.top
 
       FightDefensiveBox
         id: fightDefensiveBox
-        margin-top: 52
+        margin-top: 44
         anchors.left: parent.left
         anchors.top: parent.top
+        margin-left: 8
         
       MountButton
         id: mountButton
-        margin-top: 52
+        margin-top: 44
         anchors.left: prev.right
         anchors.top: parent.top
         
-      Button
-        id: buttonPvp
-        !text: tr('PVP')
-        margin-top: 83
-        margin-left: 3
-        width: 45
-        anchors.left: parent.left
-        anchors.top: parent.top
-
-      Button
-        !text: tr('Stop')
-        margin-top: 115
-        margin-left: 3
-        width: 45
-        anchors.left: parent.left
-        anchors.top: parent.top
-        @onClick: g_game.stop(); g_game.cancelAttackAndFollow()
-    
-    Panel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.bottom: parent.bottom
-      anchors.top: prev.bottom
-      margin-left: 4
-      margin-right: 4      
-      
       Panel
-        id: conditionPanel
-        layout:
-          type: horizontalBox
-        height: 22
-        padding: 2
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        border-width: 1
-        border-color: #00000077
-        background-color: #ffffff11
-
-      GameLabel
-        id: soulLabel
-        text-align: right
-        color: white
-        font: verdana-11px-rounded
+        margin-top: 4
+        margin-right: 5
+        anchors.fill: parent
         anchors.top: prev.bottom
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.left: parent.horizontalCenter
-        on: true
-        margin-right: 2
-        margin-top: 1
+        layout:
+          type: verticalBox
+          
+        InventoryButton
+          !text: tr('Stop')
+          @onClick: g_game.stop(); g_game.cancelAttackAndFollow()
 
-        $!on:
-          visible: false
-          margin-top: 0
-          height: 0
+        InventoryButton
+          !text: tr('Quests')
+          @onClick: g_game.requestQuestLog()
 
-      GameLabel
-        id: capLabel
-        color: white
-        font: verdana-11px-rounded
-        margin-left: 2
-        margin-top: 1
-        anchors.top: prev.top
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.horizontalCenter
-        on: true
+        InventoryButton
+          !text: tr('Options')
+          @onClick: modules.client_options.toggle()
 
-        $!on:
-          visible: false
-          margin-top: 0
-          height: 0
+        InventoryButton
+          !text: tr('Hotkeys')
+          @onClick: modules.game_hotkeys.toggle()
 
+        InventoryButton
+          !text: tr('Logout')
+          @onClick: modules.game_interface.tryLogout()

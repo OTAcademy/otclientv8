@@ -162,7 +162,7 @@ private:
     uint8 m_drawElevation;
     uint8 m_minimapColor;
     uint32 m_flags, m_houseId;
-    uint16 m_speed = 150;
+    uint16 m_speed = 0;
     uint8 m_blocking = 0;
     float m_depth = 0;
     float m_topDepth = 0;

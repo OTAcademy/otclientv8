@@ -197,7 +197,7 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
 
     g_painter->resetDraws();
 
-    if (g_graphics.canUseDepth()) {
+    if (g_graphics.canUseDepth() && !g_game.getFeature(Otc::GameSpritesAlphaChannel)) {
         if (updateMap && !isFading) {
             AutoStat s(STATS_RENDER, "UpdateMap");
             m_mapRenderTimer.restart();
@@ -288,7 +288,7 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
 
     drawQueueCreaturesInfo.reset();
 
-    for (const CreaturePtr& creature : g_map.getSpectatorsInRange(cameraPosition, false, m_visibleDimension.width() / 2 + 1, m_visibleDimension.height() / 2 + 1)) {
+    for (const CreaturePtr& creature : g_map.getSpectatorsInRangeEx(cameraPosition, false, m_visibleDimension.width() / 2, m_visibleDimension.width() / 2 + 1, m_visibleDimension.height() / 2, m_visibleDimension.height() / 2 + 1)) {
         if (!creature->canBeSeen())
             continue;
 

@@ -4,7 +4,7 @@ UIWindow = extends(UIWidget, "UIWindow")
 function UIWindow.create()
   local window = UIWindow.internalCreate()
   window:setTextAlign(AlignTopCenter)
-  window:setDraggable(true)
+  window:setDraggable(true)  
   window:setAutoFocusPolicy(AutoFocusFirst)
   return window
 end
@@ -24,6 +24,9 @@ function UIWindow:onFocusChange(focused)
 end
 
 function UIWindow:onDragEnter(mousePos)
+  if self.static then
+    return
+  end
   self:breakAnchors()
   self.movingReference = { x = mousePos.x - self:getX(), y = mousePos.y - self:getY() }
   return true
@@ -34,6 +37,9 @@ function UIWindow:onDragLeave(droppedWidget, mousePos)
 end
 
 function UIWindow:onDragMove(mousePos, mouseMoved)
+  if self.static then
+    return
+  end
   local pos = { x = mousePos.x - self.movingReference.x, y = mousePos.y - self.movingReference.y }
   self:setPosition(pos)
   self:bindRectToParent()

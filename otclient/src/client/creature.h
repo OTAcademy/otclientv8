@@ -100,7 +100,7 @@ public:
     Position getLastStepFromPosition() { return m_lastStepFromPosition; }
     Position getLastStepToPosition() { return m_lastStepToPosition; }
     float getStepProgress() { return m_walkTimer.ticksElapsed() / getStepDuration(); }
-    float getStepTicksLeft() { return getStepDuration() - m_walkTimer.ticksElapsed(); }
+    int getStepTicksLeft() { return getStepDuration() - m_walkTimer.ticksElapsed(); }
     ticks_t getWalkTicksElapsed() { return m_walkTimer.ticksElapsed(); }
     double getSpeedFormula(Otc::SpeedFormula formula) { return m_speedFormula[formula]; }
     bool hasSpeedFormula();
@@ -117,8 +117,8 @@ public:
     virtual void turn(Otc::Direction direction);
     void jump(int height, int duration);
     virtual void walk(const Position& oldPos, const Position& newPos);
-    virtual void stopWalk(bool appear = false);
-    void allowAppearWalk(uint16_t stepSpeed) { m_allowAppearWalk = true; m_nextStepSpeed = stepSpeed; }
+    virtual void stopWalk();
+    void allowAppearWalk(uint16_t stepSpeed) { m_allowAppearWalk = true; m_stepDuration = stepSpeed; }
 
     bool isWalking() { return m_walking; }
     bool isRemoved() { return m_removed; }
@@ -203,7 +203,7 @@ protected:
     int m_walkedPixels;
     uint m_footStep;
     Timer m_walkTimer;
-    Timer m_footTimer;
+    ticks_t m_footLastStep;
     TilePtr m_walkingTile;
     stdext::boolean<false> m_walking;
     stdext::boolean<false> m_allowAppearWalk;
@@ -217,7 +217,6 @@ protected:
     Position m_lastStepToPosition;
     Position m_oldPosition;
     uint8 m_elevation = 0;
-    uint16 m_nextStepSpeed = 0;
     uint16 m_stepDuration = 0;
 
     // jump related

@@ -438,7 +438,10 @@ namespace Otc
         GameNoDebug = 98,
         GameBotProtection = 99,
 
-        LastGameFeature = 101
+        // Custom features for customer
+        GameFasterAnimations = 101,
+
+        LastGameFeature = 110
     };
 
     enum PathFindResult {

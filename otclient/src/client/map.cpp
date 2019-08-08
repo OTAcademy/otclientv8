@@ -957,7 +957,7 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
                         it = nodes.emplace(neighbor, nullptr).first;
                     } else {
                         if (!wasSeen)
-                            speed = 1000;
+                            speed = 100000;
                         it = nodes.emplace(neighbor, new Node{ speed, 10000000.0f, neighbor, node, node->distance + 1, wasSeen ? 0 : 1 }).first;
                     }
                 }

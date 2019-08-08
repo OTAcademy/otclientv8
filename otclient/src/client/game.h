@@ -168,6 +168,7 @@ public:
 
     // walk related
     bool walk(Otc::Direction direction);
+    void callOnWalk(Otc::Direction direction);
     void autoWalk(std::vector<Otc::Direction> dirs, Position startPos);
     void forceWalk(Otc::Direction direction, bool withPreWalk);
     void turn(Otc::Direction direction);

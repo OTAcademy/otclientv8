@@ -109,6 +109,10 @@ bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
 
 void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
 {
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] LocalPlayer::walk", (int)g_clock.millis()));
+    }
+
     m_lastAutoRetries = 0;
     // a prewalk was going on
     if (isNewPreWalking()) {
@@ -120,6 +124,10 @@ void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
                 return;
             }
         }
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("[%i] LocalPlayer::walk invalid prewalk", (int)g_clock.millis()));
+        }
+
         // invalid pre walk
         m_newPreWalkingPositions.clear();
         m_serverWalking = true;
@@ -139,6 +147,10 @@ void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
         } else
             Creature::walk(oldPos, newPos);
     } else { // no prewalk was going on, this must be an server side automated walk
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("[%i] LocalPlayer::walk server walk", (int)g_clock.millis()));
+        }
+
         m_serverWalking = true;
         if(m_serverWalkEndEvent)
             m_serverWalkEndEvent->cancel();
@@ -192,6 +204,10 @@ void LocalPlayer::cancelWalk(Otc::Direction direction)
     if (g_game.getFeature(Otc::GameNewWalking))
         return;
 
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] cancelWalk: %i", (int)g_clock.millis(), direction));
+    }
+
     // only cancel client side walks
     if(m_walking && m_preWalking)
         stopWalk();
@@ -224,13 +240,23 @@ void LocalPlayer::cancelWalk(Otc::Direction direction)
 
 void LocalPlayer::cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir)     
 {
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] cancelNewWalk: %i- %i", (int)g_clock.millis(), walkId, (int)m_newPreWalkingPositions.size()));
+    }
+
+    bool clearedPreWalking = !m_newPreWalkingPositions.empty();
     m_newPreWalkingPositions.clear();
     g_map.requestVisibleTilesCacheUpdate();
 
     if (m_position != pos) {
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("[%i] cancelNewWalk invalid position", (int)g_clock.millis()));
+        }
         m_allowAppearWalk = false;
         g_map.removeThing(this);
         g_map.addThing(this, pos, stackpos);
+    } else if (clearedPreWalking) {
+        stopWalk();
     }
 
     m_idleTimer.restart();
@@ -325,17 +351,16 @@ void LocalPlayer::stopAutoWalk()
     }
 }
 
-void LocalPlayer::stopWalk(bool teleport) {
+void LocalPlayer::stopWalk() {
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] stopWalk", (int)g_clock.millis()));
+    }
+
     Creature::stopWalk(); // will call terminateWalk
 
     m_newPreWalkingPositions.clear();
     m_lastPrewalkDone = true;
     m_lastPrewalkDestination = Position();
-
-    if (teleport) {
-        lockWalk();
-        g_game.cancelWalkEvent();
-    }
 }
 
 void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
@@ -358,18 +383,21 @@ void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
 
 void LocalPlayer::updateWalk()
 {
-    float ticksInterval = (1000.0f / 100.0f);
+    if (!m_walking)
+        return;
 
-    float ticksElapsed = ticksInterval * ((int)(m_walkTimer.ticksElapsed() / ticksInterval));
+    float walkTicksPerPixel = ((float)(getStepDuration(true) + 10)) / 32.0f;
+    int totalPixelsWalked = std::min<int>(m_walkTimer.ticksElapsed() / walkTicksPerPixel, 32.0f);
 
-    int stepDuration = getStepDuration();
-    float walkTicksPerPixel = getStepDuration(true) / 32.0f;
-    int totalPixelsWalked = std::min<int>(ticksElapsed / walkTicksPerPixel, 32.0f);
+    // needed for paralyze effect
+    m_walkedPixels = std::max<int>(m_walkedPixels, totalPixelsWalked);
 
     // update walk animation and offsets
     updateWalkAnimation(totalPixelsWalked);
-    updateWalkOffset(totalPixelsWalked);
+    updateWalkOffset(m_walkedPixels);
     updateWalkingTile();
+
+    int stepDuration = getStepDuration();
 
     // terminate walk only when client and server side walk are completed
     if (m_walking && m_walkTimer.ticksElapsed() >= stepDuration)
@@ -380,6 +408,10 @@ void LocalPlayer::updateWalk()
 
 void LocalPlayer::terminateWalk()
 {
+    if (g_extras.debugWalking) {
+        g_logger.info(stdext::format("[%i] terminateWalk", (int)g_clock.millis()));
+    }
+
     Creature::terminateWalk();
     m_preWalking = false;
     m_secondPreWalk = false;
@@ -396,6 +428,8 @@ void LocalPlayer::terminateWalk()
             self->m_serverWalking = false;
         }, 100);
     }
+
+    callLuaField("onWalkFinish");
 }
 
 void LocalPlayer::onAppear()
@@ -421,8 +455,6 @@ void LocalPlayer::onPositionChange(const Position& newPos, const Position& oldPo
 
 void LocalPlayer::turn(Otc::Direction direction)
 {
-    if (m_walking && g_game.getFeature(Otc::GameNewWalking))
-        return;
     Creature::setDirection(direction);
 }
 

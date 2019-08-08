@@ -4,9 +4,9 @@ local leftButtonsPanel
 local rightButtonsPanel
 local leftGameButtonsPanel
 local rightGameButtonsPanel
-local feedbackButton
 local fpsUpdateEvent = nil
-local showFeedback = false
+
+local HIDE_TOPMENU = false
 
 -- private functions
 local function addButton(id, description, icon, callback, panel, toggle, front)
@@ -52,27 +52,26 @@ function init()
   rightGameButtonsPanel = topMenu:getChildById('rightGameButtonsPanel')
   pingLabel = topMenu:getChildById('pingLabel')
   fpsLabel = topMenu:getChildById('fpsLabel')
-  feedbackButton = topMenu:getChildById('feedbackButton')
   
   g_keyboard.bindKeyDown('Ctrl+Shift+T', toggle)
   
-  showFeedback = Services.feedback ~= nil and Services.feedback:len() > 4
-
   if g_game.isOnline() then
     online()
   end
   
   updateFps()
+  
+  if HIDE_TOPMENU then
+    topMenu:setHeight(0) 
+    topMenu:hide()
+  end
 end
 
 function terminate()
   disconnect(g_game, { onGameStart = online,
                        onGameEnd = offline,
                        onPingBack = updatePing })
-  if fpsUpdateEvent ~= nil then
-	  removeEvent(fpsUpdateEvent)
-	  fpsUpdateEvent = nil
-  end
+  removeEvent(fpsUpdateEvent)
   
   topMenu:destroy()
 end
@@ -83,12 +82,8 @@ function online()
   addEvent(function()
     if modules.client_options.getOption('showPing') and (g_game.getFeature(GameClientPing) or g_game.getFeature(GameExtendedClientPing)) then
       pingLabel:show()
-      if showFeedback then
-        feedbackButton:show()
-      end
     else
-      pingLabel:hide()
-      feedbackButton:hide()
+      pingLabel:hide()      
     end
   end)
 end
@@ -96,9 +91,6 @@ end
 function offline()
   hideGameButtons()
   pingLabel:hide()
-  if showFeedback then
-    feedbackButton:show()
-  end
 end
 
 function updateFps()
@@ -129,7 +121,6 @@ end
 
 function setPingVisible(enable)
   pingLabel:setVisible(enable)
-  feedbackButton:setVisible(enable and showFeedback)
 end
 
 function setFpsVisible(enable)
@@ -192,15 +183,18 @@ function toggle()
     return
   end
 
+  if HIDE_TOPMENU then
+    return
+  end
+
   if menu:isVisible() then
     menu:hide()
     modules.client_background.getBackground():addAnchor(AnchorTop, 'parent', AnchorTop)
     modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'parent', AnchorTop)
-    modules.game_interface.getShowTopMenuButton():show()
   else
     menu:show()
+    topMenu:setHeight(36) 
     modules.client_background.getBackground():addAnchor(AnchorTop, 'topMenu', AnchorBottom)
     modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'topMenu', AnchorBottom)
-    modules.game_interface.getShowTopMenuButton():hide()
   end
 end

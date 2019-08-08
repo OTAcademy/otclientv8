@@ -33,7 +33,7 @@ public:
     }
 
     int getFps() {
-        return m_frames.size() / 5;
+        return m_shortframes.size();
     }
 
     int foregroundUpdateInterval();
@@ -49,6 +49,7 @@ private:
     int m_speed = 0;
     time_t m_update = 0;
     std::list<time_t> m_frames;
+    std::list<time_t> m_shortframes;
 };
 
 extern AdaptiveRenderer g_adaptiveRenderer;

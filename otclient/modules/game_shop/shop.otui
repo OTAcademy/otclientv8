@@ -1,0 +1,5 @@
+MainWindow
+  id: shopWindow
+  !text: tr('Shop')
+  size: 550 400
+  @onEscape: hide()

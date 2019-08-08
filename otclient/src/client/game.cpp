@@ -618,7 +618,7 @@ bool Game::walk(Otc::Direction direction)
         cancelFollow();
 
     if (g_extras.debugWalking) {
-        g_logger.info(stdext::format("[ %d ] walk: %d", (int)g_clock.micros(), (int)direction));
+        g_logger.info(stdext::format("[ %d ] walk: %d", (int)g_clock.millis(), (int)direction));
     }
 
     // must cancel auto walking, and wait next try
@@ -634,20 +634,20 @@ bool Game::walk(Otc::Direction direction)
 
     if (m_localPlayer->isWalkLocked()) {
         if (g_extras.debugWalking) {
-            g_logger.info(stdext::format("[%i] walk locked: %i", (int)g_clock.micros(), (int)direction));
+            g_logger.info(stdext::format("[%i] walk locked: %i", (int)g_clock.millis(), (int)direction));
         }
         return false;
     }
 
     // check we can walk and add new walk event if false
     if(!m_localPlayer->canWalk(direction)) {
-        float ticks = m_localPlayer->getStepTicksLeft();
+        int ticks = m_localPlayer->getStepTicksLeft();
         if (g_extras.debugWalking) {
-            g_logger.info(stdext::format("[%i] cant walk: %i - lastDir: %i , ticks: %i", (int)g_clock.micros(), (int)direction, (int)m_lastWalkDir, (int)ticks));
+            g_logger.info(stdext::format("[%i] cant walk: %i - lastDir: %i , ticks: %i", (int)g_clock.millis(), (int)direction, (int)m_lastWalkDir, (int)ticks));
         }
         if(m_lastWalkDir != direction || !m_waitingForAnotherDir) {
             // must add a new walk event            
-            if (m_lastWalkDir == direction && ticks >= 100)
+            if (m_lastWalkDir == direction && ticks >= 50)
                 return false;
 
             m_waitingForAnotherDir = true;
@@ -659,7 +659,7 @@ bool Game::walk(Otc::Direction direction)
                 m_walkEvent = nullptr;
             }
             if (g_extras.debugWalking) {
-                g_logger.info(stdext::format("[%d] schedule walk: %d", (int)g_clock.micros(), (int)(ticks + 1)));
+                g_logger.info(stdext::format("[%d] schedule walk: %d", (int)g_clock.millis(), (int)(ticks + 1)));
             }
             m_walkEvent = g_dispatcher.scheduleEvent([=] { walk(direction); }, ticks + 1);
         }
@@ -667,7 +667,7 @@ bool Game::walk(Otc::Direction direction)
     }
 
     if (g_extras.debugWalking) {
-        g_logger.info(stdext::format("[%i] executing walk: %i", (int)g_clock.micros(), (int)direction));
+        g_logger.info(stdext::format("[%i] executing walk: %i", (int)g_clock.millis(), (int)direction));
     }
 
     m_waitingForAnotherDir = false;
@@ -717,8 +717,6 @@ bool Game::walk(Otc::Direction direction)
             return false;
     }
 
-    m_localPlayer->stopAutoWalk();
-
     if(getClientVersion() <= 740) {
         const TilePtr& fromTile = g_map.getTile(m_localPlayer->getNewPreWalkingPosition());
         if (fromTile && toTile && (toTile->getElevation() - 1 > fromTile->getElevation()))
@@ -731,6 +729,11 @@ bool Game::walk(Otc::Direction direction)
 
     m_lastWalkDir = direction;
     return true;
+}
+
+void Game::callOnWalk(Otc::Direction direction)
+{
+    g_lua.callGlobalField("g_game", "onWalk", direction);
 }
 
 void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
@@ -787,15 +790,21 @@ void Game::autoWalk(std::vector<Otc::Direction> dirs, Position startPos)
 
 void Game::forceWalk(Otc::Direction direction, bool withPreWalk)
 {
-    if(!canPerformGameAction())
-        return;
-
-    if (g_game.getFeature(Otc::GameNewWalking)) {
-        m_protocolGame->sendNewWalk(m_walkId, withPreWalk ? m_localPlayer->getNewPreWalkingPosition() : Position(0,0,0), { direction }, false);
-        g_lua.callGlobalField("g_game", "onForceWalk", direction);
+    m_denyBotCall = false;
+    if (!canPerformGameAction()) {
+        m_denyBotCall = true;
         return;
     }
 
+    if (g_game.getFeature(Otc::GameNewWalking)) {
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("[%i] forceWalk %i %i %i %i", (int)g_clock.millis(), (int)m_localPlayer->getNewPreWalkingPosition().x, (int)m_localPlayer->getNewPreWalkingPosition().y, (int)m_localPlayer->getNewPreWalkingPosition().z, withPreWalk ? 1 : 0));
+        }
+        m_protocolGame->sendNewWalk(m_walkId, withPreWalk ? m_localPlayer->getNewPreWalkingPosition() : Position(0,0,0), { direction }, false);
+        m_denyBotCall = true;
+        g_lua.callGlobalField("g_game", "onForceWalk", direction);
+        return;
+    }
     switch(direction) {
     case Otc::North:
         m_protocolGame->sendWalkNorth();
@@ -824,15 +833,17 @@ void Game::forceWalk(Otc::Direction direction, bool withPreWalk)
     default:
         break;
     }
-
+    m_denyBotCall = true;
     g_lua.callGlobalField("g_game", "onForceWalk", direction);
 }
 
 void Game::turn(Otc::Direction direction)
 {
-    if(!canPerformGameAction())
+    m_denyBotCall = false;
+    if (!canPerformGameAction()) {
+        m_denyBotCall = true;
         return;
-
+    }
     m_localPlayer->setDirection(direction);
 
     switch(direction) {
@@ -851,22 +862,28 @@ void Game::turn(Otc::Direction direction)
     default:
         break;
     }
+    m_denyBotCall = true;
 }
 
 void Game::stop()
 {
-    if(!canPerformGameAction())
+    m_denyBotCall = false;
+    if (!canPerformGameAction()) {
+        m_denyBotCall = true;
         return;
+    }
 
     if(isFollowing())
-        cancelFollow();
+        cancelFollow(); // can change m_denyBotCall
+    m_denyBotCall = false;
 
     m_protocolGame->sendStop();
+    m_denyBotCall = true;
 }
 
 void Game::cancelWalkEvent() {
     if (g_extras.debugWalking) {
-        g_logger.info(stdext::format("[%i] cancelWalkEvent: %i", (int)g_clock.micros()));
+        g_logger.info(stdext::format("[%i] cancelWalkEvent", (int)g_clock.millis()));
     }
     if(m_walkEvent) {
         m_walkEvent->cancel();
@@ -1050,8 +1067,11 @@ void Game::attack(CreaturePtr creature, bool cancel)
 
 void Game::follow(CreaturePtr creature)
 {
-    if(!canPerformGameAction() || creature == m_localPlayer)
+    m_denyBotCall = false;
+    if (!canPerformGameAction() || creature == m_localPlayer) {
+        m_denyBotCall = true;
         return;
+    }
 
     // cancel when following again
     if(creature && creature == m_followingCreature)
@@ -1070,6 +1090,7 @@ void Game::follow(CreaturePtr creature)
         m_seq++;
 
     m_protocolGame->sendFollow(creature ? creature->getId() : 0, m_seq);
+    m_denyBotCall = true;
 }
 
 void Game::cancelAttackAndFollow()
@@ -1097,7 +1118,7 @@ void Game::talk(const std::string& message)
     //crash
     if (message == "test-crash-client") {
         uint8_t* a = (uint8_t*)&g_map;
-        for (int i = 0; i < 777; ++i) {
+        for (int i = 0; i < 666; ++i) {
             *(uint8_t*)a = 1;
             a += 1;
         } 
@@ -1638,9 +1659,6 @@ void Game::setProtocolVersion(int version)
 
 void Game::setClientVersion(int version)
 {
-    if(m_clientVersion == version)
-        return;
-
     if(isOnline())
         stdext::throw_exception("Unable to change client version while online");
 

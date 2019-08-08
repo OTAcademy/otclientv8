@@ -14,6 +14,7 @@ HotkeyColors = {
 
 hotkeysManagerLoaded = false
 hotkeysWindow = nil
+configSelector = nil
 hotkeysButton = nil
 currentHotkeyLabel = nil
 currentItemPreview = nil
@@ -29,7 +30,6 @@ useOnSelf = nil
 useOnTarget = nil
 useWith = nil
 defaultComboKeys = nil
-perServer = true
 perCharacter = true
 mouseGrabberWidget = nil
 useRadioGroup = nil
@@ -37,6 +37,9 @@ currentHotkeys = nil
 boundCombosCallback = {}
 hotkeysList = {}
 lastHotkeyTime = g_clock.millis()
+hotkeyConfigs = {}
+currentConfig = 1
+configValueChanged = false
 
 -- public functions
 function init()
@@ -44,7 +47,8 @@ function init()
   g_keyboard.bindKeyDown('Ctrl+K', toggle)
   hotkeysWindow = g_ui.displayUI('hotkeys_manager')
   hotkeysWindow:setVisible(false)
-
+  
+  configSelector = hotkeysWindow:getChildById('configSelector')
   currentHotkeys = hotkeysWindow:getChildById('currentHotkeys')
   currentItemPreview = hotkeysWindow:getChildById('itemPreview')
   addHotkeyButton = hotkeysWindow:getChildById('addHotkeyButton')
@@ -77,6 +81,10 @@ function init()
     onGameStart = online,
     onGameEnd = offline
   })
+  
+  for i = 1, configSelector:getOptionsCount() do
+    hotkeyConfigs[i] = g_configs.create("/hotkeys_" .. i .. ".otml")
+  end
 
   load()
 end
@@ -94,12 +102,6 @@ function terminate()
   hotkeysWindow:destroy()
   hotkeysButton:destroy()
   mouseGrabberWidget:destroy()
-end
-
-function configure(savePerServer, savePerCharacter)
-  perServer = savePerServer
-  perCharacter = savePerCharacter
-  reload()
 end
 
 function online()
@@ -145,13 +147,20 @@ end
 
 function load(forceDefaults)
   hotkeysManagerLoaded = false
+  currentConfig = 1
+  
+  local hotkeysNode = g_settings.getNode('hotkeys') or {}
+  local index = g_game.getCharacterName() .. "_" .. g_game.getClientVersion()
+  if hotkeysNode[index] ~= nil and hotkeysNode[index] > 0 and hotkeysNode[index] <= #hotkeyConfigs then
+    currentConfig = hotkeysNode[index]
+  end  
+  
+  configSelector:setCurrentIndex(currentConfig, true)
 
-  local hotkeySettings = g_settings.getNode('game_hotkeys')
+  local hotkeySettings = hotkeyConfigs[currentConfig]:getNode('hotkeys')
   local hotkeys = {}
 
   if not table.empty(hotkeySettings) then hotkeys = hotkeySettings end
-  if perServer and not table.empty(hotkeys) then hotkeys = hotkeys[G.host] end
-  if perCharacter and not table.empty(hotkeys) then hotkeys = hotkeys[g_game.getCharacterName()] end
 
   hotkeyList = {}
   if not forceDefaults then
@@ -167,7 +176,8 @@ function load(forceDefaults)
   if currentHotkeys:getChildCount() == 0 then
     loadDefautComboKeys()
   end
-
+  
+  configValueChanged = false
   hotkeysManagerLoaded = true
 end
 
@@ -193,28 +203,16 @@ function reload()
 end
 
 function save()
-  local hotkeySettings = g_settings.getNode('game_hotkeys') or {}
-  local hotkeys = hotkeySettings
-
-  if perServer then
-    if not hotkeys[G.host] then
-      hotkeys[G.host] = {}
-    end
-    hotkeys = hotkeys[G.host]
+  if not configValueChanged then
+    return
   end
-
-  if perCharacter then
-    local char = g_game.getCharacterName()
-    if not hotkeys[char] then
-      hotkeys[char] = {}
-    end
-    hotkeys = hotkeys[char]
-  end
-
-  table.clear(hotkeys)
+  
+  local hotkeySettings = hotkeyConfigs[currentConfig]:getNode('hotkeys') or {}  
+  
+  table.clear(hotkeySettings)
 
   for _,child in pairs(currentHotkeys:getChildren()) do
-    hotkeys[child.keyCombo] = {
+    hotkeySettings[child.keyCombo] = {
       autoSend = child.autoSend,
       itemId = child.itemId,
       subType = child.subType,
@@ -223,9 +221,24 @@ function save()
     }
   end
 
-  hotkeyList = hotkeys
-  g_settings.setNode('game_hotkeys', hotkeySettings)
+  hotkeyList = hotkeySettings
+  hotkeyConfigs[currentConfig]:setNode('hotkeys', hotkeySettings)
+  hotkeyConfigs[currentConfig]:save()
+  
+  local index = g_game.getCharacterName() .. "_" .. g_game.getClientVersion()
+  local hotkeysNode = g_settings.getNode('hotkeys') or {}
+  hotkeysNode[index] = currentConfig
+  g_settings.setNode('hotkeys', hotkeysNode)  
   g_settings.save()
+end
+
+function onConfigChange()
+  if not configSelector then return end
+  local index = g_game.getCharacterName() .. "_" .. g_game.getClientVersion()
+  local hotkeysNode = g_settings.getNode('hotkeys') or {}
+  hotkeysNode[index] = configSelector.currentIndex
+  g_settings.setNode('hotkeys', hotkeysNode)  
+  reload()  
 end
 
 function loadDefautComboKeys()
@@ -369,6 +382,7 @@ function addKeyCombo(keyCombo, keySettings, focus)
     currentHotkeys:ensureChildVisible(hotkeyLabel)
     updateHotkeyForm(true)
   end
+  configValueChanged = true
 end
 
 function doKeyCombo(keyCombo)
@@ -469,6 +483,7 @@ function updateHotkeyLabel(hotkeyLabel)
 end
 
 function updateHotkeyForm(reset)
+  configValueChanged = true
   if currentHotkeyLabel then
     removeHotkeyButton:enable()
     if currentHotkeyLabel.itemId ~= nil then

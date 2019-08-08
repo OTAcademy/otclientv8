@@ -58,13 +58,15 @@ function init()
 
   g_keyboard.bindKeyDown('Ctrl+I', toggle)
 
-  inventoryButton = modules.client_topmenu.addRightGameToggleButton('inventoryButton', tr('Inventory') .. ' (Ctrl+I)', '/images/topbuttons/inventory', toggle)
-  inventoryButton:setOn(true)
 
   inventoryWindow = g_ui.loadUI('inventory', modules.game_interface.getRightPanel())
   inventoryWindow:disableResize()
   inventoryPanel = inventoryWindow:getChildById('contentsPanel'):getChildById('inventoryPanel')
-
+  if not inventoryWindow.forceOpen then
+    inventoryButton = modules.client_topmenu.addRightGameToggleButton('inventoryButton', tr('Inventory') .. ' (Ctrl+I)', '/images/topbuttons/inventory', toggle)
+    inventoryButton:setOn(true)
+  end
+  --[[
   purseButton = inventoryPanel:getChildById('purseButton')
   local function purseFunction()
     local purse = g_game.getLocalPlayer():getInventoryItem(InventorySlotPurse)
@@ -73,7 +75,7 @@ function init()
     end
   end
   purseButton.onClick = purseFunction
-
+  ]]--
 -- controls
   fightOffensiveBox = inventoryWindow:recursiveGetChildById('fightOffensiveBox')
   fightBalancedBox = inventoryWindow:recursiveGetChildById('fightBalancedBox')
@@ -99,7 +101,9 @@ function init()
   connect(fightModeRadioGroup, { onSelectionChange = onSetFightMode })
   connect(chaseModeButton, { onCheckChange = onSetChaseMode })
   connect(safeFightButton, { onCheckChange = onSetSafeFight })
-  connect(buttonPvp, { onClick = onSetSafeFight2 })  
+  if buttonPvp then
+    connect(buttonPvp, { onClick = onSetSafeFight2 })  
+  end
   connect(g_game, {
     onGameStart = online,
     onGameEnd = offline,
@@ -169,7 +173,9 @@ function terminate()
   -- status end
 
   inventoryWindow:destroy()
-  inventoryButton:destroy()
+  if inventoryButton then
+    inventoryButton:destroy()
+  end
 end
 
 function toggleAdventurerStyle(hasBlessing)
@@ -191,11 +197,18 @@ function refresh()
     end
     toggleAdventurerStyle(player and Bit.hasBit(player:getBlessings(), Blessings.Adventurer) or false)
   end
+  if player then
+    onSoulChange(player, player:getSoul())
+    onFreeCapacityChange(player, player:getFreeCapacity())
+  end
 
-  purseButton:setVisible(g_game.getFeature(GamePurseSlot))
+  --purseButton:setVisible(g_game.getFeature(GamePurseSlot))
 end
 
 function toggle()
+  if not inventoryButton then
+    return
+  end
   if inventoryButton:isOn() then
     inventoryWindow:close()
     inventoryButton:setOn(false)
@@ -206,6 +219,9 @@ function toggle()
 end
 
 function onMiniWindowClose()
+  if not inventoryButton then
+    return
+  end
   inventoryButton:setOn(false)
 end
 
@@ -215,7 +231,7 @@ function onInventoryChange(player, slot, item, oldItem)
 
   if slot == InventorySlotPurse then
     if g_game.getFeature(GamePurseSlot) then
-      purseButton:setEnabled(item and true or false)
+      --purseButton:setEnabled(item and true or false)
     end
     return
   end
@@ -254,12 +270,14 @@ function update()
 
   local safeFight = g_game.isSafeFight()
   safeFightButton:setChecked(not safeFight)
-  if safeFight then
-    buttonPvp:setColor("#00BB00FF")
-  else
-    buttonPvp:setColor("#FF0000FF")  
+  if buttonPvp then
+    if safeFight then
+      buttonPvp:setColor("#00BB00FF")
+    else
+      buttonPvp:setColor("#FF0000FF")  
+    end
   end
-
+  
   if g_game.getFeature(GamePVPMode) then
     local pvpMode = g_game.getPVPMode()
     local pvpWidget = getPVPBoxByMode(pvpMode)
@@ -355,10 +373,12 @@ end
 
 function onSetSafeFight(self, checked)
   g_game.setSafeFight(not checked)
-  if not checked then
-    buttonPvp:setColor("#00BB00FF")
-  else
-    buttonPvp:setColor("#FF0000FF")  
+  if buttonPvp then
+    if not checked then
+      buttonPvp:setColor("#00BB00FF")
+    else
+      buttonPvp:setColor("#FF0000FF")  
+    end
   end
 end
 
@@ -435,16 +455,26 @@ function loadIcon(bitChanged)
 end
 
 function onSoulChange(localPlayer, soul)
-  soulLabel:setText(tr('Soul') .. ': ' .. soul)
+  if not soul then return end
+  soulLabel:setText(tr('Soul') .. ':\n' .. soul)
 end
 
 function onFreeCapacityChange(player, freeCapacity)
-  capLabel:setText(tr('Cap') .. ': ' .. freeCapacity)
+  if not freeCapacity then return end
+  if freeCapacity > 99 then
+    freeCapacity = math.floor(freeCapacity * 10) / 10
+  end
+  if freeCapacity > 999 then
+    freeCapacity = math.floor(freeCapacity)
+  end
+  if freeCapacity > 99999 then
+    freeCapacity = 99999
+  end
+  capLabel:setText(tr('Cap') .. ':\n' .. freeCapacity)
 end
 
 function onStatesChange(localPlayer, now, old)
   if now == old then return end
-
   local bitsChanged = bit32.bxor(now, old)
   for i = 1, 32 do
     local pow = math.pow(2, i-1)

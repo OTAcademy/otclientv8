@@ -1,4 +1,5 @@
 local defaultOptions = {
+  vsync = true,
   showFps = true,
   showPing = true,
   fullscreen = false,
@@ -14,15 +15,16 @@ local defaultOptions = {
   showLevelsInConsole = true,
   showPrivateMessagesInConsole = true,
   showPrivateMessagesOnScreen = true,
-  panels = 6,
-  openContainersInThirdPanel = true,
+  rightPanels = 1,
+  leftPanels = 0,
+  containerPanel = 8,
   backgroundFrameRate = 100,
   enableAudio = false,
   enableMusicSound = false,
   musicSoundVolume = 100,
   enableLights = false,
   floorFading = 500,
-  crosshair = 1,
+  crosshair = 2,
   ambientLight = 100,
   optimizationLevel = 1,
   displayNames = true,
@@ -185,7 +187,9 @@ function setOption(key, value, force)
   if not force and options[key] == value then return end
   local gameMapPanel = modules.game_interface.getMapPanel()
 
-  if key == 'showFps' then
+  if key == 'vsync' then
+    g_window.setVerticalSync(value)
+  elseif key == 'showFps' then
     modules.client_topmenu.setFpsVisible(value)
   elseif key == 'showPing' then
     modules.client_topmenu.setPingVisible(value)
@@ -210,16 +214,10 @@ function setOption(key, value, force)
     end
     audioPanel:getChildById('musicSoundVolumeLabel'):setText(tr('Music volume: %d', value))
   elseif key == 'showHealthManaCircle' then
-    modules.game_interface.healthCircle:setVisible(value)
-    modules.game_interface.healthCircleFront:setVisible(value)
-    modules.game_interface.manaCircle:setVisible(value)
-    modules.game_interface.manaCircleFront:setVisible(value)
-  elseif key == 'classicView' and not force then
-    local viewMode = 1
-    if value then
-      viewMode = 0
-    end    
-    modules.game_interface.setupViewMode(viewMode)    
+    modules.game_healthinfo.healthCircle:setVisible(value)
+    modules.game_healthinfo.healthCircleFront:setVisible(value)
+    modules.game_healthinfo.manaCircle:setVisible(value)
+    modules.game_healthinfo.manaCircleFront:setVisible(value)
   elseif key == 'backgroundFrameRate' then
     local text, v = value, value
     if value <= 0 or value >= 201 then text = 'max' v = 0 end
@@ -255,8 +253,8 @@ function setOption(key, value, force)
   elseif key == 'hidePlayerBars' then
     gameMapPanel:setDrawPlayerBars(value)
   elseif key == 'topHealtManaBar' then
-    modules.game_interface.healthBar:setVisible(value)
-    modules.game_interface.manaBar:setVisible(value)
+    modules.game_healthinfo.topHealthBar:setVisible(value)
+    modules.game_healthinfo.topManaBar:setVisible(value)
   elseif key == 'displayText' then
     gameMapPanel:setDrawTexts(value)
   elseif key == 'dontStretchShrink' then
@@ -294,8 +292,8 @@ function setOption(key, value, force)
   g_settings.set(key, value)
   options[key] = value
   
-  if key == 'panels' and modules.game_interface ~= nil then
-    modules.game_interface.refreshViewMode()
+  if key == 'classicView' or key == 'rightPanels' or key == 'leftPanels' then
+    modules.game_interface.refreshViewMode()    
   end
 end
 

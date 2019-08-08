@@ -38,8 +38,11 @@ function ProtocolLogin:sendLoginPacket()
   local msg = OutputMessage.create()
   msg:addU8(ClientOpcodes.ClientEnterAccount)
   msg:addU16(g_game.getOs())
-
-  msg:addU16(g_game.getProtocolVersion())
+  if g_game.getCustomProtocolVersion() > 0 then
+    msg:addU16(g_game.getCustomProtocolVersion())  
+  else
+    msg:addU16(g_game.getProtocolVersion())
+  end
 
   if g_game.getFeature(GameClientVersion) then
     msg:addU32(g_game.getClientVersion())

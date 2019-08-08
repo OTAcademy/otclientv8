@@ -85,11 +85,7 @@ function onContainerOpen(container, previousContainer)
     previousContainer.window = nil
     previousContainer.itemsPanel = nil
   else
-    if g_settings.getBoolean('openContainersInThirdPanel') and modules.game_interface.getThirdPanel():isOn() then
-      containerWindow = g_ui.createWidget('ContainerWindow', modules.game_interface.getThirdPanel())
-    else
-      containerWindow = g_ui.createWidget('ContainerWindow', modules.game_interface.getRightPanel())
-    end
+    containerWindow = g_ui.createWidget('ContainerWindow', modules.game_interface.getContainerPanel())
   end
   containerWindow:setId('container' .. container:getId())
   local containerPanel = containerWindow:getChildById('contentsPanel')

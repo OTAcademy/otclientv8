@@ -324,11 +324,11 @@ void WIN32Window::internalCreateGLContext()
 
     if (m_eglDisplay == EGL_NO_DISPLAY)
     {
-        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. (m_eglDisplay == EGL_NO_DISPLAY)");
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll.\r\n(m_eglDisplay == EGL_NO_DISPLAY)");
     }
 
     if(!eglInitialize(m_eglDisplay, NULL, NULL))
-        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. (eglInitialize)");
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll.\r\n(eglInitialize)");
 #else
     m_eglDisplay = eglGetDisplay(m_deviceContext);
 
@@ -878,10 +878,12 @@ void WIN32Window::setVerticalSync(bool enable)
 {
     m_verticalSync = enable;
 #ifdef OPENGL_ES
-    eglSwapInterval(m_eglDisplay, enable ? 1 : 0);
+    if (eglSwapInterval(m_eglDisplay, enable ? 1 : 0) != EGL_TRUE) {
+        g_logger.error("Error while setting vsync");
+    }
 #else
     typedef BOOL (WINAPI * wglSwapIntervalProc)(int);
-    if (isExtensionSupported("WGL_EXT_swap_control")) {
+    if (isExtensionSupported("WGL_EXT_swap_control") && isExtensionSupported("EXT_swap_control_tear")) {
         wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
         if (wglSwapInterval) {
             wglSwapInterval(enable ? -1 : 0);

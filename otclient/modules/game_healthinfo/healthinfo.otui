@@ -62,7 +62,65 @@ ConditionWidget < UIWidget
 
   $!first:
     margin-left: 2
+      
+HealthOverlay < UIWidget
+  id: healthOverlay
+  anchors.fill: parent
+  phantom: true
+  
+  ProgressBar
+    id: topHealthBar
+    background-color: #ff4444
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.horizontalCenter
+    height: 16
 
+  ProgressBar
+    id: topManaBar
+    background-color: #4444ff
+    anchors.top: parent.top
+    anchors.right: parent.right
+    anchors.left: parent.horizontalCenter
+    height: 16    
+    
+  UIProgressBar
+    id: healthCircle
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/circle/left_empty
+    margin-right: 169
+    margin-bottom: 16
+    opacity: 0.5
+
+  UIProgressBar
+    id: healthCircleFront
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/circle/left_full
+    margin-right: 169
+    margin-bottom: 16
+    opacity: 0.5
+
+  UIProgressBar
+    id: manaCircle
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/circle/right_empty    
+    margin-left: 130
+    margin-bottom: 16
+    opacity: 0.5
+
+  UIProgressBar
+    id: manaCircleFront
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/circle/right_full
+    margin-left: 130
+    margin-bottom: 16    
+    opacity: 0.5
+    image-color: #0000FFFF
+  
 MiniWindow
   icon: /images/topbuttons/healthinfo
   id: healthInfoWindow
@@ -90,3 +148,4 @@ MiniWindow
       background-color: #ffffff11
     SoulLabel
     CapLabel
+

@@ -27,6 +27,14 @@ healthTooltip = 'Your character health is %d out of %d.'
 manaTooltip = 'Your character mana is %d out of %d.'
 experienceTooltip = 'You have %d%% to advance to level %d.'
 
+overlay = nil
+healthCircleFront = nil
+manaCircleFront = nil
+healthCircle = nil
+manaCircle = nil
+topHealthBar = nil
+topManaBar = nil
+
 function init()
   connect(LocalPlayer, { onHealthChange = onHealthChange,
                          onManaChange = onManaChange,
@@ -48,6 +56,16 @@ function init()
   soulLabel = healthInfoWindow:recursiveGetChildById('soulLabel')
   capLabel = healthInfoWindow:recursiveGetChildById('capLabel')
 
+  overlay = g_ui.createWidget('HealthOverlay', modules.game_interface.getMapPanel())  
+  healthCircleFront = overlay:getChildById('healthCircleFront')
+  manaCircleFront = overlay:getChildById('manaCircleFront')
+  healthCircle = overlay:getChildById('healthCircle')
+  manaCircle = overlay:getChildById('manaCircle')
+  topHealthBar = overlay:getChildById('topHealthBar')
+  topManaBar = overlay:getChildById('topManaBar')
+  
+  connect(overlay, { onGeometryChange = onOverlayGeometryChange })
+  
   -- load condition icons
   for k,v in pairs(Icons) do
     g_textures.preload(v.path)
@@ -62,6 +80,7 @@ function init()
     onSoulChange(localPlayer, localPlayer:getSoul())
     onFreeCapacityChange(localPlayer, localPlayer:getFreeCapacity())
   end
+
 
   hideLabels()
   hideExperience()
@@ -78,9 +97,11 @@ function terminate()
                             onFreeCapacityChange = onFreeCapacityChange })
 
   disconnect(g_game, { onGameEnd = offline })
-
+  disconnect(overlay, { onGeometryChange = onOverlayGeometryChange })
+  
   healthInfoWindow:destroy()
   healthInfoButton:destroy()
+  overlay:destroy()
 end
 
 function toggle()
@@ -126,44 +147,46 @@ function onHealthChange(localPlayer, health, maxHealth)
   healthBar:setText(health .. ' / ' .. maxHealth)
   healthBar:setTooltip(tr(healthTooltip, health, maxHealth))
   healthBar:setValue(health, 0, maxHealth)
-  modules.game_interface.healthBar:setText(health .. ' / ' .. maxHealth)
-  modules.game_interface.healthBar:setTooltip(tr(healthTooltip, health, maxHealth))
-  modules.game_interface.healthBar:setValue(health, 0, maxHealth)
+
+  topHealthBar:setText(health .. ' / ' .. maxHealth)
+  topHealthBar:setTooltip(tr(healthTooltip, health, maxHealth))
+  topHealthBar:setValue(health, 0, maxHealth)
 
   local healthPercent = math.floor(g_game.getLocalPlayer():getHealthPercent())
   local Yhppc = math.floor(208 * (1 - (healthPercent / 100)))
   local rect = { x = 0, y = Yhppc, width = 63, height = 208 }
-  modules.game_interface.healthCircleFront:setImageClip(rect)
+  healthCircleFront:setImageClip(rect)
 
   if healthPercent > 92 then
-    modules.game_interface.healthCircleFront:setImageColor("#00BC00FF")
+    healthCircleFront:setImageColor("#00BC00FF")
   elseif healthPercent > 60 then
-    modules.game_interface.healthCircleFront:setImageColor("#50A150FF")
+    healthCircleFront:setImageColor("#50A150FF")
   elseif healthPercent > 30 then
-    modules.game_interface.healthCircleFront:setImageColor("#A1A100FF")
+    healthCircleFront:setImageColor("#A1A100FF")
   elseif healthPercent > 8 then
-    modules.game_interface.healthCircleFront:setImageColor("#BF0A0AFF")
+    healthCircleFront:setImageColor("#BF0A0AFF")
   elseif healthPercent > 3 then
-    modules.game_interface.healthCircleFront:setImageColor("#910F0FFF")
+    healthCircleFront:setImageColor("#910F0FFF")
   else
-    modules.game_interface.healthCircleFront:setImageColor("#850C0CFF")
+    healthCircleFront:setImageColor("#850C0CFF")
   end
 
-  modules.game_interface.healthCircleFront:setMarginTop(Yhppc)
+  healthCircleFront:setMarginTop(Yhppc)
 end
 
 function onManaChange(localPlayer, mana, maxMana)
   manaBar:setText(mana .. ' / ' .. maxMana)
   manaBar:setTooltip(tr(manaTooltip, mana, maxMana))
   manaBar:setValue(mana, 0, maxMana)
-  modules.game_interface.manaBar:setText(mana .. ' / ' .. maxMana)
-  modules.game_interface.manaBar:setTooltip(tr(manaTooltip, mana, maxMana))
-  modules.game_interface.manaBar:setValue(mana, 0, maxMana)
+
+  topManaBar:setText(mana .. ' / ' .. maxMana)
+  topManaBar:setTooltip(tr(manaTooltip, mana, maxMana))
+  topManaBar:setValue(mana, 0, maxMana)
 
   local Ymppc = math.floor(208 * (1 - (math.floor((g_game.getLocalPlayer():getMaxMana() - (g_game.getLocalPlayer():getMaxMana() - g_game.getLocalPlayer():getMana())) * 100 / g_game.getLocalPlayer():getMaxMana()) / 100)))
   local rect = { x = 0, y = Ymppc, width = 63, height = 208 }
-  modules.game_interface.manaCircleFront:setImageClip(rect)
-  modules.game_interface.manaCircleFront:setMarginTop(Ymppc)
+  manaCircleFront:setImageClip(rect)
+  manaCircleFront:setMarginTop(Ymppc)
 end
 
 function onLevelChange(localPlayer, value, percent)
@@ -235,4 +258,21 @@ function setExperienceTooltip(tooltip)
   if localPlayer then
     experienceBar:setTooltip(tr(experienceTooltip, localPlayer:getLevelPercent(), localPlayer:getLevel()+1))
   end
+end
+
+function onOverlayGeometryChange() 
+  local classic = g_settings.getBoolean("classicView")
+  if classic then
+    topHealthBar:setMarginTop(15)
+    topManaBar:setMarginTop(15)
+  else
+    topHealthBar:setMarginTop(45)
+    topManaBar:setMarginTop(45)  
+  end
+
+  local height = overlay:getHeight()
+  local width = overlay:getWidth()
+   
+  topHealthBar:setMarginLeft(math.max(0, (width - height) / 2 + 2))
+  topManaBar:setMarginRight(math.max(0, (width - height) / 2 + 2))
 end
