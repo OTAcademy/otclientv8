@@ -32,9 +32,29 @@ void UICreature::drawSelf(Fw::DrawPane drawPane)
     UIWidget::drawSelf(drawPane);
 
     if(m_creature) {
+        if (m_autoRotating) {
+            auto ticks = (g_clock.millis() % 4000) / 4;
+            if (ticks < 250) 
+            {
+                m_direction = Otc::South;
+            }
+            else if (ticks < 500) 
+            {
+                m_direction = Otc::East;
+            }
+            else if (ticks < 750) 
+            {
+                m_direction = Otc::North;
+            }
+            else 
+            {
+                m_direction = Otc::West;
+            }
+        }
+
         Rect drawRect = getPaddingRect();
         g_painter->setColor(m_imageColor);
-        m_creature->drawOutfit(drawRect, !m_fixedCreatureSize);
+        m_creature->drawOutfit(drawRect, !m_fixedCreatureSize, m_direction);
     }
 }
 
@@ -42,7 +62,7 @@ void UICreature::setOutfit(const Outfit& outfit)
 {
     if(!m_creature)
         m_creature = CreaturePtr(new Creature);
-    m_creature->setDirection(Otc::South);
+    m_direction = Otc::South;
     m_creature->setOutfit(outfit);
 }
 

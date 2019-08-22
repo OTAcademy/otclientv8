@@ -524,10 +524,10 @@ std::string ResourceManager::selfChecksum() {
     return g_crypt.md5Encode(buffer, false);
 }
 
-std::string ResourceManager::readCrashLog() 
+std::string ResourceManager::readCrashLog(bool txt) 
 {
     try {
-        return readFileContents("/exception.dmp");
+        return readFileContents(txt ? "/crashreport.log" : "/exception.dmp");
     } catch (stdext::exception&) {
     }
     return "";
@@ -536,11 +536,14 @@ std::string ResourceManager::readCrashLog()
 void ResourceManager::deleteCrashLog() 
 {
     deleteFile("/exception.dmp");
+    deleteFile("/crashreport.log");
 }
 
-void ResourceManager::updateClient(const std::vector<std::string>& files, const std::string& binaryName) {
+void ResourceManager::updateClient(const std::vector<std::string>& files, std::string binaryName) {
     if (!m_loadedFromArchive)
         return g_logger.fatal("Client can be updated only while running from archive (data.zip)");
+    if (!binaryName.empty() && binaryName[0] == '/')
+        binaryName = binaryName.substr(1);
 
     auto downloads = g_http.downloads();
     
@@ -584,6 +587,10 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
     zip_source_keep(src);
 
     for (auto file : files) {
+        if (file.empty())
+            continue;
+        if (file.size() > 1 && file[0] == '/')
+            file = file.substr(1);
         auto it = downloads.find(file);
         if (it == downloads.end())
             continue;
@@ -592,8 +599,6 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, const 
         zip_source_t *s; 
         if((s=zip_source_buffer(za, it->second->response.data(), it->second->response.size(), 0)) == NULL)
             return g_logger.fatal(stdext::format("can't create source buffer: %s", zip_strerror(za)));
-        if (file[0] == '/')
-            file = file.substr(1);
         if(zip_file_add(za, file.c_str(), s, ZIP_FL_OVERWRITE) < 0)
             return g_logger.fatal(stdext::format("can't add file %s to zip archive: %s", file, zip_strerror(za)));
     }

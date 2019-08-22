@@ -83,7 +83,7 @@ function UIGameMap:onDragMove(mousePos, mouseMoved)
 end
 
 function UIGameMap:updateMarkedCreature()
-  self.updateMarkedCreatureEvent = scheduleEvent(function() self:updateMarkedCreature() end, 50)
+  self.updateMarkedCreatureEvent = scheduleEvent(function() self:updateMarkedCreature() end, 100)
   if self.mousePos and g_game.isOnline() then
     self.markingMouseRelease = true
     self:onMouseRelease(self.mousePos, MouseRightButton)
@@ -104,6 +104,7 @@ function UIGameMap:onMouseRelease(mousePosition, mouseButton)
   end
 
   local autoWalkPos = self:getPosition(mousePosition)
+  local positionOffset = self:getPositionOffset(mousePosition)
 
   -- happens when clicking outside of map boundaries
   if not autoWalkPos then 
@@ -129,14 +130,14 @@ function UIGameMap:onMouseRelease(mousePosition, mouseButton)
 
   local tile = self:getTile(mousePosition)
   if tile then
-    lookThing = tile:getTopLookThing()
+    lookThing = tile:getTopLookThingEx(positionOffset)
     useThing = tile:getTopUseThing()
-    creatureThing = tile:getTopCreature()
+    creatureThing = tile:getTopCreatureEx(positionOffset)
   end
 
   local autoWalkTile = g_map.getTile(autoWalkPos)
   if autoWalkTile then
-    attackCreature = autoWalkTile:getTopCreature()
+    attackCreature = autoWalkTile:getTopCreatureEx(positionOffset)
   end
 
   if self.markingMouseRelease then
@@ -151,7 +152,7 @@ function UIGameMap:onMouseRelease(mousePosition, mouseButton)
     else
       self:markThing(nil, '')
     end
-    return  
+    return
   end
 
   local ret = modules.game_interface.processMouseAction(mousePosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature, self.markingMouseRelease)

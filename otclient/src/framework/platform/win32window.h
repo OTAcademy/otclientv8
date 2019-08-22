@@ -36,6 +36,7 @@ struct WindowProcProxy;
 
 class WIN32Window : public PlatformWindow
 {
+    void internalSetupTimerAccuracy();
     void internalCreateWindow();
     void internalCreateGLContext();
     void internalDestroyGLContext();
@@ -94,6 +95,7 @@ private:
     HDC m_deviceContext;
     HCURSOR m_cursor;
     HCURSOR m_defaultCursor;
+    UINT m_timerRes = 0;
     bool m_hidden;
 
 #ifdef OPENGL_ES

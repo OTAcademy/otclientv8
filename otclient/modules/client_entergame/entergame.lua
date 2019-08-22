@@ -116,6 +116,7 @@ local function onHTTPResult(data, err)
   local features = data["features"]
   local settings = data["settings"]
   local rsa = data["rsa"]
+  local proxies = data["proxies"]
 
   local incorrectThings = validateThings(things)
   if #incorrectThings > 0 then
@@ -123,7 +124,7 @@ local function onHTTPResult(data, err)
     if Updater then
       return Updater.updateThings(things, incorrectThings)
     else
-      EnterGame.onError(incorrectThings)
+      return EnterGame.onError(incorrectThings)
     end
   end
   
@@ -159,6 +160,16 @@ local function onHTTPResult(data, err)
 
   if session ~= nil and session:len() > 0 then
     onSessionKey(nil, session)
+  end
+  
+  -- proxies
+  if g_proxy then
+    g_proxy.clear()
+    if proxies then
+      for i, proxy in ipairs(proxies) do
+        g_proxy.addProxy(tonumber(proxy["localPort"]), proxy["host"], tonumber(proxy["port"]), tonumber(proxy["priority"]))
+      end
+    end
   end
   
   onCharacterList(nil, characters, account, nil)  
@@ -198,6 +209,7 @@ function EnterGame.init()
   local server = g_settings.get('server')
   local host = g_settings.get('host')
   local clientVersion = g_settings.get('client-version')
+  local hdSprites = g_settings.getBoolean('hdSprites', false)
 
   if serverSelector:isOption(server) then
     serverSelector:setCurrentOption(server, false)
@@ -213,6 +225,10 @@ function EnterGame.init()
   enterGame:getChildById('accountPasswordTextEdit'):setText(password)
   enterGame:getChildById('accountNameTextEdit'):setText(account)
   rememberPasswordBox:setChecked(#account > 0)
+  
+  if enterGame.hdSprites then
+    enterGame.hdSprites:setChecked(hdSprites)
+  end
   
   g_keyboard.bindKeyDown('Ctrl+G', EnterGame.openWindow)
 
@@ -301,6 +317,7 @@ function EnterGame.doLogin()
   G.account = enterGame:getChildById('accountNameTextEdit'):getText()
   G.password = enterGame:getChildById('accountPasswordTextEdit'):getText()
   G.authenticatorToken = enterGame:getChildById('authenticatorTokenTextEdit'):getText()
+  G.hdSprites = enterGame.hdSprites and enterGame.hdSprites:isChecked()
   G.stayLogged = true
   G.server = serverSelector:getText():trim()
   G.host = serverHostTextEdit:getText()
@@ -313,6 +330,7 @@ function EnterGame.doLogin()
   g_settings.set('host', G.host)
   g_settings.set('server', G.server)
   g_settings.set('client-version', G.clientVersion)
+  g_settings.set('hdSprites', G.hdSprites)
   g_settings.save()
 
   if G.host:find("http") ~= nil then
@@ -334,16 +352,20 @@ function EnterGame.doLogin()
   
   local things = {
     data = {G.clientVersion .. "/Tibia.dat", ""},
-    sprites = {G.clientVersion .. "/Tibia.spr", ""}
+    sprites = {G.clientVersion .. "/Tibia.spr", ""},
   }
-
+  
+  if G.hdSprites then
+    things.sprites_hd = {G.clientVersion .. "/Tibia_hd.spr", ""}
+  end
+  
   local incorrectThings = validateThings(things)
   if #incorrectThings > 0 then
     g_logger.info(incorrectThings)
     if Updater then
       return Updater.updateThings(things, incorrectThings)
     else
-      EnterGame.onError(incorrectThings)
+      return EnterGame.onError(incorrectThings)
     end
   end
 
@@ -371,6 +393,11 @@ function EnterGame.doLogin()
   -- you can add custom features here
   g_game.enableFeature(GameBot)
   
+  -- proxies
+  if g_proxy then
+    g_proxy.clear()
+  end
+  
   if modules.game_things.isLoaded() then
     g_logger.info("Connection to: " .. server_ip .. ":" .. server_port)
     protocolLogin:login(server_ip, server_port, G.account, G.password, G.authenticatorToken, G.stayLogged)
@@ -396,7 +423,9 @@ function EnterGame.doLoginHttp()
     account = G.account,
     password = G.password,
     token = G.authenticatorToken,
-    version = APP_VERSION
+    hdSprites = G.hdSprites,
+    version = APP_VERSION,
+    uid = G.UUID
   }          
   HTTP.postJSON(G.host, data, onHTTPResult)
   EnterGame.hide()

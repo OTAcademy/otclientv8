@@ -31,9 +31,44 @@
 #include <framework/graphics/drawqueue.h>
 
 struct LightSource { // todo move it somewhere else
+    PointF pos;
     Color color;
-    int radius;
+    float radius;
     float depth;
+};
+
+struct LightBuffer {
+    void setLightTexture(const TexturePtr& lightTexture)
+    {
+        texture = lightTexture;
+        RectF lightTextureRect(0, 0, texture->getSize().width(), texture->getSize().height());
+        for (int i = 0; i < 1024; ++i) {
+            addRect(&texCoords[i * 12], lightTextureRect);
+        }
+    }
+
+    float destCoords[1024 * 2 * 6];
+    float texCoords[1024 * 2 * 6];
+    float depthBuffer[1024 * 6];
+    float colorBuffer[1024 * 4 * 6];
+    TexturePtr texture;
+    size_t size = 0;
+
+    inline void addRect(float* dest, const RectF& rect)
+    {
+        dest[0] = rect.left();
+        dest[1] = rect.top();
+        dest[2] = rect.right() + 1;
+        dest[3] = rect.top();
+        dest[4] = rect.left();
+        dest[5] = rect.bottom() + 1;
+        dest[6] = rect.left();
+        dest[7] = rect.bottom() + 1;
+        dest[8] = rect.right() + 1;
+        dest[9] = rect.top();
+        dest[10] = rect.right() + 1;
+        dest[11] = rect.bottom() + 1;
+    }
 };
 
 class Painter
@@ -112,11 +147,9 @@ public:
     void setClipRect(const Rect& clipRect);
     void setShaderProgram(PainterShaderProgram *shaderProgram) { m_shaderProgram = shaderProgram; }
     void setTexture(Texture *texture);
-    void setDepthTexture(Texture *texture);
     void setAlphaWriting(bool enable);
 
     void setTexture(const TexturePtr& texture) { setTexture(texture.get()); }
-    void setDepthTexture(const TexturePtr& texture) { setDepthTexture(texture.get()); }
     void setResolution(const Size& resolution);
 
     void scale(float x, float y);
@@ -144,8 +177,6 @@ public:
     void drawFillCoords(CoordsBuffer& coordsBuffer);
     void drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture);
     void drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
-    void drawLights(const std::map<Point, LightSource>& lights, const TexturePtr& lightTexutre, const TexturePtr& depthTexture, int scaling);
-    void drawLightDepthTexture(const Rect& dest, const TexturePtr& depthTexture, const Rect& src);
     void drawColorOnTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
     void drawUpsideDownTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
     void drawRepeatedTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
@@ -158,6 +189,9 @@ public:
 
     void setAtlasTextures(const TexturePtr& atlas);
     void drawQueue(DrawQueue& drawqueue);
+
+    void drawLights(const LightBuffer& buffer);
+    void drawLightDepth(const std::map<PointF, float> depth, float tileSize);
 
     //
     void drawTexturedRect(const Rect& dest, const TexturePtr& texture) { drawTexturedRect(dest, texture, Rect(Point(0,0), texture->getSize())); }
@@ -245,7 +279,7 @@ private:
     PainterShaderProgramPtr m_drawNewProgram;    
 
     PainterShaderProgramPtr m_drawLightProgram;    
-    PainterShaderProgramPtr m_drawLightDepthScalingProgram;    
+    PainterShaderProgramPtr m_drawLightDepthProgram;    
 };
 
 extern Painter *g_painter;

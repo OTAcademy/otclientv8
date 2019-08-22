@@ -262,17 +262,20 @@ end
 
 function onOverlayGeometryChange() 
   local classic = g_settings.getBoolean("classicView")
+  local minMargin = 100
   if classic then
     topHealthBar:setMarginTop(15)
     topManaBar:setMarginTop(15)
   else
     topHealthBar:setMarginTop(45)
     topManaBar:setMarginTop(45)  
+    minMargin = 200
   end
 
   local height = overlay:getHeight()
   local width = overlay:getWidth()
+  
    
-  topHealthBar:setMarginLeft(math.max(0, (width - height) / 2 + 2))
-  topManaBar:setMarginRight(math.max(0, (width - height) / 2 + 2))
+  topHealthBar:setMarginLeft(math.max(minMargin, (width - height) / 2 + 2))
+  topManaBar:setMarginRight(math.max(minMargin, (width - height) / 2 + 2))
 end

@@ -82,11 +82,11 @@ Painter::Painter()
     m_drawNewProgram->addShaderFromSourceCode(Shader::Fragment, newFragmentShader);
     m_drawNewProgram->link();    
 
-    m_drawLightDepthScalingProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawLightDepthScalingProgram);
-    m_drawLightDepthScalingProgram->addShaderFromSourceCode(Shader::Vertex, lightDepthScalingVertexShader);
-    m_drawLightDepthScalingProgram->addShaderFromSourceCode(Shader::Fragment, lightDepthScalingFragmentShader);
-    m_drawLightDepthScalingProgram->link();    
+    m_drawLightDepthProgram = PainterShaderProgramPtr(new PainterShaderProgram);
+    assert(m_drawLightDepthProgram);
+    m_drawLightDepthProgram->addShaderFromSourceCode(Shader::Vertex, lightDepthVertexShader);
+    m_drawLightDepthProgram->addShaderFromSourceCode(Shader::Fragment, lightDepthFragmentShader);
+    m_drawLightDepthProgram->link();    
 
     PainterShaderProgram::release();
 }
@@ -256,15 +256,6 @@ void Painter::setTexture(Texture* texture)
         m_glTextureId = glTextureId;
         updateGlTexture();
     }
-}
-
-void Painter::setDepthTexture(Texture* texture)
-{
-    if (!g_graphics.canUseDepth())
-        return;
-    glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_2D, texture ? texture->getId() : 0);
-    glActiveTexture(GL_TEXTURE0);
 }
 
 void Painter::setAlphaWriting(bool enable)
@@ -740,79 +731,68 @@ void Painter::drawQueue(DrawQueue& drawqueue) {
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
 }
 
-void Painter::drawLights(const std::map<Point, LightSource>& lights, const TexturePtr& lightTexutre, const TexturePtr& depthTexture, int scaling)     
+void Painter::drawLights(const LightBuffer& buffer)
 {
-    static std::vector<float> destCoords(1024 * 2 * 6);
-    static std::vector<float> texCoords(1024 * 2 * 6);
-    static std::vector<float> depthBuffer(1024 * 6);
-    static std::vector<float> colorBuffer(1024 * 4 * 6);
+    if (!buffer.texture)
+        return;
 
-    setTexture(lightTexutre);
-    setDepthTexture(depthTexture);
-
-    size_t size = std::min<size_t>(1024, lights.size());
-
-    size_t i = 0;
-    for(auto& it : lights) {
-        auto& light = it.second;
-        addRect(&destCoords[i * 12], RectF(PointF(it.first.x - light.radius, it.first.y - light.radius), SizeF(light.radius * 2, light.radius * 2)) * (1. / scaling));
-        addRect(&texCoords[i * 12], Rect(0, 0, lightTexutre->getSize()));
-        for (int j = 0; j < 6; ++j) {
-            depthBuffer[i * 6 + j] = light.depth;
-            colorBuffer[i * 24 + j * 4] = light.color.rF();
-            colorBuffer[i * 24 + j * 4 + 1] = light.color.gF();
-            colorBuffer[i * 24 + j * 4 + 2] = light.color.bF();
-            colorBuffer[i * 24 + j * 4 + 3] = light.color.aF();
-        }
-        if (++i >= size)
-            break;
-    }
+    setTexture(buffer.texture);
 
     // update shader with the current painter state
     m_drawLightProgram->bind();
     m_drawLightProgram->setTransformMatrix(m_transformMatrix);
     m_drawLightProgram->setProjectionMatrix(m_projectionMatrix);
     m_drawLightProgram->setTextureMatrix(m_textureMatrix);
-    m_drawLightProgram->setResolution(m_resolution);
-    m_drawLightProgram->setScaling(SizeF(1.0 / (float)m_resolution.width(), 1.0 / (float)m_resolution.height()));
 
     PainterShaderProgram::enableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
     PainterShaderProgram::enableAttributeArray(PainterShaderProgram::COLOR_ATTR);
 
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, destCoords.data(), 2);
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, texCoords.data(), 2);
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::DEPTH_ATTR, depthBuffer.data(), 1);
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, colorBuffer.data(), 4);
+    m_drawLightProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, buffer.destCoords, 2);
+    m_drawLightProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, buffer.texCoords, 2);
+    m_drawLightProgram->setAttributeArray(PainterShaderProgram::DEPTH_ATTR, buffer.depthBuffer, 1);
+    m_drawLightProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, buffer.colorBuffer, 4);
 
-    glDrawArrays(GL_TRIANGLES, 0, size * 6);
-    m_draws += size;
+    glDrawArrays(GL_TRIANGLES, 0, buffer.size * 6);
+    m_draws += buffer.size;
     m_calls += 1;
 
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
 }
 
-void Painter::drawLightDepthTexture(const Rect& dest, const TexturePtr& depthTexture, const Rect& src) 
+void Painter::drawLightDepth(const std::map<PointF, float> depth, float tileSize)
 {
-    static std::vector<float> destCoords(2 * 6);
-    static std::vector<float> texCoords(2 * 6);
+    static std::vector<float> destCoords(1024 * 2 * 6);
+    static std::vector<float> depthBuffer(1024 * 6);
 
-    setTexture(depthTexture);
-    addRect(&destCoords[0], dest);
-    addRect(&texCoords[0], src);
+    size_t size = std::min<size_t>(1024, depth.size());
+
+    size_t i = 0;
+    for (auto& it : depth) {
+        addRect(&destCoords[i * 12], RectF(it.first, 1 + 31.f / tileSize, 1 + 31.f / tileSize));
+        for (int j = 0; j < 6; ++j) {
+            depthBuffer[i * 6 + j] = it.second;
+        }
+        if (++i >= size)
+            break;
+    }
 
     // update shader with the current painter state
-    m_drawLightDepthScalingProgram->bind();
-    m_drawLightDepthScalingProgram->setTransformMatrix(m_transformMatrix);
-    m_drawLightDepthScalingProgram->setProjectionMatrix(m_projectionMatrix);
-    m_drawLightDepthScalingProgram->setTextureMatrix(m_textureMatrix);
-    m_drawLightDepthScalingProgram->setResolution(m_resolution);
-    m_drawLightDepthScalingProgram->setScaling(SizeF(1.0 / (float)m_resolution.width(), 1.0 / (float)m_resolution.height()));
+    m_drawLightDepthProgram->bind();
+    m_drawLightDepthProgram->setTransformMatrix(m_transformMatrix);
+    m_drawLightDepthProgram->setProjectionMatrix(m_projectionMatrix);
+    
+    
+    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
 
-    m_drawLightDepthScalingProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, destCoords.data(), 2);
-    m_drawLightDepthScalingProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, texCoords.data(), 2);
+    m_drawLightDepthProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, destCoords.data(), 2);
+    m_drawLightDepthProgram->setAttributeArray(PainterShaderProgram::DEPTH_ATTR, depthBuffer.data(), 1);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    m_draws += 1;
+    glDrawArrays(GL_TRIANGLES, 0, size * 6);
+    m_draws += size;
     m_calls += 1;
+
+    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
+    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
 }

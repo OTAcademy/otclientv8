@@ -1,9 +1,5 @@
 -- private variables
 local topMenu
-local leftButtonsPanel
-local rightButtonsPanel
-local leftGameButtonsPanel
-local rightGameButtonsPanel
 local fpsUpdateEvent = nil
 
 local HIDE_TOPMENU = false
@@ -44,15 +40,7 @@ function init()
                     onGameEnd = offline,
                     onPingBack = updatePing })
 
-  topMenu = g_ui.displayUI('topmenu')
-
-  leftButtonsPanel = topMenu:getChildById('leftButtonsPanel')
-  rightButtonsPanel = topMenu:getChildById('rightButtonsPanel')
-  leftGameButtonsPanel = topMenu:getChildById('leftGameButtonsPanel')
-  rightGameButtonsPanel = topMenu:getChildById('rightGameButtonsPanel')
-  pingLabel = topMenu:getChildById('pingLabel')
-  fpsLabel = topMenu:getChildById('fpsLabel')
-  
+  topMenu = g_ui.displayUI('topmenu')  
   g_keyboard.bindKeyDown('Ctrl+Shift+T', toggle)
   
   if g_game.isOnline() then
@@ -81,25 +69,29 @@ function online()
 
   addEvent(function()
     if modules.client_options.getOption('showPing') and (g_game.getFeature(GameClientPing) or g_game.getFeature(GameExtendedClientPing)) then
-      pingLabel:show()
+      topMenu.pingLabel:show()
     else
-      pingLabel:hide()      
+      topMenu.pingLabel:hide()      
     end
   end)
 end
 
 function offline()
   hideGameButtons()
-  pingLabel:hide()
+  topMenu.pingLabel:hide()
 end
 
 function updateFps()
   fpsUpdateEvent = scheduleEvent(updateFps, 500)
   text = 'FPS: ' .. g_app.getFps()
-  fpsLabel:setText(text)
+  topMenu.fpsLabel:setText(text)
 end
 
 function updatePing(ping)
+  if g_proxy and g_proxy.getPing() > 0 then
+    ping = g_proxy.getPing()
+  end
+  
   local text = 'Ping: '
   local color
   if ping < 0 then
@@ -115,58 +107,58 @@ function updatePing(ping)
       color = 'green'
     end
   end
-  pingLabel:setColor(color)
-  pingLabel:setText(text)
+  topMenu.pingLabel:setColor(color)
+  topMenu.pingLabel:setText(text)
 end
 
 function setPingVisible(enable)
-  pingLabel:setVisible(enable)
+  topMenu.pingLabel:setVisible(enable)
 end
 
 function setFpsVisible(enable)
-  fpsLabel:setVisible(enable)
+  topMenu.fpsLabel:setVisible(enable)
 end
 
 function addLeftButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, leftButtonsPanel, false, front)
+  return addButton(id, description, icon, callback, topMenu.leftButtonsPanel, false, front)
 end
 
 function addLeftToggleButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, leftButtonsPanel, true, front)
+  return addButton(id, description, icon, callback, topMenu.leftButtonsPanel, true, front)
 end
 
 function addRightButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, rightButtonsPanel, false, front)
+  return addButton(id, description, icon, callback, topMenu.rightButtonsPanel, false, front)
 end
 
 function addRightToggleButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, rightButtonsPanel, true, front)
+  return addButton(id, description, icon, callback, topMenu.rightButtonsPanel, true, front)
 end
 
 function addLeftGameButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, leftGameButtonsPanel, false, front)
+  return addButton(id, description, icon, callback, topMenu.leftGameButtonsPanel, false, front)
 end
 
 function addLeftGameToggleButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, leftGameButtonsPanel, true, front)
+  return addButton(id, description, icon, callback, topMenu.leftGameButtonsPanel, true, front)
 end
 
 function addRightGameButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, rightGameButtonsPanel, false, front)
+  return addButton(id, description, icon, callback, topMenu.rightGameButtonsPanel, false, front)
 end
 
 function addRightGameToggleButton(id, description, icon, callback, front)
-  return addButton(id, description, icon, callback, rightGameButtonsPanel, true, front)
+  return addButton(id, description, icon, callback, topMenu.rightGameButtonsPanel, true, front)
 end
 
 function showGameButtons()
-  leftGameButtonsPanel:show()
-  rightGameButtonsPanel:show()
+  topMenu.leftGameButtonsPanel:show()
+  topMenu.rightGameButtonsPanel:show()
 end
 
 function hideGameButtons()
-  leftGameButtonsPanel:hide()
-  rightGameButtonsPanel:hide()
+  topMenu.leftGameButtonsPanel:hide()
+  topMenu.rightGameButtonsPanel:hide()
 end
 
 function getButton(id)

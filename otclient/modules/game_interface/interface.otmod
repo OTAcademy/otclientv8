@@ -32,5 +32,6 @@ Module
     - game_unjustifiedpoints
     - game_walking
     - game_shop
+    - game_proxy
   @onLoad: init()
   @onUnload: terminate()

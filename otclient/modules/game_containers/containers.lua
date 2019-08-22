@@ -94,6 +94,12 @@ function onContainerOpen(container, previousContainer)
     g_game.close(container)
     containerWindow:hide()
   end
+  containerWindow.onDrop = function(container, widget, mousePos)
+    local child = containerPanel:getChildByIndex(-1)
+    if child then
+      child:onDrop(widget, mousePos, true)        
+    end
+  end
 
   -- this disables scrollbar auto hiding
   local scrollbar = containerWindow:getChildById('miniwindowScrollBar')

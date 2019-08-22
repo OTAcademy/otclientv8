@@ -32,24 +32,24 @@
 
 enum {
     MAX_LIGHT_INTENSITY = 8,
-    MAX_AMBIENT_LIGHT_INTENSITY = 255
+    MAX_AMBIENT_LIGHT_INTENSITY = 255,
+    LIGHT_SCALING = 32,
+    DEPTH_PER_FLOOR = 500
 };
 
 LightView::LightView()
 {
-    m_lightbuffer = g_framebuffers.createFrameBuffer();
-    m_lightbuffer2 = g_framebuffers.createFrameBuffer();
-    m_lightbuffer3 = g_framebuffers.createFrameBuffer();
+    m_lightbuffer = g_framebuffers.createFrameBuffer(true);
     m_lightbuffer->setSmooth(true);
-    m_lightbuffer2->setSmooth(false);
-    m_lightbuffer3->setSmooth(true);
     m_lightTexture = generateLightBubble(0.1f);
+    m_mapLight.setLightTexture(m_lightTexture);
+    m_creaturesLight.setLightTexture(m_lightTexture);
     reset();
 }
 
 TexturePtr LightView::generateLightBubble(float centerFactor)
 {
-    int bubbleRadius = 64;
+    int bubbleRadius = 32;
     int centerRadius = bubbleRadius * centerFactor;
     int bubbleDiameter = bubbleRadius * 2;
     ImagePtr lightImage = ImagePtr(new Image(Size(bubbleDiameter, bubbleDiameter)));
@@ -81,61 +81,54 @@ void LightView::reset()
 
 void LightView::resetMapLight()
 {
-    m_lightMap.clear();
+    m_mapLight.size = 0;
+    m_ground.clear();
     m_updateDepth = true;
+    prevCenter = Point(0, 0);
 }
 
 void LightView::resetCreaturesLight()
 {
-    m_creaturesLightMap.clear();
-}
-
-void LightView::setGlobalLight(const Light& light, int lightScaling)
-{
-    m_globalLight = light;
-    if (lightScaling != m_scaling) {
-        std::swap(m_scaling, lightScaling);
-        resize((m_lightbuffer->getSize() * lightScaling));
-    }
+    m_creaturesLight.size = 0;
+    prevCenter = Point(0, 0);
 }
 
 void LightView::addLightSource(const Point& center, const Light& light, bool fromCreature)
 {
+    if (!m_mapLight.texture || m_mapLight.size >= 1024 || m_creaturesLight.size >= 1024)
+        return;
+    if (prevCenter == center && light.color == prevLight.color && light.intensity == prevLight.intensity)
+        return;
+    prevLight = light;
+    prevCenter = center;
+
     int intensity = std::min<int>(light.intensity, MAX_LIGHT_INTENSITY);
-    int radius = intensity * g_sprites.spriteSize();
 
     Color color = Color::from8bit(light.color);
     float brightness = 0.5f + (intensity/(float)MAX_LIGHT_INTENSITY)*0.5f;
 
-    color.setRed(color.rF() * brightness);
-    color.setGreen(color.gF() * brightness);
-    color.setBlue(color.bF() * brightness);
+    LightBuffer& buffer = fromCreature ? m_creaturesLight : m_mapLight;
 
-    LightSource source;
-    source.color = color;
-    source.radius = radius;
-    source.depth = m_depth;
-    if (fromCreature) {
-        auto& newLight = m_creaturesLightMap.emplace(center, source).first->second;
-        if (newLight.radius < source.radius) {
-            newLight.radius = source.radius;
-            newLight.color = source.color;
-        }
-        if (newLight.depth > source.depth) {
-            newLight.depth = source.depth;
-        }
-    } else {
-        auto& newLight = m_lightMap.emplace(center, source).first->second;
-        if (newLight.radius < source.radius) {
-            newLight.radius = source.radius;
-            newLight.color = source.color;
-        }
-        if (newLight.depth > source.depth) {
-            newLight.depth = source.depth;
-        }
-    }
+    for (int i = 0; i < 6; ++i) {
+        buffer.colorBuffer[buffer.size * 24 + i * 4] = color.rF() * brightness;
+        buffer.colorBuffer[buffer.size * 24 + i * 4 + 1] = color.gF() * brightness;
+        buffer.colorBuffer[buffer.size * 24 + i * 4 + 2] = color.bF() * brightness;
+        buffer.colorBuffer[buffer.size * 24 + i * 4 + 3] = 1.0f;
+        buffer.depthBuffer[buffer.size * 6] = m_floor * 500;
+    }    
+    float radius = intensity * Otc::TILE_PIXELS;
+    RectF rect(center.x - radius, center.y - radius, radius * 2, radius * 2);
+    buffer.addRect(&buffer.destCoords[buffer.size * 12], rect * (1.0f / LIGHT_SCALING));
+    buffer.size += 1;
 }
 
+void LightView::addGround(const Point& ground)
+{
+    float gdepth = m_floor * DEPTH_PER_FLOOR + DEPTH_PER_FLOOR / 2;
+    auto& depth = m_ground.emplace(PointF(((float)ground.x) / LIGHT_SCALING, ((float)ground.y) / LIGHT_SCALING), gdepth).first->second;
+    if (depth > gdepth)
+        depth = gdepth;
+}
 
 void LightView::drawGlobalLight(const Light& light)
 {
@@ -150,63 +143,62 @@ void LightView::drawGlobalLight(const Light& light)
 
 void LightView::resize(const Size& size)
 {
-    m_lightbuffer->resize(size / m_scaling);
-    m_lightbuffer2->resize(size / m_scaling);
-    m_lightbuffer3->resize(size / 32);
+    m_lightbuffer->resize(size / LIGHT_SCALING);
 }
 
-void LightView::draw(const Rect& dest, const Rect& src, TexturePtr depthTexture)
+void LightView::draw(const Rect& dest, const Rect& src)
 {
     g_painter->saveAndResetState();
 
-    // DEPTH SCALING
-    if (m_updateDepth) {
-        m_updateDepth = false;
-        m_lightbuffer2->bind();
-        g_painter->setAlphaWriting(true);
-        g_painter->setCompositionMode(Painter::CompositionMode_Replace);
-        if (depthTexture)
-            g_painter->drawLightDepthTexture(Rect(0, 0, m_lightbuffer2->getSize()), depthTexture, Rect(0, 0, depthTexture->getSize()));
-        else
-            g_painter->clear(Color::white);
-        m_lightbuffer2->release();
-    }
-    
     // DRAW LIGHTS
     m_lightbuffer->bind();
+
     g_painter->setAlphaWriting(true);
-    g_painter->setCompositionMode(Painter::CompositionMode_Add);
-    
+    if (g_graphics.canUseDepth()) {
+        g_painter->setCompositionMode(Painter::CompositionMode_Replace);
+
+        if (m_updateDepth) {
+            m_updateDepth = false;
+            g_painter->setDepthFunc(Painter::DepthFunc_LESS);
+            g_painter->clear(Color::black);
+
+            g_painter->drawLightDepth(m_ground, LIGHT_SCALING);
+        }
+
+        g_painter->setDepthFunc(Painter::DepthFunc_LESS_READ);
+    }
+
     // global light
     Color color = Color::from8bit(m_globalLight.color);
     float brightness = m_globalLight.intensity / (float)MAX_AMBIENT_LIGHT_INTENSITY;
     color.setRed(color.rF() * brightness);
     color.setGreen(color.gF() * brightness);
     color.setBlue(color.bF() * brightness);
-    g_painter->clear(color);
+    if (g_graphics.canUseDepth()) {
+        g_painter->setDepthFunc(Painter::DepthFunc_LEQUAL_READ);
+        g_painter->setColor(color);
+        g_painter->setDepth(0);
+        g_painter->drawFilledRect(Rect(0, 0, m_lightbuffer->getSize()));
+        g_painter->resetColor();
+    } else {
+        g_painter->clear(color);
+    }
 
-    // other lights
-    g_painter->drawLights(m_lightMap, m_lightTexture, m_lightbuffer2->getTexture(), m_scaling);
-    g_painter->drawLights(m_creaturesLightMap, m_lightTexture, m_lightbuffer2->getTexture(), m_scaling);
+    // lights
+    g_painter->setCompositionMode(Painter::CompositionMode_Add);
+    g_painter->drawLights(m_mapLight);
+    g_painter->drawLights(m_creaturesLight);
 
     m_lightbuffer->release();
-    
-    // SMOOTH LIGHT
-    m_lightbuffer3->bind();
-    g_painter->setAlphaWriting(true);
-    g_painter->setCompositionMode(Painter::CompositionMode_Replace);
-    g_painter->clear(Color::black);
-    m_lightbuffer->draw(Rect(0, 0, m_lightbuffer3->getSize()), Rect(0, 0, m_lightbuffer->getSize()));
-    m_lightbuffer3->release();
 
     // DRAW LIGHT
     g_painter->setCompositionMode(Painter::CompositionMode_Light);
     float vertical = (float)dest.height() / (float)src.height();
     float horizontal = (float)dest.width() / (float)src.width();
     Point mt = Point(src.topLeft().x * horizontal, src.topLeft().y * vertical);
-    Point mb = (m_lightbuffer->getSize().toPoint() * m_scaling) - Point(src.bottomRight().x, src.bottomRight().y);
+    Point mb = (m_lightbuffer->getSize().toPoint() * LIGHT_SCALING) - Point(src.bottomRight().x, src.bottomRight().y);
     mb = Point(mb.x * horizontal, mb.y * vertical);
-    m_lightbuffer3->draw(Rect(dest.topLeft() - mt, dest.bottomRight() + mb));
+    m_lightbuffer->draw(Rect(dest.topLeft() - mt, dest.bottomRight() + mb));
 
     g_painter->restoreSavedState();
 }

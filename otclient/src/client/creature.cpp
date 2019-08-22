@@ -98,9 +98,9 @@ void Creature::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* light
         return;
 
     if (m_showTimedSquare)
-        drawQueue.addBoundingRect(Rect(dest + m_walkOffset - getDisplacement() + 2, Size(g_sprites.spriteSize() - 4, g_sprites.spriteSize() - 4)), m_timedSquareColor, 2);
+        drawQueue.addBoundingRect(Rect(dest + m_walkOffset - getDisplacement() + 2, Size(Otc::TILE_PIXELS - 4, Otc::TILE_PIXELS - 4)), m_timedSquareColor, 2);
     if (m_showStaticSquare)
-        drawQueue.addBoundingRect(Rect(dest + m_walkOffset - getDisplacement(), Size(g_sprites.spriteSize(), g_sprites.spriteSize())), m_staticSquareColor, 2);
+        drawQueue.addBoundingRect(Rect(dest + m_walkOffset - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS)), m_staticSquareColor, 2);
 
     newDrawOutfit(dest + m_walkOffset, drawQueue, lightView);
     m_footStepDrawn = true;
@@ -269,7 +269,7 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
         drawQueue.setLastItemAsMarked(updatedMarkedColor());
 }
 
-void Creature::drawOutfit(const Rect& destRect, bool resize)
+void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction direction)
 {
     int exactSize;
     if(m_outfit.getCategory() == ThingCategoryCreature)
@@ -279,24 +279,21 @@ void Creature::drawOutfit(const Rect& destRect, bool resize)
 
     int frameSize;
     if(!resize)
-        frameSize = std::max<int>(exactSize * 0.75f, 2 * Otc::TILE_PIXELS * 0.75f);
+        frameSize = std::max<int>(exactSize, 2 * Otc::TILE_PIXELS);
     else if(!(frameSize = exactSize))
         return;
 
-    if(g_graphics.canUseFBO()) {
-        const FrameBufferPtr& outfitBuffer = g_framebuffers.getTemporaryFrameBuffer();
-        outfitBuffer->resize(Size(frameSize, frameSize));
-        outfitBuffer->bind();
-        g_painter->setAlphaWriting(true);
-        g_painter->clear(Color::alpha);
-        internalDrawOutfit(Point(frameSize - Otc::TILE_PIXELS, frameSize - Otc::TILE_PIXELS) + getDisplacement(), 1, false, true, Otc::South);
-        outfitBuffer->release();
-        outfitBuffer->draw(destRect, Rect(0,0,frameSize,frameSize));
-    } else {
-        float scaleFactor = destRect.width() / (float)frameSize;
-        Point dest = destRect.bottomRight() - (Point(Otc::TILE_PIXELS,Otc::TILE_PIXELS) - getDisplacement()) * scaleFactor;
-        internalDrawOutfit(dest, scaleFactor, false, true, Otc::South);
-    }
+    if (direction == Otc::InvalidDirection)
+        direction = m_direction;
+
+    const FrameBufferPtr& outfitBuffer = g_framebuffers.getTemporaryFrameBuffer();
+    outfitBuffer->resize(Size(frameSize, frameSize));
+    outfitBuffer->bind();
+    g_painter->setAlphaWriting(true);
+    g_painter->clear(Color::alpha);
+    internalDrawOutfit(Point(frameSize - Otc::TILE_PIXELS, frameSize - Otc::TILE_PIXELS) + getDisplacement(), 1, false, true, direction);
+    outfitBuffer->release();
+    outfitBuffer->draw(destRect, Rect(0,0,frameSize,frameSize));
 }
 
 void Creature::drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags, DrawQueue& drawQueue)
@@ -346,6 +343,11 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
         fillColor = Color(0x66, 0xcc, 0xff);
 
     if(drawFlags & Otc::DrawBars && (!isNpc() || !g_game.getFeature(Otc::GameHideNpcNames))) {
+        float oldDepth = drawQueue.getDepth();
+        if (drawFlags & Otc::DrawBarsOnTop) {
+            drawQueue.setDepth(500);
+        }
+
         drawQueue.add(backgroundRect, nullptr, Rect(0, 0, 1, 1), Color::black);
         drawQueue.add(healthRect, nullptr, Rect(0, 0, 1, 1), fillColor);
 
@@ -365,6 +367,10 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
 
                 drawQueue.add(manaRect, nullptr, Rect(0, 0, 1, 1), Color::blue);
             }
+        }
+
+        if (Otc::DrawBarsOnTop) {
+            drawQueue.setDepth(oldDepth);
         }
     }
 
@@ -393,6 +399,13 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
         Rect iconRect = Rect(backgroundRect.x() + 13.5 + 12, backgroundRect.y() + 5, m_iconTexture->getSize());
         drawQueue.add(iconRect, m_iconTexture, Rect(0, 0, m_iconTexture->getSize()), Color::white);
     }
+}
+
+
+bool Creature::isInsideOffset(Point offset)
+{
+    Rect rect(getDrawOffset() - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS));
+    return rect.contains(offset);
 }
 
 void Creature::turn(Otc::Direction direction)
@@ -514,7 +527,7 @@ void Creature::onAppear()
         callLuaField("onWalk", m_oldPosition, m_position);
     // teleport
     } else if(m_oldPosition != m_position) {
-        if (m_oldPosition.isInRange(m_position, 1, 1, 1)) {
+        if (m_oldPosition.isInRange(m_position, 1, 1, 1) && !m_oldPosition.isInRange(m_position, 0, 0, 1)) {
             setDirection(m_oldPosition.getDirectionFromPosition(m_position));
         }
         stopWalk();
@@ -560,6 +573,8 @@ void Creature::updateWalkAnimation(int totalPixelsWalked)
     int footAnimPhases = getAnimationPhases() - 1;
     // TODO, should be /2 for <= 810
     int footDelay = ((getStepDuration(true) + 20) / (g_game.getFeature(Otc::GameFasterAnimations) ? footAnimPhases * 2 : footAnimPhases));
+    if (!g_game.getFeature(Otc::GameFasterAnimations))
+        footDelay += 10;
     // Since mount is a different outfit we need to get the mount animation phases
     if (m_outfit.getMount() != 0) {
         ThingType* type = g_things.rawGetThingType(m_outfit.getMount(), m_outfit.getCategory());
@@ -606,12 +621,12 @@ void Creature::updateWalkingTile()
 {
     // determine new walking tile
     TilePtr newWalkingTile;
-    Rect virtualCreatureRect(g_sprites.spriteSize() + (m_walkOffset.x - getDisplacementX()),
-        g_sprites.spriteSize() + (m_walkOffset.y - getDisplacementY()),
-        g_sprites.spriteSize(), g_sprites.spriteSize());
+    Rect virtualCreatureRect(Otc::TILE_PIXELS + (m_walkOffset.x - getDisplacementX()),
+        Otc::TILE_PIXELS + (m_walkOffset.y - getDisplacementY()),
+        Otc::TILE_PIXELS, Otc::TILE_PIXELS);
     for(int xi = -1; xi <= 1 && !newWalkingTile; ++xi) {
         for(int yi = -1; yi <= 1 && !newWalkingTile; ++yi) {
-            Rect virtualTileRect((xi+1)* g_sprites.spriteSize(), (yi+1)* g_sprites.spriteSize(), g_sprites.spriteSize(), g_sprites.spriteSize());
+            Rect virtualTileRect((xi+1)* Otc::TILE_PIXELS, (yi+1)* Otc::TILE_PIXELS, Otc::TILE_PIXELS, Otc::TILE_PIXELS);
 
             // only render creatures where bottom right is inside tile rect
             if(virtualTileRect.contains(virtualCreatureRect.bottomRight())) {
@@ -894,6 +909,7 @@ void Creature::addTimedSquare(uint8 color)
     }, VOLATILE_SQUARE_DURATION);
 }
 
+
 void Creature::updateShield()
 {
     m_showShieldTexture = !m_showShieldTexture;
@@ -999,6 +1015,12 @@ Point Creature::getDisplacement()
         return Point(8, 8);
     else if(m_outfit.getCategory() == ThingCategoryItem)
         return Point(0, 0);
+    
+    if (m_outfit.getMount() != 0) {
+        auto datType = g_things.rawGetThingType(m_outfit.getMount(), ThingCategoryCreature);
+        return datType->getDisplacement();
+    }
+
     return Thing::getDisplacement();
 }
 

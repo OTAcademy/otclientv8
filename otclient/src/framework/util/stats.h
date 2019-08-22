@@ -1,7 +1,7 @@
 // tfs stats system made by BBarwik
 
-#ifndef TFS_STATS_H
-#define TFS_STATS_H
+#ifndef OTCLIENT_STATS_H
+#define OTCLIENT_STATS_H
 
 #include <list>
 #include <atomic>
@@ -55,6 +55,15 @@ public:
     void clearSlow(int type);
 
     int types() { return STATS_LAST + 1; }
+
+    int64_t getSleepTime() {
+        return m_sleepTime;
+    }
+    void resetSleepTime() {
+        m_sleepTime = 0;
+    }
+
+    int64_t m_sleepTime = 0;
 
 private:
     struct {

@@ -44,6 +44,8 @@
 
 #endif
 
+bool quiet_crash = false;
+
 const char *getExceptionName(DWORD exceptionCode)
 {
     switch (exceptionCode) {
@@ -155,23 +157,21 @@ LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS e)
     g_logger.info(ss.str());
 
     // write stacktrace to crashreport.log
-    char dir[MAX_PATH];
-    GetCurrentDirectoryA(sizeof(dir) - 1, dir);
-    std::string fileName = stdext::format("%s\\crashreport.log", dir);
-    std::ofstream fout(fileName.c_str(), std::ios::out | std::ios::app);
+    auto dumpFilePath = g_resources.getWriteDir();
+    dumpFilePath /= "crashreport.log";
+    std::ofstream fout(dumpFilePath, std::ios::out | std::ios::app);
     if(fout.is_open() && fout.good()) {
         fout << ss.str();
         fout.close();
-        g_logger.info(stdext::format("Crash report saved to file %s", fileName));
+        g_logger.info(stdext::format("Crash report saved to file %s", dumpFilePath.string()));
     } else
         g_logger.error("Failed to save crash report!");
 
     // inform the user
-    std::string msg = stdext::format(
+    std::string msg = std::string(
         "The application has crashed.\n\n"
-        "A crash report has been written to:\n"
-        "%s", fileName.c_str());
-    if(!g_app.isStopping()) {
+        "A crash report has been written to:\n") + dumpFilePath.string();
+    if(!g_app.isStopping() && !quiet_crash) {
         MessageBoxA(NULL, msg.c_str(), "Application crashed", 0);
     }
     if (g_app.getIteration() < 5) {
@@ -237,54 +237,20 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
     exceptionInformation.ThreadId = GetCurrentThreadId();
     exceptionInformation.ExceptionPointers = exception;
     exceptionInformation.ClientPointers = FALSE;
-    if (MiniDumpWriteDump(process, GetProcessId(process), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL))
-    {
-        printf("Wrote a dump.");
-    }
-
+    MiniDumpWriteDump(process, GetProcessId(process), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL);
     ExceptionHandler(exception);
 
-    /*
-    SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO)+(TRACE_MAX_FUNCTION_NAME_LENGTH - 1) * sizeof(TCHAR));
-    symbol->MaxNameLen = TRACE_MAX_FUNCTION_NAME_LENGTH;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-    IMAGEHLP_LINE64 *line = (IMAGEHLP_LINE64 *)malloc(sizeof(IMAGEHLP_LINE64));
-    line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-    DWORD displacement;
-    char buf[1024];
-    while (StackWalk(image, process, thread, &frame, &context, NULL, NULL, NULL, NULL))
-    {
-        if (SymFromAddr(process, frame.AddrPC.Offset, NULL, symbol))
-        {
-            if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &displacement, line))
-            {
-                sprintf(buf, "\tat %s in %s: line: %lu: address: 0x%0X\n", symbol->Name, line->FileName, line->LineNumber, symbol->Address);
-                MessageBoxA(NULL, buf, "Exc", 0);
-            }
-            else if (TRACE_LOG_ERRORS)
-            {
-                sprintf(buf, "Error from SymGetLineFromAddr64: %lu.\n", GetLastError());
-                MessageBoxA(NULL, buf, "Exc", 0);
-            }
-        }
-        else if (TRACE_LOG_ERRORS)
-        {
-            sprintf(buf, "Error from SymFromAddr: %lu.\n", GetLastError());
-            MessageBoxA(NULL, buf, "Exc", 0);
-        }
-    }
-    DWORD error = GetLastError();
-    if (error && TRACE_LOG_ERRORS)
-    {
-        sprintf(buf, "Error from StackWalk64: %lu.\n", error);
-        MessageBoxA(NULL, buf, "Exc", 0);
-    } */
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
 void installCrashHandler()
 {
     SetUnhandledExceptionFilter(UnhandledExceptionFilter2);
+}
+
+void uninstallCrashHandler()
+{
+    quiet_crash = true;
 }
 
 #endif

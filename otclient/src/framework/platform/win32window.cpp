@@ -206,6 +206,7 @@ void WIN32Window::init()
 {
     m_instance = GetModuleHandle(NULL);
 
+    internalSetupTimerAccuracy();
     internalCreateWindow();
     internalCreateGLContext();
     internalRestoreGLContext();
@@ -242,6 +243,22 @@ void WIN32Window::terminate()
             g_logger.error("UnregisterClassA failed");
         m_instance = NULL;
     }
+
+    if (m_timerRes) {
+        timeEndPeriod(m_timerRes);
+    }
+}
+
+void WIN32Window::internalSetupTimerAccuracy() {
+    TIMECAPS tc;
+
+    if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)
+    {
+        return;
+    }
+
+    m_timerRes = min(max(tc.wPeriodMin, 1), tc.wPeriodMax);
+    timeBeginPeriod(m_timerRes);
 }
 
 struct WindowProcProxy {
@@ -346,6 +363,7 @@ void WIN32Window::internalCreateGLContext()
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
 
@@ -385,7 +403,7 @@ void WIN32Window::internalCreateGLContext()
                                          0,                          // Shift Bit Ignored
                                          0,                          // No Accumulation Buffer
                                          0, 0, 0, 0,                 // Accumulation Bits Ignored
-                                         0,                          // Z-Buffer (Depth Buffer)
+                                         16,                          // Z-Buffer (Depth Buffer)
                                          0,                          // No Stencil Buffer
                                          0,                          // No Auxiliary Buffer
                                          PFD_MAIN_PLANE,             // Main Drawing Layer

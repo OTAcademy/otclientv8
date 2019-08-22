@@ -22,17 +22,23 @@ TopButton < UIButton
 
 TopToggleButton < UIButton
   size: 26 26
-  image-source: /images/ui/button_topgame
-  image-clip: 26 0 26 26
+  image-source: /images/ui/button_top
+  image-clip: 0 0 26 26
   image-color: #ffffffff
   image-border: 3
   icon-color: #ffffffff
 
-  $on:
-    image-clip: 0 0 26 26
-    image-color: #ffffffff
-    icon-color: #ffffffff
+  $hover !disabled:
+    image-color: #ffffff99
+    image-clip: 26 0 26 26
 
+  $pressed:
+    image-clip: 52 0 26 26
+
+  $disabled:
+    image-color: #ffffff44
+    icon-color: #ffffff44
+    
 TopMenuButtonsPanel < Panel
   layout:
     type: horizontalBox

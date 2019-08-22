@@ -39,11 +39,16 @@ public:
     CreaturePtr getCreature() { return m_creature; }
     bool isFixedCreatureSize() { return m_fixedCreatureSize; }
 
+    void setAutoRotating(bool value) { m_autoRotating = value; }
+    void setDirection(Otc::Direction direction) { m_direction = direction; }
+
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
 
     CreaturePtr m_creature;
     stdext::boolean<false> m_fixedCreatureSize;
+    stdext::boolean<false> m_autoRotating;
+    Otc::Direction m_direction = Otc::South;
 };
 
 #endif

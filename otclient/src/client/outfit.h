@@ -69,8 +69,9 @@ public:
     Color getLegsColor() const { return m_legsColor; }
     Color getFeetColor() const { return m_feetColor; }
 
-    size_t hash() const {
-        return (m_id << 22) + (m_auxId << 18) + (m_xPattern << 14) + (m_animationPhase << 8) + (m_head << 24) + (m_body << 16) + (m_legs << 10) + (m_feet << 4) + (m_addons << 2) + m_mount;
+    uint64_t hash() const {
+        return (((uint64_t)m_id) << 54) + (((uint64_t)m_auxId) << 50) + (((uint64_t)m_xPattern) << 46) + (((uint64_t)m_animationPhase) << 40) +
+            (((uint64_t)m_head) << 32) + (((uint64_t)m_body) << 25) + (((uint64_t)m_legs) << 18) + (((uint64_t)m_feet) << 11) + (((uint64_t)m_addons) << 8) + m_mount;
     }
 
 private:

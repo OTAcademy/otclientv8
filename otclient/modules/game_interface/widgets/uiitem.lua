@@ -19,11 +19,11 @@ function UIItem:onDragLeave(droppedWidget, mousePos)
   return true
 end
 
-function UIItem:onDrop(widget, mousePos)
-  if not self:canAcceptDrop(widget, mousePos) then return false end
+function UIItem:onDrop(widget, mousePos, forced)
+  if not self:canAcceptDrop(widget, mousePos) and not forced then return false end
 
   local item = widget.currentDragThing
-  if not item:isItem() then return false end
+  if not item or not item:isItem() then return false end
 
   local toPos = self.position
 

@@ -119,6 +119,21 @@ void Logger::setLogFile(const std::string& file)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
+    m_outFile.open(stdext::utf8_to_latin1(file.c_str()).c_str(), std::ios::in | std::ios::binary);
+    if (m_outFile.is_open()) {
+        m_outFile.seekg(0, m_outFile.end);
+        int length = m_outFile.tellg();
+        int offset = std::max<int>(0, length - 100000);
+        length -= offset;
+        m_outFile.seekg(offset, m_outFile.beg);
+        if (length > 0) {
+            m_lastLog.resize(length);
+            m_outFile.read(&m_lastLog[0], length);
+            m_lastLog.resize(m_outFile.gcount());
+        }
+        m_outFile.close();
+    }
+
     m_outFile.open(stdext::utf8_to_latin1(file.c_str()).c_str(), std::ios::out | std::ios::app);
     if(!m_outFile.is_open() || !m_outFile.good()) {
         g_logger.error(stdext::format("Unable to save log to '%s'", file));

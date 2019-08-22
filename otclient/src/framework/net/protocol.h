@@ -30,6 +30,10 @@
 
 #include <framework/luaengine/luaobject.h>
 
+#ifdef FW_PROXY
+#include <extras/proxy/proxy.h>
+#endif
+
 // @bindclass
 class Protocol : public LuaObject
 {
@@ -64,6 +68,13 @@ protected:
     virtual void onRecv(const InputMessagePtr& inputMessage);
     virtual void onError(const boost::system::error_code& err);
 
+#ifdef FW_PROXY
+    void onProxyPacket(ProxyPacketPtr packet);
+    void onProxyDisconnected(boost::system::error_code ec);
+    uint32_t m_proxy = 0;
+    bool m_disconnected = false;
+#endif
+
     uint32 m_xteaKey[4];
 
 private:
@@ -77,6 +88,7 @@ private:
     bool m_xteaEncryptionEnabled;
     ConnectionPtr m_connection;
     InputMessagePtr m_inputMessage;
+
 };
 
 #endif

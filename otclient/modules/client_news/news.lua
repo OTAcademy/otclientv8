@@ -62,7 +62,7 @@ function updateNews()
   if ongoingNewsUpdate or os.time() < lastNewsUpdate + newsUpdateInterval then
     return
   end  
-  getNewsId = HTTP.getJSON(Services.news .. "?lang=" .. modules.client_locales.getCurrentLocale().name, onGotNews)
+  HTTP.getJSON(Services.news .. "?lang=" .. modules.client_locales.getCurrentLocale().name, onGotNews)
   ongoingNewsUpdate = true
   lastNewsUpdate = os.time()
 end
@@ -99,7 +99,7 @@ function onGotNews(data, err)
       newsImage:setId(imageName)
       newsImage:setImageSourceBase64(image)
       newsImage:setImageFixedRatio(true)
-      newsImage:setImageAutoResize(true)
+      newsImage:setImageAutoResize(false)
       newsImage:setHeight(200)
     end
   end  

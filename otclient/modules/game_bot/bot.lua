@@ -248,7 +248,6 @@ function saveEditedConfig()
   configWindow:hide()
   botConfig.configs[config].script = text
   if text:len() > 3 and text:sub(1,2) == '--' and text:sub(3,3) ~= '#' then
-    print("updating name")
     local delim_from, delim_to = string.find( text, "\n", 3, true)
     if delim_from then
       botConfig.configs[config].name = string.sub( text, 3 , delim_from - 1 ):trim()

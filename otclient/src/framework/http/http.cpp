@@ -65,7 +65,7 @@ int Http::post(const std::string& url, const std::string& data, int timeout) {
     return m_operationId++;
 }
 
-int Http::download(const std::string& url, const std::string& path, int timeout) {
+int Http::download(const std::string& url, std::string path, int timeout) {
     if (!timeout) // lua is not working with default values
         timeout = 5;
     auto result = std::make_shared<HttpResult>();
@@ -80,8 +80,12 @@ int Http::download(const std::string& url, const std::string& path, int timeout)
             g_lua.callGlobalField("g_http", "onDownloadProgress", result->operationId, result->url, result->progress, m_speed);
             return;
         }
-        if (result->error.empty())
-            m_downloads[path] = result;
+        if (result->error.empty()) {
+            if (!path.empty() && path[0] == '/')
+                m_downloads[path.substr(1)] = result;
+            else
+                m_downloads[path] = result;
+        }
         std::string checksum = g_crypt.md5Encode(std::string(result->response.begin(), result->response.end()), false);
         g_lua.callGlobalField("g_http", "onDownload", result->operationId, result->url, result->error, path, checksum);
     });

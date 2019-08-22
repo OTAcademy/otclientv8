@@ -84,11 +84,6 @@ bool AdaptiveRenderer::allowFading() {
     return m_speed <= 2;
 }
 
-int AdaptiveRenderer::lightScaling() {
-    static int limits[RenderSpeeds] = { 4, 4, 4, 8, 16 };
-    return limits[m_speed];
-}
-
 int AdaptiveRenderer::foregroundUpdateInterval() {
     static int limits[RenderSpeeds] = { 10, 30, 40, 50, 60 };
     return limits[m_speed];

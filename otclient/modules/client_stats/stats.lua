@@ -1,4 +1,4 @@
-UUID = nil
+
 local statsWindow = nil
 local statsButton = nil
 local luaStats = nil
@@ -17,14 +17,7 @@ local lastSend = 0
 local sendInterval = 60 -- 1 m
 local fps = {}
 local ping = {}
-
-function initUUID()
-  UUID = g_settings.getString('report-uuid')
-  if not UUID or #UUID ~= 36 then
-    UUID = g_crypt.genUUID()
-    g_settings.set('report-uuid', UUID)
-  end
-end
+local lastSleepTimeReset = 0
 
 function init()
   statsButton = modules.client_topmenu.addLeftButton('statsButton', 'Debug Info', '/images/topbuttons/debug', toggle)
@@ -45,8 +38,9 @@ function init()
   slowMain = statsWindow:recursiveGetChildById('slowMain')
   
   lastSend = os.time()
-  initUUID()
-  
+  g_stats.resetSleepTime()
+  lastSleepTimeReset = g_clock.micros()
+
   updateEvent = scheduleEvent(update, 2000)
   monitorEvent = scheduleEvent(monitor, 1000)
 end
@@ -98,13 +92,15 @@ function sendStats()
     }
   end
   local data = {
-    uid = UUID,
+    uid = G.UUID,
     stats = {},
     slow = {},
     render = g_adaptiveRenderer.getDebugInfo(),
     player = playerData,
     fps = fps,
     ping = ping,
+    sleepTime = math.round(g_stats.getSleepTime() / math.max(1, g_clock.micros() - lastSleepTimeReset), 2),
+    proxy = {},
 
     details = {
       report_delay = sendInterval,
@@ -136,6 +132,11 @@ function sendStats()
       os_name = g_platform.getOSName()
     }
   } 
+  if g_proxy then
+    data["proxy"] = g_proxy.getProxiesDebugInfo()
+  end
+  lastSleepTimeReset = g_clock.micros()
+  g_stats.resetSleepTime()
   for i = 1, g_stats.types() do
     table.insert(data.stats, g_stats.get(i - 1, 10, false))
     table.insert(data.slow, g_stats.getSlow(i - 1, 50, 10, false))
@@ -161,6 +162,7 @@ function update()
     return
   end
   
+  statsWindow.debugPanel.sleepTime:setText("Sleep: " .. math.round(g_stats.getSleepTime() / math.max(1, g_clock.micros() - lastSleepTimeReset), 2) .. "%")
   local adaptive = "Adaptive: " .. g_adaptiveRenderer.getLevel() .. " | " .. g_adaptiveRenderer.getDebugInfo()
   adaptiveRender:setText(adaptive)
   atlas:setText("Atlas: " .. g_atlas.getStats())
@@ -170,5 +172,14 @@ function update()
   luaStats:setText(g_stats.get(4, 5, true))
   luaCallback:setText(g_stats.get(5, 5, true))
   slowMain:setText(g_stats.getSlow(3, 10, 10, true) .. "\n\n\n" .. g_stats.getSlow(1, 20, 20, true))  
+  
+  if g_proxy then  
+    local text = ""
+    local proxiesDebug = g_proxy.getProxiesDebugInfo()
+    for proxy_name, proxy_debug in pairs(proxiesDebug) do
+      text = text .. proxy_name .. " - " .. proxy_debug .. "\n"
+    end
+    statsWindow.debugPanel.proxies:setText(text)
+  end
 end
 

@@ -46,11 +46,13 @@ public:
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
     virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
-    virtual void drawOutfit(const Rect& destRect, bool resize);
+    virtual void drawOutfit(const Rect& destRect, bool resize, Otc::Direction direction = Otc::InvalidDirection);
 
     void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr, bool lightOnly = false);
     void newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
     void drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags, DrawQueue& drawQueue);
+
+    bool isInsideOffset(Point offset);
 
     void setId(uint32 id) { m_id = id; }
     void setName(const std::string& name);
@@ -79,6 +81,7 @@ public:
 
     void showStaticSquare(const Color& color) { m_showStaticSquare = true; m_staticSquareColor = color; }
     void hideStaticSquare() { m_showStaticSquare = false; }
+
 
     uint32 getId() { return m_id; }
     std::string getName() { return m_name; }

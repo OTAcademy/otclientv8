@@ -406,6 +406,5 @@ std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)
     for (size_t j = lastSeparator; j < text.size(); ++j) { // copy word
         outText += text[j];
     }
-
     return outText;
 }

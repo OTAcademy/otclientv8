@@ -37,11 +37,20 @@ public:
     void reset();
     void resetMapLight();
     void resetCreaturesLight();
-    void setGlobalLight(const Light& light, int lightScaling);
+
+    void setFloor(int floor) {
+        m_floor = stdext::clamp<int>(floor, 0, Otc::MAX_Z);
+    }
+
+    void setGlobalLight(const Light& light) {
+        m_globalLight = light;
+    }
+
     void addLightSource(const Point& center, const Light& light, bool fromCreature = false);
+    void addGround(const Point& ground);
+
     void resize(const Size& size);
-    void draw(const Rect& dest, const Rect& src, TexturePtr depthTexture);
-    void setDepth(float depth) { m_depth = depth; }
+    void draw(const Rect& dest, const Rect& src);
 
 private:
     void drawGlobalLight(const Light& light);
@@ -49,14 +58,18 @@ private:
 
     Light m_globalLight;
     TexturePtr m_lightTexture;
+
     FrameBufferPtr m_lightbuffer;
-    FrameBufferPtr m_lightbuffer2;
-    FrameBufferPtr m_lightbuffer3;
-    std::map<Point, LightSource> m_lightMap;
-    std::map<Point, LightSource> m_creaturesLightMap;
-    float m_depth = 0;
-    int m_scaling = 1;
+
+    LightBuffer m_mapLight;
+    LightBuffer m_creaturesLight;
+
+    Point prevCenter;
+    Light prevLight;
+
+    std::map<PointF, float> m_ground; 
     bool m_updateDepth = false;
+    int m_floor = 0;
 };
 
 #endif

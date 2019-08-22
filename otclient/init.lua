@@ -1,6 +1,6 @@
 -- CONFIG
 APP_NAME = "otclientv8" -- important, change it, it's name for config dir and files in appdata
-APP_VERSION = 1337      -- client version for updater to indentify outdated client
+APP_VERSION = 1337      -- client version for updater and login to indentify outdated client
 
 Services = {
   website = "http://otclient.ovh", -- currently not used
@@ -37,9 +37,22 @@ if not g_resources.directoryExists("/modules") then
 end
 
 -- send and delete crash report if exist
-local crashLog = g_resources.readCrashLog()
-if crashLog:len() > 0 and Services.crash ~= nil and Services.crash:len() > 4 then
-  g_http.post(Services.crash, crashLog)
+if Services.crash ~= nil and Services.crash:len() > 4 then
+  local crashLog = g_resources.readCrashLog(false)
+  local crashLogTxt = g_resources.readCrashLog(true)
+  local normalLog = g_logger.getLastLog()
+  local crashed = false
+  if crashLog:len() > 0 then
+    g_http.post(Services.crash .. "?txt=0", crashLog)
+    crashed = true
+  end
+  if crashLogTxt:len() > 0 then
+    g_http.post(Services.crash .. "?txt=1", crashLogTxt)
+    crashed = true
+  end
+  if crashed and normalLog:len() > 0 then
+    g_http.post(Services.crash .. "?txt=2", normalLog)
+  end
   g_resources.deleteCrashLog()
 end
 

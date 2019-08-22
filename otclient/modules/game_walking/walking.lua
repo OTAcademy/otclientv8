@@ -4,9 +4,12 @@ wsadWalking = false
 nextWalkDir = nil
 lastWalkDir = nil
 lastFinishedStep = 0
-lastTurn = 0
-lastTurnDir = nil
 autoWalkEvent = nil
+firstStep = true
+walkLock = 0
+lastWalk = 0
+lastTurn = 0
+lastTurnDirection = 0
 
 function init()
   connect(LocalPlayer, {
@@ -82,7 +85,14 @@ function unbindKeys()
 end
 
 function enableWSAD()
-  wsadWalking = true
+  if wsadWalking then
+    return
+  end
+  wsadWalking = true  
+  local player = g_game.getLocalPlayer()
+  if player then
+    player:lockWalk(100) -- 100 ms walk lock for all directions    
+  end
 
   bindWalkKey("W", North)
   bindWalkKey("D", East)
@@ -101,6 +111,9 @@ function enableWSAD()
 end
 
 function disableWSAD()
+  if not wsadWalking then
+    return
+  end
   wsadWalking = false
 
   unbindWalkKey("W")
@@ -135,11 +148,13 @@ end
 
 function bindTurnKey(key, dir)
   local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.bindKeyPress(key, function() turn(dir) end, gameRootPanel)
+  g_keyboard.bindKeyDown(key, function() turn(dir, false) end, gameRootPanel)
+  g_keyboard.bindKeyPress(key, function() turn(dir, true) end, gameRootPanel)
 end
 
 function unbindTurnKey(key)
   local gameRootPanel = modules.game_interface.getRootPanel()
+  g_keyboard.unbindKeyDown(key, gameRootPanel)
   g_keyboard.unbindKeyPress(key, gameRootPanel)
 end
 
@@ -211,17 +226,19 @@ end
 function onTeleport(player, newPos, oldPos)
   -- floor change is also teleport
   if math.abs(newPos.x - oldPos.x) >= 3 or math.abs(newPos.y - oldPos.y) >= 3 or math.abs(newPos.z - oldPos.z) >= 2 then  
-    -- far teleport, cancel autowalk and lock walk for 100ms
-    player:lockWalk(100)
-    nextWalkDir = nil
+    -- far teleport, lock walk for 100ms
+    walkLock = g_clock.millis() + g_settings.getNumber('walkTeleportDelay')
+  else
+    walkLock = g_clock.millis() + g_settings.getNumber('walkStairsDelay')
   end
+  nextWalkDir = nil -- cancel autowalk
 end
 
 function onWalkFinish(player)
   lastFinishedStep = g_clock.millis()
   if nextWalkDir ~= nil then
     removeEvent(autoWalkEvent)
-    autoWalkEvent = scheduleEvent(function() if nextWalkDir ~= nil then walk(nextWalkDir) end end, 5)
+    autoWalkEvent = addEvent(function() if nextWalkDir ~= nil then walk(nextWalkDir) end end, false)
   end
 end
 
@@ -245,13 +262,13 @@ function walk(dir)
   if player:isWalkLocked() then
     return
   end
-
+  
   local ticksToNextWalk = player:getStepTicksLeft()
   if not player:canWalk(dir) then -- canWalk return false when previous  walk is not finished or not confirmed by server
     if ticksToNextWalk < 500 and lastWalkDir ~= dir then
       nextWalkDir = dir
     end
-    if ticksToNextWalk < 20 and lastFinishedStep + 200 > g_clock.millis() and nextWalkDir == nil then -- clicked walk 20 ms too early, try to execute again as soon possible to keep smooth walking
+    if ticksToNextWalk < 20 and lastFinishedStep + 400 > g_clock.millis() and nextWalkDir == nil then -- clicked walk 20 ms too early, try to execute again as soon possible to keep smooth walking
       nextWalkDir = dir
     end
     return
@@ -260,10 +277,6 @@ function walk(dir)
   if nextWalkDir ~= nil and nextWalkDir ~= lastWalkDir then 
     dir = nextWalkDir
   end
-
-  nextWalkDir = nil
-  removeEvent(autoWalkEvent)
-  autoWalkEvent = nil
 
   local toPos = player:getNewPreWalkingPosition(true)
   if dir == North then
@@ -289,6 +302,21 @@ function walk(dir)
   end
   local toTile = g_map.getTile(toPos)
 
+  if walkLock >= g_clock.millis() and lastWalkDir == dir then
+    return
+  end
+
+  if firstStep and lastWalkDir == dir and lastWalk + g_settings.getNumber('walkFirstStepDelay') > g_clock.millis() then
+    firstStep = false
+    walkLock = lastWalk + g_settings.getNumber('walkFirstStepDelay')
+    return
+  end
+
+  firstStep = not player:isWalking() and lastFinishedStep + 100 < g_clock.millis() and walkLock + 100 < g_clock.millis()
+  nextWalkDir = nil
+  removeEvent(autoWalkEvent)
+  autoWalkEvent = nil
+
   local preWalked = false
   if toTile and toTile:isWalkable() then
     if g_game.getFeature(GameNewWalking) then
@@ -308,14 +336,23 @@ function walk(dir)
   
   g_game.callOnWalk(dir)
   g_game.forceWalk(dir, preWalked)  
+  
+  if not firstStep and lastWalkDir ~= dir then
+    walkLock = g_clock.millis() + g_settings.getNumber('walkTurnDelay')    
+  end
+  
   lastWalkDir = dir
+  lastWalk = g_clock.millis()
 end
 
-function turn(dir)
-  if g_clock.millis() - lastTurn >= 50 or (dir ~= lastTurnDir and g_clock.millis() - lastTurn >= 30) then
-      g_game.turn(dir)
-      changeWalkDir(dir)
-      lastDirChange = g_clock.millis()
-      lastTurnDir = dir
+function turn(dir, repeated)
+  if not repeated or (lastTurnDirection == dir and lastTurn + 50 < g_clock.millis()) then
+    g_game.turn(dir)
+    changeWalkDir(dir)
+    lastTurn = g_clock.millis()
+    if not repeated then
+      lastTurn = g_clock.millis() + 100
+    end
+    lastTurnDirection = dir
   end
 end

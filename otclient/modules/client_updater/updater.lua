@@ -21,6 +21,7 @@ local progressBar = nil
 local updateProgressBar = nil
 local downloadStatusLabel = nil
 local downloadProgressBar = nil
+local downloadRetries = 0
 
 local generateChecksumsEvent = nil
 local updateableFiles = nil
@@ -161,7 +162,14 @@ function Updater.show()
   
   local data = {
     version = APP_VERSION,
-    platform = g_window.getPlatformType()
+    platform = g_window.getPlatformType(),
+    uid = G.UUID,
+    build_version = g_app.getVersion(),
+    build_revision = g_app.getBuildRevision(),
+    build_commit = g_app.getBuildCommit(),
+    build_date = g_app.getBuildDate(),
+    os = g_app.getOs(),
+    os_name = g_platform.getOSName()
   }
   HTTP.postJSON(Services.updater, data, gotStatus)
   if generateChecksumsEvent == nil then

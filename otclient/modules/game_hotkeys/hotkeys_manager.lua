@@ -390,10 +390,9 @@ function doKeyCombo(keyCombo)
   local hotKey = hotkeyList[keyCombo]
   if not hotKey then return end
 
-  if g_clock.millis() - lastHotkeyTime < 20 then
+  if hotKey.lastHotkeyTime ~= nil and g_clock.millis() - hotKey.lastHotkeyTime < 100 then
     return
   end
-  lastHotkeyTime = g_clock.millis()
 	
   if hotKey.itemId == nil then
     if not hotKey.value or #hotKey.value == 0 then return end
@@ -402,6 +401,7 @@ function doKeyCombo(keyCombo)
     else
       modules.game_console.setTextEditText(hotKey.value)
     end
+    hotKey.lastHotkeyTime = g_clock.millis()
   elseif hotKey.useType == HOTKEY_MANAGER_USE then
     if g_game.getClientVersion() < 740 then
       local item = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
@@ -411,6 +411,7 @@ function doKeyCombo(keyCombo)
     else
       g_game.useInventoryItem(hotKey.itemId)
     end
+    hotKey.lastHotkeyTime = g_clock.millis()
   elseif hotKey.useType == HOTKEY_MANAGER_USEONSELF then
     if g_game.getClientVersion() < 740 then
       local item = g_game.findPlayerItem(hotKey.itemId, hotKey.subType or -1)
@@ -420,6 +421,7 @@ function doKeyCombo(keyCombo)
     else
       g_game.useInventoryItemWith(hotKey.itemId, g_game.getLocalPlayer(), hotKey.subType or -1)
     end
+    hotKey.lastHotkeyTime = g_clock.millis()
   elseif hotKey.useType == HOTKEY_MANAGER_USEONTARGET then
     local attackingCreature = g_game.getAttackingCreature()
     if not attackingCreature then
@@ -431,6 +433,7 @@ function doKeyCombo(keyCombo)
       end
 
       modules.game_interface.startUseWith(item, hotKey.subType or - 1)
+      hotKey.lastHotkeyTime = g_clock.millis()
       return
     end
 
@@ -443,6 +446,7 @@ function doKeyCombo(keyCombo)
     else
       g_game.useInventoryItemWith(hotKey.itemId, attackingCreature, hotKey.subType or -1)
     end
+    hotKey.lastHotkeyTime = g_clock.millis()
   elseif hotKey.useType == HOTKEY_MANAGER_USEWITH then
     local item = Item.create(hotKey.itemId)
     if g_game.getClientVersion() < 740 then
@@ -451,6 +455,7 @@ function doKeyCombo(keyCombo)
       item = tmpItem
     end
     modules.game_interface.startUseWith(item, hotKey.subType or - 1)
+    hotKey.lastHotkeyTime = g_clock.millis()
   end
 end
 

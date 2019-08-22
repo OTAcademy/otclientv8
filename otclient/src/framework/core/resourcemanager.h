@@ -80,10 +80,10 @@ public:
 
     std::string selfChecksum();
 
-    std::string readCrashLog();
+    std::string readCrashLog(bool txt);
     void deleteCrashLog();
 
-    void updateClient(const std::vector<std::string>& files, const std::string& binaryName);
+    void updateClient(const std::vector<std::string>& files, std::string binaryName);
 #ifdef WITH_ENCRYPTION
     void encrypt();
     bool encryptBuffer(std::string & buffer);

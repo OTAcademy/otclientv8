@@ -37,6 +37,7 @@ public:
     MapView();
     ~MapView();
     void draw(const Rect& rect, const TilePtr& crosshairTile = nullptr);
+    void drawTexts(const Rect& rect, const Rect& srcRect);
 
 private:
     void drawTiles(bool map, bool creatures, bool isFading, const TilePtr& crosshairTile, bool draw = true);
@@ -91,6 +92,9 @@ public:
     void setDrawHealthBars(bool enable) { m_drawHealthBars = enable; }
     bool isDrawingHealthBars() { return m_drawHealthBars; }
 
+    void setDrawHealthBarsOnTop(bool enable) { m_drawHealthBarsOnTop = enable; }
+    bool isDrawingHealthBarsOnTop() { return m_drawHealthBarsOnTop; }
+
     void setDrawLights(bool enable);
     bool isDrawingLights() { return m_lightView != nullptr; }
 
@@ -111,6 +115,8 @@ public:
     PainterShaderProgramPtr getShader() { return m_shader; }
 
     Position getPosition(const Point& point, const Size& mapSize);
+
+    Point getPositionOffset(const Point& point, const Size& mapSize);
 
     MapViewPtr asMapView() { return static_self_cast<MapView>(); }
 
@@ -148,6 +154,7 @@ private:
     stdext::boolean<true> m_drawTexts;
     stdext::boolean<true> m_drawNames;
     stdext::boolean<true> m_drawHealthBars;
+    stdext::boolean<false> m_drawHealthBarsOnTop;
     stdext::boolean<true> m_drawManaBar;
     bool m_drawPlayerBars = true;
     stdext::boolean<true> m_smooth;

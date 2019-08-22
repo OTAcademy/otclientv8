@@ -25,6 +25,8 @@
 #include <framework/core/application.h>
 #include <random>
 
+extern asio::io_service g_ioService;
+
 Protocol::Protocol()
 {
     m_xteaEncryptionEnabled = false;
@@ -42,6 +44,15 @@ Protocol::~Protocol()
 
 void Protocol::connect(const std::string& host, uint16 port)
 {
+#ifdef FW_PROXY
+    if (host == "proxy" || host == "0.0.0.0") {
+        m_disconnected = false;
+        m_proxy = g_proxy.addSession(port,
+                                     std::bind(&Protocol::onProxyPacket, asProtocol(), std::placeholders::_1),
+                                     std::bind(&Protocol::onProxyDisconnected, asProtocol(), std::placeholders::_1));
+        return onConnect();
+    }
+#endif
     m_connection = ConnectionPtr(new Connection);
     m_connection->setErrorCallback(std::bind(&Protocol::onError, asProtocol(), std::placeholders::_1));
     m_connection->connect(host, port, std::bind(&Protocol::onConnect, asProtocol()));
@@ -49,6 +60,13 @@ void Protocol::connect(const std::string& host, uint16 port)
 
 void Protocol::disconnect()
 {
+#ifdef FW_PROXY
+    m_disconnected = true;
+    if (m_proxy) {
+        g_proxy.removeSession(m_proxy);
+        return;
+    }
+#endif
     if(m_connection) {
         m_connection->close();
         m_connection.reset();
@@ -57,6 +75,10 @@ void Protocol::disconnect()
 
 bool Protocol::isConnected()
 {
+#ifdef FW_PROXY
+    if (m_proxy)
+        return !m_disconnected;
+#endif
     if(m_connection && m_connection->isConnected())
         return true;
     return false;
@@ -64,6 +86,10 @@ bool Protocol::isConnected()
 
 bool Protocol::isConnecting()
 {
+#ifdef FW_PROXY
+    if (m_proxy)
+        return false;
+#endif
     if(m_connection && m_connection->isConnecting())
         return true;
     return false;
@@ -82,6 +108,15 @@ void Protocol::send(const OutputMessagePtr& outputMessage)
     // write message size
     outputMessage->writeMessageSize();
 
+#ifdef FW_PROXY
+    if (m_proxy) {
+        auto packet = std::make_shared<ProxyPacket>(outputMessage->getHeaderBuffer(), outputMessage->getWriteBuffer());
+        g_proxy.send(m_proxy, packet);
+        outputMessage->reset();
+        return;
+    }
+#endif
+
     // send
     if(m_connection)
         m_connection->write(outputMessage->getHeaderBuffer(), outputMessage->getMessageSize());
@@ -92,6 +127,11 @@ void Protocol::send(const OutputMessagePtr& outputMessage)
 
 void Protocol::recv()
 {
+#ifdef FW_PROXY
+    if (m_proxy) {
+        return;
+    }
+#endif
     m_inputMessage->reset();
 
     // first update message header size
@@ -249,3 +289,36 @@ void Protocol::onError(const boost::system::error_code& err)
     callLuaField("onError", err.message(), err.value());
     disconnect();
 }
+
+#ifdef FW_PROXY
+void Protocol::onProxyPacket(ProxyPacketPtr packet)
+{
+    auto self(asProtocol());
+    boost::asio::post(g_ioService, [&, self, packet]
+    {
+        m_inputMessage->reset();
+
+        // first update message header size
+        int headerSize = 2; // 2 bytes for message size
+        if (m_checksumEnabled)
+            headerSize += 4; // 4 bytes for checksum
+        if (m_xteaEncryptionEnabled)
+            headerSize += 2; // 2 bytes for XTEA encrypted message size
+        m_inputMessage->setHeaderSize(headerSize);
+        m_inputMessage->fillBuffer(packet->data(), 2);
+        m_inputMessage->readSize();
+        internalRecvData(packet->data() + 2, packet->size() - 2);
+    });
+}
+
+void Protocol::onProxyDisconnected(boost::system::error_code ec)
+{
+    if (m_disconnected)
+        return;
+    m_disconnected = true;
+    auto self(asProtocol());
+    boost::asio::post(g_ioService, [&, self, ec] {
+        onError(ec);
+    });
+}
+#endif

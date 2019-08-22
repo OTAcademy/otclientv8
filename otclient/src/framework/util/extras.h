@@ -18,6 +18,7 @@ public:
         DEFINE_OPTION(debugWalking, "Debbug walking");
         DEFINE_OPTION(debugPathfinding, "Debbug path finding");
         DEFINE_OPTION(debugRender, "Debbug render");
+        DEFINE_OPTION(debugProxy, "Debbug proxy");
     }
 
     bool botDetection = default_value;
@@ -28,6 +29,7 @@ public:
     bool debugWalking  = false;
     bool debugPathfinding  = false;
     bool debugRender = false;
+    bool debugProxy = false;
 
     int testMode = 0;
 

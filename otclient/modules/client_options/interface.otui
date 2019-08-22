@@ -17,6 +17,10 @@ Panel
     !text: tr('Display creature health bars')
 
   OptionCheckBox
+    id: displayHealthOnTop
+    !text: tr('Display creature health bars above texts')
+
+  OptionCheckBox
     id: hidePlayerBars
     !text: tr('Show player health bar')
 
@@ -26,11 +30,11 @@ Panel
 
   OptionCheckBox
     id: topHealtManaBar
-    !text: tr('Show top health and mana bar')
+    !text: tr('Show player top health and mana bar')
 
   OptionCheckBox
     id: showHealthManaCircle
-    !text: tr('Show healt/mana circle')
+    !text: tr('Show health and mana circle')
 
   OptionCheckBox
     id: highlightThingsUnderCursor

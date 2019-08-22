@@ -66,23 +66,23 @@ Minimap < UIMinimap
   color: black
 
   MinimapFloorUpButton
-    id: floorUp
+    id: floorUpWidget
     @onClick: self:getParent():floorUp(1)
 
   MinimapFloorDownButton
-    id: floorDown
+    id: floorDownWidget
     @onClick: self:getParent():floorDown(1)
 
   MinimapZoomInButton
-    id: zoomIn
+    id: zoomInWidget
     @onClick: self:getParent():zoomIn()
 
   MinimapZoomOutButton
-    id: zoomOut
+    id: zoomOutWidget
     @onClick: self:getParent():zoomOut()
 
   MinimapResetButton
-    id: reset
+    id: resetWidget
     @onClick: self:getParent():reset()
 
 

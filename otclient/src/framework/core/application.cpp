@@ -37,6 +37,9 @@
 
 #ifdef FW_NET
 #include <framework/net/connection.h>
+#ifdef FW_PROXY
+#include <extras/proxy/proxy.h>
+#endif
 #endif
 
 void exitSignalHandler(int sig)
@@ -93,6 +96,11 @@ void Application::init(std::vector<std::string>& args)
     // initialize lua
     g_lua.init();
     registerLuaFunctions();
+
+#ifdef FW_PROXY
+    // initalize proxy
+    g_proxy.init();
+#endif
 }
 
 void Application::deinit()
@@ -130,6 +138,11 @@ void Application::terminate()
 
     // terminate script environment
     g_lua.terminate();
+
+#ifdef FW_PROXY
+    // terminate proxy
+    g_proxy.terminate();
+#endif
 
     m_terminated = true;
 

@@ -76,6 +76,7 @@ void Stats::clearAll() {
         stats[i].data.clear();
         stats[i].slow.clear();
     }
+    resetSleepTime();
 }
 
 std::string Stats::getSlow(int type, int limit, unsigned int minTime, bool pretty) {

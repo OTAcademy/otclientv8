@@ -28,6 +28,7 @@
 #include "../stdext/string.h"
 #include "../const.h"
 #include <iomanip>
+#include <algorithm>
 
 class Color
 {
@@ -76,6 +77,11 @@ public:
 
     Color& operator=(uint32_t rgba) { setRGBA(rgba); return *this; }
     bool operator==(uint32_t rgba) const { return this->rgba() == rgba; }
+
+    Color operator+=(const Color& other) const { 
+        return Color(std::min<float>(1.0f, m_r + other.m_r), std::min<float>(1.0f, m_g + other.m_g),
+            std::min<float>(1.0f, m_b + other.m_b), std::min<float>(1.0f, m_a + other.m_a));
+    }
 
     Color& operator=(const Color& other) { m_r = other.m_r; m_g = other.m_g; m_b = other.m_b; m_a = other.m_a; return *this; }
     bool operator==(const Color& other) const { return other.rgba() == rgba(); }

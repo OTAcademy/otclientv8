@@ -25,6 +25,7 @@
 
 #ifdef CRASH_HANDLER
 void installCrashHandler();
+void uninstallCrashHandler();
 #endif
 
 #endif

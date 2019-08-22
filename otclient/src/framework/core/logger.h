@@ -58,11 +58,16 @@ public:
     void setLogFile(const std::string& file);
     void setOnLog(const OnLogCallback& onLog) { m_onLog = onLog; }
 
+    std::string getLastLog() {
+        return m_lastLog;
+    }
+
 private:
     std::list<LogMessage> m_logMessages;
     OnLogCallback m_onLog;
-    std::ofstream m_outFile;
+    std::fstream m_outFile;
     std::recursive_mutex m_mutex;
+    std::string m_lastLog;
 };
 
 extern Logger g_logger;

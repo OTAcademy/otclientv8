@@ -53,10 +53,8 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(TEX2_UNIFORM, "u_Tex2");
     bindUniformLocation(TEX3_UNIFORM, "u_Tex3");
     bindUniformLocation(ATLAS_TEX_UNIFORM, "u_Atlas");
-    bindUniformLocation(DEPTH_TEX_UNIFORM, "u_TexDepth");
     
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
-    bindUniformLocation(SCALING_UNIFORM, "u_Scaling");
 
     // VALUES
 
@@ -74,7 +72,6 @@ void PainterShaderProgram::setupUniforms()
     setUniformValue(TEX2_UNIFORM, 2);
     setUniformValue(TEX3_UNIFORM, 3);
     setUniformValue(ATLAS_TEX_UNIFORM, 6);
-    setUniformValue(DEPTH_TEX_UNIFORM, 7);
 
     setUniformValue(RESOLUTION_UNIFORM, (float)m_resolution.width(), (float)m_resolution.height());
 }
@@ -171,13 +168,6 @@ void PainterShaderProgram::setResolution(const Size& resolution)
     setUniformValue(RESOLUTION_UNIFORM, (float)resolution.width(), (float)resolution.height());
     m_resolution = resolution;
 }
-
-void PainterShaderProgram::setScaling(const SizeF& scaling) 
-{
-    bind();
-    setUniformValue(SCALING_UNIFORM, (float)scaling.width(), (float)scaling.height());
-}
-
 
 void PainterShaderProgram::updateTime()
 {

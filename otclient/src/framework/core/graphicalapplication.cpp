@@ -146,18 +146,22 @@ void GraphicalApplication::run()
         g_clock.update();
 
         if (!g_window.isVisible()) {
+            ticks_t sleepStart = stdext::micros();
             stdext::millisleep(1);
+            g_stats.m_sleepTime += (stdext::micros() - sleepStart);
             g_adaptiveRenderer.refresh();
             continue;
         }
 
-        int frameDelay = getMaxFps() <= 0 ? 0 : (1000000 / getMaxFps()) - 2000;
+        int frameDelay = getMaxFps() <= 0 ? 0 : (1000000 / getMaxFps());
 
         if (lastRender + frameDelay > stdext::micros()) {
+            ticks_t sleepStart = stdext::micros();
             stdext::millisleep(1);
+            g_stats.m_sleepTime += (stdext::micros() - sleepStart);
             continue;
         }
-        lastRender = stdext::micros();
+        lastRender = stdext::micros() > lastRender + frameDelay * 2 ? stdext::micros() : lastRender + frameDelay;
 
         g_adaptiveRenderer.newFrame();
         bool updateForeground = false;

@@ -14,7 +14,7 @@ public:
 
     int get(const std::string& url, int timeout = 5);
     int post(const std::string& url, const std::string& data, int timeout = 5);
-    int download(const std::string& url, const std::string& path, int timeout = 5);
+    int download(const std::string& url, std::string path, int timeout = 5);
 
     bool cancel(int id);
     int getProgress(int id);
@@ -25,7 +25,9 @@ public:
     void clearDownloads() {
         m_downloads.clear();
     }
-    HttpResult_ptr getFile(const std::string& path) {
+    HttpResult_ptr getFile(std::string path) {
+        if (!path.empty() && path[0] == '/')
+            path = path.substr(1);
         auto it = m_downloads.find(path);
         if (it == m_downloads.end())
             return nullptr;

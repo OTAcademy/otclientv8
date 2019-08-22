@@ -1,5 +1,7 @@
 HTTP = {
   timeout=5,
+  imageId=1000,
+  images={},
   operations={}
 }
 
@@ -36,6 +38,20 @@ end
 function HTTP.download(url, file, callback, progressCallback)
   local operation = g_http.download(url, file, HTTP.timeout)
   HTTP.operations[operation] = {type="download", url=url, file=file, callback=callback, progressCallback=progressCallback}  
+  return opreation
+end
+
+function HTTP.downloadImage(url, callback)
+  if HTTP.images[url] ~= nil then
+    if callback then
+      callback('/downloads/' .. HTTP.images[url], nil)
+    end
+    return
+  end
+  local file = "autoimage_" .. HTTP.imageId .. ".png"
+  HTTP.imageId = HTTP.imageId + 1
+  local operation = g_http.download(url, file, HTTP.timeout)
+  HTTP.operations[operation] = {type="image", url=url, file=file, callback=callback}  
   return opreation
 end
 
@@ -111,7 +127,12 @@ function HTTP.onDownload(operationId, url, err, path, checksum)
     err = nil
   end
   if operation.callback then
-    operation.callback(path, checksum, err)
+    if operation["type"] == "image" then
+      HTTP.images[url] = path
+      operation.callback('/downloads/' .. path, err)    
+    else
+      operation.callback(path, checksum, err)
+    end
   end
 end
 

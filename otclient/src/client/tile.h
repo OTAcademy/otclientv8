@@ -82,8 +82,10 @@ public:
     ThingPtr getTopThing();
 
     ThingPtr getTopLookThing();
+    ThingPtr getTopLookThingEx(Point offset);
     ThingPtr getTopUseThing();
     CreaturePtr getTopCreature();
+    CreaturePtr getTopCreatureEx(Point offset);
     ThingPtr getTopMoveThing();
     ThingPtr getTopMultiUseThing();
 

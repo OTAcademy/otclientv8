@@ -405,6 +405,7 @@ void ProtocolGame::sendUseItem(const Position& position, int itemId, int stackpo
 
 void ProtocolGame::sendUseItemWith(const Position& fromPos, int itemId, int fromStackPos, const Position& toPos, int toThingId, int toStackPos)
 {
+    g_logger.info(stdext::format("s1: %i %i", (int)fromStackPos, (int)toStackPos));
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientUseItemWith);
     addPosition(msg, fromPos);
@@ -413,6 +414,7 @@ void ProtocolGame::sendUseItemWith(const Position& fromPos, int itemId, int from
     addPosition(msg, toPos);
     msg->addU16(toThingId);
     msg->addU8(toStackPos);
+    g_logger.info(stdext::format("s: %i %i", (int)fromStackPos, (int)toStackPos));
     send(msg);
 }
 

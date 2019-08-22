@@ -26,8 +26,6 @@ public:
 
     bool allowFading();
 
-    int lightScaling();
-
     int getLevel() {
         return m_speed;
     }

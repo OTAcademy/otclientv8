@@ -33,6 +33,13 @@ function startup()
   if g_sounds ~= nil then
     musicChannel = g_sounds.getChannel(1)
   end
+  
+  G.UUID = g_settings.getString('report-uuid')
+  if not G.UUID or #G.UUID ~= 36 then
+    G.UUID = g_crypt.genUUID()
+    g_settings.set('report-uuid', G.UUID)
+  end
+  
   -- Play startup music (The Silver Tree, by Mattias Westlund)
   --musicChannel:enqueue(musicFilename, 3)
   connect(g_game, { onGameStart = function() if musicChannel ~= nil then musicChannel:stop(3) end end })
@@ -48,7 +55,7 @@ function init()
   connect(g_app, { onRun = startup,
                    onExit = exit })
 
-  g_window.setMinimumSize({ width = 800, height = 480 })
+  g_window.setMinimumSize({ width = 800, height = 600 })
   if g_sounds ~= nil then
     --g_sounds.preload(musicFilename)
   end

@@ -51,10 +51,8 @@ protected:
         TEX2_UNIFORM = 9,
         TEX3_UNIFORM = 10,
         ATLAS_TEX_UNIFORM = 11,
-        DEPTH_TEX_UNIFORM = 12,
         
-        RESOLUTION_UNIFORM = 13,
-        SCALING_UNIFORM = 14
+        RESOLUTION_UNIFORM = 12,
     };
 
     friend class Painter;
@@ -73,7 +71,6 @@ public:
     void setOpacity(float opacity);
     void setDepth(float depth);
     void setResolution(const Size& resolution);
-    void setScaling(const SizeF& scaling);
     void updateTime();
 
     void addMultiTexture(const std::string& file);

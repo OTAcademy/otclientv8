@@ -124,7 +124,7 @@ MiniWindow
   height: 200
   @onClose: modules.game_inventory.onMiniWindowClose()
   &save: true
-  &forceOpen: true
+  --&forceOpen: true
 
   MiniWindowContents
     anchors.left: parent.left

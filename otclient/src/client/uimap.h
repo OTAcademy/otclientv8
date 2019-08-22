@@ -56,6 +56,7 @@ public:
     void setDrawTexts(bool enable) { m_mapView->setDrawTexts(enable); }
     void setDrawNames(bool enable) { m_mapView->setDrawNames(enable); }
     void setDrawHealthBars(bool enable) { m_mapView->setDrawHealthBars(enable); }
+    void setDrawHealthBarsOnTop(bool enable) { m_mapView->setDrawHealthBarsOnTop(enable); }
     void setDrawLights(bool enable) { m_mapView->setDrawLights(enable); }
     void setDrawManaBar(bool enable) { m_mapView->setDrawManaBar(enable); }
     void setDrawPlayerBars(bool enable) { m_mapView->setDrawPlayerBars(enable); }
@@ -70,6 +71,7 @@ public:
     bool isDrawingTexts() { return m_mapView->isDrawingTexts(); }
     bool isDrawingNames() { return m_mapView->isDrawingNames(); }
     bool isDrawingHealthBars() { return m_mapView->isDrawingHealthBars(); }
+    bool isDrawingHealthBarsOnTop() { return m_mapView->isDrawingHealthBarsOnTop(); }
     bool isDrawingLights() { return m_mapView->isDrawingLights(); }
     bool isDrawingManaBar() { return m_mapView->isDrawingManaBar(); }
     bool isAnimating() { return m_mapView->isAnimating(); }
@@ -81,6 +83,7 @@ public:
     Otc::DrawFlags getDrawFlags() { return m_mapView->getDrawFlags(); }
     Position getCameraPosition() { return m_mapView->getCameraPosition(); }
     Position getPosition(const Point& mousePos);
+    Point getPositionOffset(const Point& mousePos);
     TilePtr getTile(const Point& mousePos);
     int getMaxZoomIn() { return m_maxZoomIn; }
     int getMaxZoomOut() { return m_maxZoomOut; }

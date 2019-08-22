@@ -58,6 +58,9 @@
 #ifdef FW_NET
 #include <framework/net/server.h>
 #include <framework/net/protocol.h>
+#ifdef FW_PROXY
+#include <extras/proxy/proxy.h>
+#endif
 #endif
 
 #ifdef FW_SQL
@@ -67,6 +70,7 @@
 #include <framework/util/extras.h>
 
 #include <framework/http/http.h>
+
 
 void Application::registerLuaFunctions()
 {
@@ -183,6 +187,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_logger", "warning", &Logger::warning, &g_logger);
     g_lua.bindSingletonFunction("g_logger", "error", &Logger::error, &g_logger);
     g_lua.bindSingletonFunction("g_logger", "fatal", &Logger::fatal, &g_logger);
+    g_lua.bindSingletonFunction("g_logger", "getLastLog", &Logger::getLastLog, &g_logger);
 
     // Lua stats
     g_lua.registerSingletonClass("g_stats");
@@ -192,6 +197,8 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_stats", "clearAll", &Stats::clearAll, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "getSlow", &Stats::getSlow, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "clearSlow", &Stats::clearSlow, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "getSleepTime", &Stats::getSleepTime, &g_stats);
+    g_lua.bindSingletonFunction("g_stats", "resetSleepTime", &Stats::resetSleepTime, &g_stats);
 
     g_lua.registerSingletonClass("g_extras");
     g_lua.bindSingletonFunction("g_extras", "set", &Extras::set, &g_extras);
@@ -875,6 +882,18 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<OutputMessage>("setMessageSize", &OutputMessage::setMessageSize);
     g_lua.bindClassMemberFunction<OutputMessage>("getWritePos", &OutputMessage::getWritePos);
     g_lua.bindClassMemberFunction<OutputMessage>("setWritePos", &OutputMessage::setWritePos);
+
+#ifdef FW_PROXY
+    g_lua.registerSingletonClass("g_proxy");
+    g_lua.bindSingletonFunction("g_proxy", "addProxy", &ProxyManager::addProxy, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "removeProxy", &ProxyManager::removeProxy, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "clear", &ProxyManager::clear, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "setMaxActiveProxies", &ProxyManager::setMaxActiveProxies, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "getProxies", &ProxyManager::getProxies, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "getProxiesDebugInfo", &ProxyManager::getProxiesDebugInfo, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "getPing", &ProxyManager::getPing, &g_proxy);
+#endif
+
 #endif
 
 #ifdef FW_SOUND

@@ -66,7 +66,7 @@ int main(int argc, const char* argv[]) {
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName(compactName);
-    g_app.setVersion("0.6 alpha");
+    g_app.setVersion("0.8 beta");
 
 #ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
@@ -105,6 +105,10 @@ int main(int argc, const char* argv[]) {
 
     // the run application main loop
     g_app.run();
+
+#ifdef CRASH_HANDLER
+    uninstallCrashHandler();
+#endif
 
     // unload modules
     g_app.deinit();

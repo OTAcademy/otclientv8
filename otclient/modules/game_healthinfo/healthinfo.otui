@@ -75,6 +75,7 @@ HealthOverlay < UIWidget
     anchors.left: parent.left
     anchors.right: parent.horizontalCenter
     height: 16
+    phantom: true
 
   ProgressBar
     id: topManaBar
@@ -83,6 +84,7 @@ HealthOverlay < UIWidget
     anchors.right: parent.right
     anchors.left: parent.horizontalCenter
     height: 16    
+    phantom: true
     
   UIProgressBar
     id: healthCircle
@@ -91,7 +93,8 @@ HealthOverlay < UIWidget
     image-source: /images/game/circle/left_empty
     margin-right: 169
     margin-bottom: 16
-    opacity: 0.5
+    opacity: 0.4
+    phantom: true
 
   UIProgressBar
     id: healthCircleFront
@@ -100,7 +103,8 @@ HealthOverlay < UIWidget
     image-source: /images/game/circle/left_full
     margin-right: 169
     margin-bottom: 16
-    opacity: 0.5
+    opacity: 0.4
+    phantom: true
 
   UIProgressBar
     id: manaCircle
@@ -109,7 +113,8 @@ HealthOverlay < UIWidget
     image-source: /images/game/circle/right_empty    
     margin-left: 130
     margin-bottom: 16
-    opacity: 0.5
+    opacity: 0.4
+    phantom: true
 
   UIProgressBar
     id: manaCircleFront
@@ -118,8 +123,9 @@ HealthOverlay < UIWidget
     image-source: /images/game/circle/right_full
     margin-left: 130
     margin-bottom: 16    
-    opacity: 0.5
+    opacity: 0.3
     image-color: #0000FFFF
+    phantom: true
   
 MiniWindow
   icon: /images/topbuttons/healthinfo

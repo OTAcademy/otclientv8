@@ -65,7 +65,7 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
     drawImage(m_rect);
     drawIcon(m_rect);
 
-    int textLength = m_text.length();
+    int textLength = m_glyphsCoords.size();
     const TexturePtr& texture = m_font->getTexture();
     if(!texture)
         return;
@@ -159,7 +159,7 @@ void UITextEdit::update(bool focusCursor)
     }
 
     // resize just on demand
-    if(textLength > (int)m_glyphsCoords.size()) {
+    if(textLength != (int)m_glyphsCoords.size()) {
         m_glyphsCoords.resize(textLength);
         m_glyphsTexCoords.resize(textLength);
     }
@@ -872,7 +872,7 @@ bool UITextEdit::onMouseMove(const Point& mousePos, const Point& mouseMoved)
 
     if(m_selectable && isPressed()) {
         int pos = getTextPos(mousePos);
-        if(pos >= 0) {
+        if(pos >= 0 && m_selectionReference != -1) {
             setSelection(m_selectionReference, pos);
             setCursorPos(pos);
         }
@@ -885,10 +885,27 @@ bool UITextEdit::onDoubleClick(const Point& mousePos)
 {
     if(UIWidget::onDoubleClick(mousePos))
         return true;
-    if(m_selectable && m_text.length() > 0) {
-        selectAll();
+
+    int pos = getTextPos(mousePos);
+    if (m_selectable && pos >= 0 && m_text.length() > 0) {
+        m_selectionReference = -1;
+        int firstSpace = 0;
+        int lastSpace = m_text.length();
+        for (int i = 0; i < pos && i < (int)m_text.length(); ++i) {
+            if (m_text[i] == ' ' || m_text[i] == '\t' || m_text[i] == '\n') {
+                firstSpace = i + 1;
+            }
+        }
+        for (int i = pos; i < (int)m_text.length(); ++i) {
+            if (m_text[i] == ' ' || m_text[i] == '\t' || m_text[i] == '\n') {
+                lastSpace = i;
+                break;
+            }
+        }
+        setSelection(firstSpace, lastSpace);
         return true;
     }
+
     return false;
 }
 

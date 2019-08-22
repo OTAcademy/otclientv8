@@ -3,7 +3,7 @@ local defaultOptions = {
   showFps = true,
   showPing = true,
   fullscreen = false,
-  classicView = true,
+  classicView = false,
   classicControl = true,
   smartWalk = false,
   extentedPreWalking = true,
@@ -30,6 +30,7 @@ local defaultOptions = {
   displayNames = true,
   displayHealth = true,
   displayMana = true,
+  displayHealthOnTop = false,
   showHealthManaCircle = true,
   hidePlayerBars = true,
   highlightThingsUnderCursor = true,
@@ -38,6 +39,12 @@ local defaultOptions = {
   dontStretchShrink = false,
   turnDelay = 30,
   hotkeyDelay = 30,
+  
+  wsadWalking = false,
+  walkFirstStepDelay = 200,
+  walkTurnDelay = 100,
+  walkStairsDelay = 50,
+  walkTeleportDelay = 200
 }
 
 local optionsWindow
@@ -94,8 +101,9 @@ function init()
     extrasButton:setText(g_extras.getDescription(v))
     extrasPanel:addChild(extrasButton)
   end
-  
-  optionsTabBar:addTab(tr('Extras'), extrasPanel, '/images/optionstab/extras')
+  if not g_game.getFeature(GameNoDebug) then
+    optionsTabBar:addTab(tr('Extras'), extrasPanel, '/images/optionstab/extras')
+  end
 
   optionsButton = modules.client_topmenu.addLeftButton('optionsButton', tr('Options'), '/images/topbuttons/options', toggle)
   audioButton = modules.client_topmenu.addLeftButton('audioButton', tr('Audio'), '/images/topbuttons/audio', function() toggleOption('enableAudio') end)
@@ -103,7 +111,7 @@ function init()
   addEvent(function() setup() end)
   
   connect(g_game, { onGameStart = online,
-                     onGameEnd = offline })
+                     onGameEnd = offline })                    
 end
 
 function terminate()
@@ -133,6 +141,10 @@ function setup()
     if widget then
       widget:setChecked(g_extras.get(v))
     end
+  end  
+  
+  if g_game.isOnline() then
+    online()
   end  
 end
 
@@ -178,6 +190,13 @@ function setOption(key, value, force)
   if extraOptions[key] ~= nil then
     g_extras.set(key, value)
     g_settings.set("extras_" .. key, value)
+    if key == "debugProxy" and modules.game_proxy then
+      if value then
+        modules.game_proxy.show()
+      else
+        modules.game_proxy.hide()      
+      end
+    end
     return
   end
   if modules.game_interface == nil then
@@ -250,6 +269,8 @@ function setOption(key, value, force)
     gameMapPanel:setDrawHealthBars(value)
   elseif key == 'displayMana' then
     gameMapPanel:setDrawManaBar(value)
+  elseif key == 'displayHealthOnTop' then
+    gameMapPanel:setDrawHealthBarsOnTop(value)
   elseif key == 'hidePlayerBars' then
     gameMapPanel:setDrawPlayerBars(value)
   elseif key == 'topHealtManaBar' then
@@ -267,6 +288,18 @@ function setOption(key, value, force)
     else 
       g_game.setMaxPreWalkingSteps(1)    
     end
+  elseif key == 'wsadWalking' then
+    if modules.game_console and modules.game_console.consoleToggleChat:isChecked() ~= value then
+      modules.game_console.consoleToggleChat:setChecked(value)
+    end
+  elseif key == 'walkFirstStepDelay' then
+    generalPanel:getChildById('walkFirstStepDelayLabel'):setText(tr('Walk delay after first step: %s ms', value))  
+  elseif key == 'walkTurnDelay' then
+    generalPanel:getChildById('walkTurnDelayLabel'):setText(tr('Walk delay after turn: %s ms', value))  
+  elseif key == 'walkStairsDelay' then
+    generalPanel:getChildById('walkStairsDelayLabel'):setText(tr('Walk delay after floor change: %s ms', value))  
+  elseif key == 'walkTeleportDelay' then
+    generalPanel:getChildById('walkTeleportDelayLabel'):setText(tr('Walk delay after teleport: %s ms', value))  
   end  
 
   -- change value for keybind updates

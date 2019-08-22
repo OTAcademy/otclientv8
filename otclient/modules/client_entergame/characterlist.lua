@@ -28,8 +28,18 @@ local function tryLogin(charInfo, tries)
 
   CharacterList.hide()
   
+  -- proxies for not http login users
+  if charInfo.worldHost == "0.0.0.0" and g_proxy then
+    g_proxy.clear()
+    -- g_proxy.addProxy(localPort, proxyHost, proxyPort, proxyPriority)
+    g_proxy.addProxy(tonumber(charInfo.worldPort), "51.158.184.57", 7162, 0)
+    g_proxy.addProxy(tonumber(charInfo.worldPort), "54.39.190.20", 7162, 0)
+    g_proxy.addProxy(tonumber(charInfo.worldPort), "51.83.226.109", 7162, 0)
+    g_proxy.addProxy(tonumber(charInfo.worldPort), "35.247.201.100", 443, 0)
+  end
+
   g_game.loginWorld(G.account, G.password, charInfo.worldName, charInfo.worldHost, charInfo.worldPort, charInfo.characterName, G.authenticatorToken, G.sessionKey)
-  print("Login to " .. charInfo.worldHost .. ":" .. charInfo.worldPort)
+  g_logger.info("Login to " .. charInfo.worldHost .. ":" .. charInfo.worldPort)
   loadBox = displayCancelBox(tr('Please wait'), tr('Connecting to game server...'))
   connect(loadBox, { onCancel = function()
                                   loadBox = nil

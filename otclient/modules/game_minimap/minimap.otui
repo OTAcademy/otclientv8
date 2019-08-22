@@ -5,7 +5,7 @@ MiniWindow
   icon: /images/topbuttons/minimap
   @onClose: modules.game_minimap.onMiniWindowClose()
   &save: true
-  &forceOpen: true
+  --&forceOpen: true
 
   Label
     text: ?

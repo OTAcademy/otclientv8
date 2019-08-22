@@ -231,6 +231,9 @@ void Connection::onConnect(const boost::system::error_code& error)
         // disable nagle's algorithm, this make the game play smoother
         boost::asio::ip::tcp::no_delay option(true);
         m_socket.set_option(option);
+        boost::system::error_code ecc;
+        m_socket.set_option(boost::asio::socket_base::send_buffer_size(65536), ecc);
+        m_socket.set_option(boost::asio::socket_base::receive_buffer_size(65536), ecc);
 
         if(m_connectCallback)
             m_connectCallback();

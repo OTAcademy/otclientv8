@@ -42,14 +42,14 @@ struct DrawQueueOutfitPattern {
 };
 
 struct DrawQueueOutfit : public DrawQueueItem {
-    DrawQueueOutfit(size_t _key, const Rect& _dest, Color _color, float _depth) :
+    DrawQueueOutfit(uint64_t _key, const Rect& _dest, Color _color, float _depth) :
         DrawQueueItem(_dest, nullptr, Rect(), _color, _depth), key(_key) {}
     virtual ~DrawQueueOutfit() {};
 
     DrawQueueOutfit* getOutfit() override { return this; }
     void draw(const Rect& location, const Rect& src = Rect(), bool mark = false) override;
 
-    size_t key;
+    uint64_t key;
     DrawQueueItem mount;
     std::vector<DrawQueueOutfitPattern> patterns;
 };
@@ -73,7 +73,7 @@ public:
         m_queue.push_back(item);
         return item;
     }
-    DrawQueueOutfit* addOutfit(size_t key, const Rect& dest) {
+    DrawQueueOutfit* addOutfit(uint64_t key, const Rect& dest) {
         if (m_blocked)
             return nullptr;
         DrawQueueOutfit* item = new DrawQueueOutfit(key, dest, Color::white.opacity(m_opacity), m_depth);

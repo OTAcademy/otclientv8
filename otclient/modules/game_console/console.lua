@@ -67,6 +67,7 @@ consolePanel = nil
 consoleContentPanel = nil
 consoleTabBar = nil
 consoleTextEdit = nil
+consoleToggleChat = nil
 channels = nil
 channelsWindow = nil
 communicationWindow = nil
@@ -121,6 +122,9 @@ function init()
   consolePanel.onDragEnter = onDragEnter
   consolePanel.onDragLeave = onDragLeave
   consolePanel.onDragMove = onDragMove
+  consoleTabBar.onDragEnter = onDragEnter
+  consoleTabBar.onDragLeave = onDragLeave
+  consoleTabBar.onDragMove = onDragMove
   
   consolePanel.onKeyPress = function(self, keyCode, keyboardModifiers)
     if not (keyboardModifiers == KeyboardCtrlModifier and keyCode == KeyC) then return false end
@@ -184,30 +188,32 @@ function toggleChat()
   if consoleToggleChat:isChecked() then
     disableChat()
   else
-    enableChat(false)
+    enableChat()
   end
 end
 
 function enableChat(temporarily)
-  local gameInterface = modules.game_interface
+  if consoleToggleChat:isChecked() then
+    return consoleToggleChat:setChecked(false)
+  end
+  if not temporarily then
+    modules.client_options.setOption("wsadWalking", false)
+  end
 
   consoleTextEdit:setVisible(true)
   consoleTextEdit:setText("")
 
-  g_keyboard.unbindKeyUp("Space")
-  g_keyboard.unbindKeyUp("Enter")
+  g_keyboard.unbindKeyDown("Space")
+  g_keyboard.unbindKeyDown("Enter")
   
   if temporarily then
     local quickFunc = function()
-      g_keyboard.unbindKeyUp("Enter")
-      g_keyboard.unbindKeyUp("Escape")
-      if not consoleToggleChat:isChecked() then
-        consoleToggleChat:setChecked(true)
-      end
-      disableChat()
+      g_keyboard.unbindKeyDown("Enter")
+      g_keyboard.unbindKeyDown("Escape")
+      disableChat(temporarily)
     end
-    g_keyboard.bindKeyUp("Enter", quickFunc)
-    g_keyboard.bindKeyUp("Escape", quickFunc)  
+    g_keyboard.bindKeyDown("Enter", quickFunc)
+    g_keyboard.bindKeyDown("Escape", quickFunc)  
   end
 
   modules.game_walking.disableWSAD()
@@ -216,7 +222,12 @@ function enableChat(temporarily)
 end
 
 function disableChat()
-  local gameInterface = modules.game_interface
+  if not consoleToggleChat:isChecked() then
+    return consoleToggleChat:setChecked(true)
+  end
+  if not temporarily then
+    modules.client_options.setOption("wsadWalking", true)
+  end
 
   consoleTextEdit:setVisible(false)
   consoleTextEdit:setText("")
@@ -227,8 +238,8 @@ function disableChat()
     end
     enableChat(true)
   end
-  g_keyboard.bindKeyUp("Space", quickFunc)
-  g_keyboard.bindKeyUp("Enter", quickFunc)
+  g_keyboard.bindKeyDown("Space", quickFunc)
+  g_keyboard.bindKeyDown("Enter", quickFunc)
 
   modules.game_walking.enableWSAD()
 
@@ -368,6 +379,7 @@ function switchMode(floating)
     consolePanel:removeAnchor(AnchorRight)    
     consolePanel:setWidth(600)
     consolePanel:setDraggable(true)
+    consoleTabBar:setDraggable(true)
     if not floatingMode then
       local savedMargin = g_settings.get("consoleLeftMargin")
       local newMargin = 150
@@ -383,6 +395,7 @@ function switchMode(floating)
     consolePanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)    
     consolePanel:addAnchor(AnchorRight, 'parent', AnchorRight)    
     consolePanel:setDraggable(false)
+    consoleTabBar:setDraggable(false)
     consolePanel:setMarginLeft(0)
   end
   floatingMode = floating
@@ -968,6 +981,7 @@ function sendMessage(message, tab)
     local isPrivateCommand = false
     local priv = true
     local tabname = name
+    local dontAdd = false
     if chatCommandPrivateReady then
       speaktypedesc = 'privatePlayerToPlayer'
       name = chatCommandPrivate
@@ -977,10 +991,11 @@ function sendMessage(message, tab)
     elseif tab == violationReportTab then
       if violationReportTab.locked then
         modules.game_textmessage.displayFailureMessage('Wait for a gamemaster reply.')
-        return
+        dontAdd = true
+      else
+        speaktypedesc = 'rvrContinue'
+        tabname = tr('Report Rule') .. '...'
       end
-      speaktypedesc = 'rvrContinue'
-      tabname = tr('Report Rule') .. '...'
     elseif tab.violationChatName then
       speaktypedesc = 'rvrAnswerTo'
       name = tab.violationChatName
@@ -993,9 +1008,10 @@ function sendMessage(message, tab)
     local speaktype = SpeakTypesSettings[speaktypedesc]
     local player = g_game.getLocalPlayer()
     g_game.talkPrivate(speaktype.speakType, name, message)
-
-    message = applyMessagePrefixies(g_game.getCharacterName(), player:getLevel(), message)
-    addPrivateText(message, speaktype, tabname, isPrivateCommand, g_game.getCharacterName())
+    if not dontAdd then
+      message = applyMessagePrefixies(g_game.getCharacterName(), player:getLevel(), message)
+      addPrivateText(message, speaktype, tabname, isPrivateCommand, g_game.getCharacterName())
+    end
   end
 end
 
@@ -1030,6 +1046,10 @@ function navigateMessageHistory(step)
     else
       consoleTextEdit:clearText()
     end
+  end
+  local player = g_game.getLocalPlayer()
+  if player then
+    player:lockWalk(100) -- lock walk for 100 ms to avoid walk during release of shift
   end
 end
 
@@ -1212,6 +1232,7 @@ function doChannelListSubmit()
     if selectedChannelLabel.channelId == 0xFFFF then
       g_game.openOwnChannel()
     else
+      g_game.leaveChannel(selectedChannelLabel.channelId)
       g_game.joinChannel(selectedChannelLabel.channelId)
     end
   end

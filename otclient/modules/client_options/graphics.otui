@@ -26,6 +26,11 @@ Panel
     id: vsync
     !text: tr('Enable vertical synchronization')
     !tooltip: tr('Limits FPS (usually to 60)')
+    @onSetup: |
+      if g_window.getPlatformType() == 'WIN32-EGL' then
+        self:setEnabled(false)
+        self:setText(tr('Enable vertical synchronization') .. " " .. tr('(OpenGL only)'))
+      end
 
   OptionCheckBox
     id: showFps

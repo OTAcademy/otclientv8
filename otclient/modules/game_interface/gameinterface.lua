@@ -65,7 +65,7 @@ function init()
 end
 
 function bindKeys()
-  gameRootPanel:setAutoRepeatDelay(100)
+  gameRootPanel:setAutoRepeatDelay(20)
 
   g_keyboard.bindKeyPress('Escape', function() g_game.cancelAttackAndFollow() end, gameRootPanel)
   g_keyboard.bindKeyPress('Ctrl+=', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomIn() end, gameRootPanel)
@@ -299,7 +299,7 @@ function onTradeWith(clickedWidget, mousePosition)
   if clickedWidget:getClassName() == 'UIGameMap' then
     local tile = clickedWidget:getTile(mousePosition)
     if tile then
-      g_game.requestTrade(selectedThing, tile:getTopCreature())
+      g_game.requestTrade(selectedThing, tile:getTopCreatureEx(clickedWidget:getPositionOffset(mousePosition)))
     end
   elseif clickedWidget:getClassName() == 'UICreatureButton' then
     local creature = clickedWidget:getCreature()
@@ -668,20 +668,6 @@ function moveStackableItem(item, toPos)
       spinbox.firstEdit = false
     end
   end
-  g_keyboard.bindKeyPress("Up", function() check() spinbox:up() end, spinbox)
-  g_keyboard.bindKeyPress("Down", function() check() spinbox:down() end, spinbox)
-  g_keyboard.bindKeyPress("Right", function() check() spinbox:up() end, spinbox)
-  g_keyboard.bindKeyPress("Left", function() check() spinbox:down() end, spinbox)
-  g_keyboard.bindKeyPress("PageUp", function() check() spinbox:setValue(spinbox:getValue()+10) end, spinbox)
-  g_keyboard.bindKeyPress("PageDown", function() check() spinbox:setValue(spinbox:getValue()-10) end, spinbox)
-
-  scrollbar.onValueChange = function(self, value)
-    itembox:setItemCount(value)
-    spinbox.onValueChange = nil
-    spinbox:setValue(value)
-    spinbox.onValueChange = spinBoxValueChange
-  end
-
   local okButton = countWindow:getChildById('buttonOk')
   local moveFunc = function()
     g_game.move(item, toPos, itembox:getItemCount())
@@ -694,6 +680,21 @@ function moveStackableItem(item, toPos)
     countWindow = nil
   end
 
+  
+  g_keyboard.bindKeyPress("Up", function() check() spinbox:up() end, spinbox)
+  g_keyboard.bindKeyPress("Down", function() check() spinbox:down() end, spinbox)
+  g_keyboard.bindKeyPress("Right", function() check() spinbox:up() end, spinbox)
+  g_keyboard.bindKeyPress("Left", function() check() spinbox:down() end, spinbox)
+  g_keyboard.bindKeyPress("PageUp", function() check() spinbox:setValue(spinbox:getValue()+10) end, spinbox)
+  g_keyboard.bindKeyPress("PageDown", function() check() spinbox:setValue(spinbox:getValue()-10) end, spinbox)
+  g_keyboard.bindKeyPress("Enter", function() moveFunc() end, spinbox)
+
+  scrollbar.onValueChange = function(self, value)
+    itembox:setItemCount(value)
+    spinbox.onValueChange = nil
+    spinbox:setValue(value)
+    spinbox.onValueChange = spinBoxValueChange
+  end
   countWindow.onEnter = moveFunc
   countWindow.onEscape = cancelFunc
 
@@ -805,7 +806,7 @@ function refreshViewMode()
     minimumWidth = minimumWidth + 300
   end
   minimumWidth = math.max(minimumWidth, 800)
-  g_window.setMinimumSize({ width = minimumWidth, height = 480 })
+  g_window.setMinimumSize({ width = minimumWidth, height = 600 })
   if g_window.getWidth() < minimumWidth then
     local oldPos = g_window.getPosition()
     local size = { width = minimumWidth, height = g_window.getHeight() }
@@ -837,7 +838,7 @@ function refreshViewMode()
     gameRightPanels:setMarginTop(modules.client_topmenu.getTopMenu():getHeight() - gameRightPanels:getPaddingTop())
   end
 
-  gameMapPanel:setVisibleDimension({ width = 17, height = 13 })
+  gameMapPanel:setVisibleDimension({ width = 15, height = 11 })
   
   if classic then  
     gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
@@ -878,6 +879,7 @@ function refreshViewMode()
     bottomSplitter:addAnchor(AnchorRight, 'parent', AnchorRight)
            
     modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')  
+    
     if modules.game_console then
       modules.game_console.switchMode(true)
     end

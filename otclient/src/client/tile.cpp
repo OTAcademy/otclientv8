@@ -111,8 +111,8 @@ void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lig
     drawQueue.setDepth(m_topDepth);
 
     for(const CreaturePtr& creature : m_walkingCreatures) {
-        creature->newDraw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x) * g_sprites.spriteSize() - m_drawElevation),
-                                dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y) * g_sprites.spriteSize() - m_drawElevation)), drawQueue, lightView);
+        creature->newDraw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x) * Otc::TILE_PIXELS - m_drawElevation),
+                                dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y) * Otc::TILE_PIXELS - m_drawElevation)), drawQueue, lightView);
     }
 
     std::vector<CreaturePtr> toDraw;
@@ -358,6 +358,24 @@ ThingPtr Tile::getTopLookThing()
     return m_things[0];
 }
 
+ThingPtr Tile::getTopLookThingEx(Point offset)
+{
+    auto creature = getTopCreatureEx(offset);
+    if (creature)
+        return creature;
+
+    if (isEmpty())
+        return nullptr;
+
+    for (uint i = 0; i < m_things.size(); ++i) {
+        ThingPtr thing = m_things[i];
+        if (!thing->isIgnoreLook() && (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom() && !thing->isOnTop() && !thing->isCreature()))
+            return thing;
+    }
+
+    return m_things[0];
+}
+
 ThingPtr Tile::getTopUseThing()
 {
     if(isEmpty())
@@ -413,6 +431,34 @@ CreaturePtr Tile::getTopCreature()
     return creature;
 }
 
+CreaturePtr Tile::getTopCreatureEx(Point offset)
+{
+    static const int cords[][2] = { {1,1}, {0,1}, {1, 0}, {-1, 1}, {0, 0}, {1, -1}, {-1, 0}, {0, -1}, {-1, -1} };
+
+    CreaturePtr localPlayer = nullptr;
+    Point localPlayerOffset;
+
+    for (auto& xy : cords) {
+        Position pos = m_position.translated(xy[0], xy[1]);
+        const TilePtr& tile = g_map.getTile(pos);
+        if (!tile) continue;
+        for (const CreaturePtr& c : tile->getCreatures()) {
+            if (c->isLocalPlayer()) {
+                localPlayer = c;
+                localPlayerOffset = Point(offset.x - xy[0] * Otc::TILE_PIXELS, offset.y - xy[1] * Otc::TILE_PIXELS);
+                continue;
+            }
+            if (c->isInsideOffset(Point(offset.x - xy[0] * Otc::TILE_PIXELS, offset.y - xy[1] * Otc::TILE_PIXELS)))
+                return c;
+        }
+    }
+
+    if (localPlayer && localPlayer->isInsideOffset(localPlayerOffset))
+        return localPlayer;
+
+    return nullptr;
+}
+
 ThingPtr Tile::getTopMoveThing()
 {
     if(isEmpty())
@@ -449,22 +495,7 @@ ThingPtr Tile::getTopMultiUseThing()
             return thing;
     }
 
-    for(uint i = 0; i < m_things.size(); ++i) {
-        ThingPtr thing = m_things[i];
-        if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom() && !thing->isOnTop()) {
-            if(i > 0 && thing->isSplash())
-                return m_things[i-1];
-            return thing;
-        }
-    }
-
-    for(uint i = 0; i < m_things.size(); ++i) {
-        ThingPtr thing = m_things[i];
-        if(!thing->isGround() && !thing->isOnTop())
-            return thing;
-    }
-
-    return m_things[0];
+    return getTopThing();
 }
 
 bool Tile::isWalkable(bool ignoreCreatures)

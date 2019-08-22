@@ -23,7 +23,6 @@ StaticWindow
   margin-left: 20
   margin-bottom: 10
   id: newsPanelHolder
-  vertical-scrollbar: itemsPanelListScrollBar
   width: 300        
   !text: tr('News')
   
@@ -36,13 +35,13 @@ StaticWindow
     anchors.right: parent.right
     anchors.top: parent.top    
     anchors.bottom: parent.bottom 
-    padding-right: 15
+    padding-right: 10
+    margin-right: 10
 
   VerticalScrollBar
     id: newsScroll
     anchors.top: newsPanel.top
     anchors.bottom: newsPanel.bottom
     anchors.left: newsPanel.right
-    wodth: 5
     step: 14
     pixels-scroll: true

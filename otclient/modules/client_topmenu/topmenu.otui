@@ -22,6 +22,7 @@ TopMenuPanel
     text-auto-resize: true
     anchors.top: parent.top
     anchors.left: leftGameButtonsPanel.right
+    anchors.right: rightGameButtonsPanel.left
 
   TopMenuPingLabel
     color: white
@@ -29,13 +30,13 @@ TopMenuPanel
     text-auto-resize: true
     anchors.top: fpsLabel.bottom
     anchors.left: fpsLabel.left
+    anchors.right: fpsLabel.right
 
   TopMenuButtonsPanel
     id: rightButtonsPanel
     anchors.top: parent.top
     anchors.bottom: parent.bottom
     anchors.right: parent.right
-    padding-left: 0
 
   TopMenuButtonsPanel
     id: rightGameButtonsPanel

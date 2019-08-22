@@ -1,0 +1,9 @@
+Module
+  name: game_proxy
+  description: Proxy
+  author: otclient.ovh
+  website: http://otclient.ovh
+  sandboxed: true
+  scripts: [ proxy ]
+  @onLoad: init()
+  @onUnload: terminate()

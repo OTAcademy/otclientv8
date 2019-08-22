@@ -383,6 +383,7 @@ void Map::cleanTile(const Position& pos)
         else
             ++it;
     }
+    g_minimap.updateTile(pos, getTile(pos));
 }
 
 void Map::setShowZone(tileflags_t zone, bool show)
@@ -952,12 +953,13 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
                     bool wasSeen = blockAndTile.second.hasFlag(MinimapTileWasSeen);
                     bool isNotWalkable = blockAndTile.second.hasFlag(MinimapTileNotWalkable);
                     bool isNotPathable = blockAndTile.second.hasFlag(MinimapTileNotPathable);
+                    bool isEmpty = blockAndTile.second.hasFlag(MinimapTileEmpty);
                     float speed = blockAndTile.second.getSpeed();
-                    if ((isNotWalkable || isNotPathable) && neighbor != goal) {
+                    if ((isNotWalkable || isNotPathable || isEmpty) && neighbor != goal) {
                         it = nodes.emplace(neighbor, nullptr).first;
                     } else {
                         if (!wasSeen)
-                            speed = 100000;
+                            speed = 1000;
                         it = nodes.emplace(neighbor, new Node{ speed, 10000000.0f, neighbor, node, node->distance + 1, wasSeen ? 0 : 1 }).first;
                     }
                 }

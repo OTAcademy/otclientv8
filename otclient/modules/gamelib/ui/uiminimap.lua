@@ -4,10 +4,6 @@ end
 
 function UIMinimap:onSetup()
   self.flagWindow = nil
-  self.floorUpWidget = self:getChildById('floorUp')
-  self.floorDownWidget = self:getChildById('floorDown')
-  self.zoomInWidget = self:getChildById('zoomIn')
-  self.zoomOutWidget = self:getChildById('zoomOut')
   self.flags = {}
   self.alternatives = {}
   self.onAddAutomapFlag = function(pos, icon, description) self:addFlag(pos, icon, description) end

@@ -695,6 +695,9 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
         g_lua.pushString(stdext::format("C++ call failed: %s", g_lua.traceback(e.what())));
         g_lua.error();
     }
+    catch (...) {
+        g_logger.fatal(stdext::format("Critical lua error!\nC++ call failed:\n%s|%s", g_lua.getCurrentFunction(), g_lua.traceback("fatal error")));
+    }
 
     return numRets;
 }
