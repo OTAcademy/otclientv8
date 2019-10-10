@@ -41,6 +41,7 @@ public:
 
 private:
     void drawTiles(bool map, bool creatures, bool isFading, const TilePtr& crosshairTile, bool draw = true);
+    void drawTileTexts(const Rect& rect, const Rect& srcRect);
     void updateGeometry(const Size& visibleDimension, const Size& optimizedSize);
     void updateVisibleTilesCache();
     void requestVisibleTilesCacheUpdate() { m_mustUpdateVisibleTilesCache = true; }

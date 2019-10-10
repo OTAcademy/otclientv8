@@ -61,7 +61,6 @@ LocalPlayer::LocalPlayer()
 void LocalPlayer::lockWalk(int millis)
 {
     m_walkLockExpiration = std::max<int>(m_walkLockExpiration, (ticks_t) g_clock.millis() + millis);
-    g_game.cancelWalkEvent();
 }
 
 bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
@@ -77,30 +76,28 @@ bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
     if (m_walking && (m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
         return false;
 
-    // prewalk has a timeout, because for some reason that I don't know yet the server sometimes doesn't answer the prewalk
-    bool prewalkTimeouted = m_walking && m_preWalking && m_walkTimer.ticksElapsed() >= getStepDuration() + PREWALK_TIMEOUT;
-
-    // avoid doing more walks than wanted when receiving a lot of walks from server
-    if (!m_lastPrewalkDone && m_preWalking && !prewalkTimeouted)
-        return false;
-
-    auto tile = g_map.getTile(getNewPreWalkingPosition(true));
-    if (isNewPreWalking() && (!m_newLastPrewalkingDone || (tile && tile->isBlocking())))
+    auto tile = g_map.getTile(getPrewalkingPosition(true));
+    if (isPreWalking() && (!m_lastPrewalkDone || (tile && tile->isBlocking())))
         return false;
 
     // cannot walk while already walking
-    if ((m_walking && !isAutoWalking()) && (!prewalkTimeouted || m_secondPreWalk) && (!isNewPreWalking() || !m_newLastPrewalkingDone))
+    if ((m_walking && !isAutoWalking()) && (!isPreWalking() || !m_lastPrewalkDone))
         return false;
 
-    if (m_newPreWalkingPositions.size() >= g_game.getMaxPreWalkingSteps()) // max 3 extra steps
+    // Without new walking limit only to 1 prewalk
+    if (!m_preWalking.empty() && !g_game.getFeature(Otc::GameNewWalking))
         return false;
 
-    if (!m_newPreWalkingPositions.empty()) { // disallow diagonal extented walking
-        auto dir = m_position.getDirectionFromPosition(m_newPreWalkingPositions.back());
+    // Limit pre walking steps
+    if (m_preWalking.size() >= g_game.getMaxPreWalkingSteps()) // max 3 extra steps
+        return false;
+
+    if (!m_preWalking.empty()) { // disallow diagonal extented prewalking walking
+        auto dir = m_position.getDirectionFromPosition(m_preWalking.back());
         if ((dir == Otc::NorthWest || dir == Otc::NorthEast || dir == Otc::SouthWest || dir == Otc::SouthEast)) {
             return false;
         }
-        if (!g_map.getTile(getNewPreWalkingPosition())->isWalkable())
+        if (!g_map.getTile(getPrewalkingPosition())->isWalkable())
             return false;
     }
 
@@ -113,13 +110,13 @@ void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
         g_logger.info(stdext::format("[%i] LocalPlayer::walk", (int)g_clock.millis()));
     }
 
-    m_lastAutoRetries = 0;
+    m_lastAutoWalkRetries = 0;
     // a prewalk was going on
-    if (isNewPreWalking()) {
-        for (auto it = m_newPreWalkingPositions.begin(); it != m_newPreWalkingPositions.end(); ++it) {
+    if (isPreWalking()) {
+        for (auto it = m_preWalking.begin(); it != m_preWalking.end(); ++it) {
             if (*it == newPos) {
-                m_newPreWalkingPositions.erase(m_newPreWalkingPositions.begin(), ++it);
-                if(!isNewPreWalking()) // reset pre walking
+                m_preWalking.erase(m_preWalking.begin(), ++it);
+                if(!isPreWalking()) // reset pre walking
                     updateWalk();
                 return;
             }
@@ -129,23 +126,12 @@ void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
         }
 
         // invalid pre walk
-        m_newPreWalkingPositions.clear();
+        m_preWalking.clear();
         m_serverWalking = true;
         if(m_serverWalkEndEvent)
             m_serverWalkEndEvent->cancel();
 
         Creature::walk(oldPos, newPos);
-    } else if (m_preWalking) {
-        // switch to normal walking
-        m_preWalking = false;
-        m_secondPreWalk = false;
-        m_lastPrewalkDone = true;
-        // if is to the last prewalk destination, updates the walk preserving the animation
-        if(newPos == m_lastPrewalkDestination) {
-            updateWalk();
-        // was to another direction, replace the walk
-        } else
-            Creature::walk(oldPos, newPos);
     } else { // no prewalk was going on, this must be an server side automated walk
         if (g_extras.debugWalking) {
             g_logger.info(stdext::format("[%i] LocalPlayer::walk server walk", (int)g_clock.millis()));
@@ -154,7 +140,7 @@ void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
         m_serverWalking = true;
         if(m_serverWalkEndEvent)
             m_serverWalkEndEvent->cancel();
-        m_lastAutoRetries = 0;
+        m_lastAutoWalkRetries = 0;
 
         Creature::walk(oldPos, newPos);
     }
@@ -162,124 +148,112 @@ void LocalPlayer::walk(const Position& oldPos, const Position& newPos)
 
 void LocalPlayer::preWalk(Otc::Direction direction)
 {
-    Position newPos = m_position.translatedToDirection(direction);
-
-    // avoid reanimating prewalks
-    if(m_preWalking) {
-        m_secondPreWalk = true;
-        return;
-    }
-
-    m_preWalking = true;
-
-    if(m_serverWalkEndEvent)
-        m_serverWalkEndEvent->cancel();
-
-    // start walking to direction
-    m_lastPrewalkDone = false;
-    m_lastPrewalkDestination = newPos;
-    Creature::walk(m_position, newPos);
-}
-
-void LocalPlayer::newPreWalk(Otc::Direction direction)
-{
     Position startPos = m_position;
-    if (!m_newPreWalkingPositions.empty())
-        startPos = m_newPreWalkingPositions.back();
+    if (!m_preWalking.empty())
+        startPos = m_preWalking.back();
     Position newPos = startPos.translatedToDirection(direction);
 
-    if(m_serverWalkEndEvent)
+    if (m_serverWalkEndEvent)
         m_serverWalkEndEvent->cancel();
 
-    m_newLastPrewalkingDone = false;
-    m_newPreWalkingPositions.push_back(newPos);
-    if (m_newPreWalkingPositions.size() > 1)
+    m_lastPrewalkDone = false;
+    m_preWalking.push_back(newPos);
+    if (m_preWalking.size() > 1)
         g_map.requestVisibleTilesCacheUpdate();
 
     Creature::walk(startPos, newPos);
 }
 
+
 void LocalPlayer::cancelWalk(Otc::Direction direction)
 {
-    if (g_game.getFeature(Otc::GameNewWalking))
+    if (g_game.getFeature(Otc::GameNewWalking)) {
         return;
-
-    if (g_extras.debugWalking) {
-        g_logger.info(stdext::format("[%i] cancelWalk: %i", (int)g_clock.millis(), direction));
     }
 
-    // only cancel client side walks
-    if(m_walking && m_preWalking)
-        stopWalk();
-
-    m_lastPrewalkDone = true;
-    m_idleTimer.restart();
-    lockWalk();
-
-    if(m_autoWalkDestination.isValid()) {
-        g_game.stop();
-        auto self = asLocalPlayer();
-
-        if (m_lastAutoRetries <= 3) {
-            if (m_autoWalkContinueEvent)
-                m_autoWalkContinueEvent->cancel();
-            m_autoWalkContinueEvent = g_dispatcher.scheduleEvent(std::bind(&LocalPlayer::autoWalk, asLocalPlayer(), m_autoWalkDestination, true), 200);
-            self->m_lastAutoRetries += 1;
-            return;
-        } else {
-            self->m_autoWalkDestination = Position();
-        }
-    }
-
-    // turn to the cancel direction
-    if(direction != Otc::InvalidDirection)
-        setDirection(direction);
-
-    callLuaField("onCancelWalk", direction);
+    return cancelNewWalk(direction);
 }
 
-void LocalPlayer::cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir)     
+void LocalPlayer::cancelNewWalk(Otc::Direction dir)
 {
     if (g_extras.debugWalking) {
-        g_logger.info(stdext::format("[%i] cancelNewWalk: %i- %i", (int)g_clock.millis(), walkId, (int)m_newPreWalkingPositions.size()));
+        g_logger.info(stdext::format("[%i] cancelWalk: %i- %i", (int)g_clock.millis()));
     }
 
-    bool clearedPreWalking = !m_newPreWalkingPositions.empty();
-    m_newPreWalkingPositions.clear();
+    bool clearedPrewalk = !m_preWalking.empty();
+
+    m_preWalking.clear();
     g_map.requestVisibleTilesCacheUpdate();
 
-    if (m_position != pos) {
-        if (g_extras.debugWalking) {
-            g_logger.info(stdext::format("[%i] cancelNewWalk invalid position", (int)g_clock.millis()));
-        }
-        m_allowAppearWalk = false;
-        g_map.removeThing(this);
-        g_map.addThing(this, pos, stackpos);
-    } else if (clearedPreWalking) {
+    if (clearedPrewalk) {
         stopWalk();
     }
 
     m_idleTimer.restart();
     lockWalk();
 
-    if(m_autoWalkDestination.isValid()) {
+    if (retryAutoWalk()) return;
+
+    if (!g_game.isIgnoringServerDirection() || !g_game.getFeature(Otc::GameNewWalking)) {
+        setDirection(dir);
+    }
+    callLuaField("onCancelWalk", dir);
+}
+
+bool LocalPlayer::predictiveCancelWalk(const Position& pos, uint32_t predictionId, Otc::Direction dir)
+{
+    if (g_extras.debugPredictiveWalking) {
+        g_logger.info(stdext::format("[%i] predictiveCancelWalk: %i - %i", (int)g_clock.millis(), predictionId, (int)m_preWalking.size()));
+    }
+    
+    m_walkMatrix.update(pos, predictionId); // for debugging, not used
+
+    for (auto it = m_preWalking.begin(); it != m_preWalking.end(); ++it) {
+        if (*it != pos) {
+            continue;
+        }
+        if (g_extras.debugPredictiveWalking) {
+            g_logger.info(stdext::format("[%i] predictiveCancelWalk: canceling walk", (int)g_clock.millis()));
+        }
+
+        if (it == m_preWalking.begin()) {
+            cancelNewWalk(dir);
+            return true;
+        }
+        while (it != m_preWalking.end()) {
+            it = m_preWalking.erase(it);
+        }
+
+        m_walkTimer.restart();
+        m_walkTimer.adjust(-(getStepDuration(true) + 50));
+        updateWalk();
+        g_map.requestVisibleTilesCacheUpdate();
+
+        return true;
+    }
+
+    return false;
+}
+
+bool LocalPlayer::retryAutoWalk()
+{
+    if (m_autoWalkDestination.isValid()) {
         g_game.stop();
         auto self = asLocalPlayer();
 
-        if (m_lastAutoRetries <= 3) {
+        if (m_lastAutoWalkRetries <= 3) {
             if (m_autoWalkContinueEvent)
                 m_autoWalkContinueEvent->cancel();
             m_autoWalkContinueEvent = g_dispatcher.scheduleEvent(std::bind(&LocalPlayer::autoWalk, asLocalPlayer(), m_autoWalkDestination, true), 200);
-            self->m_lastAutoRetries += 1;
-            return;
+            self->m_lastAutoWalkRetries += 1;
+            return true;
         } else {
             self->m_autoWalkDestination = Position();
         }
     }
-
-    setDirection(dir);
-    callLuaField("onCancelWalk", dir);
+    return false;
 }
+
 
 bool LocalPlayer::autoWalk(Position destination, bool retry)
 {
@@ -291,23 +265,23 @@ bool LocalPlayer::autoWalk(Position destination, bool retry)
     m_autoWalkContinueEvent = nullptr;
 
     if (!retry)
-        m_lastAutoRetries = 0;
+        m_lastAutoWalkRetries = 0;
 
-    if(destination == getNewPreWalkingPosition(true))
+    if(destination == getPrewalkingPosition())
         return true;
-    if(getNewPreWalkingPosition(true).isInRange(destination, 1, 1))
-        return g_game.walk(getNewPreWalkingPosition(true).getDirectionFromPosition(destination));
 
     m_autoWalkDestination = destination;
     auto self(asLocalPlayer());
-    g_map.findPathAsync(getNewPreWalkingPosition(true), destination, [self](PathFindResult_ptr result) {
+    g_map.findPathAsync(getPrewalkingPosition(), destination, [self](PathFindResult_ptr result) {
         if (self->m_autoWalkDestination != result->destination)
             return;
-        //g_logger.info(stdext::format("Async path search finished with complexity %i/50000", result->complexity));
+        if (g_extras.debugWalking) {
+            g_logger.info(stdext::format("Async path search finished with complexity %i/50000", result->complexity));
+        }
 
         if (result->status != Otc::PathFindResultOk) {
-            if (self->m_lastAutoRetries > 0 && self->m_lastAutoRetries <= 3) { // try again in 300, 700, 1200 ms if canceled by server
-                self->m_autoWalkContinueEvent = g_dispatcher.scheduleEvent(std::bind(&LocalPlayer::autoWalk, self, result->destination, true), 200 + self->m_lastAutoRetries * 100);
+            if (self->m_lastAutoWalkRetries > 0 && self->m_lastAutoWalkRetries <= 3) { // try again in 300, 700, 1200 ms if canceled by server
+                self->m_autoWalkContinueEvent = g_dispatcher.scheduleEvent(std::bind(&LocalPlayer::autoWalk, self, result->destination, true), 200 + self->m_lastAutoWalkRetries * 100);
                 return;
             }
             self->m_autoWalkDestination = Position();
@@ -315,24 +289,23 @@ bool LocalPlayer::autoWalk(Position destination, bool retry)
             return;
         }
 
-        std::vector<Otc::Direction> limitedPath = result->path;
-        if(!g_game.getFeature(Otc::GameNewWalking) && limitedPath.size() > 127)
-            limitedPath.resize(127);
-        else if(limitedPath.size() > 4095)
-            limitedPath.resize(4095);
+        if(!g_game.getFeature(Otc::GameNewWalking) && result->path.size() > 127)
+            result->path.resize(127);
+        else if(result->path.size() > 4095)
+            result->path.resize(4095);
 
-        if (limitedPath.empty()) {
+        if (result->path.empty()) {
             self->m_autoWalkDestination = Position();
             self->callLuaField("onAutoWalkFail", result->status);
             return;
         }
         
-        auto finalAutowalkPos = self->getNewPreWalkingPosition(true).translatedToDirections(limitedPath).back();
+        auto finalAutowalkPos = self->getPrewalkingPosition().translatedToDirections(result->path).back();
         if (self->m_autoWalkDestination != finalAutowalkPos) {
             self->m_lastAutoWalkPosition = finalAutowalkPos;
         }
 
-        g_game.autoWalk(limitedPath, self->getNewPreWalkingPosition(true));
+        g_game.autoWalk(result->path, result->start);
     });
 
     if(!retry)
@@ -358,15 +331,13 @@ void LocalPlayer::stopWalk() {
 
     Creature::stopWalk(); // will call terminateWalk
 
-    m_newPreWalkingPositions.clear();
-    m_lastPrewalkDone = true;
-    m_lastPrewalkDestination = Position();
+    m_preWalking.clear();
 }
 
 void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
 {
     // pre walks offsets are calculated in the oposite direction
-    if(m_preWalking || isNewPreWalking()) {
+    if(isPreWalking()) {
         m_walkOffset = Point(0,0);
         if(m_walkDirection == Otc::North || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::NorthWest)
             m_walkOffset.y = -totalPixelsWalked;
@@ -401,8 +372,8 @@ void LocalPlayer::updateWalk()
 
     // terminate walk only when client and server side walk are completed
     if (m_walking && m_walkTimer.ticksElapsed() >= stepDuration)
-        m_newLastPrewalkingDone = true;
-    if(m_walking && !m_preWalking && m_walkTimer.ticksElapsed() >= stepDuration && !isNewPreWalking())
+        m_lastPrewalkDone = true;
+    if(m_walking && m_walkTimer.ticksElapsed() >= stepDuration && !isPreWalking())
         terminateWalk();
 }
 
@@ -413,10 +384,8 @@ void LocalPlayer::terminateWalk()
     }
 
     Creature::terminateWalk();
-    m_preWalking = false;
-    m_secondPreWalk = false;
     m_idleTimer.restart();
-    m_newPreWalkingPositions.clear();
+    m_preWalking.clear();
     m_walking = false;
 
     auto self = asLocalPlayer();
@@ -451,6 +420,8 @@ void LocalPlayer::onPositionChange(const Position& newPos, const Position& oldPo
         stopAutoWalk();
     else if(m_autoWalkDestination.isValid() && newPos == m_lastAutoWalkPosition)
         autoWalk(m_autoWalkDestination);
+
+    m_walkMatrix.updatePosition(newPos);
 }
 
 void LocalPlayer::turn(Otc::Direction direction)

@@ -331,6 +331,7 @@
     <ClInclude Include="..\src\client\uiminimap.h" />
     <ClInclude Include="..\src\client\uiprogressrect.h" />
     <ClInclude Include="..\src\client\uisprite.h" />
+    <ClInclude Include="..\src\client\walkmatrix.h" />
     <ClInclude Include="..\src\extras\proxy\client.h" />
     <ClInclude Include="..\src\extras\proxy\proxy.h" />
     <ClInclude Include="..\src\framework\const.h" />
@@ -433,12 +434,12 @@
     <ClInclude Include="..\src\framework\stdext\dumper.h" />
     <ClInclude Include="..\src\framework\stdext\dynamic_storage.h" />
     <ClInclude Include="..\src\framework\stdext\exception.h" />
+    <ClInclude Include="..\src\framework\stdext\fastrand.h" />
     <ClInclude Include="..\src\framework\stdext\format.h" />
     <ClInclude Include="..\src\framework\stdext\math.h" />
     <ClInclude Include="..\src\framework\stdext\net.h" />
     <ClInclude Include="..\src\framework\stdext\packed_any.h" />
     <ClInclude Include="..\src\framework\stdext\packed_storage.h" />
-    <ClInclude Include="..\src\framework\stdext\packed_vector.h" />
     <ClInclude Include="..\src\framework\stdext\shared_object.h" />
     <ClInclude Include="..\src\framework\stdext\shared_ptr.h" />
     <ClInclude Include="..\src\framework\stdext\stdext.h" />

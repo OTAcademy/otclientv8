@@ -6,6 +6,7 @@ function UIGameMap.create()
   gameMap:setVisibleDimension({width = 15, height = 11})
   gameMap:setDrawLights(true)
   gameMap.markedThing = nil
+  gameMap.blockNextRelease = 0
   gameMap:updateMarkedCreature()
   return gameMap
 end
@@ -92,9 +93,18 @@ function UIGameMap:updateMarkedCreature()
 end
 
 function UIGameMap:onMousePress()
-  if not self:isDragging() then
+  if not self:isDragging() and self.blockNextRelease < g_clock.millis() then
     self.allowNextRelease = true
     self.markingMouseRelease = false
+  end
+end
+
+function UIGameMap:blockNextMouseRelease(postAction)
+  self.allowNextRelease = false
+  if postAction then
+    self.blockNextRelease = g_clock.millis() + 150
+  else
+    self.blockNextRelease = g_clock.millis() + 250  
   end
 end
 

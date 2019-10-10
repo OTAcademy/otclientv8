@@ -5,11 +5,19 @@
 
 void HttpSession::start() {
     if (m_result->redirects >= 10) {
-        return onError("Too many redirects");
+        auto self(shared_from_this());
+        boost::asio::post(m_service, [self] {
+            self->onError("Too many redirects");
+        });
+        return;
     }
     auto parsedUrl = parseURI(m_url);
     if (parsedUrl.domain.empty()) {
-        return onError("Invalid url", m_url);
+        auto self(shared_from_this());
+        boost::asio::post(m_service, [self] {
+            self->onError("Invalid url", self->m_url);
+        });
+        return;
     }
 
     m_domain = parsedUrl.domain;
@@ -43,10 +51,11 @@ void HttpSession::on_connect(const boost::system::error_code& ec) {
     if (ec)
         return onError("connection error", ec.message());
 
-    if (m_url.find("https") == 0)
+    if (m_url.find("https") == 0 || m_url.find("HTTPS") == 0)
     {
         //m_context.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::tlsv12_client);
-        m_ssl = std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>>(m_socket, m_context);
+        m_context = std::make_shared< boost::asio::ssl::context >(boost::asio::ssl::context::tlsv12_client);
+        m_ssl = std::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>>(m_socket, *m_context);
         m_ssl->set_verify_mode(boost::asio::ssl::verify_peer);
         m_ssl->set_verify_callback([](bool, boost::asio::ssl::verify_context&) { return true; });         
 

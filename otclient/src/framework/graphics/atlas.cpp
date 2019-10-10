@@ -3,43 +3,52 @@
 #include "painter.h"
 #include "graphics.h"
 #include <framework/core/clock.h>
+#include <framework/platform/platform.h>
 
 Atlas g_atlas;
 
 void Atlas::init() {
     m_size = std::min<size_t>(4096, g_graphics.getMaxTextureSize());
+    double memory = g_platform.getTotalSystemMemory() / (1024. * 1024.);
+    if (memory > 128 && memory < 4096 && m_size > 2048) { // old computer, use smaller texture
+        g_logger.info("[Atlas] Settings for old computer");
+        m_size = 2048;
+    }
     g_logger.info(stdext::format("[Atlas] Texture size is: %ix%i (max: %ix%i)", m_size, m_size, g_graphics.getMaxTextureSize(), g_graphics.getMaxTextureSize()));
 
     for (int l = 0; l < 2; ++l) {
         m_atlas[l] = g_framebuffers.createFrameBuffer(false);
         m_atlas[l]->resize(Size(m_size, m_size));
     }
-    reset();
+    reset(0);
+    reset(1);
 }
 
-void Atlas::reset() {
-    if (!m_atlas[0])
+void Atlas::reset(int location) {
+    if (!m_atlas[location] || location < 0 || location >= 2)
         return;
-    for (int l = 0; l < 2; ++l) {
-        for (int j = 0; j < 5; ++j)
-            m_locations[l][j].clear();
-        m_outfits[l].clear();
-        m_textures[l].clear();
+    for (int j = 0; j < 5; ++j)
+        m_locations[location][j].clear();
+    m_outfits[location].clear();
+    m_textures[location].clear();
 
-        for (size_t x = 0; x < m_size; x += 512) {
-            for (size_t y = 0; y < m_size; y += 512) {
-                m_locations[l][4].push_back(Point(x, y));
-            }
+    for (size_t x = 0; x < m_size; x += 512) {
+        for (size_t y = 0; y < m_size; y += 512) {
+            m_locations[location][4].push_back(Point(x, y));
         }
-        // create 32x32 white square
-        findSpace(l, 0);
-        assert(!m_locations[l][0].empty());
-        m_locations[l][0].pop_front();
-        m_atlas[l]->bind();
-        g_painter->setAlphaWriting(true);
-        g_painter->clearRect(Color::white, Rect(Point(0, 0), Size(32, 32)));
-        m_atlas[l]->release();
     }
+    // create 32x32 white square
+    findSpace(location, 0);
+    assert(!m_locations[location][0].empty());
+    m_locations[location][0].pop_front();
+    m_atlas[location]->bind();
+    g_painter->setAlphaWriting(true);
+    g_painter->setCompositionMode(Painter::CompositionMode_Replace);
+    g_painter->setColor(Color::alpha);
+    g_painter->drawFilledRect(Rect(0, 0, m_atlas[location]->getSize()));
+    g_painter->setColor(Color::white);
+    g_painter->drawFilledRect(Rect(0, 0, Size(32, 32)));
+    m_atlas[location]->release();
 }
 
 
@@ -50,14 +59,15 @@ void Atlas::terminate() {
         it.clear();
 }
 
-void Atlas::update(int location, DrawQueue& queue) {
+bool Atlas::update(int location, DrawQueue& queue) {
     if (location >= 2 || !m_atlas[location])
-        return;
+        return true;
 
     static const size_t sizes[5] = { 32, 64, 128, 256, 512 };
     auto& textures = m_textures[location];
     auto& outfits = m_outfits[location];
     auto atlasTexture = m_atlas[location]->getTexture();
+    bool hasSpace = true;
 
     bool bound = false;
     for (auto& item : queue.items()) {
@@ -77,6 +87,7 @@ void Atlas::update(int location, DrawQueue& queue) {
             size = 32;
         if (size > 512) {
             item->cached = false;
+            hasSpace = false;
             continue; // too big to be cached
         }
 
@@ -95,7 +106,8 @@ void Atlas::update(int location, DrawQueue& queue) {
             if(it == outfits.end()) {
                 if (m_locations[location][index].empty() && !findSpace(location, index)) {
                     item->cached = false;
-                    continue; // no more space in atlas
+                    hasSpace = false;
+                    continue;
                 }
 
                 Point drawLocation = m_locations[location][index].front();
@@ -151,18 +163,15 @@ void Atlas::update(int location, DrawQueue& queue) {
         m_atlas[location]->release();
     }
     queue.setAtlas(m_atlas[location]->getTexture());
+    return hasSpace;
 }
 
-bool Atlas::findSpace(int location, int index, bool tryCleaning) {
+bool Atlas::findSpace(int location, int index) {
     static const size_t sizes[5] = { 32, 64, 128, 256, 512 };
     if (location >= 2 || index >= 4) {
         return false;
     }
-    if (m_locations[location][index + 1].size() == 0 && !findSpace(location, index + 1, false)) {
-        if (tryCleaning) {
-            g_atlas.clean(false);
-            return findSpace(location, index, false);
-        }
+    if (m_locations[location][index + 1].size() == 0 && !findSpace(location, index + 1)) {
         return false;
     }
     auto pos = m_locations[location][index + 1].front();
@@ -175,6 +184,7 @@ bool Atlas::findSpace(int location, int index, bool tryCleaning) {
 }
 
 void Atlas::clean(bool fastClean) {
+    return; // replaced by reset
     if (!m_atlas[0])
         return;
 

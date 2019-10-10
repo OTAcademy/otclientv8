@@ -1,7 +1,8 @@
 -- CONFIG
 APP_NAME = "otclientv8" -- important, change it, it's name for config dir and files in appdata
-APP_VERSION = 1337      -- client version for updater and login to indentify outdated client
+APP_VERSION = 1337      -- client version for updater and login to identify outdated client
 
+-- If you don't use updater or other service, set it to updater = ""
 Services = {
   website = "http://otclient.ovh", -- currently not used
   updater = "http://otclient.ovh/api/updater.php",
@@ -14,14 +15,11 @@ Services = {
 -- Servers accept http login url or ip:port:version
 Servers = {
   OTClientV8 = "http://otclient.ovh/api/login.php",
-  OTClientV8c = "otclient.ovh:7171:1099",
-  Xavato = "https://www.xavato.eu/login2.php",
-  BaiakStar = "http://baiak-star.com/login.php",
-  Nostalrius = "https://fearless.nostalrius.com.br/login.php",
-  NostalriusTest = "http://158.69.63.220/login.php",
-  Kasteria = "https://login.kasteria.pl/login.php"
+  OTClientV8proxy = "http://otclient.ovh/api/login.php?proxy=1",
+  OTClientV8c = "otclient.ovh:7171:1099:25:30:80:90",
+  OTClientV8Test = "http://otclient.ovh/api/login2.php"
 }
-ALLOW_CUSTOM_SERVERS = true
+ALLOW_CUSTOM_SERVERS = true -- if true it shows option ANOTHER on server list
 -- CONFIG END
 
 -- print first terminal message

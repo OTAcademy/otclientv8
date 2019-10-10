@@ -123,7 +123,7 @@ public:
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);
-    void sendNewWalk(int walkId, const Position& pos, const std::vector<Otc::Direction>& path, bool autoWalk);
+    void sendNewWalk(int walkId, int predictionId, const Position& pos, uint8_t flags, const std::vector<Otc::Direction>& path);
 
 protected:
     void onConnect();
@@ -246,6 +246,7 @@ private:
     void parseChangeMapAwareRange(const InputMessagePtr& msg);
     void parseCreaturesMark(const InputMessagePtr& msg);
     void parseNewCancelWalk(const InputMessagePtr& msg);
+    void parsePredictiveCancelWalk(const InputMessagePtr& msg);
 
 public:
     void setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height);

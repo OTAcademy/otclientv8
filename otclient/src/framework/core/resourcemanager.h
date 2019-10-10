@@ -37,7 +37,7 @@ public:
     void terminate();
 
     int launchCorrect(const std::string& product, const std::string& app);
-    void launchFailsafe();
+    bool launchFailsafe();
     bool setupWriteDir(const std::string& product, const std::string& app);
     bool setup(const std::string& existentFile);
 
@@ -85,8 +85,8 @@ public:
 
     void updateClient(const std::vector<std::string>& files, std::string binaryName);
 #ifdef WITH_ENCRYPTION
-    void encrypt();
-    bool encryptBuffer(std::string & buffer);
+    void encrypt(const std::string& seed = "");
+    bool encryptBuffer(std::string & buffer, uint32_t seed = 0);
 #endif
     bool decryptBuffer(std::string & buffer);
 

@@ -219,20 +219,20 @@ void ThingTypeManager::loadOtb(const std::string& file)
         FileStreamPtr fin = g_resources.openFile(file);
 
         uint signature = fin->getU32();
-        if(signature != 0)
+        if (signature != 0)
             stdext::throw_exception("invalid otb file");
 
         BinaryTreePtr root = fin->getBinaryTree();
         root->skip(1); // otb first byte is always 0
 
         signature = root->getU32();
-        if(signature != 0)
+        if (signature != 0)
             stdext::throw_exception("invalid otb file");
 
         uint8 rootAttr = root->getU8();
-        if(rootAttr == 0x01) { // OTB_ROOT_ATTR_VERSION
+        if (rootAttr == 0x01) { // OTB_ROOT_ATTR_VERSION
             uint16 size = root->getU16();
-            if(size != 4 + 4 + 4 + 128)
+            if (size != 4 + 4 + 4 + 128)
                 stdext::throw_exception("invalid otb root attr version size");
 
             m_otbMajorVersion = root->getU32();
@@ -241,27 +241,29 @@ void ThingTypeManager::loadOtb(const std::string& file)
             root->skip(128); // description
         }
 
+        BinaryTreeVec children = root->getChildren();
         m_reverseItemTypes.clear();
-        m_itemTypes.resize(root->getChildren().size() + 1, m_nullItemType);
-        m_reverseItemTypes.resize(root->getChildren().size() + 1, m_nullItemType);
+        m_itemTypes.resize(children.size() + 1, m_nullItemType);
+        m_reverseItemTypes.resize(children.size() + 1, m_nullItemType);
 
-        for(const BinaryTreePtr& node : root->getChildren()) {
+        for (const BinaryTreePtr& node : children) {
             ItemTypePtr itemType(new ItemType);
             itemType->unserialize(node);
             addItemType(itemType);
 
             uint16 clientId = itemType->getClientId();
-            if(unlikely(clientId >= m_reverseItemTypes.size()))
+            if (unlikely(clientId >= m_reverseItemTypes.size()))
                 m_reverseItemTypes.resize(clientId + 1);
             m_reverseItemTypes[clientId] = itemType;
         }
 
         m_otbLoaded = true;
         g_lua.callGlobalField("g_things", "onLoadOtb", file);
-    } catch(std::exception& e) {
+    } catch (std::exception& e) {
         g_logger.error(stdext::format("Failed to load '%s' (OTB file): %s", file, e.what()));
     }
 }
+
 
 void ThingTypeManager::loadXml(const std::string& file)
 {

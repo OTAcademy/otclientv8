@@ -44,6 +44,7 @@ ResourceManager g_resources;
 void ResourceManager::init(const char *argv0, bool failsafe)
 {
     m_binaryPath = std::filesystem::absolute(argv0);
+    m_failsafe = failsafe;
     PHYSFS_init(argv0);
     PHYSFS_permitSymbolicLinks(1);
 }
@@ -119,31 +120,33 @@ int ResourceManager::launchCorrect(const std::string& product, const std::string
     return 1;
 }
 
-void ResourceManager::launchFailsafe() {
+bool ResourceManager::launchFailsafe() {
     static bool launched = false;
     if (launched || m_failsafe)
-        return;
+        return false;
 
     // check if has failsafe
     std::ifstream file(m_binaryPath.string(), std::ios::binary);
     if (!file.is_open())
-        return;
+        return false;
 
     std::string buffer(std::istreambuf_iterator<char>(file), {});
     file.close();
 
     if (buffer.size() < 1024 * 1024) // less then 1 MB
-        return;
+        return false;
 
     std::string toFind = { 0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x01 }; // zip header
     toFind[toFind.size() - 1] = 0; // otherwhise toFind would find toFind in buffer
     size_t pos = buffer.find(toFind);
     if (pos == std::string::npos)
-        return;
+        return false;
 
     launched = true;
     boost::process::spawn(m_binaryPath.string(), "--failsafe");
     stdext::millisleep(100);
+
+    return true;
 }
 
 bool ResourceManager::setupWriteDir(const std::string& product, const std::string& app) {
@@ -236,8 +239,24 @@ std::string ResourceManager::getCompactName(const std::string& existentFile) {
                 }
                 PHYSFS_unmount(dir.c_str());
             }
-        }
-        catch (...) {}
+        } catch (...) {}
+    }
+
+    if (fileData.empty()) {
+        try {
+            for (const std::string& dir : possiblePaths) {
+                std::string path = dir + "/data.zip";
+                if (!PHYSFS_mount(path.c_str(), NULL, 0))
+                    continue;
+
+                if (PHYSFS_exists(existentFile.c_str())) {
+                    fileData = readFileContents(existentFile);
+                    PHYSFS_unmount(path.c_str());
+                    break;
+                }
+                PHYSFS_unmount(path.c_str());
+            }
+        } catch (...) {}
     }
 
     std::smatch regex_match;
@@ -661,7 +680,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
 }
 
 #ifdef WITH_ENCRYPTION
-void ResourceManager::encrypt() {
+void ResourceManager::encrypt(const std::string& seed) {
     const std::string dirsToCheck[] = { "data", "modules", "mods" };
     const std::string luaExtension = ".lua";
 
@@ -681,6 +700,8 @@ void ResourceManager::encrypt() {
             toEncrypt.push(entry.path());
         }
     }
+
+    uint32_t uintseed = seed.empty() ? 0 : stdext::adler32((const uint8_t*)seed.c_str(), seed.size());
 
     while (!toEncrypt.empty()) {
         auto it = toEncrypt.front();
@@ -703,7 +724,7 @@ void ResourceManager::encrypt() {
             }
         }
 
-        if (!encryptBuffer(buffer)) { // already encrypted
+        if (!encryptBuffer(buffer, uintseed)) { // already encrypted
             g_logger.info(stdext::format("%s - already encrypted", it.string()));
             continue;
         }
@@ -741,22 +762,30 @@ bool ResourceManager::decryptBuffer(std::string& buffer) {
         return false;
 
     uint32_t addlerCheck = stdext::adler32((const uint8_t*)&new_buffer[0], size);
-    if (adler != addlerCheck)
-        return false;
+    if (adler != addlerCheck) {
+        static uint32_t seed = 0;
+        uint32_t cseed = adler ^ addlerCheck;
+        if (seed == 0) {
+            seed = cseed;
+        }
+        if ((addlerCheck ^ seed) != adler) {
+            return false;
+        }
+    }
 
     buffer = new_buffer;
     return true;
 }
 
 #ifdef WITH_ENCRYPTION
-bool ResourceManager::encryptBuffer(std::string& buffer) {
+bool ResourceManager::encryptBuffer(std::string& buffer, uint32_t seed) {
     if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
         return false; // already encrypted
 
     // not random beacause it would require to update to new files each time
     int64_t key = stdext::adler32((const uint8_t*)&buffer[0], buffer.size());
     key <<= 32;
-    key += stdext::adler32((const uint8_t*)&buffer[0], buffer.size() / 2);;
+    key += stdext::adler32((const uint8_t*)&buffer[0], buffer.size() / 2);
 
     std::string new_buffer(24 + buffer.size() * 2, '0');
     new_buffer[0] = 'E';
@@ -774,7 +803,7 @@ bool ResourceManager::encryptBuffer(std::string& buffer) {
     *(int64_t*)&new_buffer[4] = key;
     *(uint32_t*)&new_buffer[12] = (uint32_t)dstLen;
     *(uint32_t*)&new_buffer[16] = (uint32_t)buffer.size();
-    *(uint32_t*)&new_buffer[20] = (uint32_t)stdext::adler32((const uint8_t*)&buffer[0], buffer.size());
+    *(uint32_t*)&new_buffer[20] = ((uint32_t)stdext::adler32((const uint8_t*)&buffer[0], buffer.size())) ^ seed;
 
     g_crypt.bencrypt((uint8_t*)&new_buffer[0] + 24, new_buffer.size() - 24, key);
     buffer = new_buffer;

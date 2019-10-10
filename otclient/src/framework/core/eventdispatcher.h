@@ -39,10 +39,14 @@ public:
     ScheduledEventPtr scheduleEventEx(const std::string& function, const std::function<void()>& callback, int delay);
     ScheduledEventPtr cycleEventEx(const std::string& function, const std::function<void()>& callback, int delay);
 
+    bool isBotSafe() { return m_botSafe; }
+
 private:
     std::list<EventPtr> m_eventList;
     int m_pollEventsSize;
-    stdext::boolean<false> m_disabled;
+    bool m_disabled = false;
+    bool m_botSafe = false;
+    std::recursive_mutex m_mutex;
     std::priority_queue<ScheduledEventPtr, std::vector<ScheduledEventPtr>, lessScheduledEvent> m_scheduledEventList;
 };
 

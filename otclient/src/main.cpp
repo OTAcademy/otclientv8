@@ -28,37 +28,24 @@
 #include <client/client.h>
 
 int stopControl = false;
+std::thread* control_thread = nullptr;
 
 int main(int argc, const char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
-
-    std::thread *control_thread = nullptr;
-    if (std::find(args.begin(), args.end(), "--failsafe") == args.end()) {
-        control_thread = new std::thread([&] {
-            for (int i = 0; i < 100; ++i) {
-                stdext::millisleep(100);
-                if (stopControl)
-                    return;
-            }
-            if (g_app.getIteration() < 5) {
-                g_resources.launchFailsafe();
-                std::quick_exit(-1);
-            }
-        });
-    }
+    bool failSafe = std::find(args.begin(), args.end(), "--failsafe") != args.end();
 
 #ifdef CRASH_HANDLER
     installCrashHandler();
 #endif
 
 #ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1570018640) {
+    if (time(nullptr) > 1575018640) {
         control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
     }
 #endif
 
     // initialize resources
-    g_resources.init(args[0].c_str(), std::find(args.begin(), args.end(), "--failsafe") != args.end());
+    g_resources.init(argv[0], failSafe);
 
     std::string compactName = g_resources.getCompactName("init.lua");
     g_logger.setLogFile(compactName + ".log");
@@ -66,12 +53,12 @@ int main(int argc, const char* argv[]) {
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName(compactName);
-    g_app.setVersion("0.8 beta");
+    g_app.setVersion("0.995 beta");
 
 #ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
         g_lua.init();
-        g_resources.encrypt();
+        g_resources.encrypt(args.size() >= 3 ? args[2] : "");
         std::cout << "Encryption complete" << std::endl;
 #ifdef WIN32
         MessageBoxA(NULL, "Encryption complete", "Success", 0);
@@ -80,9 +67,25 @@ int main(int argc, const char* argv[]) {
     }
 #endif
 
-    int launchCorrect = !control_thread ? 0 : g_resources.launchCorrect(g_app.getName(), g_app.getCompactName());
+    int launchCorrect = failSafe ? 0 : g_resources.launchCorrect(g_app.getName(), g_app.getCompactName());
     if (launchCorrect == 1) {
         return 0;
+    }
+
+    if (!failSafe) {
+        control_thread = new std::thread([&] {
+            for (int i = 0; i < 100; ++i) {
+                stdext::millisleep(100);
+                if (stopControl)
+                    return;
+            }
+            if (g_app.getIteration() < 5) {
+                if (g_resources.launchFailsafe()) {
+                    std::quick_exit(-1);
+                }
+                return;
+            }
+        });
     }
 
     // initialize application framework and otclient
@@ -93,7 +96,7 @@ int main(int argc, const char* argv[]) {
     // find script init.lua and run it
     g_resources.setupWriteDir(g_app.getName(), g_app.getCompactName());
 
-    if (launchCorrect == -1 || (std::find(args.begin(), args.end(), "--failsafe") != args.end())) {
+    if (launchCorrect == -1 || failSafe) {
         if(!g_resources.loadDataFromSelf("init.lua"))
             g_resources.setup("init.lua");
     } else {

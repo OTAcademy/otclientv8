@@ -64,12 +64,12 @@ namespace Proto {
         GameServerExtendedOpcode            = 50,
 
         // NOTE: add any custom opcodes in this range
-        // 51 - 99
-        GameServerChangeMapAwareRange       = 51,
+        // OTClientV8 64-79
+        GameServerNewPing                   = 64,
+        GameServerChangeMapAwareRange       = 66,
 
-        GameServerNewPing                   = 55,
-
-        GameServerNewCancelWalk             = 65,
+        GameServerNewCancelWalk             = 69,
+        GameServerPredictiveCancelWalk      = 70,
 
         // original tibia ONLY
         GameServerFullMap                   = 100,
@@ -183,13 +183,14 @@ namespace Proto {
 
         // otclient ONLY
         ClientExtendedOpcode                = 50,
-        ClientChangeMapAwareRange           = 51,
 
         // NOTE: add any custom opcodes in this range
-        // 51 - 99
-        ClientNewPing                       = 55,
 
-        ClientNewWalk                       = 64,
+        // OTClientV8 64-79
+        ClientNewPing                       = 64,
+        ClientChangeMapAwareRange           = 66,
+
+        ClientNewWalk                       = 69,
 
         // original tibia ONLY
         ClientAutoWalk                      = 100,

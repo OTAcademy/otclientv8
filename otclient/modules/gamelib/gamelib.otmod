@@ -5,6 +5,7 @@ Module
   website: https://github.com/edubart/otclient
 
   dependencies:
+    - game_features
     - game_things
 
   @onLoad: |

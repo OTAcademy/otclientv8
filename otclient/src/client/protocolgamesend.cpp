@@ -26,6 +26,7 @@
 #include <framework/core/application.h>
 #include <framework/platform/platform.h>
 #include <framework/util/crypt.h>
+#include <framework/util/extras.h>
 
 void ProtocolGame::send(const OutputMessagePtr& outputMessage)
 {
@@ -37,9 +38,6 @@ void ProtocolGame::send(const OutputMessagePtr& outputMessage)
 
 void ProtocolGame::sendExtendedOpcode(uint8 opcode, const std::string& buffer)
 {
-    if (!g_game.getFeature(Otc::GameExtendedOpcode))
-        return;
-        
     if(m_enableSendExtendedOpcode) {
         OutputMessagePtr msg(new OutputMessage);
         msg->addU8(Proto::ClientExtendedOpcode);
@@ -405,7 +403,6 @@ void ProtocolGame::sendUseItem(const Position& position, int itemId, int stackpo
 
 void ProtocolGame::sendUseItemWith(const Position& fromPos, int itemId, int fromStackPos, const Position& toPos, int toThingId, int toStackPos)
 {
-    g_logger.info(stdext::format("s1: %i %i", (int)fromStackPos, (int)toStackPos));
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientUseItemWith);
     addPosition(msg, fromPos);
@@ -414,7 +411,6 @@ void ProtocolGame::sendUseItemWith(const Position& fromPos, int itemId, int from
     addPosition(msg, toPos);
     msg->addU16(toThingId);
     msg->addU8(toStackPos);
-    g_logger.info(stdext::format("s: %i %i", (int)fromStackPos, (int)toStackPos));
     send(msg);
 }
 
@@ -530,28 +526,20 @@ void ProtocolGame::sendTalk(Otc::MessageMode mode, int channelId, const std::str
         uint8 byte;
         switch(dir) {
             case Otc::East:
-                byte = 1;
-                break;
             case Otc::NorthEast:
-                byte = 2;
+            case Otc::SouthEast:
+                byte = 1;
                 break;
             case Otc::North:
                 byte = 3;
                 break;
+            case Otc::SouthWest:
             case Otc::NorthWest:
-                byte = 4;
-                break;
             case Otc::West:
                 byte = 5;
                 break;
-            case Otc::SouthWest:
-                byte = 6;
-                break;
             case Otc::South:
                 byte = 7;
-                break;
-            case Otc::SouthEast:
-                byte = 8;
                 break;
             default:
                 byte = 0;
@@ -996,13 +984,14 @@ void ProtocolGame::sendChangeMapAwareRange(int xrange, int yrange)
     send(msg);
 }
 
-void ProtocolGame::sendNewWalk(int walkId, const Position& pos, const std::vector<Otc::Direction>& path, bool autoWalk) 
+void ProtocolGame::sendNewWalk(int walkId, int predictionId, const Position& pos, uint8_t flags, const std::vector<Otc::Direction>& path)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientNewWalk);
     msg->addU32(walkId);
+    msg->addU32(predictionId);
     addPosition(msg, pos);
-    msg->addU8(autoWalk ? 1 : 0);
+    msg->addU8(flags);
     msg->addU16(path.size());
     for(Otc::Direction dir : path) {
         uint8 byte;
@@ -1040,7 +1029,6 @@ void ProtocolGame::sendNewWalk(int walkId, const Position& pos, const std::vecto
 
     send(msg);
 }
-
 
 void ProtocolGame::addPosition(const OutputMessagePtr& msg, const Position& position)
 {

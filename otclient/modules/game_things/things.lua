@@ -1,14 +1,6 @@
 filename =  nil
 loaded = false
 
-function init()
-  connect(g_game, { onClientVersionChange = load })
-end
-
-function terminate()
-  disconnect(g_game, { onClientVersionChange = load })
-end
-
 function setFileName(name)
   filename = name
 end
@@ -53,7 +45,14 @@ function load()
 
   local errorMessage = ''
   if not g_things.loadDat(datPath) then
-    errorMessage = errorMessage .. tr("Unable to load dat file, please place a valid dat in '%s'", datPath) .. '\n'
+    if not g_game.getFeature(GameSpritesU32) then
+      g_game.enableFeature(GameSpritesU32)
+      if not g_things.loadDat(datPath) then
+        errorMessage = errorMessage .. tr("Unable to load dat file, please place a valid dat in '%s'", datPath) .. '\n'
+      end
+    else
+      errorMessage = errorMessage .. tr("Unable to load dat file, please place a valid dat in '%s'", datPath) .. '\n'
+    end
   end
   if not g_sprites.loadSpr(sprPath, G.hdSprites or false) then
     errorMessage = errorMessage .. tr("Unable to load spr file, please place a valid spr in '%s'", sprPath)
@@ -65,9 +64,7 @@ function load()
     local messageBox = displayErrorBox(tr('Error'), errorMessage)
     addEvent(function() messageBox:raise() messageBox:focus() end)
 
-    disconnect(g_game, { onClientVersionChange = load })
     g_game.setClientVersion(0)
     g_game.setProtocolVersion(0)
-    connect(g_game, { onClientVersionChange = load })
   end
 end

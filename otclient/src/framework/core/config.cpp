@@ -74,7 +74,10 @@ void Config::clear()
 
 void Config::setValue(const std::string& key, const std::string& value)
 {
-    if(key == "") {
+    if (key.empty()) {
+        return;
+    }
+    if(value.empty()) {
         remove(key);
         return;
     }

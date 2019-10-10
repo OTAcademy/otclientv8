@@ -1,6 +1,6 @@
 EnterGameWindow < StaticMainWindow
   !text: tr('Enter Game')
-  size: 240 353
+  size: 240 310
 
 EnterGameWindow
   id: enterGame
@@ -31,24 +31,6 @@ EnterGameWindow
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    margin-top: 2
-
-  MenuLabel
-    id: authenticatorTokenLabel
-    !text: tr('Authenticator Token')
-    anchors.left: prev.left
-    anchors.top: prev.bottom
-    text-auto-resize: true
-    visible: true
-    margin-top: 8
-
-  TextEdit
-    id: authenticatorTokenTextEdit
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    margin-top: -22
-    visible: true
     margin-top: 2
     
   Panel

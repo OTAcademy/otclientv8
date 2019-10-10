@@ -142,6 +142,12 @@ void UIManager::inputEvent(const InputEvent& event)
                     break;
             }
 
+            if (m_pressedWidget) {
+                if (m_pressedWidget->onMouseMove(event.mousePos, event.mouseMoved)) {
+                    break;
+                }
+            }
+
             //m_mouseReceiver->propagateOnMouseMove(event.mousePos, event.mouseMoved, widgetList);
             m_rootWidget->propagateOnMouseMove(event.mousePos, event.mouseMoved, widgetList);
             for(const UIWidgetPtr& widget : widgetList) {
@@ -394,6 +400,36 @@ std::string UIManager::getStyleClass(const std::string& styleName)
     if(style && style->get("__class"))
         return style->valueAt("__class");
     return "";
+}
+
+
+UIWidgetPtr UIManager::loadUIFromString(const std::string& data, const UIWidgetPtr& parent)
+{
+    try {
+        std::stringstream sstream;
+        sstream.clear(std::ios::goodbit);
+        sstream.write(&data[0], data.length());
+        sstream.seekg(0, std::ios::beg);
+        OTMLDocumentPtr doc = OTMLDocument::parse(sstream, "(string)");
+        UIWidgetPtr widget;
+        for (const OTMLNodePtr& node : doc->children()) {
+            std::string tag = node->tag();
+
+            // import styles in these files too
+            if (tag.find("<") != std::string::npos)
+                importStyleFromOTML(node);
+            else {
+                if (widget)
+                    stdext::throw_exception("cannot have multiple main widgets in otui files");
+                widget = createWidgetFromOTML(node, parent);
+            }
+        }
+
+        return widget;
+    } catch (stdext::exception& e) {
+        g_logger.error(stdext::format("failed to load UI from string: %s", e.what()));
+        return nullptr;
+    }
 }
 
 UIWidgetPtr UIManager::loadUI(std::string file, const UIWidgetPtr& parent)

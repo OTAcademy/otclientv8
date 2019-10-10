@@ -373,8 +373,23 @@ function addKeyCombo(keyCombo, keySettings, focus)
 
     updateHotkeyLabel(hotkeyLabel)
 
-    boundCombosCallback[keyCombo] = function() doKeyCombo(keyCombo) end
+    
+    if keyCombo:lower():find("ctrl") then
+      if boundCombosCallback[keyCombo] then
+        g_keyboard.unbindKeyPress(keyCombo, boundCombosCallback[keyCombo])      
+      end
+    end
+
+    boundCombosCallback[keyCombo] = function() prepareKeyCombo(keyCombo) end
     g_keyboard.bindKeyPress(keyCombo, boundCombosCallback[keyCombo])
+        
+    if not keyCombo:lower():find("ctrl") then
+      local keyComboCtrl = "Ctrl+" .. keyCombo
+      if not boundCombosCallback[keyComboCtrl] then
+        boundCombosCallback[keyComboCtrl] = function() prepareKeyCombo(keyComboCtrl) end
+        g_keyboard.bindKeyPress(keyComboCtrl, boundCombosCallback[keyComboCtrl])      
+      end
+    end
   end
 
   if focus then
@@ -385,8 +400,35 @@ function addKeyCombo(keyCombo, keySettings, focus)
   configValueChanged = true
 end
 
+function prepareKeyCombo(keyCombo)
+    local hotKey = hotkeyList[keyCombo]
+    if keyCombo:lower():find("ctrl") and not hotKey or (hotKey.itemId == nil and (not hotKey.value or #hotKey.value == 0)) then
+      keyCombo = keyCombo:gsub("Ctrl%+", "")
+      keyCombo = keyCombo:gsub("ctrl%+", "")
+      hotKey = hotkeyList[keyCombo]
+    end
+    if not hotKey then
+      return
+    end
+    
+    if hotKey.itemId == nil then -- say
+      scheduleEvent(function() doKeyCombo(keyCombo) end, g_settings.getNumber('hotkeyDelay'))
+    else
+      doKeyCombo(keyCombo)
+    end
+end
+
 function doKeyCombo(keyCombo)
   if not g_game.isOnline() then return end
+  if modules.game_console and modules.game_console.isChatEnabled() then
+    if keyCombo:len() == 1 then 
+      return
+    end
+  end
+  if modules.game_walking then
+    modules.game_walking.checkTurn()
+  end
+  
   local hotKey = hotkeyList[keyCombo]
   if not hotKey then return end
 
@@ -433,7 +475,6 @@ function doKeyCombo(keyCombo)
       end
 
       modules.game_interface.startUseWith(item, hotKey.subType or - 1)
-      hotKey.lastHotkeyTime = g_clock.millis()
       return
     end
 
@@ -455,7 +496,6 @@ function doKeyCombo(keyCombo)
       item = tmpItem
     end
     modules.game_interface.startUseWith(item, hotKey.subType or - 1)
-    hotKey.lastHotkeyTime = g_clock.millis()
   end
 end
 

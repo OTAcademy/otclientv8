@@ -6,18 +6,16 @@
 
 class Http {
 public:
-    Http() {}
+    Http() : m_ios(), m_guard(boost::asio::make_work_guard(m_ios)) {}
 
     void init();
     void terminate();
-    void poll();
 
     int get(const std::string& url, int timeout = 5);
     int post(const std::string& url, const std::string& data, int timeout = 5);
     int download(const std::string& url, std::string path, int timeout = 5);
 
     bool cancel(int id);
-    int getProgress(int id);
 
     const std::map<std::string, HttpResult_ptr>& downloads() {
         return m_downloads;
@@ -39,7 +37,9 @@ private:
     int m_operationId = 1;
     int m_speed = 0;
     size_t m_lastSpeedUpdate = 0;
+    std::thread m_thread;
     boost::asio::io_context m_ios;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_guard;
     std::map<int, HttpResult_ptr> m_operations;
     std::map<std::string, HttpResult_ptr> m_downloads;
 };

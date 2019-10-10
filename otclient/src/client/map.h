@@ -140,6 +140,7 @@ struct PathFindResult
     Otc::PathFindResult status = Otc::PathFindResultNoWay;
     std::vector<Otc::Direction> path;
     int complexity = 0;
+    Position start;
     Position destination;
 };
 using PathFindResult_ptr = std::shared_ptr<PathFindResult>;

@@ -46,7 +46,8 @@ bool SpriteManager::loadSpr(std::string file)
     m_signature = 0;
     m_spriteSize = 32;
     m_loaded = false;
-    g_atlas.reset();
+    g_atlas.reset(0);
+    g_atlas.reset(1);
 
     try {
         file = g_resources.guessFilePath(file, "spr");

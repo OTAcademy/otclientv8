@@ -31,11 +31,10 @@ void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int 
     if(m_id == 0)
         return;
 
-    int animationPhase = 0;
     if(animate) {
         if(g_game.getFeature(Otc::GameEnhancedAnimations)) {
             // This requires a separate getPhaseAt method as using getPhase would make all magic effects use the same phase regardless of their appearance time
-            animationPhase = rawGetThingType()->getAnimator()->getPhaseAt(m_animationTimer.ticksElapsed());
+            m_animationPhase = rawGetThingType()->getAnimator()->getPhaseAt(m_animationTimer, m_animationPhase);
         } else {
             // hack to fix some animation phases duration, currently there is no better solution
             int ticks = EFFECT_TICKS_PER_FRAME;
@@ -43,7 +42,7 @@ void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int 
                 ticks <<= 2;
             }
 
-            animationPhase = std::min<int>((int)(m_animationTimer.ticksElapsed() / ticks), getAnimationPhases() - 1);
+            m_animationPhase = std::min<int>((int)(m_animationTimer.ticksElapsed() / ticks), getAnimationPhases() - 1);
         }
     }
 
@@ -55,22 +54,26 @@ void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int 
     if(yPattern < 0)
         yPattern += getNumPatternY();
 
-    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, 0, animationPhase, lightView, lightOnly);
+    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, 0, m_animationPhase, lightView, lightOnly);
 }
 
 void Effect::newDrawEffect(const Point& dest, int offsetX, int offsetY, DrawQueue& drawQueue, LightView* lightView) {
     if(m_id == 0)
         return;
 
-    int animationPhase = 0;
     if(g_game.getFeature(Otc::GameEnhancedAnimations)) {
-        animationPhase = rawGetThingType()->getAnimator()->getPhaseAt(m_animationTimer.ticksElapsed());
+        if (!rawGetThingType() || !rawGetThingType()->getAnimator()) return;
+        m_animationPhase = rawGetThingType()->getAnimator()->getPhaseAt(m_animationTimer, m_animationPhase);
     } else {
         int ticks = EFFECT_TICKS_PER_FRAME;
         if (m_id == 33) {
             ticks <<= 2;
         }
-        animationPhase = std::min<int>((int)(m_animationTimer.ticksElapsed() / ticks), getAnimationPhases() - 1);
+        m_animationPhase = std::min<int>((int)(m_animationTimer.ticksElapsed() / ticks), getAnimationPhases() - 1);
+    }
+
+    if (m_animationPhase == -1) {
+        return;
     }
 
     int xPattern = offsetX % getNumPatternX();
@@ -81,7 +84,7 @@ void Effect::newDrawEffect(const Point& dest, int offsetX, int offsetY, DrawQueu
     if(yPattern < 0)
         yPattern += getNumPatternY();
 
-    rawGetThingType()->newDraw(dest, 0, xPattern, yPattern, 0, animationPhase, drawQueue, lightView);
+    rawGetThingType()->newDraw(dest, 0, xPattern, yPattern, 0, m_animationPhase, drawQueue, lightView);
 }
 
 

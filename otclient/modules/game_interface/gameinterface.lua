@@ -65,7 +65,7 @@ function init()
 end
 
 function bindKeys()
-  gameRootPanel:setAutoRepeatDelay(20)
+  gameRootPanel:setAutoRepeatDelay(10)
 
   g_keyboard.bindKeyPress('Escape', function() g_game.cancelAttackAndFollow() end, gameRootPanel)
   g_keyboard.bindKeyPress('Ctrl+=', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomIn() end, gameRootPanel)
@@ -272,6 +272,7 @@ function onMouseGrabberRelease(self, mousePosition, mouseButton)
   selectedThing = nil
   g_mouse.popCursor('target')
   self:ungrabMouse()
+  gameMapPanel:blockNextMouseRelease(true)
   return true
 end
 
@@ -279,7 +280,7 @@ function onUseWith(clickedWidget, mousePosition)
   if clickedWidget:getClassName() == 'UIGameMap' then
     local tile = clickedWidget:getTile(mousePosition)
     if tile then
-      if selectedThing:isFluidContainer() or selectedThing:isMultiUse() then
+      if selectedThing:isFluidContainer() then
         g_game.useWith(selectedThing, tile:getTopMultiUseThing(), selectedSubtype)
       else
         g_game.useWith(selectedThing, tile:getTopUseThing(), selectedSubtype)
@@ -310,6 +311,7 @@ function onTradeWith(clickedWidget, mousePosition)
 end
 
 function startUseWith(thing, subType)
+  gameMapPanel:blockNextMouseRelease()
   if not thing then return end
   if g_ui.isMouseGrabbed() then
     if selectedThing then
@@ -538,7 +540,7 @@ end
 
 function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature, marking)
   local keyboardModifiers = g_keyboard.getModifiers()
-  
+
   if not modules.client_options.getOption('classicControl') then
     if keyboardModifiers == KeyboardNoModifier and mouseButton == MouseRightButton then
       createThingMenu(menuPosition, lookThing, useThing, creatureThing)
@@ -614,11 +616,15 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
     end
   end
 
-
   local player = g_game.getLocalPlayer()
-  player:stopAutoWalk()
+  player:stopAutoWalk()  
 
   if autoWalkPos and keyboardModifiers == KeyboardNoModifier and mouseButton == MouseLeftButton then
+    local autoWalkTile = g_map.getTile(autoWalkPos)
+    if autoWalkTile and not autoWalkTile:isWalkable(true) then
+      modules.game_textmessage.displayFailureMessage(tr('Sorry, not possible.'))
+      return false
+    end
     player:autoWalk(autoWalkPos)
     return true
   end
@@ -856,13 +862,13 @@ function refreshViewMode()
 
     modules.client_topmenu.getTopMenu():setImageColor('white')
     gameBottomPanel:setImageColor('white')
-    g_game.changeMapAwareRange(20, 16)
+    g_game.changeMapAwareRange(19, 15)
   
     if modules.game_console then
       modules.game_console.switchMode(false)
     end
   else
-    g_game.changeMapAwareRange(30, 20)
+    g_game.changeMapAwareRange(29, 19)
     gameMapPanel:fill('parent')
     gameRootPanel:fill('parent')
     gameMapPanel:setKeepAspectRatio(false)

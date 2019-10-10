@@ -257,7 +257,7 @@ void WIN32Window::internalSetupTimerAccuracy() {
         return;
     }
 
-    m_timerRes = min(max(tc.wPeriodMin, 1), tc.wPeriodMax);
+    m_timerRes = std::min<UINT>(std::max<UINT>(tc.wPeriodMin, 1), tc.wPeriodMax);
     timeBeginPeriod(m_timerRes);
 }
 
@@ -375,8 +375,27 @@ void WIN32Window::internalCreateGLContext()
     if(!eglChooseConfig(m_eglDisplay, configList, &m_eglConfig, 1, &numConfig))
         g_logger.fatal("Failed to choose EGL config");
 
-    if(numConfig != 1)
+    if (numConfig != 1) {
         g_logger.warning("Didn't got the exact EGL config");
+        static int configList2[] = {
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_RED_SIZE, 8,
+            EGL_GREEN_SIZE, 8,
+            EGL_BLUE_SIZE, 8,
+            EGL_ALPHA_SIZE, 8,
+            EGL_NONE
+        };
+
+        if (!eglGetConfigs(m_eglDisplay, NULL, 0, &numConfig))
+            g_logger.fatal("No valid GL configurations");
+
+        if (!eglChooseConfig(m_eglDisplay, configList2, &m_eglConfig, 1, &numConfig))
+            g_logger.fatal("Failed to choose EGL config");
+
+        if (numConfig != 1) {
+            g_logger.warning("Didn't got the exact EGL config (2)");
+        }
+    }
 
     EGLint contextAtrrList[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,

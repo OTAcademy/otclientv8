@@ -211,7 +211,6 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_http", "post", &Http::post, &g_http);
     g_lua.bindSingletonFunction("g_http", "download", &Http::download, &g_http);
     g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
-    g_lua.bindSingletonFunction("g_http", "getProgress", &Http::getProgress, &g_http);
 
     g_lua.registerSingletonClass("g_atlas");
     g_lua.bindSingletonFunction("g_atlas", "getStats", &Atlas::getStats, &g_atlas);
@@ -394,6 +393,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_ui", "getStyle", &UIManager::getStyle, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "getStyleClass", &UIManager::getStyleClass, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "loadUI", &UIManager::loadUI, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "loadUIFromString", &UIManager::loadUIFromString, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "displayUI", &UIManager::displayUI, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "createWidget", &UIManager::createWidget, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "createWidgetFromOTML", &UIManager::createWidgetFromOTML, &g_ui);
@@ -869,6 +869,7 @@ void Application::registerLuaFunctions()
     // OutputMessage
     g_lua.registerClass<OutputMessage>();
     g_lua.bindClassStaticFunction<OutputMessage>("create", []{ return OutputMessagePtr(new OutputMessage); });
+    g_lua.bindClassMemberFunction<OutputMessage>("setBuffer", &OutputMessage::setBuffer);
     g_lua.bindClassMemberFunction<OutputMessage>("getBuffer", &OutputMessage::getBuffer);
     g_lua.bindClassMemberFunction<OutputMessage>("reset", &OutputMessage::reset);
     g_lua.bindClassMemberFunction<OutputMessage>("addU8", &OutputMessage::addU8);

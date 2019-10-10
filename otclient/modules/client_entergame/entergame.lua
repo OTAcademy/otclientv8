@@ -3,12 +3,15 @@ EnterGame = { }
 -- private variables
 local loadBox
 local enterGame
-local newLogin = nil
 local enterGameButton
 local clientBox
 local protocolLogin
 local server = nil
 local versionsFound = false
+
+local newLogin = nil
+local newLoginUrl = nil
+local newLoginEvent
 
 local customServerSelectorPanel
 local serverSelectorPanel
@@ -179,6 +182,8 @@ end
 -- public functions
 function EnterGame.init()
   enterGame = g_ui.displayUI('entergame')
+  newLogin = g_ui.displayUI('entergame_new')
+  
   serverSelectorPanel = enterGame:getChildById('serverSelectorPanel')
   customServerSelectorPanel = enterGame:getChildById('customServerSelectorPanel')
   
@@ -209,7 +214,6 @@ function EnterGame.init()
   local server = g_settings.get('server')
   local host = g_settings.get('host')
   local clientVersion = g_settings.get('client-version')
-  local hdSprites = g_settings.getBoolean('hdSprites', false)
 
   if serverSelector:isOption(server) then
     serverSelector:setCurrentOption(server, false)
@@ -225,11 +229,7 @@ function EnterGame.init()
   enterGame:getChildById('accountPasswordTextEdit'):setText(password)
   enterGame:getChildById('accountNameTextEdit'):setText(account)
   rememberPasswordBox:setChecked(#account > 0)
-  
-  if enterGame.hdSprites then
-    enterGame.hdSprites:setChecked(hdSprites)
-  end
-  
+    
   g_keyboard.bindKeyDown('Ctrl+G', EnterGame.openWindow)
 
   if g_game.isOnline() then
@@ -244,7 +244,12 @@ end
 function EnterGame.terminate()
   g_keyboard.unbindKeyDown('Ctrl+G')
   
+  removeEvent(newLoginEvent)
+  
   enterGame:destroy()
+  if newLogin then
+    newLogin:destroy()
+  end
   if loadBox then
     loadBox:destroy()
     loadBox = nil
@@ -264,10 +269,12 @@ function EnterGame.show()
   enterGame:raise()
   enterGame:focus()
   enterGame:getChildById('accountNameTextEdit'):focus()
+  EnterGame.checkNewLogin()
 end
 
 function EnterGame.hide()
   enterGame:hide()
+  newLogin:hide()
 end
 
 function EnterGame.openWindow()
@@ -281,14 +288,44 @@ end
 function EnterGame.clearAccountFields()
   enterGame:getChildById('accountNameTextEdit'):clearText()
   enterGame:getChildById('accountPasswordTextEdit'):clearText()
-  enterGame:getChildById('authenticatorTokenTextEdit'):clearText()
+  --enterGame:getChildById('authenticatorTokenTextEdit'):clearText()
   enterGame:getChildById('accountNameTextEdit'):focus()
   g_settings.remove('account')
   g_settings.remove('password')
 end
 
+function EnterGame.hideNewLogin()
+  newLogin:hide()
+  newLoginUrl = nil
+end
+
+function EnterGame.checkNewLoginEvent()
+  newLoginEvent = scheduleEvent(function() EnterGame.checkNewLoginEvent() end, 1000)
+  EnterGame.checkNewLogin()
+end
+
+function EnterGame.checkNewLogin()
+  if not newLoginUrl then
+    return
+  end
+  local url = newLoginUrl  
+  HTTP.postJSON(newLoginUrl, { quick = 1 }, function(data, err)
+    if url ~= newLoginUrl then return end
+    if err then return end
+    if not data["qrcode"] then return end
+    newLogin.qrcode:setImageSourceBase64(data["qrcode"])
+    newLogin.code:setText(data["code"])
+    if enterGame:isHidden() then return end
+    if newLogin:isHidden() then
+      newLogin:show()
+      newLogin:raise()
+    end
+  end)
+end
+
 function EnterGame.onServerChange()
   server = serverSelector:getText()
+  EnterGame.hideNewLogin()
   if server == tr("Another") then
     if not customServerSelectorPanel:isOn() then
       serverHostTextEdit:setText("")
@@ -297,10 +334,12 @@ function EnterGame.onServerChange()
     end
   elseif customServerSelectorPanel:isOn() then
     enterGame:setHeight(enterGame:getHeight() - customServerSelectorPanel:getHeight())
-    customServerSelectorPanel:setOn(false)  
+    customServerSelectorPanel:setOn(false)
   end
   if Servers and Servers[server] ~= nil then
     serverHostTextEdit:setText(Servers[server])
+    newLoginUrl = Servers[server]
+    EnterGame.checkNewLogin()
   end
 end
 
@@ -316,8 +355,8 @@ function EnterGame.doLogin()
   
   G.account = enterGame:getChildById('accountNameTextEdit'):getText()
   G.password = enterGame:getChildById('accountPasswordTextEdit'):getText()
-  G.authenticatorToken = enterGame:getChildById('authenticatorTokenTextEdit'):getText()
-  G.hdSprites = enterGame.hdSprites and enterGame.hdSprites:isChecked()
+  --G.authenticatorToken = enterGame:getChildById('authenticatorTokenTextEdit'):getText()
+  G.authenticatorToken = ""
   G.stayLogged = true
   G.server = serverSelector:getText():trim()
   G.host = serverHostTextEdit:getText()
@@ -330,7 +369,6 @@ function EnterGame.doLogin()
   g_settings.set('host', G.host)
   g_settings.set('server', G.server)
   g_settings.set('client-version', G.clientVersion)
-  g_settings.set('hdSprites', G.hdSprites)
   g_settings.save()
 
   if G.host:find("http") ~= nil then
@@ -354,10 +392,6 @@ function EnterGame.doLogin()
     data = {G.clientVersion .. "/Tibia.dat", ""},
     sprites = {G.clientVersion .. "/Tibia.spr", ""},
   }
-  
-  if G.hdSprites then
-    things.sprites_hd = {G.clientVersion .. "/Tibia_hd.spr", ""}
-  end
   
   local incorrectThings = validateThings(things)
   if #incorrectThings > 0 then
@@ -388,10 +422,12 @@ function EnterGame.doLogin()
   g_game.setProtocolVersion(g_game.getClientProtocolVersion(G.clientVersion))
   g_game.setCustomProtocolVersion(0)
   g_game.chooseRsa(G.host)
-  g_game.setCustomOs(2) -- windows
+  -- g_game.setCustomOs(2) -- windows, optional
 
-  -- you can add custom features here
-  g_game.enableFeature(GameBot)
+  -- extra features from init.lua
+  for i = 4, #server_params do
+    g_game.enableFeature(tonumber(server_params[i]))
+  end
   
   -- proxies
   if g_proxy then
@@ -399,7 +435,7 @@ function EnterGame.doLogin()
   end
   
   if modules.game_things.isLoaded() then
-    g_logger.info("Connection to: " .. server_ip .. ":" .. server_port)
+    g_logger.info("Connecting to: " .. server_ip .. ":" .. server_port)
     protocolLogin:login(server_ip, server_port, G.account, G.password, G.authenticatorToken, G.stayLogged)
   else
     loadBox:destroy()
@@ -423,7 +459,6 @@ function EnterGame.doLoginHttp()
     account = G.account,
     password = G.password,
     token = G.authenticatorToken,
-    hdSprites = G.hdSprites,
     version = APP_VERSION,
     uid = G.UUID
   }          

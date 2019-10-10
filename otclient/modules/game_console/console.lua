@@ -202,12 +202,14 @@ function enableChat(temporarily)
 
   consoleTextEdit:setVisible(true)
   consoleTextEdit:setText("")
+  consoleTextEdit:focus()
 
   g_keyboard.unbindKeyDown("Space")
   g_keyboard.unbindKeyDown("Enter")
   
   if temporarily then
     local quickFunc = function()
+      if not g_game.isOnline() then return end
       g_keyboard.unbindKeyDown("Enter")
       g_keyboard.unbindKeyDown("Escape")
       disableChat(temporarily)
@@ -233,6 +235,7 @@ function disableChat()
   consoleTextEdit:setText("")
 
   local quickFunc = function()
+    if not g_game.isOnline() then return end
     if consoleToggleChat:isChecked() then
       consoleToggleChat:setChecked(false)
     end
@@ -244,6 +247,10 @@ function disableChat()
   modules.game_walking.enableWSAD()
 
   consoleToggleChat:setTooltip(tr("Enable chat mode"))
+end
+
+function isChatEnabled()
+  return consoleTextEdit:isVisible()
 end
 
 function terminate()
@@ -1049,7 +1056,7 @@ function navigateMessageHistory(step)
   end
   local player = g_game.getLocalPlayer()
   if player then
-    player:lockWalk(100) -- lock walk for 100 ms to avoid walk during release of shift
+    player:lockWalk(200) -- lock walk for 200 ms to avoid walk during release of shift
   end
 end
 
@@ -1270,15 +1277,15 @@ function loadCommunicationSettings()
 
   local ignoreNode = g_settings.getNode('IgnorePlayers')
   if ignoreNode then
-    for i = 1, #ignoreNode do
-      table.insert(communicationSettings.ignoredPlayers, ignoreNode[i])
+    for _, player in pairs(ignoreNode) do
+      table.insert(communicationSettings.ignoredPlayers, player)
     end
   end
 
   local whitelistNode = g_settings.getNode('WhitelistedPlayers')
   if whitelistNode then
-    for i = 1, #whitelistNode do
-      table.insert(communicationSettings.whitelistedPlayers, whitelistNode[i])
+    for _, player in pairs(whitelistNode) do
+      table.insert(communicationSettings.whitelistedPlayers, player)
     end
   end
 

@@ -1,7 +1,0 @@
-Label
-  anchors.fill: parent
-  phantom: true
-  text: -
-  text-wrap: true
-  text-auto-resize: true
-  font: terminus-10px

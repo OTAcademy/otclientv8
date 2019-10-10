@@ -111,8 +111,8 @@ void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lig
     drawQueue.setDepth(m_topDepth);
 
     for(const CreaturePtr& creature : m_walkingCreatures) {
-        creature->newDraw(Point(dest.x + ((creature->getNewPreWalkingPosition().x - m_position.x) * Otc::TILE_PIXELS - m_drawElevation),
-                                dest.y + ((creature->getNewPreWalkingPosition().y - m_position.y) * Otc::TILE_PIXELS - m_drawElevation)), drawQueue, lightView);
+        creature->newDraw(Point(dest.x + ((creature->getPrewalkingPosition().x - m_position.x) * Otc::TILE_PIXELS - m_drawElevation),
+                                dest.y + ((creature->getPrewalkingPosition().y - m_position.y) * Otc::TILE_PIXELS - m_drawElevation)), drawQueue, lightView);
     }
 
     std::vector<CreaturePtr> toDraw;
@@ -132,10 +132,18 @@ void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lig
     }
 }
 
+void Tile::drawTexts(const Point& dest)
+{
+    for (auto& text : m_texts) {
+        text->drawText(dest, Rect(dest.x - 64, dest.y - 64, 128, 128));
+    }
+}
+
 void Tile::clean()
 {
     while(!m_things.empty())
         removeThing(m_things.front());
+    m_texts.clear();
 }
 
 void Tile::addWalkingCreature(const CreaturePtr& creature)
@@ -238,6 +246,10 @@ bool Tile::removeThing(ThingPtr thing)
             m_things.erase(it);
             removed = true;
         }
+    }
+
+    if (thing->isCreature()) {
+        m_lastCreature = thing->getId();
     }
 
     thing->onDisappear();
@@ -483,19 +495,34 @@ ThingPtr Tile::getTopMoveThing()
 
 ThingPtr Tile::getTopMultiUseThing()
 {
-    if(isEmpty())
+    if (isEmpty())
         return nullptr;
 
-    if(CreaturePtr topCreature = getTopCreature())
+    if (CreaturePtr topCreature = getTopCreature())
         return topCreature;
 
-    for(uint i = 0; i < m_things.size(); ++i) {
+    for (uint i = 0; i < m_things.size(); ++i) {
         ThingPtr thing = m_things[i];
-        if(thing->isForceUse())
+        if (thing->isForceUse())
             return thing;
     }
 
-    return getTopThing();
+    for (uint i = 0; i < m_things.size(); ++i) {
+        ThingPtr thing = m_things[i];
+        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom() && !thing->isOnTop()) {
+            if (i > 0 && thing->isSplash())
+                return m_things[i - 1];
+            return thing;
+        }
+    }
+
+    for (uint i = 0; i < m_things.size(); ++i) {
+        ThingPtr thing = m_things[i];
+        if (!thing->isGround() && !thing->isOnTop())
+            return thing;
+    }
+
+    return m_things[0];
 }
 
 bool Tile::isWalkable(bool ignoreCreatures)
@@ -668,4 +695,12 @@ void Tile::checkTranslucentLight()
         tile->m_flags &= ~TILESTATE_TRANSLUECENT_LIGHT;
 }
 
-/* vim: set ts=4 sw=4 et :*/
+void Tile::addText(const StaticTextPtr& text)
+{
+    m_texts.push_back(text);
+}
+
+void Tile::removeText(const StaticTextPtr& text)
+{
+    m_texts.erase(std::remove(m_texts.begin(), m_texts.end(), text), m_texts.end());
+}

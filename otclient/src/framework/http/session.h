@@ -35,11 +35,11 @@ private:
 
     std::string m_domain;
     std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> m_ssl;
+    std::shared_ptr<boost::asio::ssl::context> m_context;
+
     boost::beast::flat_buffer m_streambuf{ 512 * 1024 * 1024 }; // limited to 512MB
     boost::beast::http::request<boost::beast::http::string_body> m_request;
     boost::beast::http::response_parser<boost::beast::http::dynamic_body> m_response;
-
-    boost::asio::ssl::context m_context{ boost::asio::ssl::context::tlsv12_client };
 
     void on_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator iterator);
     void on_connect(const boost::system::error_code& ec);

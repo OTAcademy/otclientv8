@@ -233,7 +233,6 @@ end
 
 function compareChecksums()
   for file, checksum in pairs(statusData["files"]) do
-    file = file
     checksum = checksum:lower()
     if file == statusData["binary"] then
       if binaryChecksum ~= checksum then

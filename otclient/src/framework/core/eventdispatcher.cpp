@@ -23,6 +23,7 @@
 #include "eventdispatcher.h"
 
 #include <framework/core/clock.h>
+#include <framework/core/graphicalapplication.h>
 #include <framework/util/stats.h>
 #include "timer.h"
 
@@ -44,6 +45,7 @@ void EventDispatcher::shutdown()
 void EventDispatcher::poll()
 {
     AutoStat s(STATS_MAIN, "PollDispatcher");
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     int loops = 0;
     for(int count = 0, max = m_scheduledEventList.size(); count < max && !m_scheduledEventList.empty(); ++count) {
@@ -53,6 +55,7 @@ void EventDispatcher::poll()
         m_scheduledEventList.pop();
         {
             AutoStat s2(STATS_DISPATCHER, scheduledEvent->getFunction());
+            m_botSafe = scheduledEvent->isBotSafe();
             scheduledEvent->execute();
         }
 
@@ -79,6 +82,7 @@ void EventDispatcher::poll()
             m_eventList.pop_front();
             {
                 AutoStat s2(STATS_DISPATCHER, event->getFunction());
+                m_botSafe = event->isBotSafe();
                 event->execute();
             }
         }
@@ -86,6 +90,8 @@ void EventDispatcher::poll()
         
         loops++;
     }
+
+    m_botSafe = false;
 }
 
 ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
@@ -93,8 +99,10 @@ ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, 
     if(m_disabled)
         return ScheduledEventPtr(new ScheduledEvent("", nullptr, delay, 1));
 
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+
     assert(delay >= 0);
-    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 1));
+    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 1, g_app.isOnInputEvent()));
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
 }
@@ -104,8 +112,10 @@ ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, con
     if(m_disabled)
         return ScheduledEventPtr(new ScheduledEvent("", nullptr, delay, 0));
 
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+
     assert(delay > 0);
-    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 0));
+    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 0, g_app.isOnInputEvent()));
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
 }
@@ -115,7 +125,10 @@ EventPtr EventDispatcher::addEventEx(const std::string& function, const std::fun
     if(m_disabled)
         return EventPtr(new Event("", nullptr));
 
-    EventPtr event(new Event(function, callback));
+    EventPtr event(new Event(function, callback, g_app.isOnInputEvent()));
+
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+
     // front pushing is a way to execute an event before others
     if(pushFront) {
         m_eventList.push_front(event);

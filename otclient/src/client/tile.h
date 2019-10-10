@@ -66,6 +66,7 @@ public:
 
     void drawItems(const Point & dest, DrawQueue& drawQueue, LightView *lightView);
     void drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView);
+    void drawTexts(const Point& dest);
 
 public:
     void clean();
@@ -153,13 +154,26 @@ public:
     float getTopDepth() {
         return m_topDepth;
     }
+
+    void addText(const StaticTextPtr& text);
+    void removeText(const StaticTextPtr& text);
+    void clearTexts()
+    {
+        m_texts.clear();
+    }
+    std::vector<StaticTextPtr>& getTexts()
+    {
+        return m_texts;
+    }
+
          
 private:
     void checkTranslucentLight();
 
-    stdext::packed_vector<CreaturePtr> m_walkingCreatures;
-    stdext::packed_vector<EffectPtr> m_effects; // leave this outside m_things because it has no stackpos.
-    stdext::packed_vector<ThingPtr> m_things;
+    std::vector<CreaturePtr> m_walkingCreatures;
+    std::vector<EffectPtr> m_effects; // leave this outside m_things because it has no stackpos.
+    std::vector<ThingPtr> m_things;
+    std::vector<StaticTextPtr> m_texts;
     Position m_position;
     uint8 m_drawElevation;
     uint8 m_minimapColor;
@@ -168,6 +182,8 @@ private:
     uint8 m_blocking = 0;
     float m_depth = 0;
     float m_topDepth = 0;
+
+    uint32_t m_lastCreature = 0;
     
     stdext::boolean<false> m_selected;
 };

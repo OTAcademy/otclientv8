@@ -8,24 +8,22 @@ configEditorText = nil
 configList = nil
 botPanel = nil
 local botMessages = nil
-local messagesWidgets = {}
-local documentationButton = nil
 local showingDocumentation = false
 local configCopy = ""
 local enableButton = nil
 local executeEvent = nil
+local checkMsgsEvent = nil
 local errorOccured = false
 local statusLabel = nil
 local compiledConfig = nil
 local configTab = nil
-local tabs = {"init", "ui", "macros", "hotkeys", "callbacks", "attack", "loot", "tools", "alarms", "other"}
+local tabs = {"macros", "hotkeys", "callbacks", "other"}
 local mainTab = nil
 local activeTab = nil
 local editorText = {"", ""}
 
 function init()
   dofile("defaultconfig")
-  dofile("documentation")
   dofile("executor")
   
   connect(g_game, { onGameStart = online, onGameEnd = offline, onTalk = botOnTalk})
@@ -33,7 +31,6 @@ function init()
   connect(rootWidget, { onKeyDown = botKeyDown,
                         onKeyUp = botKeyUp,
                         onKeyPress = botKeyPress })
-  connect(g_http, { onGet = botOnGet })
   
   botConfigFile = g_configs.create("/bot.otml")
   local config = botConfigFile:get("config")
@@ -66,7 +63,6 @@ function init()
   configWindow:hide()
   
   configEditorText = configWindow:getChildById('text')
-  documentationButton = configWindow:getChildById('documentationButton')
   configTab = configWindow:getChildById('configTab')
   
   configTab.onTabChange = editorTabChanged
@@ -75,7 +71,7 @@ function init()
     if botConfig.configs[i].name ~= nil then
       configList:addOption(botConfig.configs[i].name)
     else
-      configList:addOption("Config #" .. i)    
+      configList:addOption("Config #" .. i)
     end
   end
   if type(botConfig.selectedConfig) == 'number' then
@@ -88,10 +84,6 @@ function init()
     configTab:addTab(v, nil, nil)  
   end
   
-  for i=1,5 do
-    table.insert(messagesWidgets, g_ui.createWidget('BotLabel', botMessages))
-  end
-    
   if g_game.isOnline() then
     online()
   end
@@ -111,12 +103,9 @@ function terminate()
                         onKeyPress = botKeyPress })
 
   disconnect(g_game, { onGameStart = online, onGameEnd = offline, onTalk = botOnTalk})
-  disconnect(g_http, { onGet = botOnGet })
 
-  if executeEvent ~= nil then
-    removeEvent(executeEvent)
-    executeEvent = nil
-  end
+  removeEvent(executeEvent)
+  removeEvent(checkMsgsEvent)
 
   botWindow:destroy()
   botButton:destroy()  
@@ -138,20 +127,16 @@ function toggle()
 end
 
 function online()
-  if g_game.getFeature(GameBot) then
-    botButton:show()
-    updateEnabled()
-    if botConfig.enabled then
-      refreshConfig()
-    else 
-      clearConfig()
-    end
-    if executeEvent == nil then
-      executeEvent = scheduleEvent(executeConfig, 200)
-    end
-  else
-    botButton:hide()
-    botWindow:close()
+  botButton:show()
+  updateEnabled()
+  if botConfig.enabled then
+    refreshConfig()
+  else 
+    clearConfig()
+  end
+  if executeEvent == nil then
+    executeEvent = scheduleEvent(executeConfig, 200)
+    checkMsgsEvent = scheduleEvent(checkMsgs, 200)
   end
 end
 
@@ -188,7 +173,6 @@ function editConfig()
   activeTab = mainTab
   configTab:selectTab(mainTab)
   showingDocumentation = false
-  documentationButton:setText(tr("Documentation"))  
 end
 
 local function split2(str, delimiter)
@@ -217,9 +201,6 @@ function restoreMainTab()
 end
 
 function editorTabChanged(holder, tab)
-  if showingDocumentation then
-    toggleDocumentation()
-  end
   if activeTab == tab then
     return
   end
@@ -239,9 +220,6 @@ function editorTabChanged(holder, tab)
 end
 
 function saveEditedConfig()
-  if showingDocumentation then
-    toggleDocumentation()
-  end
   restoreMainTab()
   local config = configList.currentIndex
   local text = configEditorText:getText()
@@ -259,20 +237,14 @@ end
 
 function clearConfig()
   compiledConfig = nil
-  while botPanel:getChildCount() > 0 do
-    botPanel:destroyChildren(botPanel:getLastChild())
-  end
-  for i, widget in ipairs(messagesWidgets) do
-    widget:hide()
-  end
+  botPanel:destroyChildren()
+  botMessages:destroyChildren()
+  botMessages:updateLayout()
 end
 
 function refreshConfig()
   clearConfig()
   configWindow:hide()
-  if not g_game.getFeature(GameBot) then
-    return
-  end
   
   botConfig.selectedConfig = configList.currentIndex
   if not botConfig.enabled then
@@ -291,7 +263,7 @@ function refreshConfig()
     return
   end
   errorOccured = false
-  local status, result = pcall(function() return executeBot(config.script, config.storage, botPanel) end)
+  local status, result = pcall(function() return executeBot(config.script, config.storage, botPanel, botMsgCallback) end)
   if not status then    
     errorOccured = true
     statusLabel:setText(tr("Error: " .. tostring(result)))
@@ -302,10 +274,6 @@ function refreshConfig()
 end
 
 function executeConfig()
-  if not g_game.getFeature(GameBot) then
-    executeEvent = nil
-    return
-  end
   executeEvent = scheduleEvent(executeConfig, 20)    
   if compiledConfig == nil then
     return
@@ -322,39 +290,32 @@ function executeConfig()
     statusLabel:setText(tr("Error: " .. result))
     return
   end 
-  if result then
-    for i, widget in ipairs(messagesWidgets) do
-      if #result >= i then
-        local msg = result[i]
-        widget:show()
-        if msg.error then
-          widget:setText(msg.error)
-          widget:setColor("red")
-        elseif msg.warn then
-          widget:setText(msg.warn)        
-          widget:setColor("yellow")
-        elseif msg.info then
-          widget:setText(msg.info)        
-          widget:setColor("white")
-        end
-      elseif widget:isVisible() then
-        widget:hide()
-      end
-    end
+end
+
+function botMsgCallback(category, msg)
+  local widget = g_ui.createWidget('BotLabel', botMessages)
+  widget.added = g_clock.millis()
+  if category == 'error' then
+    widget:setText(msg)
+    widget:setColor("red")
+  elseif category == 'warn' then
+    widget:setText(msg)        
+    widget:setColor("yellow")
+  elseif category == 'info' then
+    widget:setText(msg)        
+    widget:setColor("white")
+  end
+  
+  if botMessages:getChildCount() > 5 then
+    botMessages:getFirstChild():destroy()
   end
 end
 
-function toggleDocumentation() 
-  showingDocumentation = not showingDocumentation
-  if showingDocumentation then
-    configCopy = configEditorText:getText()
-    configEditorText:setText(botDocumentation)
-    configEditorText:setEditable(false)
-    documentationButton:setText(tr("Hide documentation"))
-  else
-    configEditorText:setText(configCopy)
-    configEditorText:setEditable(true)
-    documentationButton:setText(tr("Documentation"))
+function checkMsgs()
+  checkMsgsEvent = scheduleEvent(checkMsgs, 200)  
+  local widget = botMessages:getFirstChild()
+  if widget and widget.added + 5000 < g_clock.millis() then
+    widget:destroy()
   end
 end
 

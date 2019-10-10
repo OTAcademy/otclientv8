@@ -18,6 +18,7 @@
         BUILD_REVISION="0";
         FW_CAM;
         AB;
+        NOMINMAX;
     </PREPROCESSOR_DEFS>
     
     <OTCLIENT_LIBDEPS>

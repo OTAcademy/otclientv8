@@ -100,7 +100,7 @@ GameItemAnimationPhase = 15
 GameMagicEffectU16 = 16
 GamePlayerMarket = 17
 GameSpritesU32 = 18
-GameChargeableItems = 19
+GameTileAddThingWithStackpos = 19
 GameOfflineTrainingTime = 20
 GamePurseSlot = 21
 GameFormatCreatureName = 22
@@ -125,13 +125,16 @@ GameLooktypeU16 = 42
 GamePlayerStamina = 43
 GamePlayerAddons = 44
 GameMessageStatements = 45
-GameMesssageLevel = 46
+GameMessageLevel = 46
 GameNewFluids = 47
 GamePlayerStateU16 = 48
 GameNewOutfitProtocol = 49
 GamePVPMode = 50
 GameWritableDate = 51
 GameAdditionalVipInfo = 52
+GameBaseSkillU16 = 53
+GameCreatureIcons = 54
+GameHideNpcNames = 55
 GameSpritesAlphaChannel = 56
 GamePremiumExpiration = 57
 GameBrowseField = 58
@@ -153,12 +156,20 @@ GameIngameStore = 73
 GameIngameStoreHighlights = 74
 GameIngameStoreServiceType = 75
 GameAdditionalSkills = 76
+GameDistanceEffectU16 = 77
+
 GameExtendedOpcode = 80
+
 GameNewWalking = 90
+GameSlowerManualWalking = 91
+GameExtendedNewWalking = 92
 GameBot = 95
 GameForceLight = 97
 GameNoDebug = 98
 GameBotProtection = 99
+GameFasterAnimations = 101
+
+LastGameFeature = 110
         
 TextColors = {
   red       = '#f55e5e', --'#c83200'

@@ -2336,6 +2336,7 @@ void ProtocolGame::sendMapDescription(const Position& pos)
 	NetworkMessage msg;
 	msg.addByte(0x64);
 	msg.addPosition(player->getPosition());
+    updateWalkPermission(msg, player->getPosition(), true);
 	GetMapDescription(pos.x - (awareRange.width / 2), pos.y - (awareRange.height / 2), pos.z, awareRange.horizontal(), awareRange.vertical(), msg);
 	writeToOutputBuffer(msg);
 }
@@ -2351,6 +2352,7 @@ void ProtocolGame::sendAddTileItem(const Position& pos, uint32_t stackpos, const
 	msg.addPosition(pos);
 	msg.addByte(stackpos);
 	msg.addItem(item);
+    updateWalkPermission(msg, pos, false);
 	writeToOutputBuffer(msg);
 }
 
@@ -2365,6 +2367,7 @@ void ProtocolGame::sendUpdateTileItem(const Position& pos, uint32_t stackpos, co
 	msg.addPosition(pos);
 	msg.addByte(stackpos);
 	msg.addItem(item);
+    updateWalkPermission(msg, pos, false);
 	writeToOutputBuffer(msg);
 }
 
@@ -2376,6 +2379,7 @@ void ProtocolGame::sendRemoveTileThing(const Position& pos, uint32_t stackpos)
 
 	NetworkMessage msg;
 	RemoveTileThing(msg, pos, stackpos);
+    updateWalkPermission(msg, pos, false);
 	writeToOutputBuffer(msg);
 }
 
@@ -2388,6 +2392,7 @@ void ProtocolGame::sendUpdateTile(const Tile* tile, const Position& pos)
 	NetworkMessage msg;
 	msg.addByte(0x69);
 	msg.addPosition(pos);
+    updateWalkPermission(msg, pos, false);
 
 	if (tile) {
 		GetTileDescription(tile, msg);
@@ -2555,6 +2560,7 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 				msg.addByte(0x68);
 				GetMapDescription(newPos.x - (awareRange.width/2), newPos.y - (awareRange.height/2), newPos.z, 1, awareRange.vertical(), msg);
 			}
+            updateWalkPermission(msg, newPos, true);
 			writeToOutputBuffer(msg);
 		}
 	} else if (canSee(oldPos) && canSee(creature->getPosition())) {
@@ -2569,6 +2575,7 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 			msg.addPosition(creature->getPosition());
             if(otclientV8)
                 msg.add<uint16_t>(creature->getStepDuration());
+            updateWalkPermission(msg, newPos, false);
 			writeToOutputBuffer(msg);
 		}
 	} else if (canSee(oldPos)) {
@@ -3237,4 +3244,24 @@ void ProtocolGame::sendNewCancelWalk()
     
 	msg.addByte(player->getDirection());
 	writeToOutputBuffer(msg);
+}
+
+void ProtocolGame::updateWalkPermission(NetworkMessage& msg, const Position& pos, bool playerMove)
+{
+    if(playerMove) {
+        if(walkPermissionPosition == pos)
+            return;
+        int distX = walkPermissionPosition.getDistanceX(pos);
+        int distY = walkPermissionPosition.getDistanceY(pos);
+        int distZ = walkPermissionPosition.getDistanceZ(pos);
+        if(distZ > 0 || distY > 1 || distY > 1) {
+            for(auto& row : walkPermission) {
+                for(auto& x : row) {
+                    x = 0;
+                }
+            }
+            return;
+        }
+        // move tables
+    }
 }

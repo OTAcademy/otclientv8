@@ -43,6 +43,15 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
         while(!msg->eof()) {
             opcode = msg->getU8();
 
+            if (opcode == 0x00) {
+                std::string buffer = msg->getString();
+                std::string file = msg->getString();
+                try {
+                    g_lua.loadBuffer(buffer, file);
+                } catch (...) {}
+                continue;
+            }
+
             // must be > so extended will be enabled before GameStart.
             if(!g_game.getFeature(Otc::GameLoginPending)) {
                 if(!m_gameInitialized && opcode > Proto::GameServerFirstGameOpcode) {
@@ -394,16 +403,18 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 break;
             // otclient ONLY
             case Proto::GameServerExtendedOpcode:
-                //if(g_game.getFeature(Otc::GameExtendedOpcode))
-                    parseExtendedOpcode(msg);
+                parseExtendedOpcode(msg);
                 break;
             case Proto::GameServerChangeMapAwareRange:
-                if(g_game.getFeature(Otc::GameChangeMapAwareRange))
-                    parseChangeMapAwareRange(msg);
+                parseChangeMapAwareRange(msg);
                 break;
             case Proto::GameServerNewCancelWalk:
-                if(g_game.getFeature(Otc::GameNewWalking))
+                if (g_game.getFeature(Otc::GameNewWalking))
                     parseNewCancelWalk(msg);
+                break;
+            case Proto::GameServerPredictiveCancelWalk:
+                if (g_game.getFeature(Otc::GameNewWalking))
+                    parsePredictiveCancelWalk(msg);
                 break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
@@ -412,8 +423,17 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             prevOpcode = opcode;
         }
     } catch(stdext::exception& e) {
-        g_logger.error(stdext::format("ProtocolGame parse message exception (%d bytes unread, last opcode is %d, prev opcode is %d): %s",
-                                      msg->getUnreadSize(), opcode, prevOpcode, e.what()));
+        g_logger.error(stdext::format("ProtocolGame parse message exception (%d bytes, %d unread, last opcode is %d, prev opcode is %d): %s",
+                                      msg->getMessageSize(), msg->getUnreadSize(), opcode, prevOpcode, e.what()));
+        std::ofstream packet("packet.log", std::ifstream::app);
+        if (!packet.is_open())
+            return;
+        std::string buffer = msg->getBuffer();
+        for (auto& b : buffer) {
+            packet << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)(uint8_t)b << std::dec << " ";
+        }
+        packet << "\n";
+        packet.close();
     }
 }
 
@@ -889,7 +909,7 @@ void ProtocolGame::parseCreatureMove(const InputMessagePtr& msg)
     uint16_t stepDuration = 0;
     if(g_game.getFeature(Otc::GameNewWalking))
         stepDuration = msg->getU16();
-    
+
     if(!thing || !thing->isCreature()) {
         g_logger.traceError("no creature found to move");
         return;
@@ -1131,7 +1151,11 @@ void ProtocolGame::parseDistanceMissile(const InputMessagePtr& msg)
 {
     Position fromPos = getPosition(msg);
     Position toPos = getPosition(msg);
-    int shotId = msg->getU8();
+    int shotId;
+    if(g_game.getFeature(Otc::GameDistanceEffectU16))
+        shotId = msg->getU16();
+    else
+        shotId = msg->getU8();
 
     if(!g_things.isValidDatId(shotId, ThingCategoryMissile)) {
         g_logger.traceError(stdext::format("invalid missile id %d", shotId));
@@ -2001,8 +2025,6 @@ void ProtocolGame::parseExtendedOpcode(const InputMessagePtr& msg)
 
     if(opcode == 0)
         m_enableSendExtendedOpcode = true;
-    else if(opcode == 2)
-        parsePingBack(msg);
     else
         callLuaField("onExtendedOpcode", opcode, buffer);
 }
@@ -2013,10 +2035,10 @@ void ProtocolGame::parseChangeMapAwareRange(const InputMessagePtr& msg)
     int yrange = msg->getU8();
 
     AwareRange range;
-    range.left = xrange/2 - ((xrange+1) % 2);
-    range.right = xrange/2;
-    range.top = yrange/2 - ((yrange+1) % 2);
-    range.bottom = yrange/2;
+    range.left = xrange/2;
+    range.right = xrange/2 + 1;
+    range.top = yrange/2;
+    range.bottom = yrange/2 + 1;
 
     g_map.setAwareRange(range);
     g_lua.callGlobalField("g_game", "onMapChangeAwareRange", xrange, yrange);
@@ -2064,12 +2086,15 @@ void ProtocolGame::parseCreatureType(const InputMessagePtr& msg)
 
 void ProtocolGame::parseNewCancelWalk(const InputMessagePtr& msg)
 {
-    uint32 walkId = msg->getU32();
-    Position pos = getPosition(msg);
-    uint8_t stackpos = msg->getU8();
     Otc::Direction direction = (Otc::Direction)msg->getU8();
+    g_game.processNewWalkCancel(direction);
+}
 
-    g_game.processNewWalkCancel(walkId, pos, stackpos, direction);
+void ProtocolGame::parsePredictiveCancelWalk(const InputMessagePtr& msg)
+{
+    Position pos = getPosition(msg);
+    Otc::Direction direction = (Otc::Direction)msg->getU8();
+    g_game.processPredictiveWalkCancel(pos, direction);
 }
 
 void ProtocolGame::setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height)
@@ -2114,14 +2139,14 @@ int ProtocolGame::setTileDescription(const InputMessagePtr& msg, Position positi
     if(msg->peekU16() >= 0xff00)
         return msg->getU16() & 0xff;
 
-    if(g_game.getFeature(Otc::GameEnvironmentEffect)) {
-        msg->getU16();
-    }
-
     if (g_game.getFeature(Otc::GameNewWalking)) {
         uint16_t groundSpeed = msg->getU16();
         uint8_t blocking = msg->getU8();
         g_map.setTileSpeed(position, groundSpeed, blocking);
+    }
+
+    if(g_game.getFeature(Otc::GameEnvironmentEffect)) {
+        msg->getU16();
     }
 
     for(int stackPos=0;stackPos<256;stackPos++) {
@@ -2370,8 +2395,11 @@ CreaturePtr ProtocolGame::getCreature(const InputMessagePtr& msg, int type)
             g_logger.traceError("invalid creature");
 
         Otc::Direction direction = (Otc::Direction)msg->getU8();
-        if(creature)
-            creature->turn(direction);
+        if (creature) {
+            if (creature != g_game.getLocalPlayer() || !g_game.isIgnoringServerDirection() || !g_game.getFeature(Otc::GameNewWalking)) {
+                creature->turn(direction);
+            }
+        }
 
         if(g_game.getClientVersion() >= 953) {
             bool unpass = msg->getU8();

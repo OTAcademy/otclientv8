@@ -160,6 +160,27 @@ void MapView::drawTiles(bool map, bool creatures, bool isFading, const TilePtr& 
         drawQueueCreatures.draw();
 }
 
+void MapView::drawTileTexts(const Rect& rect, const Rect& srcRect)
+{
+    Position cameraPosition = getCameraPosition();
+    Point drawOffset = srcRect.topLeft();
+    float horizontalStretchFactor = rect.width() / (float)srcRect.width();
+    float verticalStretchFactor = rect.height() / (float)srcRect.height();
+
+    auto player = g_game.getLocalPlayer();
+    for (auto& tile : m_cachedVisibleTiles) {
+        Position tilePos = tile.first->getPosition();
+        if (tilePos.z != player->getPosition().z) continue;        
+
+        Point p = transformPositionTo2D(tilePos, cameraPosition) - drawOffset;
+        p.x *= horizontalStretchFactor;
+        p.y *= verticalStretchFactor;
+        p += rect.topLeft();
+
+        tile.first->drawTexts(p);
+    }
+}
+
 
 void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
     Position cameraPosition = getCameraPosition();
@@ -301,7 +322,7 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
 
         PointF jumpOffset = creature->getJumpOffset();
         Point creatureOffset = Point(16 - creature->getDisplacementX(), -creature->getDisplacementY() - 2);
-        Position pos = creature->getNewPreWalkingPosition();
+        Position pos = creature->getPrewalkingPosition();
         Point p = transformPositionTo2D(pos, cameraPosition) - drawOffset;
         p += (creature->getDrawOffset() + creatureOffset) - Point(stdext::round(jumpOffset.x), stdext::round(jumpOffset.y));
         p.x = p.x * horizontalStretchFactor;
@@ -335,6 +356,8 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
     }
 
     g_painter->setDepthFunc(Painter::DepthFunc_None);
+
+    drawTileTexts(rect, srcRect);
 
     if (g_extras.debugRender) {
         static CachedText text;
@@ -759,7 +782,7 @@ Point MapView::transformPositionTo2D(const Position& position, const Position& r
 Position MapView::getCameraPosition()
 {
     if (isFollowingCreature()) {
-        return m_followingCreature->getNewPreWalkingPosition();
+        return m_followingCreature->getPrewalkingPosition();
     }
 
     return m_customCameraPosition;

@@ -89,7 +89,7 @@ void Creature::draw(const Point& dest, float scaleFactor, bool animate, LightVie
             g_painter->setColor(Color::white);
         }
 
-        internalDrawOutfit(dest + animationOffset * scaleFactor, scaleFactor, animate, animate, m_walking ? m_walkDirection : m_direction);
+        internalDrawOutfit(dest + animationOffset * scaleFactor, scaleFactor, animate, animate, m_walking && !g_game.shouldShowingRealDirection() ? m_walkDirection : m_direction);
     }
 }
 
@@ -247,7 +247,7 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
         }
 
         // xPattern => creature direction
-        Otc::Direction dir = m_walking ? m_walkDirection : m_direction;
+        Otc::Direction dir = m_walking && !g_game.shouldShowingRealDirection() ? m_walkDirection : m_direction;
         int xPattern;
         if (dir == Otc::NorthEast || dir == Otc::SouthEast)
             xPattern = Otc::East;
@@ -283,6 +283,9 @@ void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction dire
     else if(!(frameSize = exactSize))
         return;
 
+    if (frameSize > 2048)
+        return;
+
     if (direction == Otc::InvalidDirection)
         direction = m_direction;
 
@@ -314,8 +317,10 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
     if (g_extras.debugWalking) {
         int footDelay = (getStepDuration(true)) / 3;
         int footAnimPhases = getAnimationPhases() - 1;
-        m_nameCache.setText(stdext::format("%i %i %i %i %i\n %i %i\n%i %i %i %i %i", (int)m_stepDuration, (int)getStepDuration(true), getStepDuration(false), (int)m_walkedPixels, (int)m_walkTimer.ticksElapsed(),
+        m_nameCache.setText(stdext::format("%i %i %i %i %i\n %i %i\n%i %i %i\n%i %i %i %i %i",
+                                          (int)m_stepDuration, (int)getStepDuration(true), getStepDuration(false), (int)m_walkedPixels, (int)m_walkTimer.ticksElapsed(),
                                           (int)m_walkOffset.x, (int)m_walkOffset.y,
+                                          (int)m_speed, (int)getTile()->getGroundSpeed(), (int)g_game.getWalkId(),
                                           (int)(g_clock.millis() - m_footLastStep), (int)footDelay, (int)footAnimPhases, (int)m_walkAnimationPhase, (int)stdext::millis()));
     }
 
@@ -630,7 +635,7 @@ void Creature::updateWalkingTile()
 
             // only render creatures where bottom right is inside tile rect
             if(virtualTileRect.contains(virtualCreatureRect.bottomRight())) {
-                newWalkingTile = g_map.getOrCreateTile(getNewPreWalkingPosition().translated(xi, yi, 0));
+                newWalkingTile = g_map.getOrCreateTile(getPrewalkingPosition().translated(xi, yi, 0));
             }
         }
     }
@@ -954,10 +959,10 @@ int Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
     if(dir == Otc::InvalidDirection)
         tilePos = m_lastStepToPosition;
     else
-        tilePos = getNewPreWalkingPosition(true).translatedToDirection(dir);
+        tilePos = getPrewalkingPosition(true).translatedToDirection(dir);
 
     if(!tilePos.isValid())
-        tilePos = getNewPreWalkingPosition(true);
+        tilePos = getPrewalkingPosition(true);
 
     const TilePtr& tile = g_map.getTile(tilePos);
     if(tile) {
@@ -995,7 +1000,7 @@ int Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
        m_lastStepDirection == Otc::SouthWest || m_lastStepDirection == Otc::SouthEast))
         interval *= factor;
 
-    interval += 5;
+    interval += 10;
 
     if (!isServerWalking() && g_game.getFeature(Otc::GameSlowerManualWalking))
     {

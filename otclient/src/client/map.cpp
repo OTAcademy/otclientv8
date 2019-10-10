@@ -901,6 +901,7 @@ std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const
 
 PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal, std::shared_ptr<std::list<Node*>> visibleNodes) {
     auto ret = std::make_shared<PathFindResult>();
+    ret->start = start;
     ret->destination = goal;
 
     if (start == goal) {

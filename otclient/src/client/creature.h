@@ -87,6 +87,7 @@ public:
     std::string getName() { return m_name; }
     uint8 getHealthPercent() { return m_healthPercent; }
     Otc::Direction getDirection() { return m_direction; }
+    Otc::Direction getWalkDirection() { return m_walkDirection; }
     Outfit getOutfit() { return m_outfit; }
     Light getLight() { return m_light; }
     uint16 getSpeed() { return m_speed; }
@@ -139,8 +140,8 @@ public:
     virtual void onDisappear();
     virtual void onDeath();
 
-    virtual bool isNewPreWalking() { return false; }
-    virtual Position getNewPreWalkingPosition(bool beforePrewalk = false) { return m_position; }
+    virtual bool isPreWalking() { return false; }
+    virtual Position getPrewalkingPosition(bool beforePrewalk = false) { return m_position; }
 
     TilePtr getWalkingTileOrTile() {
         return m_walkingTile ? m_walkingTile : getTile();

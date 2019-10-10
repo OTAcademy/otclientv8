@@ -49,6 +49,7 @@ public:
     OTMLNodePtr getStyle(const std::string& styleName);
     std::string getStyleClass(const std::string& styleName);
 
+    UIWidgetPtr loadUIFromString(const std::string& data, const UIWidgetPtr& parent);
     UIWidgetPtr loadUI(std::string file, const UIWidgetPtr& parent);
     UIWidgetPtr displayUI(const std::string& file) { return loadUI(file, m_rootWidget); }
     UIWidgetPtr createWidget(const std::string& styleName, const UIWidgetPtr& parent);

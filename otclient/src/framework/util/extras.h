@@ -15,10 +15,14 @@ public:
     Extras() {
         DEFINE_OPTION(limitedPolling, "Limited polling");
 
-        DEFINE_OPTION(debugWalking, "Debbug walking");
-        DEFINE_OPTION(debugPathfinding, "Debbug path finding");
-        DEFINE_OPTION(debugRender, "Debbug render");
-        DEFINE_OPTION(debugProxy, "Debbug proxy");
+        DEFINE_OPTION(debugWalking, "Debug walking");
+        DEFINE_OPTION(debugPredictiveWalking, "Debug predictive walking");
+        DEFINE_OPTION(debugPathfinding, "Debug path finding");
+        DEFINE_OPTION(debugRender, "Debug render");
+        DEFINE_OPTION(debugProxy, "Debug proxy");
+        DEFINE_OPTION(showPredictions, "Show predictions");
+
+        DEFINE_OPTION(disablePredictiveWalking, "Disable predictive walking");
     }
 
     bool botDetection = default_value;
@@ -27,9 +31,12 @@ public:
     bool limitedPolling = default_value;
 
     bool debugWalking  = false;
+    bool debugPredictiveWalking = false;
     bool debugPathfinding  = false;
     bool debugRender = false;
     bool debugProxy = false;
+    bool disablePredictiveWalking = false;
+    bool showPredictions = false;
 
     int testMode = 0;
 

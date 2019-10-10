@@ -35,9 +35,11 @@
 extern "C" {
 #ifdef _MSC_VER
 #include <luajit/lua.h>
+#include <luajit/lualib.h>
 #include <luajit/lauxlib.h>
 #else
 #include <lua.h>
+#include <laulib.h>
 #include <lauxlib.h>
 #endif
 }
@@ -179,11 +181,6 @@ static lua_Unsigned luaL_checkunsigned (lua_State *L, int arg) {
 
 #define lbitlib_c
 #define LUA_LIB
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
 
 
 /* number of bits to consider in a number */

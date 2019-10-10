@@ -24,6 +24,7 @@
 #define LOCALPLAYER_H
 
 #include "player.h"
+#include "walkmatrix.h"
 
 // @bindclass
 class LocalPlayer : public Player
@@ -95,7 +96,6 @@ public:
 
     bool hasSight(const Position& pos);
     bool isKnown() { return m_known; }
-    bool isPreWalking() { return m_preWalking || !m_newPreWalkingPositions.empty(); }
     bool isAutoWalking() { return m_autoWalkDestination.isValid(); }
     bool isServerWalking() { return m_serverWalking; }
     bool isPremium() { return m_premium; }
@@ -107,29 +107,38 @@ public:
     virtual void onAppear();
     virtual void onPositionChange(const Position& newPos, const Position& oldPos);
 
-    // new walking
-    bool isNewPreWalking() override { return !m_newPreWalkingPositions.empty(); }
-    Position getNewPreWalkingPosition(bool beforePrewalk = false) override {
-        if(m_newPreWalkingPositions.empty())
+    // pre walking
+    void preWalk(Otc::Direction direction);
+    bool isPreWalking() override { return !m_preWalking.empty(); }
+    Position getPrewalkingPosition(bool beforePrewalk = false) override {
+        if(m_preWalking.empty())
             return m_position;
-        else if (!beforePrewalk && m_newPreWalkingPositions.size() == 1)
+        else if (!beforePrewalk && m_preWalking.size() == 1)
             return m_position;
-        auto ret = m_newPreWalkingPositions.rbegin();
+        auto ret = m_preWalking.rbegin();
         if(!beforePrewalk)
             ret++;
         return *ret; 
     }
-    std::list<Position> newPos() {
-        return m_newPreWalkingPositions;
+
+    uint32_t getWalkPrediction(const Position& pos)
+    {
+        return m_walkMatrix.get(pos);
     };
 
-    void preWalk(Otc::Direction direction);
-    void newPreWalk(Otc::Direction direction);
+    std::string dumpWalkMatrix()
+    {
+        return m_walkMatrix.dump();
+    }
 
 protected:
     void walk(const Position& oldPos, const Position& newPos);
     void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);
-    void cancelNewWalk(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir);
+    
+    void cancelNewWalk(Otc::Direction dir);
+    bool predictiveCancelWalk(const Position& pos, uint32_t predictionId, Otc::Direction dir);
+    
+    bool retryAutoWalk();
     void stopWalk();
 
     friend class Game;
@@ -141,24 +150,22 @@ protected:
 
 private:
     // walk related
-    Position m_lastPrewalkDestination;
     Position m_autoWalkDestination;
     Position m_lastAutoWalkPosition;
-    int m_lastAutoRetries = 0;
+    int m_lastAutoWalkRetries = 0;
     ScheduledEventPtr m_serverWalkEndEvent;
     ScheduledEventPtr m_autoWalkContinueEvent;
     ticks_t m_walkLockExpiration;
-    stdext::boolean<false> m_preWalking;
-    stdext::boolean<true> m_lastPrewalkDone;
-    stdext::boolean<false> m_secondPreWalk;
-    stdext::boolean<false> m_serverWalking;
 
-    std::list<Position> m_newPreWalkingPositions;
-    bool m_newLastPrewalkingDone = false;
+    // walking and pre walking
+    std::list<Position> m_preWalking;
+    bool m_serverWalking = false;
+    bool m_lastPrewalkDone = false;
+    WalkMatrix m_walkMatrix;
 
-    stdext::boolean<false> m_premium;
-    stdext::boolean<false> m_known;
-    stdext::boolean<false> m_pending;
+    bool m_premium = false;
+    bool m_known = false;
+    bool m_pending = false;
 
     ItemPtr m_inventoryItems[Otc::LastInventorySlot];
     Timer m_idleTimer;

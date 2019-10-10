@@ -157,7 +157,6 @@ void Application::poll()
 #endif
 
     g_dispatcher.poll();
-    g_http.poll();
 
     // poll connection again to flush pending write
 #ifdef FW_NET

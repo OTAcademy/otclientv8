@@ -836,9 +836,6 @@
     <ClInclude Include="..\src\framework\stdext\packed_storage.h">
       <Filter>Header Files\framework\stdext</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\framework\stdext\packed_vector.h">
-      <Filter>Header Files\framework\stdext</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\framework\stdext\shared_object.h">
       <Filter>Header Files\framework\stdext</Filter>
     </ClInclude>
@@ -1102,6 +1099,12 @@
     </ClInclude>
     <ClInclude Include="..\src\extras\proxy\client.h">
       <Filter>Extras\proxy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\client\walkmatrix.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\stdext\fastrand.h">
+      <Filter>Header Files\framework\stdext</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

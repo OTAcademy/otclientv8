@@ -51,8 +51,9 @@ protected:
     void onAppear();
 
 private:
-    Timer m_animationTimer;
     uint16 m_id;
+    Timer m_animationTimer;
+    int m_animationPhase = 0;
 };
 
 #endif

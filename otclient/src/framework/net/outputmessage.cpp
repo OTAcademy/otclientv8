@@ -35,6 +35,16 @@ void OutputMessage::reset()
     m_messageSize = 0;
 }
 
+void OutputMessage::setBuffer(const std::string& buffer)
+{
+    int len = buffer.size();
+    reset();
+    checkWrite(len);
+    memcpy((char*)(m_buffer + m_writePos), buffer.c_str(), len);
+    m_writePos += len;
+    m_messageSize += len;
+}
+
 void OutputMessage::addU8(uint8 value)
 {
     checkWrite(1);

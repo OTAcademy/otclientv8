@@ -93,7 +93,9 @@ protected:
     void processInventoryChange(int slot, const ItemPtr& item);
     void processAttackCancel(uint seq);
     void processWalkCancel(Otc::Direction direction);
-    void processNewWalkCancel(uint32 walkId, const Position& pos, uint8 stackpos, Otc::Direction dir);
+
+    void processNewWalkCancel(Otc::Direction dir);
+    void processPredictiveWalkCancel(const Position& pos, Otc::Direction dir);
 
     void processPlayerHelpers(int helpers);
     void processPlayerModes(Otc::FightModes fightMode, Otc::ChaseModes chaseMode, bool safeMode, Otc::PVPModes pvpMode);
@@ -167,13 +169,10 @@ public:
     void safeLogout();
 
     // walk related
-    bool walk(Otc::Direction direction);
-    void callOnWalk(Otc::Direction direction);
-    void autoWalk(std::vector<Otc::Direction> dirs, Position startPos);
-    void forceWalk(Otc::Direction direction, bool withPreWalk);
+    void walk(Otc::Direction direction, bool withPreWalk);
+    void autoWalk(const std::vector<Otc::Direction>& dirs, Position startPos);
     void turn(Otc::Direction direction);
     void stop();
-    void cancelWalkEvent();
 
     // item related
     void look(const ThingPtr& thing, bool isBattleList = false);
@@ -308,6 +307,7 @@ public:
     void changeMapAwareRange(int xrange, int yrange);
 
     // dynamic support for game features
+    void resetFeatures() { m_features.reset(); }
     void enableFeature(Otc::GameFeature feature) { m_features.set(feature, true); }
     void disableFeature(Otc::GameFeature feature) { m_features.set(feature, false); }
     void setFeature(Otc::GameFeature feature, bool enabled) { m_features.set(feature, enabled); }
@@ -360,6 +360,18 @@ public:
     void setMaxPreWalkingSteps(uint value) { m_maxPreWalkingSteps = value; }
     uint getMaxPreWalkingSteps() { return m_maxPreWalkingSteps; }
 
+    void setExtendedNewWalking(bool value) { m_extendedNewWalking = false; }
+    uint getWalkId() { return m_walkId; }
+
+    void showRealDirection(bool value) { m_showRealDirection = value; }
+    bool shouldShowingRealDirection() { return m_showRealDirection; }
+
+    void ignoreServerDirection(bool value) { m_ignoreServerDirection = value; }
+    bool isIgnoringServerDirection()
+    {
+        return m_ignoreServerDirection;
+    }
+
 protected:
     void enableBotCall() { m_denyBotCall = false; }
     void disableBotCall() { m_denyBotCall = true; }
@@ -384,7 +396,9 @@ private:
     uint m_pingSent;
     uint m_pingReceived;
     uint m_walkId = 0;
+    uint m_walkPrediction = 0;
     uint m_maxPreWalkingSteps = 2;
+    bool m_extendedNewWalking = false;
     stdext::timer m_pingTimer;
     std::map<uint32_t, stdext::timer> m_newPingIds;
     uint m_seq;
@@ -405,7 +419,6 @@ private:
     std::bitset<Otc::LastGameFeature> m_features;
     ScheduledEventPtr m_pingEvent;
     ScheduledEventPtr m_newPingEvent;
-    ScheduledEventPtr m_walkEvent;
     ScheduledEventPtr m_checkConnectionEvent;
     bool m_connectionFailWarned;
     int m_protocolVersion;
@@ -413,6 +426,9 @@ private:
     int m_clientVersion;
     std::string m_clientSignature;
     int m_clientCustomOs;
+
+    bool m_showRealDirection = false;
+    bool m_ignoreServerDirection = true;
 };
 
 extern Game g_game;

@@ -309,6 +309,8 @@ class ProtocolGame final : public Protocol
         void sendNewCancelWalk();
 
 		friend class Player;
+        
+        void updateWalkPermission(NetworkMessage& msg, const Position& pos, bool playerMove);
 
 		// Helpers so we don't need to bind every time
 		template <typename Callable, typename... Args>
@@ -342,6 +344,10 @@ class ProtocolGame final : public Protocol
 			int horizontal() { return width + 1; }
 			int vertical() { return height + 1; }			
 		} awareRange;
+        
+        int32_t walkPermissionId = 0;
+        Position walkPermissionPosition;
+        int32_t walkPermission[5][5] = {};
 };
 
 #endif

@@ -39,6 +39,5 @@
 #include "dynamic_storage.h"
 #include "packed_storage.h"
 #include "format.h"
-#include "packed_vector.h"
 
 #endif

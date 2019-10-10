@@ -245,7 +245,15 @@ end
 
 function onAddVip(id, name, state, description, iconId, notify)
   local vipList = vipWindow:getChildById('contentsPanel')
-
+  
+  local childrenCount = vipList:getChildCount()
+  for i=1,childrenCount do
+    local child = vipList:getChildByIndex(i)
+    if child:getText() == name then
+      return -- don't add duplicated vips
+    end
+  end
+  
   local label = g_ui.createWidget('VipListLabel')
   label.onMousePress = onVipListLabelMousePress
   label:setId('vip' .. id)

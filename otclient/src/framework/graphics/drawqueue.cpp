@@ -70,7 +70,7 @@ void DrawQueue::addBoundingRect(const Rect& dest, const Color& color, int innerL
 
 void DrawQueue::draw() {
     int location = m_type == DRAW_QUEUE_MAP ? 0 : 1;
-    g_atlas.update(location, *this);
+    bool hasSpace = g_atlas.update(location, *this);
     g_painter->drawQueue(*this);
     //todo fixes for depth less
     for (auto& item : items()) {
@@ -91,4 +91,8 @@ void DrawQueue::draw() {
     g_painter->resetDepth();
     //drawUncached();
     //drawMarked();
+
+    if (!hasSpace) {
+        g_atlas.reset(location);
+    }
 }
