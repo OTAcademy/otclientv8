@@ -86,4 +86,19 @@ static const std::string glslSolidColorOnTextureFragmentShader = "\n\
         return vec4(0,0,0,0);\n\
     }\n";
 
+static const std::string glslOutfitLayersFragmentShader = "\n\
+    uniform highp mat4 u_Color;\n\
+    varying mediump vec2 v_TexCoord;\n\
+    uniform sampler2D u_Tex0;\n\
+    highp vec4 calculatePixel() {\n\
+        vec4 texcolor = texture2D(u_Tex0, v_TexCoord);\n\
+        if(texcolor.r > 0.9)\n\
+            return texcolor.g > 0.9 ? u_Color[0] : u_Color[3];\n\
+        if(texcolor.g > 0.9)\n\
+            return u_Color[2];\n\
+        if(texcolor.b > 0.9)\n\
+            return u_Color[1];\n\
+        return vec4(0,0,0,0);\n\
+    }\n";
+
 #endif

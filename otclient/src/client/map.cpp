@@ -69,7 +69,13 @@ void Map::notificateTileUpdate(const Position& pos)
 
     for(const MapViewPtr& mapView : m_mapViews)
         mapView->onTileUpdate(pos);
-    g_minimap.updateTile(pos, getTile(pos));
+
+    if (!isAwareOfPosition(pos))
+        return;
+
+    if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) && g_game.getLocalPlayer() && g_game.getLocalPlayer()->getPosition().z == pos.z) {
+        g_minimap.updateTile(pos, getTile(pos));
+    }
 }
 
 void Map::requestVisibleTilesCacheUpdate() {
@@ -129,6 +135,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
             AnimatedTextPtr animatedText = thing->static_self_cast<AnimatedText>();
             AnimatedTextPtr prevAnimatedText;
             bool merged = false;
+            /*
             for(auto other : m_animatedTexts) {
                 if(other->getPosition() == pos) {
                     prevAnimatedText = other;
@@ -137,7 +144,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
                         break;
                     }
                 }
-            }
+            } */
             if(!merged) {
                 if(prevAnimatedText) {
                     Point offset = prevAnimatedText->getOffset();
@@ -383,7 +390,13 @@ void Map::cleanTile(const Position& pos)
         else
             ++it;
     }
-    g_minimap.updateTile(pos, getTile(pos));
+
+    if (!isAwareOfPosition(pos))
+        return;
+
+    if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) && g_game.getLocalPlayer() && g_game.getLocalPlayer()->getPosition().z == pos.z) {
+        g_minimap.updateTile(pos, getTile(pos));
+    }
 }
 
 void Map::setShowZone(tileflags_t zone, bool show)

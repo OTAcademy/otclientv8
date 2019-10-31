@@ -49,7 +49,8 @@ public:
 
     // @dontbind
     void readFileStream(const std::string& fileName, std::iostream& out);
-    std::string readFileContents(const std::string& fileName);
+    std::string readFileContents(const std::string& fileName, bool safe = false);
+    std::string readFileContentsSafe(const std::string& fileName) { return readFileContents(fileName, true); }
     // @dontbind
     bool writeFileBuffer(const std::string& fileName, const uchar* data, uint size);
     bool writeFileContents(const std::string& fileName, const std::string& data);

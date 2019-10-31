@@ -49,6 +49,8 @@ void Tile::calculateTopDepth() {
         if(!thing->isLyingCorpse()) {
             continue;
         }
+        if (thing->isHidden())
+            continue;
         redrawPreviousTopW = std::max<int>(thing->getWidth() - 1, redrawPreviousTopW);
         redrawPreviousTopH = std::max<int>(thing->getHeight() - 1, redrawPreviousTopH);
     }
@@ -74,6 +76,8 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
     for(const ThingPtr& thing : m_things) {
         if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
             break;
+        if (thing->isHidden())
+            continue;
 
         thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
         m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
@@ -84,6 +88,8 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
         const ThingPtr& thing = *it;
         if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
             break;
+        if (thing->isHidden())
+            continue;
 
         thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
         m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
@@ -93,12 +99,19 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
     drawQueue.setDepth(m_topDepth - 1);
 
     int limit = g_adaptiveRenderer.effetsLimit();
-    for (auto i = (int)m_effects.size() > limit ?  m_effects.size() - limit : 0; i < m_effects.size(); ++i)
+    for (auto i = (int)m_effects.size() > limit ? m_effects.size() - limit : 0; i < m_effects.size(); ++i) {
+        if (m_effects[i]->isHidden())
+            continue;
         m_effects[i]->newDrawEffect(dest - m_drawElevation, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, drawQueue, lightView);
+    }
 
-    for(const ThingPtr& thing : m_things)
-        if(thing->isOnTop())
+    for (const ThingPtr& thing : m_things) {
+        if (thing->isHidden())
+            continue;
+        if (thing->isOnTop()) {
             thing->newDraw(dest, drawQueue, lightView);
+        }
+    }
 
     if(hasTranslucentLight() && lightView) {
         Light light;
@@ -111,6 +124,8 @@ void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lig
     drawQueue.setDepth(m_topDepth);
 
     for(const CreaturePtr& creature : m_walkingCreatures) {
+        if (creature->isHidden())
+            continue;
         creature->newDraw(Point(dest.x + ((creature->getPrewalkingPosition().x - m_position.x) * Otc::TILE_PIXELS - m_drawElevation),
                                 dest.y + ((creature->getPrewalkingPosition().y - m_position.y) * Otc::TILE_PIXELS - m_drawElevation)), drawQueue, lightView);
     }
@@ -119,6 +134,8 @@ void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lig
     for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
         const ThingPtr& thing = *it;
         if(!thing->isCreature())
+            continue;
+        if (thing->isHidden())
             continue;
         CreaturePtr creature = thing->static_self_cast<Creature>();
         if (creature && !creature->isWalking())
@@ -132,10 +149,18 @@ void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lig
     }
 }
 
-void Tile::drawTexts(const Point& dest)
+void Tile::drawTexts(Point dest)
 {
-    for (auto& text : m_texts) {
-        text->drawText(dest, Rect(dest.x - 64, dest.y - 64, 128, 128));
+    if (m_timerText && g_clock.millis() < m_timer) {
+        if (m_text && m_text->hasText())
+            dest.y -= 8;
+        m_timerText->setText(stdext::format("%.01f", (m_timer - g_clock.millis()) / 1000.));
+        m_timerText->drawText(dest, Rect(dest.x - 64, dest.y - 64, 128, 128));
+        dest.y += 16;
+    }
+
+    if (m_text && m_text->hasText()) {
+        m_text->drawText(dest, Rect(dest.x - 64, dest.y - 64, 128, 128));
     }
 }
 
@@ -143,7 +168,6 @@ void Tile::clean()
 {
     while(!m_things.empty())
         removeThing(m_things.front());
-    m_texts.clear();
 }
 
 void Tile::addWalkingCreature(const CreaturePtr& creature)
@@ -224,6 +248,9 @@ void Tile::addThing(const ThingPtr& thing, int stackPos)
 
     if(thing->isTranslucent())
         checkTranslucentLight();
+
+    if(g_game.isTileThingLuaCallbackEnabled())
+        callLuaField("onAddThing", thing);
 }
 
 bool Tile::removeThing(ThingPtr thing)
@@ -256,6 +283,10 @@ bool Tile::removeThing(ThingPtr thing)
 
     if(thing->isTranslucent())
         checkTranslucentLight();
+
+    if (g_game.isTileThingLuaCallbackEnabled() && removed) {
+        callLuaField("onRemoveThing", thing);
+    }
 
     return removed;
 }
@@ -695,12 +726,34 @@ void Tile::checkTranslucentLight()
         tile->m_flags &= ~TILESTATE_TRANSLUECENT_LIGHT;
 }
 
-void Tile::addText(const StaticTextPtr& text)
+void Tile::setText(const std::string& text, Color color)
 {
-    m_texts.push_back(text);
+    if (!m_text) {
+        m_text = StaticTextPtr(new StaticText());
+    }
+    m_text->setText(text);
+    m_text->setColor(color);
 }
 
-void Tile::removeText(const StaticTextPtr& text)
+std::string Tile::getText()
 {
-    m_texts.erase(std::remove(m_texts.begin(), m_texts.end(), text), m_texts.end());
+    return m_text ? m_text->getCachedText().getText() : "";
+}
+
+void Tile::setTimer(int time, Color color)
+{
+    if (time > 60000) {
+        g_logger.warning("Max tile timer value is 60000 (60s)!");
+        return;
+    }
+    m_timer = time + g_clock.millis();
+    if (!m_timerText) {
+        m_timerText = StaticTextPtr(new StaticText());
+    }
+    m_timerText->setColor(color);
+}
+
+int Tile::getTimer()
+{
+    return m_timerText ? std::max<int>(0, m_timer - g_clock.millis()) : 0;
 }

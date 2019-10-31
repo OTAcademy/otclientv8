@@ -27,8 +27,7 @@
 #include "coordsbuffer.h"
 #include <framework/core/timer.h>
 
-class PainterShaderProgram : public ShaderProgram
-{
+class PainterShaderProgram : public ShaderProgram {
 protected:
     enum {
         VERTEX_ATTR = 0,
@@ -51,7 +50,7 @@ protected:
         TEX2_UNIFORM = 9,
         TEX3_UNIFORM = 10,
         ATLAS_TEX_UNIFORM = 11,
-        
+
         RESOLUTION_UNIFORM = 12,
     };
 
@@ -68,6 +67,7 @@ public:
     void setProjectionMatrix(const Matrix3& projectionMatrix);
     void setTextureMatrix(const Matrix3& textureMatrix);
     void setColor(const Color& color);
+    void setMatrixColor(const Matrix4& colors);
     void setOpacity(float opacity);
     void setDepth(float depth);
     void setResolution(const Size& resolution);

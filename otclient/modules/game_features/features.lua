@@ -10,7 +10,9 @@ function updateFeatures(version)
     g_game.resetFeatures()
     
     -- you can add custom features here, list of them in modules\gamelib\const.lua
-    g_game.getFeature(GameBot)
+    g_game.enableFeature(GameBot)
+    --g_game.enableFeature(GameMinimapLimitedToSingleFloor)
+    --g_game.enableFeature(GameSpritesAlphaChannel)
     
     if(version >= 770) then
         g_game.enableFeature(GameLooktypeU16);

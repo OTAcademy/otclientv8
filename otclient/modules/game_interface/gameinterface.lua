@@ -279,10 +279,11 @@ end
 function onUseWith(clickedWidget, mousePosition)
   if clickedWidget:getClassName() == 'UIGameMap' then
     local tile = clickedWidget:getTile(mousePosition)
-    if tile then
-      if selectedThing:isFluidContainer() then
+    if tile then      
+      if selectedThing:isFluidContainer() or selectedThing:isMultiUse() then
         g_game.useWith(selectedThing, tile:getTopMultiUseThing(), selectedSubtype)
       else
+        print("normal")
         g_game.useWith(selectedThing, tile:getTopUseThing(), selectedSubtype)
       end
     end
@@ -530,9 +531,13 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     end
   end
 
-  if g_game.getFeature(GameBot) and useThing then
+  if g_game.getFeature(GameBot) and useThing and useThing:isItem() then
     menu:addSeparator()
-    menu:addOption(tr("ID: " .. useThing:getId()))
+    if useThing:getSubType() > 1 then
+      menu:addOption("ID: " .. useThing:getId() .. " SubType: " .. useThing:getSubType())    
+    else
+      menu:addOption("ID: " .. useThing:getId())
+    end
   end
 
   menu:display(menuPosition)

@@ -81,19 +81,19 @@ void Image::overwriteMask(const Color& maskedColor, const Color& insideColor, co
 {
     assert(m_bpp == 4);
 
-    for(int p=0;p<getPixelCount();p++) {
-        uint8& r = m_pixels[p*4 + 0];
-        uint8& g = m_pixels[p*4 + 1];
-        uint8& b = m_pixels[p*4 + 2];
-        uint8& a = m_pixels[p*4 + 3];
+    uint32_t maskedColorU32 = maskedColor.argb();
+    uint32_t insideColorU32 = insideColor.argb();
+    uint32_t outsideColorU32 = outsideColor.argb();
+    int pixels = getPixelCount();
 
-        Color pixelColor(r,g,b,a);
-        Color writeColor = (pixelColor == maskedColor) ? insideColor : outsideColor;
+    for (int p = 0; p < pixels; p++) {
+        uint32* rgba = (uint32_t*)(&m_pixels[p * 4]);
 
-        r = writeColor.r();
-        g = writeColor.g();
-        b = writeColor.b();
-        a = writeColor.a();
+        if (*rgba == maskedColorU32) {
+            *rgba = insideColorU32;
+            continue;
+        }
+        *rgba = outsideColorU32;
     }
 }
 
@@ -101,20 +101,19 @@ void Image::blit(const Point& dest, const ImagePtr& other)
 {
     assert(m_bpp == 4);
 
-    if(!other)
+    if (!other)
         return;
 
+    int width = other->getWidth(), height = other->getHeight();
     uint8* otherPixels = other->getPixelData();
-    for(int p = 0; p < other->getPixelCount(); ++p) {
-        int x = p % other->getWidth();
-        int y = p / other->getWidth();
-        int pos = ((dest.y + y) * m_size.width() + (dest.x + x)) * 4;
-
-        if (otherPixels[p*4+3] != 0) {
-            m_pixels[pos+0] = otherPixels[p*4+0];
-            m_pixels[pos+1] = otherPixels[p*4+1];
-            m_pixels[pos+2] = otherPixels[p*4+2];
-            m_pixels[pos+3] = otherPixels[p*4+3];
+    for (int y = 0, p = 0; y < height; ++y) {
+        int pos = ((dest.y + y) * m_size.width() + dest.x) * 4;
+        for (int x = 0; x < width; ++x) {
+            if (otherPixels[p + 3] != 0) {
+                *(uint32_t*)&m_pixels[pos] = *(uint32_t*)&otherPixels[p];
+            }
+            pos += 4;
+            p += 4;
         }
     }
 }

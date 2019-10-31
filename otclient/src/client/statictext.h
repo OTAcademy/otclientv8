@@ -52,6 +52,7 @@ public:
     Color getColor() { return m_color; }
 
     CachedText& getCachedText() { return m_cachedText; }
+    bool hasText() { return m_cachedText.hasText(); }
 
 private:
     void update();

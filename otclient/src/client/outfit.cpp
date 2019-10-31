@@ -34,24 +34,40 @@ Outfit::Outfit()
     resetClothes();
 }
 
-void Outfit::newDraw(Point dest, DrawQueue& drawQueue, LightView* lightView) 
+void Outfit::newDraw(Point dest, DrawQueue& drawQueue, bool isWalking, LightView* lightView) 
 {
     assert(m_category == ThingCategoryCreature);
 
+    auto type = g_things.rawGetThingType(getId(), ThingCategoryCreature);
+    if (!type) return;
+
+    int mountAnimationPhase = m_animationPhase;
+
+    if (type->getIdleAnimator()) {
+        if (isWalking) {
+            m_animationPhase += type->getIdleAnimator()->getAnimationPhases() - 1;
+        } else {
+            m_animationPhase = type->getIdleAnimator()->getPhase();
+            mountAnimationPhase = 0;
+        }
+    }
+
+    uint64_t hash = (((uint64_t)m_id) << 54) + (((uint64_t)m_auxId) << 50) + (((uint64_t)m_xPattern) << 46) + 
+        (((uint64_t)m_animationPhase) << 40) + (((uint64_t)m_head) << 32) + (((uint64_t)m_body) << 25) + 
+        (((uint64_t)m_legs) << 18) + (((uint64_t)m_feet) << 11) + (((uint64_t)m_addons) << 8)
+        + ((uint64_t)m_mount << 1) + (isWalking ? 1 : 0);
     
-    auto outfit = drawQueue.addOutfit(hash(), Rect(dest - Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), Size(Otc::TILE_PIXELS * 4, Otc::TILE_PIXELS * 4)));
+    auto outfit = drawQueue.addOutfit(hash, Rect(dest - Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), Size(Otc::TILE_PIXELS * 4, Otc::TILE_PIXELS * 4)));
     if (!outfit)
         return;
     dest = Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3);
-
-    auto type = g_things.rawGetThingType(getId(), ThingCategoryCreature);
 
     int zPattern = 0;
     if(getMount() != 0) {
         auto datType = g_things.rawGetThingType(getMount(), ThingCategoryCreature);
         dest -= datType->getDisplacement();
 
-        datType->newDraw(dest, 0, m_xPattern, 0, 0, m_animationPhase, drawQueue, lightView, NewDrawMount);
+        datType->newDraw(dest, 0, m_xPattern, 0, 0, mountAnimationPhase, drawQueue, lightView, NewDrawMount);
         dest += type->getDisplacement();
         zPattern = std::min<int>(1, type->getNumPatternZ() - 1);
     }
@@ -62,19 +78,13 @@ void Outfit::newDraw(Point dest, DrawQueue& drawQueue, LightView* lightView)
         }
         type->newDraw(dest, 0, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfit);
         if(type->getLayers() > 1) {
-            type->newDraw(dest, SpriteMaskYellow, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
-            type->newDraw(dest, SpriteMaskRed, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
-            type->newDraw(dest, SpriteMaskGreen, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
-            type->newDraw(dest, SpriteMaskBlue, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
-            if (!outfit) continue;
+            type->newDraw(dest, SpriteMask, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
             if (outfit->patterns.empty()) continue;
-            auto& layers = outfit->patterns.back().layers;
-            if (layers.size() == 4) {
-                layers[0].color = getHeadColor();
-                layers[1].color = getBodyColor();
-                layers[2].color = getLegsColor();
-                layers[3].color = getFeetColor();
-            }
+            auto& colors = outfit->patterns.back().colors;
+            colors[0] = getHeadColor();
+            colors[1] = getBodyColor();
+            colors[2] = getLegsColor();
+            colors[3] = getFeetColor();
         }
     }
 }

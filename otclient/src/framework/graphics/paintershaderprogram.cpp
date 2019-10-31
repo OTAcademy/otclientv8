@@ -53,7 +53,7 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(TEX2_UNIFORM, "u_Tex2");
     bindUniformLocation(TEX3_UNIFORM, "u_Tex3");
     bindUniformLocation(ATLAS_TEX_UNIFORM, "u_Atlas");
-    
+
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
 
     // VALUES
@@ -84,7 +84,7 @@ bool PainterShaderProgram::link()
     bindAttributeLocation(DEPTH_ATTR, "a_Depth");
     bindAttributeLocation(COLOR_ATTR, "a_Color");
     bindAttributeLocation(DEPTH_TEXCOORD_ATTR, "a_DepthTexCoord");
-    if(ShaderProgram::link()) {
+    if (ShaderProgram::link()) {
         bind();
         setupUniforms();
         release();
@@ -95,7 +95,7 @@ bool PainterShaderProgram::link()
 
 void PainterShaderProgram::setTransformMatrix(const Matrix3& transformMatrix)
 {
-    if(transformMatrix == m_transformMatrix)
+    if (transformMatrix == m_transformMatrix)
         return;
 
     bind();
@@ -105,7 +105,7 @@ void PainterShaderProgram::setTransformMatrix(const Matrix3& transformMatrix)
 
 void PainterShaderProgram::setProjectionMatrix(const Matrix3& projectionMatrix)
 {
-    if(projectionMatrix == m_projectionMatrix)
+    if (projectionMatrix == m_projectionMatrix)
         return;
 
     bind();
@@ -115,7 +115,7 @@ void PainterShaderProgram::setProjectionMatrix(const Matrix3& projectionMatrix)
 
 void PainterShaderProgram::setTextureMatrix(const Matrix3& textureMatrix)
 {
-    if(textureMatrix == m_textureMatrix)
+    if (textureMatrix == m_textureMatrix)
         return;
 
     bind();
@@ -125,7 +125,7 @@ void PainterShaderProgram::setTextureMatrix(const Matrix3& textureMatrix)
 
 void PainterShaderProgram::setColor(const Color& color)
 {
-    if(color == m_color)
+    if (color == m_color)
         return;
 
     bind();
@@ -133,9 +133,17 @@ void PainterShaderProgram::setColor(const Color& color)
     m_color = color;
 }
 
+void PainterShaderProgram::setMatrixColor(const Matrix4& colors)
+{
+    bind();
+    setUniformValue(COLOR_UNIFORM, colors);
+    m_color = Color::alpha;
+}
+
+
 void PainterShaderProgram::setOpacity(float opacity)
 {
-    if(m_opacity == opacity)
+    if (m_opacity == opacity)
         return;
 
     bind();
@@ -151,7 +159,7 @@ void PainterShaderProgram::setDepth(float depth)
     if (depth < 0.)
         depth = 0.;
 
-    if(m_depth == depth)
+    if (m_depth == depth)
         return;
 
     bind();
@@ -161,7 +169,7 @@ void PainterShaderProgram::setDepth(float depth)
 
 void PainterShaderProgram::setResolution(const Size& resolution)
 {
-    if(m_resolution == resolution)
+    if (m_resolution == resolution)
         return;
 
     bind();
@@ -172,7 +180,7 @@ void PainterShaderProgram::setResolution(const Size& resolution)
 void PainterShaderProgram::updateTime()
 {
     float time = g_clock.seconds() - m_startTime;
-    if(m_time == time)
+    if (m_time == time)
         return;
 
     bind();
@@ -182,11 +190,11 @@ void PainterShaderProgram::updateTime()
 
 void PainterShaderProgram::addMultiTexture(const std::string& file)
 {
-    if(m_multiTextures.size() > 3)
+    if (m_multiTextures.size() > 3)
         g_logger.error("cannot add more multi textures to shader, the max is 3");
 
     TexturePtr texture = g_textures.getTexture(file);
-    if(!texture)
+    if (!texture)
         return;
 
     texture->setSmooth(true);
@@ -197,11 +205,11 @@ void PainterShaderProgram::addMultiTexture(const std::string& file)
 
 void PainterShaderProgram::bindMultiTextures()
 {
-    if(m_multiTextures.size() == 0)
+    if (m_multiTextures.size() == 0)
         return;
 
-    int i=1;
-    for(const TexturePtr& tex : m_multiTextures) {
+    int i = 1;
+    for (const TexturePtr& tex : m_multiTextures) {
         glActiveTexture(GL_TEXTURE0 + i++);
         glBindTexture(GL_TEXTURE_2D, tex->getId());
     }
@@ -209,7 +217,7 @@ void PainterShaderProgram::bindMultiTextures()
     glActiveTexture(GL_TEXTURE0);
 }
 
-void PainterShaderProgram::clearMultiTextures()     
+void PainterShaderProgram::clearMultiTextures()
 {
     m_multiTextures.clear();
 }

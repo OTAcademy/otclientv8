@@ -334,7 +334,7 @@ void ResourceManager::readFileStream(const std::string& fileName, std::iostream&
     out.seekg(0, std::ios::beg);
 }
 
-std::string ResourceManager::readFileContents(const std::string& fileName)
+std::string ResourceManager::readFileContents(const std::string& fileName, bool safe)
 {
     std::string fullPath = resolvePath(fileName);
     
@@ -352,6 +352,10 @@ std::string ResourceManager::readFileContents(const std::string& fileName)
     std::string buffer(fileSize, 0);
     PHYSFS_readBytes(file, (void*)&buffer[0], fileSize);
     PHYSFS_close(file);
+
+    if (safe) {
+        return buffer;
+    }
 
     static std::string unencryptedExtensions[] = { ".otml", ".otmm", ".dmp", ".log", ".dll", ".exe", ".zip" };
 

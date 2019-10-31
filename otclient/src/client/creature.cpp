@@ -131,8 +131,9 @@ void Creature::internalDrawOutfit(Point dest, float scaleFactor, bool animateWal
         int animationPhase = animateWalk ? m_walkAnimationPhase : 0;
 
         if(isAnimateAlways() && animateIdle) {
-            int ticksPerFrame = 1000 / getAnimationPhases();
-            animationPhase = (g_clock.millis() % (ticksPerFrame * getAnimationPhases())) / ticksPerFrame;
+            int phases = getAnimator() ? getAnimator()->getAnimationPhases() : getAnimationPhases();
+            int ticksPerFrame = 1000 / phases;
+            animationPhase = (g_clock.millis() % (ticksPerFrame * phases)) / ticksPerFrame;
         }
 
         // xPattern => creature direction
@@ -171,15 +172,24 @@ void Creature::internalDrawOutfit(Point dest, float scaleFactor, bool animateWal
                 Color oldColor = g_painter->getColor();
                 Painter::CompositionMode oldComposition = g_painter->getCompositionMode();
                 g_painter->setCompositionMode(Painter::CompositionMode_Multiply);
-                g_painter->setColor(m_outfit.getHeadColor());
-                datType->draw(dest, scaleFactor, SpriteMaskYellow, xPattern, yPattern, zPattern, animationPhase);
-                g_painter->setColor(m_outfit.getBodyColor());
-                datType->draw(dest, scaleFactor, SpriteMaskRed, xPattern, yPattern, zPattern, animationPhase);
-                g_painter->setColor(m_outfit.getLegsColor());
-                datType->draw(dest, scaleFactor, SpriteMaskGreen, xPattern, yPattern, zPattern, animationPhase);
-                g_painter->setColor(m_outfit.getFeetColor());
-                datType->draw(dest, scaleFactor, SpriteMaskBlue, xPattern, yPattern, zPattern, animationPhase);
-                g_painter->setColor(oldColor);
+                Color colors[4];
+                colors[0] = m_outfit.getHeadColor();
+                colors[1] = m_outfit.getBodyColor();
+                colors[2] = m_outfit.getLegsColor();
+                colors[3] = m_outfit.getFeetColor();
+
+                Matrix4 mat4;
+                for (int x = 0; x < 4; ++x) {
+                    mat4(x + 1, 1) = colors[x].rF();
+                    mat4(x + 1, 2) = colors[x].gF();
+                    mat4(x + 1, 3) = colors[x].bF();
+                    mat4(x + 1, 4) = colors[x].aF();
+                }
+                g_painter->setDrawOutfitLayersProgram();
+                g_painter->setMatrixColor(mat4);
+                datType->draw(dest, scaleFactor, SpriteMask, xPattern, yPattern, zPattern, animationPhase);
+                g_painter->resetShaderProgram();
+                g_painter->resetColor();
                 g_painter->setCompositionMode(oldComposition);
             }
         }
@@ -242,8 +252,9 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
         int animationPhase = m_walkAnimationPhase;
 
         if (isAnimateAlways()) {
-            int ticksPerFrame = 1000 / getAnimationPhases();
-            animationPhase = (g_clock.millis() % (ticksPerFrame * getAnimationPhases())) / ticksPerFrame;
+            int phases = getAnimator() ? getAnimator()->getAnimationPhases() : getAnimationPhases();
+            int ticksPerFrame = 1000 / phases;
+            animationPhase = (g_clock.millis() % (ticksPerFrame * phases)) / ticksPerFrame;
         }
 
         // xPattern => creature direction
@@ -259,7 +270,7 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
         m_outfit.setAnimationPhase(animationPhase);
         m_outfit.setXPattern(xPattern);
 
-        m_outfit.newDraw(dest, drawQueue, lightView);
+        m_outfit.newDraw(dest, drawQueue, isWalking(), lightView);
     }
 
     if (drawQueue.isBlocked())
@@ -316,7 +327,7 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
     //debug            
     if (g_extras.debugWalking) {
         int footDelay = (getStepDuration(true)) / 3;
-        int footAnimPhases = getAnimationPhases() - 1;
+        int footAnimPhases = getWalkAnimationPhases() - 1;
         m_nameCache.setText(stdext::format("%i %i %i %i %i\n %i %i\n%i %i %i\n%i %i %i %i %i",
                                           (int)m_stepDuration, (int)getStepDuration(true), getStepDuration(false), (int)m_walkedPixels, (int)m_walkTimer.ticksElapsed(),
                                           (int)m_walkOffset.x, (int)m_walkOffset.y,
@@ -569,13 +580,20 @@ void Creature::onDeath()
     callLuaField("onDeath");
 }
 
+int Creature::getWalkAnimationPhases()
+{
+    if (!getAnimator())
+        return getAnimationPhases();
+    return getAnimator()->getAnimationPhases() + 1;
+}
+
 void Creature::updateWalkAnimation(int totalPixelsWalked)
 {
     // update outfit animation
     if (m_outfit.getCategory() != ThingCategoryCreature)
         return;
 
-    int footAnimPhases = getAnimationPhases() - 1;
+    int footAnimPhases = getWalkAnimationPhases() - 1;
     // TODO, should be /2 for <= 810
     int footDelay = ((getStepDuration(true) + 20) / (g_game.getFeature(Otc::GameFasterAnimations) ? footAnimPhases * 2 : footAnimPhases));
     if (!g_game.getFeature(Otc::GameFasterAnimations))
@@ -740,8 +758,11 @@ void Creature::setHealthPercent(uint8 healthPercent)
     else
         m_informationColor = Color(0x85, 0x0C, 0x0C);
 
+    bool changed = m_healthPercent != healthPercent;
     m_healthPercent = healthPercent;
-    callLuaField("onHealthPercentChange", healthPercent);
+    if (changed) {
+        callLuaField("onHealthPercentChange", healthPercent);
+    }
 
     if(healthPercent <= 0)
         onDeath();

@@ -1519,9 +1519,6 @@ void Game::setProtocolVersion(int version)
     if(isOnline())
         stdext::throw_exception("Unable to change protocol version while online");
 
-    if(version != 0 && (version < 740 || version > 1099))
-        stdext::throw_exception(stdext::format("Protocol version %d not supported", version));
-
     m_protocolVersion = version;
 
     Proto::buildMessageModesMap(version);
@@ -1534,11 +1531,7 @@ void Game::setClientVersion(int version)
     if(isOnline())
         stdext::throw_exception("Unable to change client version while online");
 
-    if(version != 0 && (version < 740 || version > 1099))
-        stdext::throw_exception(stdext::format("Client version %d not supported", version));
-
     m_clientVersion = version;
-
     g_lua.callGlobalField("g_game", "onClientVersionChange", version);
 }
 

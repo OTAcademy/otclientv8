@@ -118,6 +118,7 @@ public:
     void updateShield();
 
     // walk related
+    int getWalkAnimationPhases();
     virtual void turn(Otc::Direction direction);
     void jump(int height, int duration);
     virtual void walk(const Position& oldPos, const Position& newPos);

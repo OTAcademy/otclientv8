@@ -38,7 +38,7 @@ public:
 
     static Color getColor(int color);
 
-    void newDraw(Point dest, DrawQueue& drawQueue, LightView* lightView);
+    void newDraw(Point dest, DrawQueue& drawQueue, bool isWalking, LightView* lightView);
 
     void setId(int id) { m_id = id; }
     void setAuxId(int id) { m_auxId = id; }
@@ -68,11 +68,6 @@ public:
     Color getBodyColor() const { return m_bodyColor; }
     Color getLegsColor() const { return m_legsColor; }
     Color getFeetColor() const { return m_feetColor; }
-
-    uint64_t hash() const {
-        return (((uint64_t)m_id) << 54) + (((uint64_t)m_auxId) << 50) + (((uint64_t)m_xPattern) << 46) + (((uint64_t)m_animationPhase) << 40) +
-            (((uint64_t)m_head) << 32) + (((uint64_t)m_body) << 25) + (((uint64_t)m_legs) << 18) + (((uint64_t)m_feet) << 11) + (((uint64_t)m_addons) << 8) + m_mount;
-    }
 
 private:
     ThingCategory m_category;

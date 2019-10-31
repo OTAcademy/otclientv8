@@ -301,8 +301,17 @@ void ThingType::unserialize(uint16 clientId, ThingCategory category, const FileS
         m_animationPhases += groupAnimationsPhases;
 
         if(groupAnimationsPhases > 1 && g_game.getFeature(Otc::GameEnhancedAnimations)) {
-            m_animator = AnimatorPtr(new Animator);
-            m_animator->unserialize(groupAnimationsPhases, fin);
+            AnimatorPtr animator = AnimatorPtr(new Animator);
+            animator->unserialize(groupAnimationsPhases, fin);
+
+            switch (frameGroupType) {
+            case FrameGroupIdle:
+                m_idleAnimator = animator;
+                break;
+            case FrameGroupMoving:
+                m_animator = animator;
+                break;
+            }
         }
 
         int totalSprites = m_size.area() * m_layers * m_numPatternX * m_numPatternY * m_numPatternZ * groupAnimationsPhases;
@@ -315,6 +324,11 @@ void ThingType::unserialize(uint16 clientId, ThingCategory category, const FileS
             m_spritesIndex[i] = g_game.getFeature(Otc::GameSpritesU32) ? fin->getU32() : fin->getU16();
 
         totalSpritesCount += totalSprites;
+    }
+
+    if (m_idleAnimator && !m_animator) {
+        m_animator = m_idleAnimator;
+        m_idleAnimator = nullptr;
     }
 
     m_textures.resize(m_animationPhases);
@@ -494,9 +508,16 @@ void ThingType::newDraw(const Point& dest, int layer, int xPattern, int yPattern
     Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * g_sprites.spriteSize()), textureRect.size());
 
     if(lightView && hasLight()) {
+        Point lightDest = dest;
+        if ((type == NewDrawMount) || (type == NewDrawOutfit) || (type == NewDrawOutfitLayers)) {
+            auto outfit = drawQueue.getLastOutfit();
+            if (outfit) {
+                lightDest = lightDest + outfit->dest.topLeft() - Point(16, 16);
+            }
+        }
         Light light = getLight();
         if(light.intensity > 0) 
-            lightView->addLightSource(Rect(dest - m_displacement  - (m_size.toPoint() - Point(1, 1)) * g_sprites.spriteSize(), texture->getSize()).center(), light, type != NewDrawNormal);
+            lightView->addLightSource(Rect(lightDest - m_displacement  - (m_size.toPoint() - Point(1, 1)) * g_sprites.spriteSize(), texture->getSize()).center(), light, type != NewDrawNormal);
     }
 
     if (drawQueue.isBlocked())
@@ -518,7 +539,7 @@ void ThingType::newDraw(const Point& dest, int layer, int xPattern, int yPattern
     } else if (type == NewDrawOutfitLayers) {
         auto outfit = drawQueue.getLastOutfit();
         if (outfit && !outfit->patterns.empty()) {
-            outfit->patterns.back().layers.push_back({ screenRect, texture, textureRect, Color::white, 0 });
+            outfit->patterns.back().layer = { screenRect, texture, textureRect, Color::white, 0 };
         }
     }
 }
@@ -536,9 +557,9 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
         int textureLayers = 1;
         int numLayers = m_layers;
         if(m_category == ThingCategoryCreature && numLayers >= 2) {
-             // 5 layers: outfit base, red mask, green mask, blue mask, yellow mask
-            textureLayers = 5;
-            numLayers = 5;
+            // otcv8 optimization from 5 to 2 layers
+            textureLayers = 2;
+            numLayers = 2;
         }
 
         int indexSize = textureLayers * m_numPatternX * m_numPatternY * m_numPatternZ;
@@ -563,21 +584,17 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
                         Point framePos = Point(frameIndex % (textureSize.width() / m_size.width()) * m_size.width(),
                                                frameIndex / (textureSize.width() / m_size.width()) * m_size.height()) * spriteSize;
 
-                        if(!useCustomImage) {
-                            for(int h = 0; h < m_size.height(); ++h) {
-                                for(int w = 0; w < m_size.width(); ++w) {
+                        if (!useCustomImage) {
+                            for (int h = 0; h < m_size.height(); ++h) {
+                                for (int w = 0; w < m_size.width(); ++w) {
                                     uint spriteIndex = getSpriteIndex(w, h, spriteMask ? 1 : l, x, y, z, animationPhase);
                                     ImagePtr spriteImage = g_sprites.getSpriteImage(m_spritesIndex[spriteIndex]);
-                                    if(spriteImage) {
-                                        if(spriteMask) {
-                                            static Color maskColors[] = { Color::red, Color::green, Color::blue, Color::yellow };
-                                            spriteImage->overwriteMask(maskColors[l - 1]);
-                                        }
-                                        Point spritePos = Point(m_size.width()  - w - 1,
-                                                                m_size.height() - h - 1) * spriteSize;
-
-                                        fullImage->blit(framePos + spritePos, spriteImage);
+                                    if (!spriteImage) {
+                                        continue;
                                     }
+                                    Point spritePos = Point(m_size.width() - w - 1,
+                                                            m_size.height() - h - 1) * spriteSize;
+                                    fullImage->blit(framePos + spritePos, spriteImage);
                                 }
                             }
                         }

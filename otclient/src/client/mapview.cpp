@@ -116,7 +116,7 @@ void MapView::drawTiles(bool map, bool creatures, bool isFading, const TilePtr& 
             if (itm->second && !isFading) // render only light
                 drawQueueMap.block();
 
-            if (m_lightView && itm->first->getGround() && !itm->first->getGround()->isTranslucent()) {
+            if (map && m_lightView && itm->first->getGround() && !itm->first->getGround()->isTranslucent()) {
                 m_lightView->addGround(transformPositionTo2D(tilePos, cameraPosition));
             }
 

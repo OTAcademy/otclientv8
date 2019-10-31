@@ -87,6 +87,7 @@ public:
     int getNumPatternZ() { return rawGetThingType()->getNumPatternZ(); }
     int getAnimationPhases() { return rawGetThingType()->getAnimationPhases(); }
     AnimatorPtr getAnimator() { return rawGetThingType()->getAnimator(); }
+    AnimatorPtr getIdleAnimator() { return rawGetThingType()->getIdleAnimator(); }
     int getGroundSpeed() { return rawGetThingType()->getGroundSpeed(); }
     int getMaxTextLength() { return rawGetThingType()->getMaxTextLength(); }
     Light getLight() { return rawGetThingType()->getLight(); }
@@ -135,6 +136,11 @@ public:
     bool isTopEffect() { return rawGetThingType()->isTopEffect(); }
     MarketData getMarketData() { return rawGetThingType()->getMarketData(); }
 
+    void hide() { m_hidden = true; }
+    void show() { m_hidden = false; }
+    void setHidden(bool value) { m_hidden = value; }
+    bool isHidden() { return m_hidden; }
+
     virtual void onPositionChange(const Position& newPos, const Position& oldPos) { }
     virtual void onAppear() { }
     virtual void onDisappear() { }
@@ -143,6 +149,7 @@ protected:
     Position m_position;
     uint16 m_datId;
     bool m_marked = false;
+    bool m_hidden = false;
     Color m_markedColor;
 };
 #pragma pack(pop)

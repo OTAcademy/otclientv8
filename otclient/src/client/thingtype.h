@@ -108,10 +108,7 @@ enum ThingAttr : uint8 {
 };
 
 enum SpriteMask {
-    SpriteMaskRed = 1,
-    SpriteMaskGreen,
-    SpriteMaskBlue,
-    SpriteMaskYellow
+    SpriteMask = 1,
 };
 
 struct MarketData {
@@ -160,6 +157,7 @@ public:
     int getNumPatternZ() { return m_numPatternZ; }
     int getAnimationPhases() { return m_animationPhases; }
     AnimatorPtr getAnimator() { return m_animator; }
+    AnimatorPtr getIdleAnimator() { return m_idleAnimator; }
     Point getDisplacement() { return m_displacement; }
     int getDisplacementX() { return getDisplacement().x; }
     int getDisplacementY() { return getDisplacement().y; }
@@ -233,6 +231,7 @@ private:
     Size m_size;
     Point m_displacement;
     AnimatorPtr m_animator;
+    AnimatorPtr m_idleAnimator;
     int m_animationPhases;
     int m_exactSize;
     int m_realSize;

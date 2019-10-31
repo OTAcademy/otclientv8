@@ -38,7 +38,8 @@ struct DrawQueueItem {
 
 struct DrawQueueOutfitPattern {
     DrawQueueItem texture;
-    std::vector<DrawQueueItem> layers;
+    DrawQueueItem layer;
+    Color colors[4];
 };
 
 struct DrawQueueOutfit : public DrawQueueItem {

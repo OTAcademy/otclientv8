@@ -155,13 +155,11 @@ int LuaObject::luaCallLuaField(const std::string& field, const T&... args) {
     // to force using the __index metamethod of it's metatable
     // so cannot use LuaObject::getField here
     // push field
-    AutoStat s(STATS_LUA, field);
+    //AutoStat s(STATS_LUA, field);
     g_lua.pushObject(asLuaObject());
     g_lua.getField(field);
 
     int ret = 0;
-    uint64_t executionStart = stdext::micros();
-
     if(!g_lua.isNil()) {
         // the first argument is always this object (self)
         g_lua.insert(-2);

@@ -44,6 +44,8 @@ public:
     BitmapFontPtr getFont() const { return m_font; }
     Fw::AlignmentFlag getAlign() { return m_align; }
 
+    bool hasText() { return !m_text.empty(); }
+
 private:
     void update();
 

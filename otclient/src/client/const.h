@@ -429,6 +429,7 @@ namespace Otc
         GameDistanceEffectU16 = 77,
 
         GameExtendedOpcode = 80,
+        GameMinimapLimitedToSingleFloor = 81,
 
         // 90-99 otclientv8 features
         GameNewWalking = 90,

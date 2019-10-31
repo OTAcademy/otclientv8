@@ -20,11 +20,20 @@ void DrawQueueOutfit::draw(const Rect& location, const Rect&, bool mark) {
             g_painter->drawTexturedRect(pattern.texture.dest + location.topLeft(), pattern.texture.texture, pattern.texture.src);
         if (mark)
             continue;
-        for (auto& layer : pattern.layers) {
+        if (pattern.layer.texture) {
             g_painter->setCompositionMode(Painter::CompositionMode_Multiply);
-            if (layer.texture) {
-                g_painter->setColor(layer.color);
-                g_painter->drawTexturedRect(layer.dest + location.topLeft(), layer.texture, layer.src);
+            if (pattern.layer.texture) {
+                Matrix4 mat4;
+                for (int x = 0; x < 4; ++x) {
+                    mat4(x + 1, 1) = pattern.colors[x].rF();
+                    mat4(x + 1, 2) = pattern.colors[x].gF();
+                    mat4(x + 1, 3) = pattern.colors[x].bF();
+                    mat4(x + 1, 4) = pattern.colors[x].aF();
+                }
+                g_painter->setDrawOutfitLayersProgram();
+                g_painter->setMatrixColor(mat4);
+                g_painter->drawTexturedRect(pattern.layer.dest + location.topLeft(), pattern.layer.texture, pattern.layer.src);
+                g_painter->resetShaderProgram();
             }
         }
         g_painter->resetColor();

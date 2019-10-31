@@ -29,6 +29,7 @@
 #include "creature.h"
 #include "item.h"
 #include <framework/luaengine/luaobject.h>
+#include <framework/stdext/time.h>
 
 enum tileflags_t
 {
@@ -66,7 +67,7 @@ public:
 
     void drawItems(const Point & dest, DrawQueue& drawQueue, LightView *lightView);
     void drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView);
-    void drawTexts(const Point& dest);
+    void drawTexts(Point dest);
 
 public:
     void clean();
@@ -155,25 +156,17 @@ public:
         return m_topDepth;
     }
 
-    void addText(const StaticTextPtr& text);
-    void removeText(const StaticTextPtr& text);
-    void clearTexts()
-    {
-        m_texts.clear();
-    }
-    std::vector<StaticTextPtr>& getTexts()
-    {
-        return m_texts;
-    }
+    void setText(const std::string& text, Color color);
+    std::string getText();
+    void setTimer(int time, Color color);
+    int getTimer();
 
-         
 private:
     void checkTranslucentLight();
 
     std::vector<CreaturePtr> m_walkingCreatures;
     std::vector<EffectPtr> m_effects; // leave this outside m_things because it has no stackpos.
     std::vector<ThingPtr> m_things;
-    std::vector<StaticTextPtr> m_texts;
     Position m_position;
     uint8 m_drawElevation;
     uint8 m_minimapColor;
@@ -186,6 +179,10 @@ private:
     uint32_t m_lastCreature = 0;
     
     stdext::boolean<false> m_selected;
+
+    ticks_t m_timer = 0;
+    StaticTextPtr m_timerText;
+    StaticTextPtr m_text;
 };
 
 #endif

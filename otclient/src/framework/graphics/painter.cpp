@@ -31,7 +31,7 @@
 #include <framework/platform/platformwindow.h>
 #include <framework/util/extras.h>
 
-Painter *g_painter = nullptr;
+Painter* g_painter = nullptr;
 
 Painter::Painter()
 {
@@ -63,30 +63,35 @@ Painter::Painter()
     m_drawSolidColorProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslSolidColorFragmentShader);
     m_drawSolidColorProgram->link();
 
-
     m_drawSolidColorOnTextureProgram = PainterShaderProgramPtr(new PainterShaderProgram);
     assert(m_drawSolidColorOnTextureProgram);
     m_drawSolidColorOnTextureProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader);
     m_drawSolidColorOnTextureProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslSolidColorOnTextureFragmentShader);
-    m_drawSolidColorOnTextureProgram->link();    
+    m_drawSolidColorOnTextureProgram->link();
+
+    m_drawOutfitLayersProgram = PainterShaderProgramPtr(new PainterShaderProgram);
+    assert(m_drawOutfitLayersProgram);
+    m_drawOutfitLayersProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader);
+    m_drawOutfitLayersProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslOutfitLayersFragmentShader);
+    m_drawOutfitLayersProgram->link();
 
     m_drawLightProgram = PainterShaderProgramPtr(new PainterShaderProgram);
     assert(m_drawLightProgram);
     m_drawLightProgram->addShaderFromSourceCode(Shader::Vertex, lightVertexShader);
     m_drawLightProgram->addShaderFromSourceCode(Shader::Fragment, lightFragmentShader);
-    m_drawLightProgram->link();    
+    m_drawLightProgram->link();
 
     m_drawNewProgram = PainterShaderProgramPtr(new PainterShaderProgram);
     assert(m_drawNewProgram);
     m_drawNewProgram->addShaderFromSourceCode(Shader::Vertex, newVertexShader);
     m_drawNewProgram->addShaderFromSourceCode(Shader::Fragment, newFragmentShader);
-    m_drawNewProgram->link();    
+    m_drawNewProgram->link();
 
     m_drawLightDepthProgram = PainterShaderProgramPtr(new PainterShaderProgram);
     assert(m_drawLightDepthProgram);
     m_drawLightDepthProgram->addShaderFromSourceCode(Shader::Vertex, lightDepthVertexShader);
     m_drawLightDepthProgram->addShaderFromSourceCode(Shader::Fragment, lightDepthFragmentShader);
-    m_drawLightDepthProgram->link();    
+    m_drawLightDepthProgram->link();
 
     PainterShaderProgram::release();
 }
@@ -136,7 +141,7 @@ void Painter::refreshState()
 
 void Painter::saveState()
 {
-    assert(m_oldStateIndex<10);
+    assert(m_oldStateIndex < 10);
     m_olderStates[m_oldStateIndex].resolution = m_resolution;
     m_olderStates[m_oldStateIndex].transformMatrix = m_transformMatrix;
     m_olderStates[m_oldStateIndex].projectionMatrix = m_projectionMatrix;
@@ -206,7 +211,7 @@ void Painter::clearRect(const Color& color, const Rect& rect)
 
 void Painter::setCompositionMode(Painter::CompositionMode compositionMode)
 {
-    if(m_compositionMode == compositionMode)
+    if (m_compositionMode == compositionMode)
         return;
     m_compositionMode = compositionMode;
     updateGlCompositionMode();
@@ -214,13 +219,13 @@ void Painter::setCompositionMode(Painter::CompositionMode compositionMode)
 
 void Painter::setBlendEquation(Painter::BlendEquation blendEquation)
 {
-    if(m_blendEquation == blendEquation)
+    if (m_blendEquation == blendEquation)
         return;
     m_blendEquation = blendEquation;
     updateGlBlendEquation();
 }
 
-void Painter::setDepthFunc(DepthFunc func) 
+void Painter::setDepthFunc(DepthFunc func)
 {
     if (!g_graphics.canUseDepth())
         return;
@@ -232,7 +237,7 @@ void Painter::setDepthFunc(DepthFunc func)
 
 void Painter::setClipRect(const Rect& clipRect)
 {
-    if(m_clipRect == clipRect)
+    if (m_clipRect == clipRect)
         return;
     m_clipRect = clipRect;
     updateGlClipRect();
@@ -240,19 +245,19 @@ void Painter::setClipRect(const Rect& clipRect)
 
 void Painter::setTexture(Texture* texture)
 {
-    if(m_texture == texture)
+    if (m_texture == texture)
         return;
 
     m_texture = texture;
 
     uint glTextureId;
-    if(texture) {
+    if (texture) {
         setTextureMatrix(texture->getTransformMatrix());
         glTextureId = texture->getId();
     } else
         glTextureId = 0;
 
-    if(m_glTextureId != glTextureId) {
+    if (m_glTextureId != glTextureId) {
         m_glTextureId = glTextureId;
         updateGlTexture();
     }
@@ -260,7 +265,7 @@ void Painter::setTexture(Texture* texture)
 
 void Painter::setAlphaWriting(bool enable)
 {
-    if(m_alphaWriting == enable)
+    if (m_alphaWriting == enable)
         return;
 
     m_alphaWriting = enable;
@@ -282,14 +287,14 @@ void Painter::setResolution(const Size& resolution)
     //   |  x  y  1  |  *  |     0.0      | -2.0 / height |      0.0      |  =  |  x'  y'  1  |
     //   -------------     |    -1.0      |      1.0      |      1.0      |     ---------------
 
-    Matrix3 projectionMatrix = { 2.0f/resolution.width(),  0.0f,                      0.0f,
-        0.0f,                    -2.0f/resolution.height(),  0.0f,
+    Matrix3 projectionMatrix = { 2.0f / resolution.width(),  0.0f,                      0.0f,
+        0.0f,                    -2.0f / resolution.height(),  0.0f,
         -1.0f,                     1.0f,                      1.0f };
 
     m_resolution = resolution;
 
     setProjectionMatrix(projectionMatrix);
-    if(g_painter == this)
+    if (g_painter == this)
         updateGlViewport();
 }
 
@@ -348,52 +353,52 @@ void Painter::popTransformMatrix()
 
 void Painter::updateGlTexture()
 {
-    if(m_glTextureId != 0)
+    if (m_glTextureId != 0)
         glBindTexture(GL_TEXTURE_2D, m_glTextureId);
 }
 
 void Painter::updateGlCompositionMode()
 {
-    switch(m_compositionMode) {
-        case CompositionMode_Normal:
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-            break;
-        case CompositionMode_Multiply:
-            glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-        case CompositionMode_Add:
-            glBlendFunc(GL_ONE, GL_ONE);
-            break;
-        case CompositionMode_Replace:
-            glBlendFunc(GL_ONE, GL_ZERO);
-            break;
-        case CompositionMode_DestBlending:
-            glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA);
-            break;
-        case CompositionMode_Light:
-            glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-            break;
-        case CompositionMode_AlphaZeroing:
-            glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
-            break;
-        case CompositionMode_AlphaRestoring:
-            glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
-            break;
-        case CompositionMode_ZeroAlphaOverrite:
-            glBlendFuncSeparate(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA, GL_ONE, GL_ONE);
-            break;
+    switch (m_compositionMode) {
+    case CompositionMode_Normal:
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+        break;
+    case CompositionMode_Multiply:
+        glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    case CompositionMode_Add:
+        glBlendFunc(GL_ONE, GL_ONE);
+        break;
+    case CompositionMode_Replace:
+        glBlendFunc(GL_ONE, GL_ZERO);
+        break;
+    case CompositionMode_DestBlending:
+        glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA);
+        break;
+    case CompositionMode_Light:
+        glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+        break;
+    case CompositionMode_AlphaZeroing:
+        glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
+        break;
+    case CompositionMode_AlphaRestoring:
+        glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
+        break;
+    case CompositionMode_ZeroAlphaOverrite:
+        glBlendFuncSeparate(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA, GL_ONE, GL_ONE);
+        break;
     }
 }
 
 void Painter::updateGlBlendEquation()
 {
-    if(!g_graphics.canUseBlendEquation())
+    if (!g_graphics.canUseBlendEquation())
         return;
-    if(m_blendEquation == BlendEquation_Add)
+    if (m_blendEquation == BlendEquation_Add)
         glBlendEquation(GL_FUNC_ADD); // GL_FUNC_ADD
-    else if(m_blendEquation == BlendEquation_Max)
+    else if (m_blendEquation == BlendEquation_Max)
         glBlendEquation(0x8008); // GL_MAX
-    else if(m_blendEquation == BlendEquation_Subtract)
+    else if (m_blendEquation == BlendEquation_Subtract)
         glBlendEquation(GL_FUNC_SUBTRACT); // GL_MAX
 }
 
@@ -407,43 +412,43 @@ void Painter::updateDepthFunc()
     }
 
     switch (m_depthFunc) {
-        case DepthFunc_None:
-            glDisable(GL_DEPTH_TEST);
-            break;
-        case DepthFunc_ALWAYS:
-            glDepthFunc(GL_ALWAYS);
-            glDepthMask(GL_TRUE);  
-            break;
-        case DepthFunc_ALWAYS_READ:
-            glDepthFunc(GL_ALWAYS);
-            glDepthMask(GL_FALSE);  
-            break;
-        case DepthFunc_EQUAL:
-            glDepthFunc(GL_EQUAL);
-            glDepthMask(GL_TRUE);  
-            break;
-        case DepthFunc_LEQUAL:
-            glDepthFunc(GL_LEQUAL);
-            glDepthMask(GL_TRUE);  
-            break;
-        case DepthFunc_LEQUAL_READ:
-            glDepthFunc(GL_LEQUAL);
-            glDepthMask(GL_FALSE);  
-            break;
-        case DepthFunc_LESS:
-            glDepthFunc(GL_LESS);
-            glDepthMask(GL_TRUE);  
-            break;
-        case DepthFunc_LESS_READ:
-            glDepthFunc(GL_LESS);
-            glDepthMask(GL_FALSE);  
-            break;
+    case DepthFunc_None:
+        glDisable(GL_DEPTH_TEST);
+        break;
+    case DepthFunc_ALWAYS:
+        glDepthFunc(GL_ALWAYS);
+        glDepthMask(GL_TRUE);
+        break;
+    case DepthFunc_ALWAYS_READ:
+        glDepthFunc(GL_ALWAYS);
+        glDepthMask(GL_FALSE);
+        break;
+    case DepthFunc_EQUAL:
+        glDepthFunc(GL_EQUAL);
+        glDepthMask(GL_TRUE);
+        break;
+    case DepthFunc_LEQUAL:
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(GL_TRUE);
+        break;
+    case DepthFunc_LEQUAL_READ:
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(GL_FALSE);
+        break;
+    case DepthFunc_LESS:
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
+        break;
+    case DepthFunc_LESS_READ:
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_FALSE);
+        break;
     }
 }
 
 void Painter::updateGlClipRect()
 {
-    if(m_clipRect.isValid()) {
+    if (m_clipRect.isValid()) {
         glEnable(GL_SCISSOR_TEST);
         glScissor(m_clipRect.left(), m_resolution.height() - m_clipRect.bottom() - 1, m_clipRect.width(), m_clipRect.height());
     } else {
@@ -454,10 +459,10 @@ void Painter::updateGlClipRect()
 
 void Painter::updateGlAlphaWriting()
 {
-    if(m_alphaWriting)
-        glColorMask(1,1,1,1);
+    if (m_alphaWriting)
+        glColorMask(1, 1, 1, 1);
     else
-        glColorMask(1,1,1,0);
+        glColorMask(1, 1, 1, 0);
 }
 
 void Painter::updateGlViewport()
@@ -468,27 +473,31 @@ void Painter::updateGlViewport()
 void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArray* colorArray)
 {
     int vertexCount = coordsBuffer.getVertexCount();
-    if(vertexCount == 0)
+    if (vertexCount == 0)
         return;
 
     bool textured = coordsBuffer.getTextureCoordCount() > 0 && m_texture;
 
     // skip drawing of empty textures
-    if(textured && m_texture->isEmpty())
+    if (textured && m_texture->isEmpty())
         return;
 
     // update shader with the current painter state
     m_drawProgram->bind();
     m_drawProgram->setTransformMatrix(m_transformMatrix);
     m_drawProgram->setProjectionMatrix(m_projectionMatrix);
-    if(textured) {
+    if (textured) {
         m_drawProgram->setTextureMatrix(m_textureMatrix);
         m_drawProgram->bindMultiTextures();
     }
 
     m_drawProgram->setOpacity(m_opacity);
     m_drawProgram->setDepth(m_depth);
-    m_drawProgram->setColor(m_color);
+    if (m_drawProgram != m_drawOutfitLayersProgram) {
+        m_drawProgram->setColor(m_color);
+    } else {
+        m_drawProgram->setMatrixColor(m_matrixColor);
+    }
     m_drawProgram->setResolution(m_resolution);
     m_drawProgram->updateTime();
 
@@ -497,8 +506,8 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
     bool hardwareCached = coordsBuffer.isHardwareCached();
 
     // only set texture coords arrays when needed
-    if(textured) {
-        if(hardwareCached) {
+    if (textured) {
+        if (hardwareCached) {
             coordsBuffer.getHardwareTextureCoordArray()->bind();
             m_drawProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, nullptr, 2);
         } else {
@@ -513,21 +522,21 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
     }
 
     // set vertex array
-    if(hardwareCached) {
+    if (hardwareCached) {
         coordsBuffer.getHardwareVertexArray()->bind();
         m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, nullptr, 2);
         HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
     } else
         m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
 
-    if(drawMode == Triangles)
+    if (drawMode == Triangles)
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-    else if(drawMode == TriangleStrip)
+    else if (drawMode == TriangleStrip)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     m_draws += vertexCount / 6;
     m_calls += 1;
 
-    if(!textured)
+    if (!textured)
         PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
     if (colorArray)
         PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
@@ -542,7 +551,7 @@ void Painter::drawFillCoords(CoordsBuffer& coordsBuffer)
 
 void Painter::drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture)
 {
-    if(texture && texture->isEmpty())
+    if (texture && texture->isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
@@ -552,7 +561,7 @@ void Painter::drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& te
 
 void Painter::drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
 {
-    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+    if (dest.isEmpty() || src.isEmpty() || texture->isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
@@ -563,9 +572,9 @@ void Painter::drawTexturedRect(const Rect& dest, const TexturePtr& texture, cons
     drawCoords(m_coordsBuffer, TriangleStrip);
 }
 
-void Painter::drawColorOnTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)     
+void Painter::drawColorOnTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
 {
-    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+    if (dest.isEmpty() || src.isEmpty() || texture->isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorOnTextureProgram.get());
@@ -578,7 +587,7 @@ void Painter::drawColorOnTexturedRect(const Rect& dest, const TexturePtr& textur
 
 void Painter::drawUpsideDownTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
 {
-    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+    if (dest.isEmpty() || src.isEmpty() || texture->isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
@@ -591,7 +600,7 @@ void Painter::drawUpsideDownTexturedRect(const Rect& dest, const TexturePtr& tex
 
 void Painter::drawRepeatedTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
 {
-    if(dest.isEmpty() || src.isEmpty() || texture->isEmpty())
+    if (dest.isEmpty() || src.isEmpty() || texture->isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
@@ -604,7 +613,7 @@ void Painter::drawRepeatedTexturedRect(const Rect& dest, const TexturePtr& textu
 
 void Painter::drawFilledRect(const Rect& dest)
 {
-    if(dest.isEmpty())
+    if (dest.isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
@@ -616,7 +625,7 @@ void Painter::drawFilledRect(const Rect& dest)
 
 void Painter::drawFilledTriangle(const Point& a, const Point& b, const Point& c)
 {
-    if(a == b || a == c || b == c)
+    if (a == b || a == c || b == c)
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
@@ -628,7 +637,7 @@ void Painter::drawFilledTriangle(const Point& a, const Point& b, const Point& c)
 
 void Painter::drawBoundingRect(const Rect& dest, int innerLineWidth)
 {
-    if(dest.isEmpty() || innerLineWidth == 0)
+    if (dest.isEmpty() || innerLineWidth == 0)
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
@@ -639,7 +648,8 @@ void Painter::drawBoundingRect(const Rect& dest, int innerLineWidth)
 }
 
 // new render
-void Painter::setAtlasTextures(const TexturePtr& atlas) {
+void Painter::setAtlasTextures(const TexturePtr& atlas)
+{
     static uint activeTexture = 0;
     if (activeTexture == atlas->getId())
         return;
@@ -651,36 +661,39 @@ void Painter::setAtlasTextures(const TexturePtr& atlas) {
     glActiveTexture(GL_TEXTURE0);
 }
 
-inline void addRect(float* dest, const Rect& rect) {
+inline void addRect(float* dest, const Rect& rect)
+{
     dest[0] = rect.left();
     dest[1] = rect.top();
-    dest[2] = rect.right()+1;
+    dest[2] = rect.right() + 1;
     dest[3] = rect.top();
     dest[4] = rect.left();
-    dest[5] = rect.bottom()+1;
+    dest[5] = rect.bottom() + 1;
     dest[6] = rect.left();
-    dest[7] = rect.bottom()+1;
-    dest[8] = rect.right()+1;
+    dest[7] = rect.bottom() + 1;
+    dest[8] = rect.right() + 1;
     dest[9] = rect.top();
-    dest[10] = rect.right()+1;
-    dest[11] = rect.bottom()+1;
+    dest[10] = rect.right() + 1;
+    dest[11] = rect.bottom() + 1;
 }
-inline void addRect(float* dest, const RectF& rect) {
+inline void addRect(float* dest, const RectF& rect)
+{
     dest[0] = rect.left();
     dest[1] = rect.top();
-    dest[2] = rect.right()+1;
+    dest[2] = rect.right() + 1;
     dest[3] = rect.top();
     dest[4] = rect.left();
-    dest[5] = rect.bottom()+1;
+    dest[5] = rect.bottom() + 1;
     dest[6] = rect.left();
-    dest[7] = rect.bottom()+1;
-    dest[8] = rect.right()+1;
+    dest[7] = rect.bottom() + 1;
+    dest[8] = rect.right() + 1;
     dest[9] = rect.top();
-    dest[10] = rect.right()+1;
-    dest[11] = rect.bottom()+1;
+    dest[10] = rect.right() + 1;
+    dest[11] = rect.bottom() + 1;
 }
 
-void Painter::drawQueue(DrawQueue& drawqueue) {
+void Painter::drawQueue(DrawQueue& drawqueue)
+{
     static std::vector<float> destCoords(8192 * 2 * 6);
     static std::vector<float> texCoords(8192 * 2 * 6);
     static std::vector<float> depthBuffer(8192 * 6);
@@ -693,7 +706,7 @@ void Painter::drawQueue(DrawQueue& drawqueue) {
 
     size_t size = 0;
 
-    for(auto& item : drawqueue.items()) {        
+    for (auto& item : drawqueue.items()) {
         if (!item->cached)
             continue;
         addRect(&destCoords[size * 12], item->dest);
@@ -781,8 +794,8 @@ void Painter::drawLightDepth(const std::map<PointF, float> depth, float tileSize
     m_drawLightDepthProgram->bind();
     m_drawLightDepthProgram->setTransformMatrix(m_transformMatrix);
     m_drawLightDepthProgram->setProjectionMatrix(m_projectionMatrix);
-    
-    
+
+
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
     PainterShaderProgram::enableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
 

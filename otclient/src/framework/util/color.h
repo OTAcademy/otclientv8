@@ -51,6 +51,7 @@ public:
     float rF() const { return m_r; }
 
     uint32 rgba() const { return uint32(a() | b() << 8 | g() << 16 | r() << 24); }
+    uint32 argb() const { return uint32(r() | g() << 8 | b() << 16 | a() << 24); }
 
     void setRed(int r) { m_r = uint8(r)/255.0f; }
     void setGreen(int g) { m_g = uint8(g)/255.0f; }

@@ -71,8 +71,7 @@ struct LightBuffer {
     }
 };
 
-class Painter
-{
+class Painter {
 public:
     enum BlendEquation {
         BlendEquation_Add,
@@ -118,13 +117,13 @@ public:
         Painter::BlendEquation blendEquation;
         Painter::DepthFunc depthFunc;
         Rect clipRect;
-        Texture *texture;
-        PainterShaderProgram *shaderProgram;
+        Texture* texture;
+        PainterShaderProgram* shaderProgram;
         bool alphaWriting;
     };
 
     Painter();
-    ~Painter() { }
+    ~Painter() {}
 
     void bind();
     void unbind();
@@ -145,8 +144,8 @@ public:
     void setBlendEquation(BlendEquation blendEquation);
     void setDepthFunc(DepthFunc func);
     void setClipRect(const Rect& clipRect);
-    void setShaderProgram(PainterShaderProgram *shaderProgram) { m_shaderProgram = shaderProgram; }
-    void setTexture(Texture *texture);
+    void setShaderProgram(PainterShaderProgram* shaderProgram) { m_shaderProgram = shaderProgram; }
+    void setTexture(Texture* texture);
     void setAlphaWriting(bool enable);
 
     void setTexture(const TexturePtr& texture) { setTexture(texture.get()); }
@@ -164,7 +163,7 @@ public:
     Matrix3 getProjectionMatrix() { return m_projectionMatrix; }
     Matrix3 getTextureMatrix() { return m_textureMatrix; }
     BlendEquation getBlendEquation() { return m_blendEquation; }
-    PainterShaderProgram *getShaderProgram() { return m_shaderProgram; }
+    PainterShaderProgram* getShaderProgram() { return m_shaderProgram; }
     bool getAlphaWriting() { return m_alphaWriting; }
 
     void resetBlendEquation() { setBlendEquation(BlendEquation_Add); }
@@ -184,7 +183,7 @@ public:
     void drawFilledTriangle(const Point& a, const Point& b, const Point& c);
     void drawBoundingRect(const Rect& dest, int innerLineWidth = 1);
 
-    void setDrawProgram(PainterShaderProgram *drawProgram) { m_drawProgram = drawProgram; }
+    void setDrawProgram(PainterShaderProgram* drawProgram) { m_drawProgram = drawProgram; }
     bool hasShaders() { return true; }
 
     void setAtlasTextures(const TexturePtr& atlas);
@@ -193,8 +192,9 @@ public:
     void drawLights(const LightBuffer& buffer);
     void drawLightDepth(const std::map<PointF, float> depth, float tileSize);
 
+
     //
-    void drawTexturedRect(const Rect& dest, const TexturePtr& texture) { drawTexturedRect(dest, texture, Rect(Point(0,0), texture->getSize())); }
+    void drawTexturedRect(const Rect& dest, const TexturePtr& texture) { drawTexturedRect(dest, texture, Rect(Point(0, 0), texture->getSize())); }
 
     void setColor(const Color& color) { m_color = color; }
     void setShaderProgram(const PainterShaderProgramPtr& shaderProgram) { setShaderProgram(shaderProgram.get()); }
@@ -228,8 +228,18 @@ public:
     int calls() { return m_calls; }
     void resetDraws() { m_draws = m_calls = 0; }
 
-    void setDrawColorOnTextureShaderProgram() {
+    void setDrawColorOnTextureShaderProgram()
+    {
         setShaderProgram(m_drawSolidColorOnTextureProgram);
+    }
+
+    void setMatrixColor(const Matrix4& mat4)
+    {
+        m_matrixColor = mat4;
+    }
+    void setDrawOutfitLayersProgram()
+    {
+        setShaderProgram(m_drawOutfitLayersProgram);
     }
 
 protected:
@@ -251,7 +261,7 @@ protected:
     Matrix3 m_atlasTextureMatrix;
 
     BlendEquation m_blendEquation;
-    Texture *m_texture;
+    Texture* m_texture;
     bool m_alphaWriting;
 
     PainterState m_olderStates[10];
@@ -259,10 +269,11 @@ protected:
 
     uint m_glTextureId;
 
-    PainterShaderProgram *m_shaderProgram;
+    PainterShaderProgram* m_shaderProgram;
     CompositionMode m_compositionMode;
     DepthFunc m_depthFunc;
     Color m_color;
+    Matrix4 m_matrixColor;
     Size m_resolution;
     float m_opacity;
     float m_depth;
@@ -271,17 +282,18 @@ protected:
     int m_calls = 0;
 
 private:
-    PainterShaderProgram *m_drawProgram;
+    PainterShaderProgram* m_drawProgram;
     PainterShaderProgramPtr m_drawTexturedProgram;
     PainterShaderProgramPtr m_drawSolidColorProgram;
     PainterShaderProgramPtr m_drawSolidColorOnTextureProgram;
+    PainterShaderProgramPtr m_drawOutfitLayersProgram;
 
-    PainterShaderProgramPtr m_drawNewProgram;    
+    PainterShaderProgramPtr m_drawNewProgram;
 
-    PainterShaderProgramPtr m_drawLightProgram;    
-    PainterShaderProgramPtr m_drawLightDepthProgram;    
+    PainterShaderProgramPtr m_drawLightProgram;
+    PainterShaderProgramPtr m_drawLightDepthProgram;
 };
 
-extern Painter *g_painter;
+extern Painter* g_painter;
 
 #endif

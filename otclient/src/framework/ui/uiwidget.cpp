@@ -32,6 +32,7 @@
 #include <framework/graphics/texturemanager.h>
 #include <framework/core/application.h>
 #include <framework/luaengine/luainterface.h>
+#include <framework/util/stats.h>
 
 UIWidget::UIWidget()
 {
@@ -44,6 +45,8 @@ UIWidget::UIWidget()
     initBaseStyle();
     initText();
     initImage();
+
+    g_stats.addWidget(this);
 }
 
 UIWidget::~UIWidget()
@@ -53,6 +56,8 @@ UIWidget::~UIWidget()
     if(!m_destroyed)
         g_logger.warning(stdext::format("widget '%s' was not explicitly destroyed", m_id));
 #endif
+
+    g_stats.removeWidget(this);
 }
 
 void UIWidget::draw(const Rect& visibleRect, Fw::DrawPane drawPane)
@@ -772,6 +777,10 @@ void UIWidget::bindRectToParent()
 
 void UIWidget::internalDestroy()
 {
+    if (!getText().empty()) {
+        setText("", true);
+    }
+
     m_destroyed = true;
     m_visible = false;
     m_enabled = false;

@@ -511,10 +511,11 @@ int LuaInterface::signalCall(int numArgs, int numRets)
     try {
         // must be a function
         if(isFunction(funcIndex)) {
-            std::shared_ptr<std::string> error = std::make_shared<std::string>();
+            static std::shared_ptr<std::string> error = std::make_shared<std::string>();
             rets = safeCall(numArgs, -1, error);
             if (!error->empty()) {
                 g_logger.error(stdext::format("protected lua call failed: %s", *error));
+                error->clear();
                 return rets;
             }
 
@@ -534,10 +535,11 @@ int LuaInterface::signalCall(int numArgs, int numRets)
                     for(int i=0;i<numArgs;++i)
                         pushValue(-numArgs-2);
 
-                    std::shared_ptr<std::string> error = std::make_shared<std::string>();
+                    static std::shared_ptr<std::string> error = std::make_shared<std::string>();
                     int rets = safeCall(numArgs, -1, error);
                     if (!error->empty()) {
                         g_logger.error(stdext::format("protected lua call failed: %s", *error));
+                        error->clear();
                         return rets;
                     }
                     if(rets == 1) {
@@ -697,7 +699,7 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
     }
     catch (...) {
         g_logger.fatal(stdext::format("Critical lua error!\nC++ call failed:\n%s|%s", g_lua.getCurrentFunction(), g_lua.traceback("fatal error")));
-    }
+    } 
 
     return numRets;
 }

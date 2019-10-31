@@ -24,6 +24,18 @@ function UIItem:onDrop(widget, mousePos, forced)
 
   local item = widget.currentDragThing
   if not item or not item:isItem() then return false end
+  
+  if self.selectable then
+    self:setItemId(item:getId())
+    self:setItemCount(item:getCount())
+    if item:getSubType() > 1 then
+      self:setItemSubType(item:getSubType())
+    end
+    if self.onItemChange then
+      self:onItemChange()
+    end
+    return
+  end
 
   local toPos = self.position
 
@@ -93,7 +105,7 @@ function UIItem:onMouseRelease(mousePosition, mouseButton)
 end
 
 function UIItem:canAcceptDrop(widget, mousePos)
-  if self:isVirtual() or not self:isDraggable() then return false end
+  if not self.selectable and (self:isVirtual() or not self:isDraggable()) then return false end
   if not widget or not widget.currentDragThing then return false end
 
   local children = rootWidget:recursiveGetChildrenByPos(mousePos)
@@ -108,4 +120,14 @@ function UIItem:canAcceptDrop(widget, mousePos)
 
   error('Widget ' .. self:getId() .. ' not in drop list.')
   return false
+end
+
+function UIItem:onClick(mousePos)
+  if not self.selectable then
+    return
+  end
+
+  if modules.game_itemselector then
+    modules.game_itemselector.show(self)
+  end
 end

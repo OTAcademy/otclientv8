@@ -335,7 +335,7 @@ public:
     bool isConnectionOk() { return m_protocolGame && m_protocolGame->getElapsedTicksSinceLastRead() < 5000; }
 
     int getPing() { return m_ping; }
-    ContainerPtr getContainer(int index) { return m_containers[index]; }
+    ContainerPtr getContainer(int index) { if (m_containers.find(index) == m_containers.end()) { return nullptr; } return m_containers[index]; }
     std::map<int, ContainerPtr> getContainers() { return m_containers; }
     std::map<int, Vip> getVips() { return m_vips; }
     CreaturePtr getAttackingCreature() { return m_attackingCreature; }
@@ -371,6 +371,9 @@ public:
     {
         return m_ignoreServerDirection;
     }
+
+    void enableTileThingLuaCallback(bool value) { m_tileThingsLuaCallback = value; }
+    bool isTileThingLuaCallbackEnabled() { return m_tileThingsLuaCallback; }
 
 protected:
     void enableBotCall() { m_denyBotCall = false; }
@@ -429,6 +432,7 @@ private:
 
     bool m_showRealDirection = false;
     bool m_ignoreServerDirection = true;
+    bool m_tileThingsLuaCallback = false;
 };
 
 extern Game g_game;

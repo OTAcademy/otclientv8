@@ -4,13 +4,14 @@
 #include <iomanip>
 #include <map>
 #include <framework/stdext/time.h>
+#include <framework/ui/uiwidget.h>
 
 Stats g_stats;
 
 AutoStatRecursive* AutoStatRecursive::activeStat = nullptr;
 
 void Stats::add(int type, Stat* stat) {
-    if (type > STATS_LAST)
+    if (type < 0 || type > STATS_LAST)
         return;
 
     auto it = stats[type].data.emplace(stat->description, StatsData(0, 0, stat->extraDescription)).first;
@@ -28,7 +29,7 @@ void Stats::add(int type, Stat* stat) {
 }
 
 std::string Stats::get(int type, int limit, bool pretty) {
-    if (type > STATS_LAST)
+    if (type < 0 || type > STATS_LAST)
         return "";
 
     std::multimap<uint64_t, StatsMap::const_iterator> sorted_stats;
@@ -40,6 +41,9 @@ std::string Stats::get(int type, int limit, bool pretty) {
         sorted_stats.emplace(it->second.executionTime, it);
         total_time += it->second.executionTime;
     }
+
+    if (total_time == 0 || time_from_start == 0)
+        return "";
 
     std::stringstream ret;
 
@@ -65,7 +69,7 @@ std::string Stats::get(int type, int limit, bool pretty) {
 }
 
 void Stats::clear(int type) {
-    if (type > STATS_LAST)
+    if (type < 0 || type > STATS_LAST)
         return;
     stats[type].start = stdext::micros();
     stats[type].data.clear();
@@ -80,7 +84,7 @@ void Stats::clearAll() {
 }
 
 std::string Stats::getSlow(int type, int limit, unsigned int minTime, bool pretty) {
-    if (type > STATS_LAST)
+    if (type < 0 || type > STATS_LAST)
         return "";
 
     std::stringstream ret;
@@ -110,9 +114,71 @@ std::string Stats::getSlow(int type, int limit, unsigned int minTime, bool prett
 }
 
 void Stats::clearSlow(int type) {
-    if (type > STATS_LAST)
+    if (type < 0 || type > STATS_LAST)
         return;
     for (auto& stat : stats[type].slow)
         delete stat;
     stats[type].slow.clear();
+}
+
+
+void Stats::addWidget(UIWidget* widget)
+{
+    createdWidgets += 1;
+    widgets.insert(widget);
+}
+
+void Stats::removeWidget(UIWidget* widget)
+{
+    destroyedWidgets += 1;
+    widgets.erase(widget);
+}
+
+std::string Stats::getWidgetsInfo(int limit, bool pretty)
+{
+    std::stringstream ret;
+    if (pretty)
+        ret << "Widgets: " << widgets.size() << " (" << destroyedWidgets << "/" << createdWidgets << ")\n";
+    else
+        ret << widgets.size() << "|" << destroyedWidgets << "|" << createdWidgets << "\n";
+    if (pretty)
+        ret << "Widget" << std::setw(44) << "Childrens" << std::setw(10) << "\n";
+    else
+        ret << "Widget|Childerns" << "\n";
+
+    for (int z = 0; z < 2; ++z) {
+        if (z == 1) {
+            ret << (pretty ? "Parent of parent\n" : "\n");
+        }
+        std::map<std::string, int> parents;
+        std::multimap<int, std::string> sortedParents;
+        for (auto& widget : widgets) {
+            auto parent = widget->getParent();
+            if (!parent || parent->getId().empty())
+                continue;
+            if (z == 1) {
+                parent = parent->getParent();
+                if (!parent || parent->getId().empty())
+                    continue;
+            }
+            parents.emplace(parent->getId(), 0).first->second += 1;
+        }
+        for (auto& parent : parents) {
+            sortedParents.emplace(parent.second, parent.first);
+        }
+
+        int i = 0;
+        for (auto it = sortedParents.rbegin(); it != sortedParents.rend(); ++it) {
+            if (i++ > limit)
+                break;
+            if (pretty) {
+                std::string name = it->second.substr(0, 45);
+                ret << name << std::setw(50 - name.size()) << it->first << std::setw(10) << "\n";
+            } else {
+                ret << it->second << "|" << it->first << "\n";
+            }
+        }
+    }
+
+    return ret.str();
 }

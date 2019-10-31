@@ -199,7 +199,8 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_stats", "clearSlow", &Stats::clearSlow, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "getSleepTime", &Stats::getSleepTime, &g_stats);
     g_lua.bindSingletonFunction("g_stats", "resetSleepTime", &Stats::resetSleepTime, &g_stats);
-
+    g_lua.bindSingletonFunction("g_stats", "getWidgetsInfo", &Stats::getWidgetsInfo, &g_stats);
+    
     g_lua.registerSingletonClass("g_extras");
     g_lua.bindSingletonFunction("g_extras", "set", &Extras::set, &g_extras);
     g_lua.bindSingletonFunction("g_extras", "get", &Extras::get, &g_extras);
@@ -241,12 +242,11 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_resources", "getBinaryName", &ResourceManager::getBinaryName, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "listDirectoryFiles", &ResourceManager::listDirectoryFiles, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "isFileType", &ResourceManager::isFileType, &g_resources);
-    // unsafe for encryption
-    //g_lua.bindSingletonFunction("g_resources", "readFileContents", &ResourceManager::readFileContents, &g_resources);
-    //g_lua.bindSingletonFunction("g_resources", "writeFileContents", &ResourceManager::writeFileContents, &g_resources);
-    //g_lua.bindSingletonFunction("g_resources", "guessFilePath", &ResourceManager::guessFilePath, &g_resources);
-    //g_lua.bindSingletonFunction("g_resources", "makeDir", &ResourceManager::makeDir, &g_resources);
-    //g_lua.bindSingletonFunction("g_resources", "deleteFile", &ResourceManager::deleteFile, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "readFileContents", &ResourceManager::readFileContentsSafe, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "writeFileContents", &ResourceManager::writeFileContents, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "guessFilePath", &ResourceManager::guessFilePath, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "makeDir", &ResourceManager::makeDir, &g_resources);
+    g_lua.bindSingletonFunction("g_resources", "deleteFile", &ResourceManager::deleteFile, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "readCrashLog", &ResourceManager::readCrashLog, &g_resources);
     g_lua.bindSingletonFunction("g_resources", "deleteCrashLog", &ResourceManager::deleteCrashLog, &g_resources);
 

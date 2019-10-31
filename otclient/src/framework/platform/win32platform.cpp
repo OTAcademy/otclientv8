@@ -26,6 +26,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <framework/stdext/stdext.h>
+#include <framework/core/eventdispatcher.h>
 #include <boost/algorithm/string.hpp>
 #include <tchar.h>
 
@@ -148,7 +149,9 @@ ticks_t Platform::getFileModificationTime(std::string file)
 
 void Platform::openUrl(std::string url)
 {
-    ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
+    g_dispatcher.scheduleEvent([url] {
+        ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
+    }, 50);
 }
 
 std::string Platform::getCPUName()

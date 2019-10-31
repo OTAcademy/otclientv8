@@ -87,7 +87,6 @@ bool Atlas::update(int location, DrawQueue& queue) {
             size = 32;
         if (size > 512) {
             item->cached = false;
-            hasSpace = false;
             continue; // too big to be cached
         }
 
@@ -135,6 +134,7 @@ bool Atlas::update(int location, DrawQueue& queue) {
         if (it == textures.end()) {
             if (m_locations[location][index].empty() && !findSpace(location, index)) {
                 item->cached = false; // no more space in atlas
+                hasSpace = false;
                 continue;
             }
 

@@ -75,15 +75,36 @@ void UIItem::drawSelf(Fw::DrawPane drawPane)
 
 void UIItem::setItemId(int id)
 {
-    if(!m_item && id != 0)
+    if (!m_item && id != 0)
         m_item = Item::create(id);
     else {
         // remove item
-        if(id == 0)
+        if (id == 0)
             m_item = nullptr;
         else
             m_item->setId(id);
     }
+
+    callLuaField("onItemChange");
+}
+
+void UIItem::setItemCount(int count)
+{
+    if (m_item)
+        m_item->setCount(count);
+    callLuaField("onItemChange");
+}
+void UIItem::setItemSubType(int subType)
+{
+    if (m_item)
+        m_item->setSubType(subType);
+    callLuaField("onItemChange");
+}
+
+void UIItem::setItem(const ItemPtr& item)
+{
+    m_item = item;
+    callLuaField("onItemChange");
 }
 
 void UIItem::onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode)

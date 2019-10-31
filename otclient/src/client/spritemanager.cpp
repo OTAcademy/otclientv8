@@ -246,49 +246,37 @@ ImagePtr SpriteManager::getSpriteImage(int id)
 
         ImagePtr image(new Image(Size(m_spriteSize, m_spriteSize)));
 
-        uint8 *pixels = image->getPixelData();
+        uint8* pixels = image->getPixelData();
         int writePos = 0;
         int read = 0;
         bool useAlpha = g_game.getFeature(Otc::GameSpritesAlphaChannel);
-        uint8 channels = useAlpha ? 4 : 3;
 
         // decompress pixels
-        while(read < pixelDataSize && writePos < spriteDataSize) {
+        while (read < pixelDataSize && writePos < spriteDataSize) {
             uint16 transparentPixels = m_spritesFile->getU16();
             uint16 coloredPixels = m_spritesFile->getU16();
 
-            for(int i = 0; i < transparentPixels && writePos < spriteDataSize; i++) {
-                pixels[writePos + 0] = 0x00;
-                pixels[writePos + 1] = 0x00;
-                pixels[writePos + 2] = 0x00;
-                pixels[writePos + 3] = 0x00;
-                writePos += 4;
+            writePos += transparentPixels * 4;
+
+            if (useAlpha) {
+                m_spritesFile->read(&pixels[writePos], std::min<uint16>(coloredPixels * 4, spriteDataSize - writePos));
+                writePos += coloredPixels * 4;
+                read += 4 + (4 * coloredPixels);
+            } else {
+                for (int i = 0; i < coloredPixels && writePos < spriteDataSize; i++) {
+                    pixels[writePos + 0] = m_spritesFile->getU8();
+                    pixels[writePos + 1] = m_spritesFile->getU8();
+                    pixels[writePos + 2] = m_spritesFile->getU8();
+                    pixels[writePos + 3] = 0xFF;
+                    writePos += 4;
+                }
+                read += 4 + (3 * coloredPixels);
             }
-
-            for(int i = 0; i < coloredPixels && writePos < spriteDataSize; i++) {
-                pixels[writePos + 0] = m_spritesFile->getU8();
-                pixels[writePos + 1] = m_spritesFile->getU8();
-                pixels[writePos + 2] = m_spritesFile->getU8();
-                pixels[writePos + 3] = useAlpha ? m_spritesFile->getU8() : 0xFF;
-                writePos += 4;
-            }
-
-            read += 4 + (channels * coloredPixels);
-        }
-
-        // fill remaining pixels with alpha
-        while(writePos < spriteDataSize) {
-            pixels[writePos + 0] = 0x00;
-            pixels[writePos + 1] = 0x00;
-            pixels[writePos + 2] = 0x00;
-            pixels[writePos + 3] = 0x00;
-            writePos += 4;
         }
 
         return image;
-    } catch(stdext::exception& e) {
+    } catch (stdext::exception & e) {
         g_logger.error(stdext::format("Failed to get sprite id %d: %s", id, e.what()));
         return nullptr;
     }
 }
-

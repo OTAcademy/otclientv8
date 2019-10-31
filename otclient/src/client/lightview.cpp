@@ -68,7 +68,7 @@ TexturePtr LightView::generateLightBubble(float centerFactor)
         }
     }
 
-    TexturePtr tex = TexturePtr(new Texture(lightImage, true));
+    TexturePtr tex = TexturePtr(new Texture(lightImage, false));
     tex->setSmooth(true);
     return tex;
 }

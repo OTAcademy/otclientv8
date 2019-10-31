@@ -9,6 +9,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <cassert>
+#include <set>
 
 // NOT THREAD SAFE
 
@@ -42,6 +43,8 @@ struct StatsData {
 using StatsMap = std::unordered_map<std::string, StatsData>;
 using StatsList = std::list<Stat*>;
 
+class UIWidget;
+
 class Stats {
 public:
     void add(int type, Stat* stats);
@@ -65,12 +68,20 @@ public:
 
     int64_t m_sleepTime = 0;
 
+    void addWidget(UIWidget* widget);
+    void removeWidget(UIWidget* widget);
+    std::string getWidgetsInfo(int limit, bool pretty);
+
 private:
     struct {
         StatsMap data;
         StatsList slow;
         int64_t start = 0;
     } stats[STATS_LAST + 1];
+
+    std::set<UIWidget*> widgets;
+    int createdWidgets = 0;
+    int destroyedWidgets = 0;
 };
 
 extern Stats g_stats;

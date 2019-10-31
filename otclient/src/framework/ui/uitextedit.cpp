@@ -196,7 +196,7 @@ void UITextEdit::update(bool focusCursor)
                         glyphRect.setLeft(std::max<int>(glyphRect.left() - m_font->getGlyphSpacing().width(), 0));
 
                         // first glyph entirely visible found
-                        if(glyphRect.topLeft() >= startGlyphPos) {
+                        if(glyphRect.topLeft().x >= startGlyphPos.x && glyphRect.topLeft().y >= startGlyphPos.y) {
                             m_textVirtualOffset.x = glyphsPositions[pos].x;
                             m_textVirtualOffset.y = glyphsPositions[pos].y - m_font->getYOffset();
                             break;
@@ -389,7 +389,7 @@ void UITextEdit::appendText(std::string text)
         if(!m_multiline)
             stdext::replace_all(text, "\n", " ");
         stdext::replace_all(text, "\r", "");
-        stdext::replace_all(text, "\t", "    ");
+        stdext::replace_all(text, "\t", "  ");
 
         if(text.length() > 0) {
             // only add text if textedit can add it
