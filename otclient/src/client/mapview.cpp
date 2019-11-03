@@ -176,6 +176,7 @@ void MapView::drawTileTexts(const Rect& rect, const Rect& srcRect)
         p.x *= horizontalStretchFactor;
         p.y *= verticalStretchFactor;
         p += rect.topLeft();
+        p.y += 5;
 
         tile.first->drawTexts(p);
     }

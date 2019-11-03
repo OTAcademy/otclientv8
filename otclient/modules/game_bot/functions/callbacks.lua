@@ -11,9 +11,10 @@ context.callback = function(callbackType, callback)
   local callbackData = {}
   table.insert(context._callbacks[callbackType], function(...)
     if not callbackData.delay or callbackData.delay < context.now then
+      local prevExecution = context._currentExecution
       context._currentExecution = callbackData       
       callback(...)
-      context._currentExecution = nil
+      context._currentExecution = prevExecution
     end
   end)
 end
@@ -68,8 +69,32 @@ context.onCreatureHealthPercentChange = function(callback)
   return context.callback("onCreatureHealthPercentChange", callback)
 end
 
+-- onUse(callback) -- callback = function(pos, itemId, stackPos, subType)
+context.onUse = function(callback)
+  return context.callback("onUse", callback)
+end
 
--- custom callbacks
+-- onUseWith(callback) -- callback = function(pos, itemId, target, subType)
+context.onUseWith = function(callback)
+  return context.callback("onUseWith", callback)
+end
+
+-- onContainerOpen -- callback = function(container, previousContainer)
+context.onContainerOpen = function(callback)
+  return context.callback("onContainerOpen", callback)
+end
+
+-- onContainerUpdateItem -- callback = function(container)
+context.onContainerClose = function(callback)
+  return context.callback("onContainerClose", callback)
+end
+
+-- onContainerUpdateItem -- callback = function(container, slot, item)
+context.onContainerUpdateItem = function(callback)
+  return context.callback("onContainerUpdateItem", callback)
+end
+
+-- CUSTOM CALLBACKS
 
 -- listen(name, callback) -- callback = function(text, channelId, pos)
 context.listen = function(name, callback)

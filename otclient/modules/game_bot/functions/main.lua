@@ -36,7 +36,7 @@ context.macro = function(timeout, name, hotkey, callback, parent)
   local switch = nil
   if name:len() > 0 then
     if context.storage._macros[name] == nil then
-      context.storage._macros[name] = true
+      context.storage._macros[name] = false
     end
     switch = context._addMacroSwitch(name, hotkey, parent)
   end
@@ -52,7 +52,7 @@ context.macro = function(timeout, name, hotkey, callback, parent)
   local macroData = context._macros[#context._macros]
   macroData.callback = function()
     if not macroData.delay or macroData.delay < context.now then
-      context._currentExecution = macroData       
+      context._currentExecution = macroData   
       callback()
       context._currentExecution = nil    
       return true

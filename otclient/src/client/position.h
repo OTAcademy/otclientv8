@@ -238,6 +238,11 @@ public:
         return false;
     }
 
+    std::string toString()
+    {
+        return std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z);
+    }
+
     int x;
     int y;
     short z;

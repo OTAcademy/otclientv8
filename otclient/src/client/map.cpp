@@ -62,7 +62,7 @@ void Map::removeMapView(const MapViewPtr& mapView)
         m_mapViews.erase(it);
 }
 
-void Map::notificateTileUpdate(const Position& pos)
+void Map::notificateTileUpdate(const Position& pos, bool updateMinimap)
 {
     if(!pos.isMapPosition())
         return;
@@ -70,10 +70,10 @@ void Map::notificateTileUpdate(const Position& pos)
     for(const MapViewPtr& mapView : m_mapViews)
         mapView->onTileUpdate(pos);
 
-    if (!isAwareOfPosition(pos))
+    if (!updateMinimap)
         return;
 
-    if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) && g_game.getLocalPlayer() && g_game.getLocalPlayer()->getPosition().z == pos.z) {
+    if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) || (m_centralPosition.z == pos.z)) {
         g_minimap.updateTile(pos, getTile(pos));
     }
 }
@@ -179,7 +179,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
         thing->onAppear();
     }
 
-    notificateTileUpdate(pos);
+    notificateTileUpdate(pos, thing->isItem());
 }
 
 void Map::setTileSpeed(const Position& pos, uint16_t speed, uint8_t blocking) {
@@ -226,7 +226,7 @@ bool Map::removeThing(const ThingPtr& thing)
     } else if(const TilePtr& tile = thing->getTile())
         ret = tile->removeThing(thing);
 
-    notificateTileUpdate(thing->getPosition());
+    notificateTileUpdate(thing->getPosition(), thing->isItem());
     return ret;
 }
 
@@ -380,7 +380,7 @@ void Map::cleanTile(const Position& pos)
             if(tile->canErase())
                 block.remove(pos);
 
-            notificateTileUpdate(pos);
+            notificateTileUpdate(pos, false);
         }
     }
     for(auto it = m_staticTexts.begin();it != m_staticTexts.end();) {
@@ -391,10 +391,7 @@ void Map::cleanTile(const Position& pos)
             ++it;
     }
 
-    if (!isAwareOfPosition(pos))
-        return;
-
-    if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) && g_game.getLocalPlayer() && g_game.getLocalPlayer()->getPosition().z == pos.z) {
+    if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) || (m_centralPosition.z == pos.z)) {
         g_minimap.updateTile(pos, getTile(pos));
     }
 }
@@ -973,7 +970,7 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
                         it = nodes.emplace(neighbor, nullptr).first;
                     } else {
                         if (!wasSeen)
-                            speed = 1000;
+                            speed = 2000;
                         it = nodes.emplace(neighbor, new Node{ speed, 10000000.0f, neighbor, node, node->distance + 1, wasSeen ? 0 : 1 }).first;
                     }
                 }
@@ -1038,4 +1035,138 @@ void Map::findPathAsync(const Position& start, const Position& goal, std::functi
         auto ret = g_map.newFindPath(start, goal, visibleNodes);
         g_dispatcher.addEvent(std::bind(callback, ret));
     });
+}
+
+std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath(const Position& start, int maxDistance, const std::map<std::string, std::string>& params)
+{
+    // using Dijkstra's algorithm
+    struct LessNode {
+        bool operator()(Node* a, Node* b) const
+        {
+            return b->totalCost < a->totalCost;
+        }
+    };
+
+    if (g_extras.debugPathfinding) {
+        g_logger.info(stdext::format("findEveryPath: %i %i %i - %i", start.x, start.y, start.z, maxDistance));
+        for (auto& param : params) {
+            g_logger.info(stdext::format("%s - %s", param.first, param.second));
+        }
+    }
+
+    std::map<std::string, std::string>::const_iterator it;
+    it = params.find("ignoreLastCreature");
+    bool ignoreLastCreature = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("ignoreCreatures");
+    bool ignoreCreatures = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("ignoreNonPathable");
+    bool ignoreNonPathable = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("ignoreNonWalkable");
+    bool ignoreNonWalkable = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("ignoreStairs");
+    bool ignoreStairs = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("ignoreCost");
+    bool ignoreCost = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("allowUnseen");
+    bool allowUnseen = it != params.end() && it->second != "0" && it->second != "";
+    Position destPos;
+    it = params.find("destination");
+    if (it != params.end()) {
+        std::vector<int32> pos = stdext::split<int32>(it->second, ",");
+        if (pos.size() == 3) {
+            destPos = Position(pos[0], pos[1], pos[2]);
+        }
+    }
+
+    std::map<std::string, std::tuple<int, int, int, std::string>> ret;
+    std::unordered_map<Position, Node*, PositionHasher> nodes;
+    std::priority_queue<Node*, std::vector<Node*>, LessNode> searchList;
+
+    Node* initNode = new Node{ 1, 0, start, nullptr, 0, 0 };
+    nodes[start] = initNode;
+    searchList.push(initNode);
+
+    while (!searchList.empty()) {
+        Node* node = searchList.top();
+        searchList.pop();        
+        ret[node->pos.toString()] = std::make_tuple(node->totalCost, node->distance, 
+                                                    node->prev ? node->prev->pos.getDirectionFromPosition(node->pos) : -1,
+                                                    node->prev ? node->prev->pos.toString() : "");
+        if (node->pos == destPos)
+            break;
+        if (node->distance >= maxDistance)
+            continue;
+        for (int i = -1; i <= 1; ++i) {
+            for (int j = -1; j <= 1; ++j) {
+                if (i == 0 && j == 0)
+                    continue;
+                Position neighbor = node->pos.translated(i, j);
+                auto it = nodes.find(neighbor);
+                if (it == nodes.end()) {
+                    bool wasSeen = false;
+                    bool hasCreature = false;
+                    bool isNotWalkable = false;
+                    bool isNotPathable = false;
+                    int mapColor = 0;
+                    int speed = 1000;
+                    if (g_map.isAwareOfPosition(neighbor)) {
+                        if (const TilePtr& tile = getTile(neighbor)) {
+                            wasSeen = true;
+                            hasCreature = tile->hasBlockingCreature();
+                            isNotWalkable = !tile->isWalkable(true);
+                            isNotPathable = !tile->isPathable();
+                            mapColor = tile->getMinimapColorByte();
+                            speed = tile->getGroundSpeed();
+                        }
+                    } else {
+                        const MinimapTile& mtile = g_minimap.getTile(neighbor);
+                        wasSeen = mtile.hasFlag(MinimapTileWasSeen);
+                        isNotWalkable = mtile.hasFlag(MinimapTileNotWalkable);
+                        isNotPathable = mtile.hasFlag(MinimapTileNotPathable);
+                        mapColor = mtile.color;
+                        if (isNotWalkable || isNotPathable)
+                            wasSeen = true;
+                        speed = mtile.getSpeed();
+                    }
+                    bool hasStairs = isNotPathable && mapColor >= 210 && mapColor <= 213;
+                    if ((!wasSeen && !allowUnseen) || (hasStairs && !ignoreStairs && neighbor != destPos) || (isNotPathable && !ignoreNonPathable) || (isNotWalkable && !ignoreNonWalkable)) {
+                        it = nodes.emplace(neighbor, nullptr).first;
+                    } else if ((hasCreature && !ignoreCreatures)) {
+                        it = nodes.emplace(neighbor, nullptr).first;
+                        if (ignoreLastCreature) {
+                            ret[neighbor.toString()] = std::make_tuple(node->totalCost + 100, node->distance + 1, 
+                                                                       node->pos.getDirectionFromPosition(neighbor),
+                                                                       node->pos.toString());
+                        }
+                    } else {
+                        it = nodes.emplace(neighbor, new Node{ (float)speed, 10000000.0f, neighbor, node, node->distance + 1, wasSeen ? 0 : 1 }).first;
+                    }
+                }
+
+                if (!it->second) {
+                    continue;
+                }
+
+                float diagonal = ((i == 0 || j == 0) ? 1.0f : 3.0f);
+                float cost = it->second->cost * diagonal;
+                if (ignoreCost)
+                    cost = 1;
+                if (node->totalCost + cost < it->second->totalCost) {
+                    it->second->totalCost = node->totalCost + cost;
+                    it->second->prev = node;
+                    if (it->second->unseen)
+                        it->second->unseen = node->unseen + 1;
+                    it->second->distance = node->distance + 1;
+                    searchList.push(it->second);
+                }
+            }
+        }
+    }
+
+    for (auto& node : nodes) {
+        if (node.second)
+            delete node.second;
+    }
+
+    return ret;
 }

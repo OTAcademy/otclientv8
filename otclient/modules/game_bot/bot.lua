@@ -26,7 +26,13 @@ function init()
   dofile("defaultconfig")
   dofile("executor")
   
-  connect(g_game, { onGameStart = online, onGameEnd = offline, onTalk = botOnTalk})
+  connect(g_game, { 
+    onGameStart = online, 
+    onGameEnd = offline, 
+    onTalk = botOnTalk,
+    onUse = botOnUse,
+    onUseWith = botOnUseWith
+  })
 
   connect(rootWidget, { onKeyDown = botKeyDown,
                         onKeyUp = botKeyUp,
@@ -36,7 +42,7 @@ function init()
 
   connect(Creature, {
     onAppear = botCreatureAppear,
-    onDisappear =botCreatureDisappear,
+    onDisappear = botCreatureDisappear,
     onPositionChange = botCreaturePositionChange,
     onHealthPercentChange = botCraetureHealthPercentChange
   })  
@@ -44,6 +50,9 @@ function init()
     onPositionChange = botCreaturePositionChange,
     onHealthPercentChange = botCraetureHealthPercentChange
   })  
+  connect(Container, { onOpen = botContainerOpen,
+                       onClose = botContainerClose,
+                       onUpdateItem = botContainerUpdateItem })
   
   botConfigFile = g_configs.create("/bot.otml")
   local config = botConfigFile:get("config")
@@ -56,6 +65,9 @@ function init()
   else
     botConfig = botDefaultConfig
   end
+  
+  botConfig.configs[1].name = botDefaultConfig.configs[1].name
+  botConfig.configs[1].script = botDefaultConfig.configs[1].script
 
   botButton = modules.client_topmenu.addRightGameToggleButton('botButton',
     tr('Bot'), '/images/topbuttons/bot', toggle)
@@ -136,7 +148,13 @@ function terminate()
                         onKeyUp = botKeyUp,
                         onKeyPress = botKeyPress })
 
-  disconnect(g_game, { onGameStart = online, onGameEnd = offline, onTalk = botOnTalk})
+  disconnect(g_game, { 
+    onGameStart = online, 
+    onGameEnd = offline, 
+    onTalk = botOnTalk,
+    onUse = botOnUse,
+    onUseWith = botOnUseWith
+  })
   
   disconnect(Tile, { onAddThing = botAddThing, onRemoveThing = botRemoveThing })
 
@@ -150,6 +168,9 @@ function terminate()
     onPositionChange = botCreaturePositionChange,
     onHealthPercentChange = botCraetureHealthPercentChange
   })  
+  disconnect(Container, { onOpen = botContainerOpen,
+                       onClose = botContainerClose,
+                       onUpdateItem = botContainerUpdateItem })
 
   removeEvent(executeEvent)
   removeEvent(checkMsgsEvent)
@@ -177,7 +198,7 @@ function online()
   botButton:show()
   updateEnabled()
   if botConfig.enabled then
-    scheduleEvent(refreshConfig, 1)
+    scheduleEvent(refreshConfig, 20)
   else 
     clearConfig()
   end
@@ -309,6 +330,12 @@ function clearConfig()
   
   botMessages:destroyChildren()
   botMessages:updateLayout()
+
+  for i, widget in pairs(g_ui.getRootWidget():getChildren()) do
+    if widget.botWidget then
+      widget:destroy()
+    end
+  end
 end
 
 function refreshConfig()
@@ -337,7 +364,7 @@ function refreshConfig()
   end
   errorOccured = false
   g_game.enableTileThingLuaCallback(false)
-  local status, result = pcall(function() return executeBot(config.script, config.storage, botTabs, botMsgCallback) end)
+  local status, result = pcall(function() return executeBot(config.script, config.storage, botTabs, botMsgCallback, saveConfig) end)
   if not status then    
     errorOccured = true
     statusLabel:setText("Error: " .. tostring(result))
@@ -453,4 +480,29 @@ end
 function botCraetureHealthPercentChange(creature, healthPercent)
   if compiledConfig == nil then return false end
   safeBotCall(function() compiledConfig.callbacks.onCreatureHealthPercentChange(creature, healthPercent) end)
+end
+
+function botOnUse(pos, itemId, stackPos, subType)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onUse(pos, itemId, stackPos, subType) end)
+end
+
+function botOnUseWith(pos, itemId, target, subType)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onUseWith(pos, itemId, target, subType) end)
+end
+
+function botContainerOpen(container, previousContainer)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onContainerOpen(container, previousContainer) end)
+end
+
+function botContainerClose(container)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onContainerClose(container) end)
+end
+
+function botContainerUpdateItem(container, slot, item)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onContainerUpdateItem(container, slot, item) end)
 end

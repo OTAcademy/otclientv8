@@ -803,9 +803,10 @@ void ProtocolGame::parseMapMoveNorth(const InputMessagePtr& msg)
         pos = g_map.getCentralPosition();
     pos.y--;
 
+    g_map.setCentralPosition(pos);
+
     AwareRange range = g_map.getAwareRange();
     setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), 1);
-    g_map.setCentralPosition(pos);
 }
 
 void ProtocolGame::parseMapMoveEast(const InputMessagePtr& msg)
@@ -817,9 +818,10 @@ void ProtocolGame::parseMapMoveEast(const InputMessagePtr& msg)
         pos = g_map.getCentralPosition();
     pos.x++;
 
+    g_map.setCentralPosition(pos);
+
     AwareRange range = g_map.getAwareRange();
     setMapDescription(msg, pos.x + range.right, pos.y - range.top, pos.z, 1, range.vertical());
-    g_map.setCentralPosition(pos);
 }
 
 void ProtocolGame::parseMapMoveSouth(const InputMessagePtr& msg)
@@ -831,9 +833,10 @@ void ProtocolGame::parseMapMoveSouth(const InputMessagePtr& msg)
         pos = g_map.getCentralPosition();
     pos.y++;
 
+    g_map.setCentralPosition(pos);
+
     AwareRange range = g_map.getAwareRange();
     setMapDescription(msg, pos.x - range.left, pos.y + range.bottom, pos.z, range.horizontal(), 1);
-    g_map.setCentralPosition(pos);
 }
 
 void ProtocolGame::parseMapMoveWest(const InputMessagePtr& msg)
@@ -845,9 +848,10 @@ void ProtocolGame::parseMapMoveWest(const InputMessagePtr& msg)
         pos = g_map.getCentralPosition();
     pos.x--;
 
+    g_map.setCentralPosition(pos);
+
     AwareRange range = g_map.getAwareRange();
     setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, 1, range.vertical());
-    g_map.setCentralPosition(pos);
 }
 
 void ProtocolGame::parseUpdateTile(const InputMessagePtr& msg)
@@ -1782,6 +1786,11 @@ void ProtocolGame::parseFloorChangeUp(const InputMessagePtr& msg)
     AwareRange range = g_map.getAwareRange();
     pos.z--;
 
+    Position newPos = pos;
+    newPos.x++;
+    newPos.y++;
+    g_map.setCentralPosition(newPos);
+
     int skip = 0;
     if(pos.z == Otc::SEA_FLOOR)
         for(int i = Otc::SEA_FLOOR - Otc::AWARE_UNDEGROUND_FLOOR_RANGE; i >= 0; i--)
@@ -1789,9 +1798,6 @@ void ProtocolGame::parseFloorChangeUp(const InputMessagePtr& msg)
     else if(pos.z > Otc::SEA_FLOOR)
         skip = setFloorDescription(msg, pos.x - range.left, pos.y - range.top, pos.z - Otc::AWARE_UNDEGROUND_FLOOR_RANGE, range.horizontal(), range.vertical(), 3, skip);
 
-    pos.x++;
-    pos.y++;
-    g_map.setCentralPosition(pos);
 }
 
 void ProtocolGame::parseFloorChangeDown(const InputMessagePtr& msg)
@@ -1804,6 +1810,11 @@ void ProtocolGame::parseFloorChangeDown(const InputMessagePtr& msg)
     AwareRange range = g_map.getAwareRange();
     pos.z++;
 
+    Position newPos = pos;
+    newPos.x--;
+    newPos.y--;
+    g_map.setCentralPosition(newPos);
+
     int skip = 0;
     if(pos.z == Otc::UNDERGROUND_FLOOR) {
         int j, i;
@@ -1812,10 +1823,6 @@ void ProtocolGame::parseFloorChangeDown(const InputMessagePtr& msg)
     }
     else if(pos.z > Otc::UNDERGROUND_FLOOR && pos.z < Otc::MAX_Z-1)
         skip = setFloorDescription(msg, pos.x - range.left, pos.y - range.top, pos.z + Otc::AWARE_UNDEGROUND_FLOOR_RANGE, range.horizontal(), range.vertical(), -3, skip);
-
-    pos.x--;
-    pos.y--;
-    g_map.setCentralPosition(pos);
 }
 
 void ProtocolGame::parseOpenOutfitWindow(const InputMessagePtr& msg)

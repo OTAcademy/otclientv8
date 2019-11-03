@@ -666,6 +666,14 @@ bool Tile::hasCreature()
     return false;
 }
 
+bool Tile::hasBlockingCreature()
+{
+    for (const ThingPtr& thing : m_things)
+        if (thing->isCreature() && !thing->static_self_cast<Creature>()->isPassable())
+            return true;
+    return false;
+}
+
 bool Tile::limitsFloorsView(bool isFreeView)
 {
     // ground and walls limits the view

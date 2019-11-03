@@ -49,9 +49,8 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
         calculateGlyphsWidthsAutomatically(Image::load(textureFile), glyphSize);
     }
 
-    // 32 and 160 are spaces (&nbsp;)
+    // 32 is space
     m_glyphsSize[32].setWidth(spaceWidth);
-    m_glyphsSize[160].setWidth(spaceWidth);
 
     // use 127 as spacer [Width: 1], Important for the current NPC highlighting system
     m_glyphsSize[127].setWidth(1);
@@ -377,7 +376,7 @@ std::string BitmapFont::newWrapText(const std::string& text, int maxWidth)
             continue;
         }
 
-        if (glyph < 32 || glyph > 126) // not ascii character
+        if (glyph < 32) // invalid character
             continue; 
 
         wordLength += m_glyphsSize[glyph].width() + m_glyphSpacing.width();

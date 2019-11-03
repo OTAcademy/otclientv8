@@ -1007,10 +1007,6 @@ int Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
     else
         interval /= speed;
 
-    if (g_game.getClientVersion() >= 900) {
-        interval = std::ceil((float)interval / (float)g_game.getServerBeat()) * g_game.getServerBeat();
-    }
-
     float factor = 3;
     if(g_game.getClientVersion() <= 810)
         factor = 2;
@@ -1021,13 +1017,11 @@ int Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
        m_lastStepDirection == Otc::SouthWest || m_lastStepDirection == Otc::SouthEast))
         interval *= factor;
 
-    interval += 10;
-
     if (!isServerWalking() && g_game.getFeature(Otc::GameSlowerManualWalking))
     {
-        interval += 20;
+        interval += 25;
     }
-    if(isServerWalking() && g_game.getFeature(Otc::GameNewWalking)) // just use server value
+    if(isServerWalking() && g_game.getFeature(Otc::GameNewWalking) && m_stepDuration > 0) // just use server value
     {
         interval = m_stepDuration;
     }

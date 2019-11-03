@@ -115,6 +115,7 @@ public:
     bool mustHookSouth();
     bool mustHookEast();
     bool hasCreature();
+    bool hasBlockingCreature();
     bool limitsFloorsView(bool isFreeView = false);
     bool canErase();
     int getElevation() const;

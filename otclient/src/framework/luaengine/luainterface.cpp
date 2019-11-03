@@ -485,7 +485,9 @@ int LuaInterface::safeCall(int numArgs, int numRets, const std::shared_ptr<std::
             clearStack();
             return 0;
         } else {
-            throw LuaException(popString());
+            std::string errorMsg = popString();
+            g_logger.error(stdext::format("Lua error: %s", errorMsg));
+            throw LuaException(errorMsg);
         }
     }
     int rets = (stackSize() + numArgs + 1) - previousStackSize;

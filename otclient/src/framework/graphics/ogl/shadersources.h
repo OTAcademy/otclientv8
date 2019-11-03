@@ -93,11 +93,11 @@ static const std::string glslOutfitLayersFragmentShader = "\n\
     highp vec4 calculatePixel() {\n\
         vec4 texcolor = texture2D(u_Tex0, v_TexCoord);\n\
         if(texcolor.r > 0.9)\n\
-            return texcolor.g > 0.9 ? u_Color[0] : u_Color[3];\n\
+            return texcolor.g > 0.9 ? u_Color[0] : u_Color[1];\n\
         if(texcolor.g > 0.9)\n\
             return u_Color[2];\n\
         if(texcolor.b > 0.9)\n\
-            return u_Color[1];\n\
+            return u_Color[3];\n\
         return vec4(0,0,0,0);\n\
     }\n";
 

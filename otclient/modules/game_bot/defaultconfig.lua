@@ -1,41 +1,81 @@
 botDefaultConfig = {
   configs = {
-    {name = "Example", script = [=[
---Example
+    {name = "Default", script = [=[
+--Default
+--IMPORTANT
+--In this config editions are not saved
 
 --#main
 
 Panels.Haste()
 Panels.ManaShield()
-Panels.Health()
-Panels.HealthItem()
-Panels.ManaItem()
-Panels.ManaItem()
 Panels.AntiParalyze()
 
-local tab2 = addTab("Another Tab")
-addButton("button1", "test button on 2nd tab", nil, tab2)
+local battleTab = addTab("Battle")
+local caveTab = addTab("Cave")
+local toolsTab = addTab("Tools")
 
-local tab3 = addTab("3th tab")
-addLabel("label1", "Label on 3th tab", tab3)
-Panels.Turning(tab3)
+Panels.Eating(battleTab)
+Panels.Health(battleTab)
+Panels.HealthItem(battleTab)
+Panels.ManaItem(battleTab)
+Panels.AttackSpell(battleTab)
+
+local waypoints = Panels.Waypoints(caveTab)
+local attacking = Panels.Attacking(caveTab)
+local looting = Panels.Looting(caveTab) 
+addButton("tutorial", "Help & Tutorials", function()
+  g_platform.openUrl("https://github.com/OTCv8/otclientv8_bot")
+end, caveTab)
 
 --#macros
 
-local helloLabel = addLabel("helloLabel", "", tab2)
+addSeparator("sep1")
+local helloLabel = addLabel("helloLabel", "")
 
 macro(1000, "example macro (time)", nil, function()
   helloLabel:setText("Time from start: " .. now)
-end, tab2)
+end)
+
+macro(1000, "this macro does nothing", "f7", function()
+
+end, toolsTab)
+
+macro(100, "debug pathfinding", nil, function()
+  for i, tile in ipairs(g_map.getTiles(posz())) do
+    tile:setText("")
+  end
+  local path = findEveryPath(pos(), 20, {
+    ignoreNonPathable = false
+  })
+  local total = 0
+  for i, p in pairs(path) do
+    local s = i:split(",")
+    local pos = {x=tonumber(s[1]), y=tonumber(s[2]), z=tonumber(s[3])}
+    local tile = g_map.getTile(pos)
+    if tile then
+      tile:setText(p[2])
+    end
+     total = total + 1
+  end
+end, toolsTab)
+
+macro(1000, "speed hack", nil, function()
+  player:setSpeed(1000)
+end, toolsTab)
+
+
 --#hotkeys
 
 hotkey("f5", "example hotkey", function()
   info("Wow, you clicked f5 hotkey")
 end)
 
-singlehotkey("f6", "example hotkey2", function()
+singlehotkey("ctrl+f6", "singlehotkey", function()
   info("Wow, you clicked f6 singlehotkey")
+  usewith(268, player)
 end)
+
 --#callbacks
 
 local positionLabel = addLabel("positionLabel", "")
@@ -43,19 +83,7 @@ onPlayerPositionChange(function()
   positionLabel:setText("Pos: " .. posx() .. "," .. posy() .. "," .. posz())
 end)
 
-listen(player:getName(), function(text)
-  info("you said: " .. text)
-end)
 --#other
-
-HTTP.getJSON("https://api.ipify.org/?format=json", function(data, err)
-    if err then
-        warn("Whoops! Error occured: " .. err)
-        return
-    end
-    info("HTTP: My IP is: " .. tostring(data['ip']))
-end)
-
 
 ]=]},
   {name = "UI & Healing", script = [=[
@@ -204,7 +232,7 @@ end)
 
 --#other
 ]=]},
-  {}, {}, {}
+  {}, {}, {}, {}
   },
   enabled = false,
   selectedConfig = 1

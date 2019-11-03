@@ -163,7 +163,7 @@ public:
 
     void addMapView(const MapViewPtr& mapView);
     void removeMapView(const MapViewPtr& mapView);
-    void notificateTileUpdate(const Position& pos);
+    void notificateTileUpdate(const Position& pos, bool updateMinimap = false);
 
     void requestVisibleTilesCacheUpdate();
 
@@ -267,6 +267,9 @@ public:
     std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> findPath(const Position& start, const Position& goal, int maxComplexity, int flags = 0);
     PathFindResult_ptr newFindPath(const Position& start, const Position& goal, std::shared_ptr<std::list<Node*>> visibleNodes);
     void findPathAsync(const Position & start, const Position & goal, std::function<void(PathFindResult_ptr)> callback);
+
+    // tuple = <cost, distance, prevPos>
+    std::map<std::string, std::tuple<int, int, int, std::string>> findEveryPath(const Position& start, int maxDistance, const std::map<std::string, std::string>& params);
 
 private:
     void removeUnawareThings();

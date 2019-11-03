@@ -1,7 +1,8 @@
-function executeBot(config, storage, tabs, msgCallback)
+function executeBot(config, storage, tabs, msgCallback, saveConfigCallback)
   local context = {}
   context.tabs = tabs
   context.panel = context.tabs:addTab("Main", g_ui.createWidget('BotPanel')).tabPanel
+  context.saveConfig = saveConfigCallback
   
   context.storage = storage
   if context.storage._macros == nil then
@@ -22,7 +23,12 @@ function executeBot(config, storage, tabs, msgCallback)
     onCreatureAppear = {},
     onCreatureDisappear = {},
     onCreaturePositionChange = {},
-    onCreatureHealthPercentChange = {}
+    onCreatureHealthPercentChange = {},
+    onUse = {},
+    onUseWith = {},
+    onContainerOpen = {},
+    onContainerClose = {},
+    onContainerUpdateItem = {}
   }
 
   -- basic functions & classes
@@ -33,17 +39,26 @@ function executeBot(config, storage, tabs, msgCallback)
   context.math = math
   context.table = table
   context.string = string
+  context.tonumber = tonumber
   context.tr = tr
   context.json = json
   context.regexMatch = regexMatch
+  context.getDistanceBetween = function(p1, p2)
+    return math.max(math.abs(p1.x - p2.x), math.abs(p1.y - p2.y))
+  end
   
   -- classes
   context.g_resources = g_resources
   context.g_game = g_game
   context.g_map = g_map
   context.g_ui = g_ui
+  context.g_platform = g_platform
+  context.g_sounds = g_sounds
+  context.g_window = g_window
+  context.g_mouse = g_mouse
+
   context.StaticText = StaticText
-  context.Position = Position
+  context.Config = Config
   context.HTTP = HTTP
 
   -- log functions
@@ -74,14 +89,24 @@ function executeBot(config, storage, tabs, msgCallback)
       
       for i, macro in ipairs(context._macros) do
         if macro.lastExecution + macro.timeout <= context.now and (macro.name == nil or macro.name:len() < 1 or context.storage._macros[macro.name]) then
-          if macro.callback() then
-              macro.lastExecution = context.now
+          local status, result = pcall(function()
+            if macro.callback() then
+                macro.lastExecution = context.now
+            end
+          end)
+          if not status then
+            context.error("Macro: " .. macro.name .. " execution error: " .. result)
           end
         end
       end
       
       while #context._scheduler > 0 and context._scheduler[1].execution <= g_clock.millis() do
-        context._scheduler[1].callback()
+        local status, result = pcall(function()
+          context._scheduler[1].callback()
+        end)
+        if not status then
+          context.error("Schedule execution error: " .. result)
+        end
         table.remove(context._scheduler, 1)
       end
     end,
@@ -155,7 +180,7 @@ function executeBot(config, storage, tabs, msgCallback)
       onCreatureDisappear = function(creature)
         for i, callback in ipairs(context._callbacks.onCreatureDisappear) do
           callback(creature)
-        end      
+        end
       end,
       onCreaturePositionChange = function(creature, newPos, oldPos)
         for i, callback in ipairs(context._callbacks.onCreaturePositionChange) do
@@ -166,6 +191,31 @@ function executeBot(config, storage, tabs, msgCallback)
         for i, callback in ipairs(context._callbacks.onCreatureHealthPercentChange) do
           callback(creature, healthPercent)
         end      
+      end,
+      onUse = function(pos, itemId, stackPos, subType)
+        for i, callback in ipairs(context._callbacks.onUse) do
+          callback(pos, itemId, stackPos, subType)
+        end      
+      end,
+      onUseWith = function(pos, itemId, target, subType)
+        for i, callback in ipairs(context._callbacks.onUseWith) do
+          callback(pos, itemId, target, subType)
+        end
+      end,
+      onContainerOpen = function(container, previousContainer)
+        for i, callback in ipairs(context._callbacks.onContainerOpen) do
+          callback(container, previousContainer)
+        end
+      end,
+      onContainerClose = function(container)
+        for i, callback in ipairs(context._callbacks.onContainerClose) do
+          callback(container)
+        end
+      end,
+      onContainerUpdateItem = function(container, slot, item)
+        for i, callback in ipairs(context._callbacks.onContainerUpdateItem) do
+          callback(container, slot, item)
+        end
       end
     }    
   }
