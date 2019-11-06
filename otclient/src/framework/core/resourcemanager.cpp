@@ -608,7 +608,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
 
     zip_error_fini(&error);
     zip_source_keep(src);
-
+    bool newFiles = false;
     for (auto file : files) {
         if (file.empty())
             continue;
@@ -624,6 +624,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
             return g_logger.fatal(stdext::format("can't create source buffer: %s", zip_strerror(za)));
         if(zip_file_add(za, file.c_str(), s, ZIP_FL_OVERWRITE) < 0)
             return g_logger.fatal(stdext::format("can't add file %s to zip archive: %s", file, zip_strerror(za)));
+        newFiles = true;
     }
 
     if (zip_close(za) < 0)
@@ -638,21 +639,23 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
     if (zip_source_open(src) < 0)
         return g_logger.fatal(stdext::format("can't open source: %s", zip_error_strerror(zip_source_error(src))));
 
-    PHYSFS_file* file = PHYSFS_openWrite("data.zip");
-    if(!file)
-        return g_logger.fatal(stdext::format("can't open data.zip for writing: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
+    if (newFiles) {
+        PHYSFS_file* file = PHYSFS_openWrite("data.zip");
+        if (!file)
+            return g_logger.fatal(stdext::format("can't open data.zip for writing: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
 
-    const size_t chunk_size = 1024 * 1024;
-    std::vector<char> chunk(chunk_size);
-    while (zipSize > 0) {
-        size_t currentChunk = std::min<size_t>(zipSize, chunk_size);
-        if ((zip_uint64_t)zip_source_read(src, chunk.data(), currentChunk) < currentChunk)
-            return g_logger.fatal(stdext::format("can't read data from source: %s", zip_error_strerror(zip_source_error(src))));
-        PHYSFS_writeBytes(file, chunk.data(), currentChunk);
-        zipSize -= currentChunk;
+        const size_t chunk_size = 1024 * 1024;
+        std::vector<char> chunk(chunk_size);
+        while (zipSize > 0) {
+            size_t currentChunk = std::min<size_t>(zipSize, chunk_size);
+            if ((zip_uint64_t)zip_source_read(src, chunk.data(), currentChunk) < currentChunk)
+                return g_logger.fatal(stdext::format("can't read data from source: %s", zip_error_strerror(zip_source_error(src))));
+            PHYSFS_writeBytes(file, chunk.data(), currentChunk);
+            zipSize -= currentChunk;
+        }
+
+        PHYSFS_close(file);
     }
-
-    PHYSFS_close(file);
     zip_source_close(src);
     zip_source_free(src);
 
@@ -663,7 +666,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
 
         std::filesystem::path path(binaryName);
         auto newBinary = path.stem().string() + "-" + std::to_string(time(nullptr)) + path.extension().string();
-        file = PHYSFS_openWrite(newBinary.c_str());
+        PHYSFS_file* file = PHYSFS_openWrite(newBinary.c_str());
         if (!file)
             return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
         PHYSFS_writeBytes(file, it->second->response.data(), it->second->response.size());

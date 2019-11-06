@@ -161,6 +161,7 @@ public:
     std::string getText();
     void setTimer(int time, Color color);
     int getTimer();
+    void setFill(Color color);
 
 private:
     void checkTranslucentLight();
@@ -184,6 +185,7 @@ private:
     ticks_t m_timer = 0;
     StaticTextPtr m_timerText;
     StaticTextPtr m_text;
+    Color m_fill;
 };
 
 #endif

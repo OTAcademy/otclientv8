@@ -4,7 +4,7 @@ project(otclient)
 set(VERSION "0.6.6")
 set(CMAKE_CXX_STANDARD 17)
 
-option(FRAMEWORK_SOUND "Use SOUND " ON)
+option(FRAMEWORK_SOUND "Use SOUND " OFF)
 option(FRAMEWORK_GRAPHICS "Use GRAPHICS " ON)
 option(FRAMEWORK_XML "Use XML " ON)
 option(FRAMEWORK_NET "Use NET " ON)

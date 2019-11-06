@@ -7,19 +7,33 @@ botDefaultConfig = {
 
 --#main
 
-Panels.Haste()
-Panels.ManaShield()
-Panels.AntiParalyze()
 
-local battleTab = addTab("Battle")
+local healTab = addTab("HP")
+local attackTab = addTab("Atck")
+local warTab = addTab("War")
 local caveTab = addTab("Cave")
-local toolsTab = addTab("Tools")
 
-Panels.Eating(battleTab)
-Panels.Health(battleTab)
-Panels.HealthItem(battleTab)
-Panels.ManaItem(battleTab)
-Panels.AttackSpell(battleTab)
+Panels.TradeMessage()
+
+Panels.Haste(healTab)
+Panels.ManaShield(healTab)
+Panels.AntiParalyze(healTab)
+Panels.Health(healTab)
+Panels.Health(healTab)
+Panels.HealthItem(healTab)
+Panels.HealthItem(healTab)
+Panels.ManaItem(healTab)
+Panels.ManaItem(healTab)
+Panels.Equip(healTab)
+Panels.Equip(healTab)
+Panels.Equip(healTab)
+Panels.Eating(healTab)
+
+Panels.AttackSpell(attackTab)
+Panels.AttackItem(attackTab)
+
+Panels.AttackLeaderTarget(warTab)
+Panels.LimitFloor(warTab)
 
 local waypoints = Panels.Waypoints(caveTab)
 local attacking = Panels.Attacking(caveTab)
@@ -39,7 +53,7 @@ end)
 
 macro(1000, "this macro does nothing", "f7", function()
 
-end, toolsTab)
+end)
 
 macro(100, "debug pathfinding", nil, function()
   for i, tile in ipairs(g_map.getTiles(posz())) do
@@ -58,11 +72,11 @@ macro(100, "debug pathfinding", nil, function()
     end
      total = total + 1
   end
-end, toolsTab)
+end)
 
 macro(1000, "speed hack", nil, function()
   player:setSpeed(1000)
-end, toolsTab)
+end)
 
 
 --#hotkeys
@@ -84,6 +98,16 @@ onPlayerPositionChange(function()
 end)
 
 --#other
+
+macro(100, "hide useless tiles", "", function()
+  for i, tile in ipairs(g_map.getTiles(posz())) do
+    if not tile:isWalkable(true) then
+      tile:setFill('black')
+    end
+  end
+end)
+
+addLabel("mapinfo", "You can use ctrl + plus and ctrl + minus to zoom in / zoom out map")
 
 ]=]},
   {name = "UI & Healing", script = [=[

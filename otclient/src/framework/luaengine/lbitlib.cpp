@@ -39,7 +39,7 @@ extern "C" {
 #include <luajit/lauxlib.h>
 #else
 #include <lua.h>
-#include <laulib.h>
+#include <lualib.h>
 #include <lauxlib.h>
 #endif
 }

@@ -72,6 +72,11 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
     drawQueue.setDepth(m_depth);
     m_drawElevation = 0;
 
+    if (m_fill != Color::white) {
+        drawQueue.add(Rect(dest, Otc::TILE_PIXELS, Otc::TILE_PIXELS), nullptr, Rect(), m_fill);
+        return;
+    }
+
     // first bottom items
     for(const ThingPtr& thing : m_things) {
         if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
@@ -669,7 +674,7 @@ bool Tile::hasCreature()
 bool Tile::hasBlockingCreature()
 {
     for (const ThingPtr& thing : m_things)
-        if (thing->isCreature() && !thing->static_self_cast<Creature>()->isPassable())
+        if (thing->isCreature() && !thing->static_self_cast<Creature>()->isPassable() && !thing->isLocalPlayer())
             return true;
     return false;
 }
@@ -764,4 +769,9 @@ void Tile::setTimer(int time, Color color)
 int Tile::getTimer()
 {
     return m_timerText ? std::max<int>(0, m_timer - g_clock.millis()) : 0;
+}
+
+void Tile::setFill(Color color)
+{
+    m_fill = color;
 }

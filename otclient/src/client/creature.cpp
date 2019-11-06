@@ -385,7 +385,7 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
             }
         }
 
-        if (Otc::DrawBarsOnTop) {
+        if (drawFlags & Otc::DrawBarsOnTop) {
             drawQueue.setDepth(oldDepth);
         }
     }
@@ -595,7 +595,10 @@ void Creature::updateWalkAnimation(int totalPixelsWalked)
 
     int footAnimPhases = getWalkAnimationPhases() - 1;
     // TODO, should be /2 for <= 810
-    int footDelay = ((getStepDuration(true) + 20) / (g_game.getFeature(Otc::GameFasterAnimations) ? footAnimPhases * 2 : footAnimPhases));
+    int footDelay = getStepDuration(true);
+    if (footAnimPhases > 0) {
+        footDelay = ((getStepDuration(true) + 20) / (g_game.getFeature(Otc::GameFasterAnimations) ? footAnimPhases * 2 : footAnimPhases));
+    }
     if (!g_game.getFeature(Otc::GameFasterAnimations))
         footDelay += 10;
     // Since mount is a different outfit we need to get the mount animation phases

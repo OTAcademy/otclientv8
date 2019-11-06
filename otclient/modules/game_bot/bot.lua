@@ -17,7 +17,7 @@ local errorOccured = false
 local statusLabel = nil
 local compiledConfig = nil
 local configTab = nil
-local tabs = {"main", "macros", "hotkeys", "callbacks", "other"}
+local tabs = {"main", "panels", "macros", "hotkeys", "callbacks", "other"}
 local mainTab = nil
 local activeTab = nil
 local editorText = {"", ""}
@@ -26,12 +26,19 @@ function init()
   dofile("defaultconfig")
   dofile("executor")
   
+  g_ui.importStyle("ui/basic.otui")
+  g_ui.importStyle("ui/panels.otui")
+  
   connect(g_game, { 
     onGameStart = online, 
     onGameEnd = offline, 
     onTalk = botOnTalk,
     onUse = botOnUse,
-    onUseWith = botOnUseWith
+    onUseWith = botOnUseWith,
+    onChannelList = botChannelList,
+    onOpenChannel = botOpenChannel,
+    onCloseChannel = botCloseChannel,
+    onChannelEvent = botChannelEvent
   })
 
   connect(rootWidget, { onKeyDown = botKeyDown,
@@ -53,6 +60,7 @@ function init()
   connect(Container, { onOpen = botContainerOpen,
                        onClose = botContainerClose,
                        onUpdateItem = botContainerUpdateItem })
+  connect(g_map, { onMissle = botOnMissle })
   
   botConfigFile = g_configs.create("/bot.otml")
   local config = botConfigFile:get("config")
@@ -153,7 +161,11 @@ function terminate()
     onGameEnd = offline, 
     onTalk = botOnTalk,
     onUse = botOnUse,
-    onUseWith = botOnUseWith
+    onUseWith = botOnUseWith,
+    onChannelList = botChannelList,
+    onOpenChannel = botOpenChannel,
+    onCloseChannel = botCloseChannel,
+    onChannelEvent = botChannelEvent
   })
   
   disconnect(Tile, { onAddThing = botAddThing, onRemoveThing = botRemoveThing })
@@ -171,6 +183,7 @@ function terminate()
   disconnect(Container, { onOpen = botContainerOpen,
                        onClose = botContainerClose,
                        onUpdateItem = botContainerUpdateItem })
+  disconnect(g_map, { onMissle = botOnMissle })
 
   removeEvent(executeEvent)
   removeEvent(checkMsgsEvent)
@@ -335,6 +348,10 @@ function clearConfig()
     if widget.botWidget then
       widget:destroy()
     end
+  end
+  local gameMapPanel = modules.game_interface.getMapPanel()
+  if gameMapPanel then
+    gameMapPanel:unlockVisibleFloor()   
   end
 end
 
@@ -505,4 +522,34 @@ end
 function botContainerUpdateItem(container, slot, item)
   if compiledConfig == nil then return false end
   safeBotCall(function() compiledConfig.callbacks.onContainerUpdateItem(container, slot, item) end)
+end
+
+function botOnMissle(missle)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onMissle(missle) end)
+end
+
+function botOnMissle(missle)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onMissle(missle) end)
+end
+
+function botChannelList(channels)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onChannelList(channels) end)
+end
+
+function botOpenChannel(channelId, name)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onOpenChannel(channelId, name) end)
+end
+
+function botCloseChannel(channelId)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onCloseChannel(channelId) end)
+end
+
+function botChannelEvent(channelId, name, event)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onChannelEvent(channelId, name, event) end)
 end

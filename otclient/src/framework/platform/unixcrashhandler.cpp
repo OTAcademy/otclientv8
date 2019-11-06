@@ -135,4 +135,9 @@ void installCrashHandler()
     sigaction(SIGABRT, &sa, NULL);  // process aborted (asserts)
 }
 
+void uninstallCrashHandler()
+{
+    
+}
+
 #endif

@@ -53,7 +53,6 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/stdext/net.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/packed_any.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/packed_storage.h
-    ${CMAKE_CURRENT_LIST_DIR}/stdext/packed_vector.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/shared_object.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/shared_ptr.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/stdext.h
@@ -187,6 +186,7 @@ if(USE_STATIC_LIBS)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -static-libgcc -static-libstdc++")
     endif()
     message(STATUS "Link to static libraries: ON")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 else()
     message(STATUS "Link to static libraries: OFF")
 endif()
@@ -316,7 +316,13 @@ if(FRAMEWORK_GRAPHICS)
             link_directories(/usr/X11R6/lib/)
             SET(OPENGL_LIBRARIES GL)
         else()
-            find_package(OpenGL REQUIRED)
+            if(USE_STATIC_LIBS)
+                set(CMAKE_FIND_LIBRARY_SUFFIXES ".so")
+                find_package(OpenGL REQUIRED)
+                set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+            else()
+                find_package(OpenGL REQUIRED)            
+            endif()
         endif()
         find_package(GLEW REQUIRED)
         set(framework_LIBRARIES ${framework_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})

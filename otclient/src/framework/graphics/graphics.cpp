@@ -48,7 +48,7 @@ void Graphics::init()
     try {
         glVersion = std::atof((const char*)glGetString(GL_VERSION));
     }
-    catch (std::exception) {}
+    catch (const std::exception&) {}
 
     if (glVersion < 2.0) {
         g_logger.fatal(stdext::format("Your device doesn't support OpenGL >= 2.0, try to use DX version or install graphics drivers. GPU: %s OpenGL: %s (%f)",

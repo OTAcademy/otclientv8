@@ -625,6 +625,9 @@ void Client::registerLuaFunctions()
     g_lua.registerClass<Missile, Thing>();
     g_lua.bindClassStaticFunction<Missile>("create", []{ return MissilePtr(new Missile); });
     g_lua.bindClassMemberFunction<Missile>("setId", &Missile::setId);
+    g_lua.bindClassMemberFunction<Missile>("getId", &Missile::getId);
+    g_lua.bindClassMemberFunction<Missile>("getSource", &Missile::getSource);
+    g_lua.bindClassMemberFunction<Missile>("getDestination", &Missile::getDestination);
 
     g_lua.registerClass<StaticText, Thing>();
     g_lua.bindClassStaticFunction<StaticText>("create", []{ return StaticTextPtr(new StaticText); });
@@ -739,7 +742,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Tile>("getText", &Tile::getText);
     g_lua.bindClassMemberFunction<Tile>("setTimer", &Tile::setTimer);
     g_lua.bindClassMemberFunction<Tile>("getTimer", &Tile::getTimer);
-
+    g_lua.bindClassMemberFunction<Tile>("setFill", &Tile::setFill);
 
     g_lua.registerClass<UIItem, UIWidget>();
     g_lua.bindClassStaticFunction<UIItem>("create", []{ return UIItemPtr(new UIItem); });

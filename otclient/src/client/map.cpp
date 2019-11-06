@@ -180,6 +180,10 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
     }
 
     notificateTileUpdate(pos, thing->isItem());
+
+    if (thing->isMissile()) {
+        g_lua.callGlobalField("g_map", "onMissle", thing);
+    }
 }
 
 void Map::setTileSpeed(const Position& pos, uint16_t speed, uint8_t blocking) {
@@ -1069,6 +1073,8 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
     bool ignoreCost = it != params.end() && it->second != "0" && it->second != "";
     it = params.find("allowUnseen");
     bool allowUnseen = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("allowOnlyVisibleTiles");
+    bool allowOnlyVisibleTiles = it != params.end() && it->second != "0" && it->second != "";    
     Position destPos;
     it = params.find("destination");
     if (it != params.end()) {
@@ -1105,8 +1111,8 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
                 if (it == nodes.end()) {
                     bool wasSeen = false;
                     bool hasCreature = false;
-                    bool isNotWalkable = false;
-                    bool isNotPathable = false;
+                    bool isNotWalkable = true;
+                    bool isNotPathable = true;
                     int mapColor = 0;
                     int speed = 1000;
                     if (g_map.isAwareOfPosition(neighbor)) {
@@ -1118,7 +1124,7 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
                             mapColor = tile->getMinimapColorByte();
                             speed = tile->getGroundSpeed();
                         }
-                    } else {
+                    } else if(!allowOnlyVisibleTiles) {
                         const MinimapTile& mtile = g_minimap.getTile(neighbor);
                         wasSeen = mtile.hasFlag(MinimapTileWasSeen);
                         isNotWalkable = mtile.hasFlag(MinimapTileNotWalkable);

@@ -108,6 +108,9 @@ void Missile::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightV
 
 void Missile::setPath(const Position& fromPosition, const Position& toPosition)
 {
+    m_source = fromPosition;
+    m_destination = toPosition;
+
     m_direction = fromPosition.getDirectionFromPosition(toPosition);
 
     m_position = fromPosition;

@@ -49,12 +49,16 @@ public:
     const ThingTypePtr& getThingType();
     ThingType *rawGetThingType();
 
+    Position getSource() { return m_source; }
+    Position getDestination() { return m_destination; }
+
 private:
     Timer m_animationTimer;
     Point m_delta;
     float m_duration;
     uint16 m_id;
     Otc::Direction m_direction;
+    Position m_source, m_destination;
 };
 
 #endif
