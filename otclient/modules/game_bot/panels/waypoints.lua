@@ -269,7 +269,7 @@ Panel
       ui.config:addOption(name)
     end
     
-    if not context.storage.cavebot.activeConfig and #context.storage.cavebot.configs > 0 then
+    if (not context.storage.cavebot.activeConfig or context.storage.cavebot.activeConfig == 0) and #context.storage.cavebot.configs > 0 then
        context.storage.cavebot.activeConfig = 1
     end
     
@@ -331,10 +331,24 @@ Panel
     if not context.storage.cavebot.activeConfig or not context.storage.cavebot.configs[context.storage.cavebot.activeConfig] then
       return
     end
-    context.storage.cavebot.enabled = false
-    table.remove(context.storage.cavebot.configs, context.storage.cavebot.activeConfig)
-    context.storage.cavebot.activeConfig = 0
-    refreshConfig()
+    local questionWindow = nil
+    local closeWindow = function()
+      questionWindow:destroy()
+    end
+    local removeConfig = function()
+      closeWindow()
+      if not context.storage.cavebot.activeConfig or not context.storage.cavebot.configs[context.storage.cavebot.activeConfig] then
+        return
+      end
+      context.storage.cavebot.enabled = false
+      table.remove(context.storage.cavebot.configs, context.storage.cavebot.activeConfig)
+      context.storage.cavebot.activeConfig = 0
+      refreshConfig()
+    end
+    questionWindow = context.displayGeneralBox(tr('Remove config'), tr('Do you want to remove current waypoints config?'), {
+      { text=tr('Yes'), callback=removeConfig },
+      { text=tr('No'), callback=closeWindow },
+      anchor=AnchorHorizontalCenter}, removeConfig, closeWindow)
   end
   
   -- waypoint editor
@@ -578,7 +592,7 @@ Panel
     -- wait if attacking/following creature
     local attacking = g_game.getAttackingCreature()
     local following = g_game.getFollowingCreature()
-    if (attacking and context.getCreatureById(attacking:getId())) or (following and context.getCreatureById(following:getId())) then
+    if (attacking and context.getCreatureById(attacking:getId()) and not attacking.ignoreByWaypoints) or (following and context.getCreatureById(following:getId())) then
       executeNextMacroCall = false
       return 
     end

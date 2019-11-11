@@ -199,13 +199,13 @@ void Creature::internalDrawOutfit(Point dest, float scaleFactor, bool animateWal
 
         int animationPhase = 0;
         int animationPhases = type->getAnimationPhases();
-        int animateTicks = Otc::ITEM_TICKS_PER_FRAME;
+        int animateTicks = g_game.getFeature(Otc::GameEnhancedAnimations) ? Otc::ITEM_TICKS_PER_FRAME_FAST : Otc::ITEM_TICKS_PER_FRAME;
 
         // when creature is an effect we cant render the first and last animation phase,
         // instead we should loop in the phases between
         if(m_outfit.getCategory() == ThingCategoryEffect) {
             animationPhases = std::max<int>(1, animationPhases-2);
-            animateTicks = Otc::INVISIBLE_TICKS_PER_FRAME;
+            animateTicks = g_game.getFeature(Otc::GameEnhancedAnimations) ? Otc::INVISIBLE_TICKS_PER_FRAME_FAST : Otc::INVISIBLE_TICKS_PER_FRAME;
         }
 
         if(animationPhases > 1) {
@@ -231,11 +231,11 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
 
         int animationPhase = 0;
         int animationPhases = type->getAnimationPhases();
-        int animateTicks = Otc::ITEM_TICKS_PER_FRAME;
+        int animateTicks = g_game.getFeature(Otc::GameEnhancedAnimations) ? Otc::ITEM_TICKS_PER_FRAME_FAST : Otc::ITEM_TICKS_PER_FRAME;
 
         if(m_outfit.getCategory() == ThingCategoryEffect) {
             animationPhases = std::max<int>(1, animationPhases-2);
-            animateTicks = Otc::INVISIBLE_TICKS_PER_FRAME;
+            animateTicks = g_game.getFeature(Otc::GameEnhancedAnimations) ? Otc::INVISIBLE_TICKS_PER_FRAME_FAST : Otc::INVISIBLE_TICKS_PER_FRAME;
         }
 
         if(animationPhases > 1) {

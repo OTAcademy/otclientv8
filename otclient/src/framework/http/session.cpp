@@ -159,7 +159,7 @@ void HttpSession::on_read(const boost::system::error_code& ec, size_t bytes_tran
     if (m_result->size > 0) {
         //m_callback
         int new_progress = (int)std::min<int64_t>(100ll, (100ll * (int64_t)m_response.get().payload_size().get_value_or(0)) / (int64_t)m_result->size);
-        if (new_progress != m_result->progress) // update progress
+        if (!m_result->finished && new_progress != m_result->progress) // update progress
             m_callback(m_result);
         m_result->progress = new_progress;
     }

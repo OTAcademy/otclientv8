@@ -69,6 +69,7 @@ public:
     void sendUseItemWith(const Position& fromPos, int itemId, int fromStackPos, const Position& toPos, int toThingId, int toStackPos);
     void sendUseOnCreature(const Position& pos, int thingId, int stackpos, uint creatureId);
     void sendRotateItem(const Position& pos, int thingId, int stackpos);
+    void sendWrapableItem(const Position& pos, int thingId, int stackpos);
     void sendCloseContainer(int containerId);
     void sendUpContainer(int containerId);
     void sendEditText(uint id, const std::string& text);
@@ -101,6 +102,9 @@ public:
     void sendRequestOutfit();
     void sendChangeOutfit(const Outfit& outfit);
     void sendMountStatus(bool mount);
+    void sendApplyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm);
+    void sendClearImbuement(uint8_t slot);
+    void sendCloseImbuingWindow();
     void sendAddVip(const std::string& name);
     void sendRemoveVip(uint playerId);
     void sendEditVip(uint playerId, const std::string& description, int iconId, bool notifyLogin);
@@ -203,6 +207,10 @@ private:
     void parseEditText(const InputMessagePtr& msg);
     void parseEditList(const InputMessagePtr& msg);
     void parsePremiumTrigger(const InputMessagePtr& msg);
+    void parsePreyFreeRolls(const InputMessagePtr& msg);
+    void parsePreyTimeLeft(const InputMessagePtr& msg);
+    void parsePreyData(const InputMessagePtr& msg);
+    void parsePreyPrices(const InputMessagePtr& msg);
     void parsePlayerInfo(const InputMessagePtr& msg);
     void parsePlayerStats(const InputMessagePtr& msg);
     void parsePlayerSkills(const InputMessagePtr& msg);
@@ -242,6 +250,16 @@ private:
     void parseItemInfo(const InputMessagePtr& msg);
     void parsePlayerInventory(const InputMessagePtr& msg);
     void parseModalDialog(const InputMessagePtr& msg);
+    void parseClientCheck(const InputMessagePtr& msg);
+    void parseGameNews(const InputMessagePtr& msg);
+    void parseMessageDialog(const InputMessagePtr& msg);
+    void parseResourceBalance(const InputMessagePtr& msg);
+    void parseQuestTracker(const InputMessagePtr& msg);
+    void parseImbuementWindow(const InputMessagePtr& msg);
+    void parseKillTracker(const InputMessagePtr& msg);
+    void parseSupplyTracker(const InputMessagePtr& msg);
+    void parseImpactTracker(const InputMessagePtr& msg);
+    void parseLootTracker(const InputMessagePtr& msg);
     void parseExtendedOpcode(const InputMessagePtr& msg);
     void parseChangeMapAwareRange(const InputMessagePtr& msg);
     void parseCreaturesMark(const InputMessagePtr& msg);
@@ -253,13 +271,14 @@ public:
     int setFloorDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height, int offset, int skip);
     int setTileDescription(const InputMessagePtr& msg, Position position);
 
-    Outfit getOutfit(const InputMessagePtr& msg);
+    Outfit getOutfit(const InputMessagePtr& msg, bool ignoreMount = false);
     ThingPtr getThing(const InputMessagePtr& msg);
     ThingPtr getMappedThing(const InputMessagePtr & msg);
     CreaturePtr getCreature(const InputMessagePtr& msg, int type = 0);
     StaticTextPtr getStaticText(const InputMessagePtr& msg, int type = 0);
     ItemPtr getItem(const InputMessagePtr& msg, int id = 0);
     Position getPosition(const InputMessagePtr& msg);
+    void getImbuementInfo(const InputMessagePtr& msg);
 
 private:
     stdext::boolean<false> m_enableSendExtendedOpcode;

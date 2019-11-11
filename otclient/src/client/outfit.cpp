@@ -34,7 +34,7 @@ Outfit::Outfit()
     resetClothes();
 }
 
-void Outfit::newDraw(Point dest, DrawQueue& drawQueue, bool isWalking, LightView* lightView) 
+void Outfit::newDraw(Point org_dest, DrawQueue& drawQueue, bool isWalking, LightView* lightView) 
 {
     assert(m_category == ThingCategoryCreature);
 
@@ -42,6 +42,7 @@ void Outfit::newDraw(Point dest, DrawQueue& drawQueue, bool isWalking, LightView
     if (!type) return;
 
     int mountAnimationPhase = m_animationPhase;
+    Point dest = Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3);
 
     if (type->getIdleAnimator()) {
         if (isWalking) {
@@ -52,26 +53,32 @@ void Outfit::newDraw(Point dest, DrawQueue& drawQueue, bool isWalking, LightView
         }
     }
 
-    uint64_t hash = (((uint64_t)m_id) << 54) + (((uint64_t)m_auxId) << 50) + (((uint64_t)m_xPattern) << 46) + 
-        (((uint64_t)m_animationPhase) << 40) + (((uint64_t)m_head) << 32) + (((uint64_t)m_body) << 25) + 
-        (((uint64_t)m_legs) << 18) + (((uint64_t)m_feet) << 11) + (((uint64_t)m_addons) << 8)
-        + ((uint64_t)m_mount << 1) + (isWalking ? 1 : 0);
-    
-    auto outfit = drawQueue.addOutfit(hash, Rect(dest - Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), Size(Otc::TILE_PIXELS * 4, Otc::TILE_PIXELS * 4)));
-    if (!outfit)
-        return;
-    dest = Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3);
-
     int zPattern = 0;
     if(getMount() != 0) {
         auto datType = g_things.rawGetThingType(getMount(), ThingCategoryCreature);
-        dest -= datType->getDisplacement();
-
-        datType->newDraw(dest, 0, m_xPattern, 0, 0, mountAnimationPhase, drawQueue, lightView, NewDrawMount);
-        dest += type->getDisplacement();
+        if (datType->getIdleAnimator()) {
+            if (isWalking) {
+                mountAnimationPhase += datType->getIdleAnimator()->getAnimationPhases() - 1;
+            } else {
+                mountAnimationPhase = datType->getIdleAnimator()->getPhase();
+            }
+        }
+        Point mount_dest = org_dest;
+        mount_dest -= datType->getDisplacement();
+        datType->newDraw(mount_dest, 0, m_xPattern, 0, 0, mountAnimationPhase, drawQueue, lightView, NewDrawMount);
         zPattern = std::min<int>(1, type->getNumPatternZ() - 1);
+        dest -= datType->getDisplacement();
+        dest += type->getDisplacement();
     }
-    
+
+    uint64_t hash = (((uint64_t)m_id) << 54) + (((uint64_t)m_auxId) << 50) + (((uint64_t)m_xPattern) << 46) +
+        (((uint64_t)m_animationPhase) << 40) + (((uint64_t)m_head) << 32) + (((uint64_t)m_body) << 25) +
+        (((uint64_t)m_legs) << 11) + (((uint64_t)m_feet) << 6) + (((uint64_t)m_addons) << 3) + (((uint64_t)zPattern) << 1) + (isWalking ? 1 : 0);
+
+    auto outfit = drawQueue.addOutfit(hash, Rect(org_dest - Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), Size(Otc::TILE_PIXELS * 4, Otc::TILE_PIXELS * 4)));
+    if (!outfit)
+        return;
+
     for(int yPattern = 0; yPattern < type->getNumPatternY(); yPattern++) {
         if (yPattern > 0 && !(getAddons() & (1 << (yPattern - 1)))) {
             continue;

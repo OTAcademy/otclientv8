@@ -38,8 +38,9 @@ int Http::get(const std::string& url, int timeout) {
         result->operationId = operationId;
         m_operations[operationId] = result;
         auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&](HttpResult_ptr result) {
-            g_dispatcher.addEventEx("Http::onGet", [result]() {
-                if (!result->finished) {
+            bool finished = result->finished;
+            g_dispatcher.addEventEx("Http::onGet", [result, finished]() {
+                if (!finished) {
                     g_lua.callGlobalField("g_http", "onGetProgress", result->operationId, result->url, result->progress);
                     return;
                 }
@@ -68,8 +69,9 @@ int Http::post(const std::string& url, const std::string& data, int timeout) {
         result->postData = data;
         m_operations[operationId] = result;
         auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&](HttpResult_ptr result) {
-            g_dispatcher.addEventEx("Http::onPost", [result]() {
-                if (!result->finished) {
+            bool finished = result->finished;
+            g_dispatcher.addEventEx("Http::onPost", [result, finished]() {
+                if (!finished) {
                     g_lua.callGlobalField("g_http", "onPostProgress", result->operationId, result->url, result->progress);
                     return;
                 }

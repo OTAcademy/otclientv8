@@ -345,7 +345,7 @@ void ThingType::unserialize(uint16 clientId, ThingCategory category, const FileS
             for (size_t i = 0, idx = 0; i < sizes.size(); ++i) {
                 int totalSprites = total_sprites[i];
                 if (m_size == sizes[i]) {
-                    for (size_t j = 0; j < totalSprites; ++j) {
+                    for (int j = 0; j < totalSprites; ++j) {
                         m_spritesIndex.push_back(sprites[idx++]);
                     }
                     continue;
@@ -566,13 +566,8 @@ void ThingType::newDraw(const Point& dest, int layer, int xPattern, int yPattern
     if (drawQueue.isBlocked())
         return;
 
-    if (type == NewDrawNormal || type == NewDrawMissle) {
+    if (type == NewDrawNormal || type == NewDrawMissle || type == NewDrawMount) {
         drawQueue.add(screenRect, texture, textureRect);
-    } else if (type == NewDrawMount) {
-        auto outfit = drawQueue.getLastOutfit();
-        if (outfit) {
-            outfit->mount = { screenRect, texture, textureRect, Color::white, 0 };
-        }
     } else if (type == NewDrawOutfit) {
         auto outfit = drawQueue.getLastOutfit();
         if(outfit) {

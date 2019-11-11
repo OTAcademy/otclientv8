@@ -71,6 +71,8 @@ namespace Proto {
         GameServerNewCancelWalk             = 69,
         GameServerPredictiveCancelWalk      = 70,
 
+        GameServerClientCheck               = 99,
+
         // original tibia ONLY
         GameServerFullMap                   = 100,
         GameServerMapTopRow                 = 101,
@@ -113,6 +115,7 @@ namespace Proto {
         GameServerCreatureType              = 149,
         GameServerEditText                  = 150,
         GameServerEditList                  = 151,
+        GameServerNews                      = 152,
         GameServerBlessings                 = 156,
         GameServerPreset                    = 157,
         GameServerPremiumTrigger            = 158, // 1038
@@ -144,6 +147,11 @@ namespace Proto {
         GameServerFloorChangeUp             = 190,
         GameServerFloorChangeDown           = 191,
         GameServerChooseOutfit              = 200,
+        GameServerImpactTracker             = 204,
+        GameServerSupplyTracker             = 206,
+        GameServerLootTracker               = 207,
+        GameServerQuestTracker              = 208,
+        GameServerKillTracker               = 209,
         GameServerVipAdd                    = 210,
         GameServerVipState                  = 211,
         GameServerVipLogout                 = 212,
@@ -152,6 +160,13 @@ namespace Proto {
         GameServerCoinBalance               = 223, // 1080
         GameServerStoreError                = 224, // 1080
         GameServerRequestPurchaseData       = 225, // 1080
+        GameServerPreyFreeRolls             = 230,
+        GameServerPreyTimeLeft              = 231,
+        GameServerPreyData                  = 232,
+        GameServerPreyPrices                = 233,
+        GameServerImbuementWindow           = 235,
+        GameServerMessageDialog             = 237,
+        GameServerResourceBalance           = 238,
         GameServerQuestLog                  = 240,
         GameServerQuestLine                 = 241,
         GameServerCoinBalanceUpdating       = 242, // 1080
@@ -225,6 +240,7 @@ namespace Proto {
         ClientUpContainer                   = 136,
         ClientEditText                      = 137,
         ClientEditList                      = 138,
+        ClientWrapableItem                  = 139,
         ClientLook                          = 140,
         ClientLookCreature                  = 141,
         ClientTalk                          = 150,
@@ -257,6 +273,9 @@ namespace Proto {
         ClientRequestOutfit                 = 210,
         ClientChangeOutfit                  = 211,
         ClientMount                         = 212, // 870
+        ApplyImbuemente                     = 213,
+        ClearingImbuement                   = 214,
+        CloseImbuingWindow                  = 215,
         ClientAddVip                        = 220,
         ClientRemoveVip                     = 221,
         ClientEditVip                       = 222,

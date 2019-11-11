@@ -591,6 +591,7 @@ void Game::cancelLogin()
     if(m_protocolGame)
         m_protocolGame->sendLogout();
 
+    g_lua.callGlobalField("g_game", "onLogout");
     processDisconnect();
 }
 
@@ -599,6 +600,7 @@ void Game::forceLogout()
     if(!isOnline())
         return;
 
+    g_lua.callGlobalField("g_game", "onLogout");
     m_protocolGame->sendLogout();
     processDisconnect();
 }
@@ -608,6 +610,7 @@ void Game::safeLogout()
     if(!isOnline())
         return;
 
+    g_lua.callGlobalField("g_game", "onLogout");
     m_protocolGame->sendLogout();
 }
 

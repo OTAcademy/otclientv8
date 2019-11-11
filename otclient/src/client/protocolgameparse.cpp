@@ -25,6 +25,7 @@
 #include "localplayer.h"
 #include "thingtypemanager.h"
 #include "game.h"
+#include "const.h"
 #include "map.h"
 #include "item.h"
 #include "effect.h"
@@ -401,6 +402,49 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerSetStoreDeepLink:
                 parseSetStoreDeepLink(msg);
                 break;
+            // protocol>=1100
+            case Proto::GameServerClientCheck:
+                parseClientCheck(msg);
+                break;
+            case Proto::GameServerNews:
+                parseGameNews(msg);
+                break;
+            case Proto::GameServerMessageDialog:
+                parseMessageDialog(msg);
+                break;
+            case Proto::GameServerResourceBalance:
+                parseResourceBalance(msg);
+                break;
+            case Proto::GameServerPreyFreeRolls:
+                parsePreyFreeRolls(msg);
+                break;
+            case Proto::GameServerPreyTimeLeft:
+                parsePreyTimeLeft(msg);
+                break;
+            case Proto::GameServerPreyData:
+                parsePreyData(msg);
+                break;
+            case Proto::GameServerPreyPrices:
+                parsePreyPrices(msg);
+                break;
+            case Proto::GameServerImpactTracker:
+                parseImpactTracker(msg);
+                break;
+            case Proto::GameServerSupplyTracker:
+                parseSupplyTracker(msg);
+                break;
+            case Proto::GameServerLootTracker:
+                parseLootTracker(msg);
+                break;
+            case Proto::GameServerQuestTracker:
+                parseQuestTracker(msg);
+                break;
+            case Proto::GameServerKillTracker:
+                parseKillTracker(msg);
+                break;
+            case Proto::GameServerImbuementWindow:
+                parseImbuementWindow(msg);
+                break;
             // otclient ONLY
             case Proto::GameServerExtendedOpcode:
                 parseExtendedOpcode(msg);
@@ -493,8 +537,8 @@ void ProtocolGame::parseEnterGame(const InputMessagePtr& msg)
 
 void ProtocolGame::parseStoreButtonIndicators(const InputMessagePtr& msg)
 {
-    msg->getU8(); // unknown
-    msg->getU8(); // unknown
+    /*bool haveSale = */msg->getU8(); // unknown
+    /*bool haveNewItem = */msg->getU8(); // unknown
 }
 
 void ProtocolGame::parseSetStoreDeepLink(const InputMessagePtr& msg)
@@ -551,6 +595,12 @@ void ProtocolGame::parseCoinBalance(const InputMessagePtr& msg)
     bool update = msg->getU8() == 1;
     int coins = -1;
     int transferableCoins = -1;
+
+    if (g_game.getClientVersion() >= 1100) {
+        msg->getU8();
+        msg->getU8();
+    }
+
     if(update) {
         // amount of coins that can be used to buy prodcuts
         // in the ingame store
@@ -1351,12 +1401,72 @@ void ProtocolGame::parsePremiumTrigger(const InputMessagePtr& msg)
     }
 }
 
+void ProtocolGame::parsePreyFreeRolls(const InputMessagePtr& msg)
+{
+    int slot = msg->getU8();
+    int timeLeft = msg->getU16();
+
+}
+
+void ProtocolGame::parsePreyTimeLeft(const InputMessagePtr& msg)
+{
+    int slot = msg->getU8();
+    int timeLeft = msg->getU16();
+
+}
+
+void ProtocolGame::parsePreyData(const InputMessagePtr& msg)
+{
+    int slot = msg->getU8();
+    Otc::PreyState_t state = (Otc::PreyState_t)msg->getU8();
+    if (state == Otc::PREY_STATE_LOCKED) {
+        Otc::PreyUnlockState_t unlockState = (Otc::PreyUnlockState_t)msg->getU8();
+    } else if (state == Otc::PREY_STATE_INACTIVE) {
+
+    } else if (state == Otc::PREY_STATE_ACTIVE) {
+        std::string currentHolderName = msg->getString();
+        Outfit currentHolderOutfit = getOutfit(msg, true);
+        Otc::PreyBonusType_t bonusType = (Otc::PreyBonusType_t)msg->getU8();
+        int bonusValue = msg->getU16();
+        int bonusGrade = msg->getU8();
+        int timeLeft = msg->getU16();
+    } else if (state == Otc::PREY_STATE_SELECTION) {
+        int selectionSize = msg->getU8();
+        for (int i = 0; i < selectionSize; ++i) {
+            std::string name = msg->getString();
+            Outfit outfit = getOutfit(msg, true);
+        }
+    } else if (state == Otc::PREY_STATE_SELECTION_CHANGE_MONSTER) {
+        Otc::PreyBonusType_t bonusType = (Otc::PreyBonusType_t)msg->getU8();
+        int bonusValue = msg->getU16();
+        int bonusGrade = msg->getU8();
+        int selectionSize = msg->getU8();
+        for (int i = 0; i < selectionSize; ++i) {
+            std::string name = msg->getString();
+            Outfit outfit = getOutfit(msg, true);
+        }
+    } else {
+        g_logger.error(stdext::format("Unknown prey data state: %i", (int)state));
+    }
+    int timeUntilFreeReroll = msg->getU16();
+}
+
+
+void ProtocolGame::parsePreyPrices(const InputMessagePtr& msg)
+{
+    int price = msg->getU32();
+}
+
 void ProtocolGame::parsePlayerInfo(const InputMessagePtr& msg)
 {
     bool premium = msg->getU8(); // premium
     if(g_game.getFeature(Otc::GamePremiumExpiration))
         int premiumEx = msg->getU32(); // premium expiration used for premium advertisement
     int vocation = msg->getU8(); // vocation
+
+    if (g_game.getFeature(Otc::GamePrey)) {
+        bool preyEnabled = msg->getU8() > 0;
+    }
 
     int spellCount = msg->getU16();
     std::vector<int> spells;
@@ -1654,6 +1764,15 @@ void ProtocolGame::parseOpenOwnPrivateChannel(const InputMessagePtr& msg)
 {
     int channelId = msg->getU16();
     std::string name = msg->getString();
+
+    if (g_game.getFeature(Otc::GameChannelPlayerList)) {
+        int joinedPlayers = msg->getU16();
+        for (int i = 0; i < joinedPlayers; ++i)
+            g_game.formatCreatureName(msg->getString()); // player name
+        int invitedPlayers = msg->getU16();
+        for (int i = 0; i < invitedPlayers; ++i)
+            g_game.formatCreatureName(msg->getString()); // player name
+    }
 
     g_game.processOpenOwnPrivateChannel(channelId, name);
 }
@@ -2025,6 +2144,117 @@ void ProtocolGame::parseModalDialog(const InputMessagePtr& msg)
     g_game.processModalDialog(id, title, message, buttonList, enterButton, escapeButton, choiceList, priority);
 }
 
+void ProtocolGame::parseClientCheck(const InputMessagePtr& msg)
+{
+    msg->getU32();
+    msg->getU8();
+}
+
+void ProtocolGame::parseGameNews(const InputMessagePtr& msg)
+{
+    msg->getU32();
+    msg->getU8();
+}
+
+void ProtocolGame::parseMessageDialog(const InputMessagePtr& msg)
+{
+    msg->getU8();
+    msg->getString();
+}
+
+void ProtocolGame::parseResourceBalance(const InputMessagePtr& msg)
+{
+    msg->getU8();
+    msg->getU64();
+}
+
+void ProtocolGame::parseQuestTracker(const InputMessagePtr& msg)
+{
+    msg->getU8();
+    msg->getU16();
+}
+
+void ProtocolGame::parseImbuementWindow(const InputMessagePtr& msg)
+{
+    msg->getU16();
+    int slot = msg->getU8();
+    for (int i = 0; i < slot; ++i) {
+        bool info = msg->getU8() == 1;
+        if (info) {
+            getImbuementInfo(msg);
+            msg->getU32();
+            msg->getU32();
+        }
+    }
+
+    int imbuements = msg->getU16();
+    for (int i = 0; i < imbuements; ++i) {
+        getImbuementInfo(msg);
+
+    }
+
+    int needItems = msg->getU32();
+    for (int i = 0; i < needItems; ++i) {
+        msg->getU16();
+        msg->getU16();
+    }
+}
+
+void ProtocolGame::getImbuementInfo(const InputMessagePtr& msg)
+{
+    msg->getU32();
+    msg->getString();
+    msg->getString();
+    msg->getString();
+    msg->getU16();
+    msg->getU32();
+    msg->getU8();
+    int size = msg->getU8();
+    for (int i = 0; i < size; ++i) {
+        msg->getU16();
+        msg->getString();
+        msg->getU16();
+    }
+
+    msg->getU32();
+    msg->getU8();
+    msg->getU32();
+}
+
+
+void ProtocolGame::parseKillTracker(const InputMessagePtr& msg)
+{
+    msg->getString();
+    msg->getU16();
+    msg->getU8();
+    msg->getU8();
+    msg->getU8();
+    msg->getU8();
+    msg->getU8();
+    bool emptyCorpse = msg->getU8() == 0;
+    if (!emptyCorpse) {
+        getItem(msg);
+    }
+}
+
+void ProtocolGame::parseSupplyTracker(const InputMessagePtr& msg)
+{
+    msg->getU16();
+}
+
+void ProtocolGame::parseImpactTracker(const InputMessagePtr& msg)
+{
+    msg->getU8();
+    msg->getU32();
+}
+
+void ProtocolGame::parseLootTracker(const InputMessagePtr& msg)
+{
+    msg->getU16();
+    msg->getString();
+}
+
+
 void ProtocolGame::parseExtendedOpcode(const InputMessagePtr& msg)
 {
     int opcode = msg->getU8();
@@ -2170,7 +2400,7 @@ int ProtocolGame::setTileDescription(const InputMessagePtr& msg, Position positi
     return 0;
 }
 
-Outfit ProtocolGame::getOutfit(const InputMessagePtr& msg)
+Outfit ProtocolGame::getOutfit(const InputMessagePtr& msg, bool ignoreMount)
 {
     Outfit outfit;
 
@@ -2218,7 +2448,7 @@ Outfit ProtocolGame::getOutfit(const InputMessagePtr& msg)
         }
     }
 
-    if(g_game.getFeature(Otc::GamePlayerMounts)) {
+    if(g_game.getFeature(Otc::GamePlayerMounts) && !ignoreMount) {
         int mount = msg->getU16();
         outfit.setMount(mount);
     }

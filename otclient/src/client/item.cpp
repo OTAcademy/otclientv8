@@ -404,9 +404,9 @@ int Item::calculateAnimationPhase(bool animate)
                 return getAnimator()->getPhase();
 
             if(m_async)
-                return (g_clock.millis() % (Otc::ITEM_TICKS_PER_FRAME * getAnimationPhases())) / Otc::ITEM_TICKS_PER_FRAME;
+                return (g_clock.millis() % ((g_game.getFeature(Otc::GameEnhancedAnimations) ? Otc::ITEM_TICKS_PER_FRAME_FAST : Otc::ITEM_TICKS_PER_FRAME) * getAnimationPhases())) / Otc::ITEM_TICKS_PER_FRAME;
             else {
-                if(g_clock.millis() - m_lastPhase >= Otc::ITEM_TICKS_PER_FRAME) {
+                if(g_clock.millis() - m_lastPhase >= (g_game.getFeature(Otc::GameEnhancedAnimations) ? Otc::ITEM_TICKS_PER_FRAME_FAST : Otc::ITEM_TICKS_PER_FRAME)) {
                     m_phase = (m_phase + 1) % getAnimationPhases();
                     m_lastPhase = g_clock.millis();
                 }

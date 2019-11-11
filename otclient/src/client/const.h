@@ -34,8 +34,10 @@ namespace Otc
         UNDERGROUND_FLOOR = SEA_FLOOR+1,
         AWARE_UNDEGROUND_FLOOR_RANGE = 2,
 
-        INVISIBLE_TICKS_PER_FRAME = 100,
-        ITEM_TICKS_PER_FRAME = 100,
+        INVISIBLE_TICKS_PER_FRAME = 500,
+        INVISIBLE_TICKS_PER_FRAME_FAST = 100,
+        ITEM_TICKS_PER_FRAME = 500,
+        ITEM_TICKS_PER_FRAME_FAST = 100,
         ANIMATED_TEXT_DURATION = 1000,
         STATIC_DURATION_PER_CHARACTER = 60,
         MIN_STATIC_TEXT_DURATION = 3000,
@@ -427,6 +429,7 @@ namespace Otc
         GameIngameStoreServiceType = 75,
         GameAdditionalSkills = 76,
         GameDistanceEffectU16 = 77,
+        GamePrey = 78,
 
         GameExtendedOpcode = 80,
         GameMinimapLimitedToSingleFloor = 81,
@@ -533,6 +536,65 @@ namespace Otc
         StateNew = 1,
         StateSale = 2,
         StateTimed = 3
+    };
+
+    enum PreySlotNum_t : uint8_t {
+        PREY_SLOTNUM_FIRST,
+        PREY_SLOTNUM_SECOND,
+        PREY_SLOTNUM_THIRD,
+        PREY_SLOTNUM_LAST = PREY_SLOTNUM_THIRD
+    };
+    enum PreyState_t : uint8_t {
+        PREY_STATE_LOCKED = 0,
+        PREY_STATE_INACTIVE = 1,
+        PREY_STATE_ACTIVE = 2,
+        PREY_STATE_SELECTION = 3,
+        PREY_STATE_SELECTION_CHANGE_MONSTER = 4, // unused; hmm
+        PREY_STATE_SELECTION_FROMALL = 5,
+        PREY_STATE_CHANGE_FROMALL = 6, // unused :(
+    };
+    enum PreyMessageDialog_t : uint8_t {
+        //PREY_MESSAGEDIALOG_IMBUEMENT_SUCCESS = 0,
+        //PREY_MESSAGEDIALOG_IMBUEMENT_ERROR = 1,
+        //PREY_MESSAGEDIALOG_IMBUEMENT_ROLL_FAILED = 2,
+        //PREY_MESSAGEDIALOG_IMBUEMENT_STATION_NOT_FOUND = 3,
+        //PREY_MESSAGEDIALOG_IMBUEMENT_CHARM_SUCCESS = 10,
+        //PREY_MESSAGEDIALOG_IMBUEMENT_CHARM_ERROR = 11,
+        PREY_MESSAGEDIALOG_PREY_MESSAGE = 20,
+        PREY_MESSAGEDIALOG_PREY_ERROR = 21,
+    };
+    enum PreyResourceType_t : uint8_t {
+        PREY_RESOURCETYPE_BANK_GOLD = 0,
+        PREY_RESOURCETYPE_INVENTORY_GOLD = 1,
+        PREY_RESOURCETYPE_PREY_BONUS_REROLLS = 10
+    };
+    enum PreyBonusType_t : uint8_t {
+        PREY_BONUS_DAMAGE_BOOST = 0,
+        PREY_BONUS_DAMAGE_REDUCTION = 1,
+        PREY_BONUS_XP_BONUS = 2,
+        PREY_BONUS_IMPROVED_LOOT = 3,
+        PREY_BONUS_NONE = 4, // internal usage but still added to client;
+        PREY_BONUS_FIRST = PREY_BONUS_DAMAGE_BOOST,
+        PREY_BONUS_LAST = PREY_BONUS_IMPROVED_LOOT,
+    };
+    enum PreyAction_t : uint8_t {
+        PREY_ACTION_LISTREROLL = 0,
+        PREY_ACTION_BONUSREROLL = 1,
+        PREY_ACTION_MONSTERSELECTION = 2,
+        PREY_ACTION_REQUEST_ALL_MONSTERS = 3,
+        PREY_ACTION_CHANGE_FROM_ALL = 4,
+        PREY_ACTION_LOCK_PREY = 5,
+
+    };
+    enum PreyConfigState {
+        PREY_CONFIG_STATE_FREE,
+        PREY_CONFIG_STATE_PREMIUM,
+        PREY_CONFIG_STATE_TIBIACOINS
+    };
+    enum PreyUnlockState_t : uint8_t {
+        PREY_UNLOCK_STORE_AND_PREMIUM = 0,
+        PREY_UNLOCK_STORE = 1,
+        PREY_UNLOCK_NONE = 2,
     };
 }
 

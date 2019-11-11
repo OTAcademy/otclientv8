@@ -435,6 +435,16 @@ void ProtocolGame::sendRotateItem(const Position& pos, int thingId, int stackpos
     send(msg);
 }
 
+void ProtocolGame::sendWrapableItem(const Position& pos, int thingId, int stackpos)
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientWrapableItem);
+    addPosition(msg, pos);
+    msg->addU16(thingId);
+    msg->addU8(stackpos);
+    send(msg);
+}
+
 void ProtocolGame::sendCloseContainer(int containerId)
 {
     OutputMessagePtr msg(new OutputMessage);
@@ -767,6 +777,31 @@ void ProtocolGame::sendMountStatus(bool mount)
     } else {
         g_logger.error("ProtocolGame::sendMountStatus does not support the current protocol.");
     }
+}
+
+void ProtocolGame::sendApplyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm)
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ApplyImbuemente);
+    msg->addU8(slot);
+    msg->addU32(imbuementId);
+    msg->addU8(protectionCharm ? 1 : 0);
+    send(msg);
+}
+
+void ProtocolGame::sendClearImbuement(uint8_t slot)
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClearingImbuement);
+    msg->addU8(slot);
+    send(msg);
+}
+
+void ProtocolGame::sendCloseImbuingWindow()
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::CloseImbuingWindow);
+    send(msg);
 }
 
 void ProtocolGame::sendAddVip(const std::string& name)
