@@ -97,6 +97,7 @@ public:
     std::vector<CreaturePtr> getCreatures();
     std::vector<CreaturePtr> getWalkingCreatures() { return m_walkingCreatures; }
     std::vector<ThingPtr> getThings() { return m_things; }
+    std::vector<EffectPtr> getEffects() { return m_effects; }
     ItemPtr getGround();
     int getGroundSpeed();
     bool isBlocking() { return m_blocking != 0; }

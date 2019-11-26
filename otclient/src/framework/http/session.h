@@ -26,6 +26,7 @@ public:
 private:
     boost::asio::io_service& m_service;
     std::string m_url;
+    int m_port;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::ip::tcp::resolver m_resolver;
     HttpResult_cb m_callback;

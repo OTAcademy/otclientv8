@@ -375,6 +375,8 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
 
                 Rect manaRect = backgroundRect.expanded(-1);
                 double maxMana = player->getMaxMana();
+                if (maxMana < player->getMana())
+                    maxMana = player->getMana();
                 if(maxMana == 0) {
                     manaRect.setWidth(25);
                 } else {

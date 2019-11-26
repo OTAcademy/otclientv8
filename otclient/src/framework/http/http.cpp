@@ -5,6 +5,7 @@
 
 #include "http.h"
 #include "session.h"
+#include "websocket.h"
 
 Http g_http;
 
@@ -19,6 +20,12 @@ void Http::terminate() {
     if (!m_working)
         return;
     m_working = false;
+    for (auto& ws : m_websockets) {
+        ws.second->close();
+    }
+    for (auto& op : m_operations) {
+        op.second->canceled = true;
+    }
     m_guard.reset();
     if (!m_thread.joinable()) {
         stdext::millisleep(100);
@@ -46,6 +53,9 @@ int Http::get(const std::string& url, int timeout) {
                 }
                 g_lua.callGlobalField("g_http", "onGet", result->operationId, result->url, result->error, std::string(result->response.begin(), result->response.end()));
             });
+            if (finished) {
+                m_operations.erase(operationId);
+            }
         });
         session->start();
     });
@@ -77,6 +87,9 @@ int Http::post(const std::string& url, const std::string& data, int timeout) {
                 }
                 g_lua.callGlobalField("g_http", "onPost", result->operationId, result->url, result->error, std::string(result->response.begin(), result->response.end()));
             });
+            if (finished) {
+                m_operations.erase(operationId);
+            }
         });
         session->start();
     });
@@ -115,14 +128,72 @@ int Http::download(const std::string& url, std::string path, int timeout) {
             g_dispatcher.addEventEx("Http::onDownload", [result, path, checksum]() {
                 g_lua.callGlobalField("g_http", "onDownload", result->operationId, result->url, result->error, path, checksum);
             });
+            m_operations.erase(operationId);
         });
         session->start();
     });
     return operationId;
 }
 
+int Http::ws(const std::string& url, int timeout)
+{
+    if (!timeout) // lua is not working with default values
+        timeout = 5;
+    int operationId = m_operationId++;
+
+    boost::asio::post(m_ios, [&, url, timeout, operationId] {
+        auto result = std::make_shared<HttpResult>();
+        result->url = url;
+        result->operationId = operationId;
+        m_operations[operationId] = result;
+        auto session = std::make_shared<WebsocketSession>(m_ios, url, timeout, result, [&, result](WebsocketCallbackType type, std::string message) {
+            g_dispatcher.addEventEx("Http::ws", [result, type, message]() {
+                if (type == WEBSOCKET_OPEN) {
+                    g_lua.callGlobalField("g_http", "onWsOpen", result->operationId, message);
+                } else if (type == WEBSOCKET_MESSAGE) {
+                    g_lua.callGlobalField("g_http", "onWsMessage", result->operationId, message);
+                } else if (type == WEBSOCKET_CLOSE) {
+                    g_lua.callGlobalField("g_http", "onWsClose", result->operationId, message);
+                } else if (type == WEBSOCKET_ERROR) {
+                    g_lua.callGlobalField("g_http", "onWsError", result->operationId, message);
+                }
+            });
+            if (type == WEBSOCKET_CLOSE) {
+                m_websockets.erase(result->operationId);
+            }
+        });
+        m_websockets[result->operationId] = session;
+        session->start();
+    });
+
+    return operationId;
+}
+
+bool Http::wsSend(int operationId, std::string message)
+{
+    boost::asio::post(m_ios, [&, operationId, message] {
+        auto wit = m_websockets.find(operationId);
+        if (wit == m_websockets.end()) {
+            return;
+        }
+        wit->second->send(message);
+    });
+    return true;
+}
+
+bool Http::wsClose(int operationId)
+{
+    cancel(operationId);
+    return true;
+}
+
+
 bool Http::cancel(int id) {
     boost::asio::post(m_ios, [&, id] {
+        auto wit = m_websockets.find(id);
+        if (wit != m_websockets.end()) {
+            wit->second->close();
+        }
         auto it = m_operations.find(id);
         if (it == m_operations.end())
             return;

@@ -211,6 +211,9 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_http", "get", &Http::get, &g_http);
     g_lua.bindSingletonFunction("g_http", "post", &Http::post, &g_http);
     g_lua.bindSingletonFunction("g_http", "download", &Http::download, &g_http);
+    g_lua.bindSingletonFunction("g_http", "ws", &Http::ws, &g_http);
+    g_lua.bindSingletonFunction("g_http", "wsSend", &Http::wsSend, &g_http);
+    g_lua.bindSingletonFunction("g_http", "wsClose", &Http::wsClose, &g_http);
     g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
 
     g_lua.registerSingletonClass("g_atlas");
@@ -636,6 +639,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("getPaddingLeft", &UIWidget::getPaddingLeft);
     g_lua.bindClassMemberFunction<UIWidget>("getOpacity", &UIWidget::getOpacity);
     g_lua.bindClassMemberFunction<UIWidget>("getRotation", &UIWidget::getRotation);
+    g_lua.bindClassMemberFunction<UIWidget>("setQRCode", &UIWidget::setQRCode);
     g_lua.bindClassMemberFunction<UIWidget>("setImageSource", &UIWidget::setImageSource);
     g_lua.bindClassMemberFunction<UIWidget>("setImageSourceBase64", &UIWidget::setImageSourceBase64);
     g_lua.bindClassMemberFunction<UIWidget>("setImageClip", &UIWidget::setImageClip);

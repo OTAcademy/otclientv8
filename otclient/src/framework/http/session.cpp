@@ -21,6 +21,13 @@ void HttpSession::start() {
     }
 
     m_domain = parsedUrl.domain;
+    try {
+        m_port = parsedUrl.port.empty() ? 0 : std::stoi(parsedUrl.port);
+    } catch (std::exception&) {
+    }
+    if (!m_port) {
+        m_port = parsedUrl.protocol == "https" ? 443 : 80;
+    }
 
     m_timer.expires_after(std::chrono::seconds(m_timeout));
     m_timer.async_wait(std::bind(&HttpSession::onTimeout, shared_from_this(), std::placeholders::_1));
@@ -37,13 +44,13 @@ void HttpSession::start() {
         m_request.content_length(m_result->postData.size());
     }
 
-    boost::asio::ip::tcp::resolver::query query(parsedUrl.domain, parsedUrl.protocol);
-    m_resolver.async_resolve(query, std::bind(&HttpSession::on_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    m_resolver.async_resolve(m_domain, std::to_string(m_port), std::bind(&HttpSession::on_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void HttpSession::on_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator iterator) {
     if (ec)
         return onError("resolve error", ec.message());
+    iterator->endpoint().port(m_port);
     m_socket.async_connect(*iterator, std::bind(&HttpSession::on_connect, shared_from_this(), std::placeholders::_1));
 }
 

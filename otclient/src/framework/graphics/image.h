@@ -44,7 +44,7 @@ public:
     bool nextMipmap();
 
     void setPixel(int x, int y, uint8 *pixel) { memcpy(&m_pixels[(y * m_size.width() + x) * m_bpp], pixel, m_bpp);}
-    void setPixel(int x, int y, const Color& color) { uint32 tmp = color.rgba(); setPixel(x,y,(uint8*)&tmp); }
+    void setPixel(int x, int y, const Color& color) { uint32 tmp = color.argb(); setPixel(x,y,(uint8*)&tmp); }
 
     std::vector<uint8>& getPixels() { return m_pixels; }
     uint8* getPixelData() { return &m_pixels[0]; }
@@ -54,6 +54,8 @@ public:
     int getHeight() { return m_size.height(); }
     int getBpp() { return m_bpp; }
     uint8* getPixel(int x, int y) { return &m_pixels[(y * m_size.width() + x) * m_bpp]; }
+
+    static ImagePtr fromQRCode(const std::string& code, int border);
 
 private:
     std::vector<uint8> m_pixels;

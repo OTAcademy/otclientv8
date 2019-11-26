@@ -4,6 +4,8 @@
 #include <framework/global.h>
 #include "result.h"
 
+class WebsocketSession;
+
 class Http {
 public:
     Http() : m_ios(), m_guard(boost::asio::make_work_guard(m_ios)) {}
@@ -14,6 +16,9 @@ public:
     int get(const std::string& url, int timeout = 5);
     int post(const std::string& url, const std::string& data, int timeout = 5);
     int download(const std::string& url, std::string path, int timeout = 5);
+    int ws(const std::string& url, int timeout = 5);
+    bool wsSend(int operationId, std::string message);
+    bool wsClose(int operationId);
 
     bool cancel(int id);
 
@@ -41,6 +46,7 @@ private:
     boost::asio::io_context m_ios;
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_guard;
     std::map<int, HttpResult_ptr> m_operations;
+    std::map<int, std::shared_ptr<WebsocketSession>> m_websockets;
     std::map<std::string, HttpResult_ptr> m_downloads;
 };
 

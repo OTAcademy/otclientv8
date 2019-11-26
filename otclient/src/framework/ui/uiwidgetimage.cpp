@@ -22,6 +22,7 @@
 
 #include "uiwidget.h"
 #include <framework/graphics/painter.h>
+#include <framework/graphics/image.h>
 #include <framework/graphics/texture.h>
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/graphics.h>
@@ -35,9 +36,11 @@ void UIWidget::initImage()
 void UIWidget::parseImageStyle(const OTMLNodePtr& styleNode)
 {
     for(const OTMLNodePtr& node : styleNode->children()) {
-        if(node->tag() == "image-source")
+        if (node->tag() == "qr" || node->tag() == "qr-code")
+            setQRCode(node->value(), 1);
+        else if(node->tag() == "image-source")
             setImageSource(stdext::resolve_path(node->value(), node->source()));
-        if(node->tag() == "image-source-base64")
+        else if(node->tag() == "image-source-base64")
             setImageSourceBase64(node->value());
         else if(node->tag() == "image-offset-x")
             setImageOffsetX(node->value<int>());
@@ -176,6 +179,23 @@ void UIWidget::drawImage(const Rect& screenCoords)
 
     g_painter->setColor(m_imageColor);
     g_painter->drawTextureCoords(m_imageCoordsBuffer, m_imageTexture);
+}
+
+void UIWidget::setQRCode(const std::string& code, int border)
+{
+    m_imageTexture = TexturePtr(new Texture(Image::fromQRCode(code, border)));
+
+    if (m_imageTexture && (!m_rect.isValid() || m_imageAutoResize)) {
+        Size size = getSize();
+        Size imageSize = m_imageTexture->getSize();
+        if (size.width() <= 0 || m_imageAutoResize)
+            size.setWidth(imageSize.width());
+        if (size.height() <= 0 || m_imageAutoResize)
+            size.setHeight(imageSize.height());
+        setSize(size);
+    }
+
+    m_imageMustRecache = true;
 }
 
 void UIWidget::setImageSource(const std::string& source)

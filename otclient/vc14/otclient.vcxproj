@@ -229,6 +229,7 @@
     <ClCompile Include="..\src\framework\graphics\texturemanager.cpp" />
     <ClCompile Include="..\src\framework\http\http.cpp" />
     <ClCompile Include="..\src\framework\http\session.cpp" />
+    <ClCompile Include="..\src\framework\http\websocket.cpp" />
     <ClCompile Include="..\src\framework\input\mouse.cpp" />
     <ClCompile Include="..\src\framework\luaengine\lbitlib.cpp" />
     <ClCompile Include="..\src\framework\luaengine\luaexception.cpp" />
@@ -264,6 +265,7 @@
     <ClCompile Include="..\src\framework\stdext\net.cpp" />
     <ClCompile Include="..\src\framework\stdext\string.cpp" />
     <ClCompile Include="..\src\framework\stdext\time.cpp" />
+    <ClCompile Include="..\src\framework\stdext\uri.cpp" />
     <ClCompile Include="..\src\framework\ui\uianchorlayout.cpp" />
     <ClCompile Include="..\src\framework\ui\uiboxlayout.cpp" />
     <ClCompile Include="..\src\framework\ui\uigridlayout.cpp" />
@@ -281,6 +283,7 @@
     <ClCompile Include="..\src\framework\util\color.cpp" />
     <ClCompile Include="..\src\framework\util\crypt.cpp" />
     <ClCompile Include="..\src\framework\util\extras.cpp" />
+    <ClCompile Include="..\src\framework\util\qrcodegen.c" />
     <ClCompile Include="..\src\framework\util\stats.cpp" />
     <ClCompile Include="..\src\framework\xml\tinystr.cpp" />
     <ClCompile Include="..\src\framework\xml\tinyxml.cpp" />
@@ -391,6 +394,7 @@
     <ClInclude Include="..\src\framework\http\http.h" />
     <ClInclude Include="..\src\framework\http\result.h" />
     <ClInclude Include="..\src\framework\http\session.h" />
+    <ClInclude Include="..\src\framework\http\websocket.h" />
     <ClInclude Include="..\src\framework\input\mouse.h" />
     <ClInclude Include="..\src\framework\luaengine\declarations.h" />
     <ClInclude Include="..\src\framework\luaengine\lbitlib.h" />
@@ -467,6 +471,7 @@
     <ClInclude Include="..\src\framework\util\databuffer.h" />
     <ClInclude Include="..\src\framework\util\matrix.h" />
     <ClInclude Include="..\src\framework\util\point.h" />
+    <ClInclude Include="..\src\framework\util\qrcodegen.h" />
     <ClInclude Include="..\src\framework\util\rect.h" />
     <ClInclude Include="..\src\framework\util\size.h" />
     <ClInclude Include="..\src\framework\util\stats.h" />

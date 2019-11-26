@@ -835,6 +835,9 @@ void ProtocolGame::sendBugReport(const std::string& comment)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientBugReport);
+    if (g_game.getClientVersion() > 1000) {
+        msg->addU8(3); // other
+    }
     msg->addString(comment);
     send(msg);
 }

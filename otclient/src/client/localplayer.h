@@ -82,7 +82,7 @@ public:
     double getLevel() { return m_level; }
     double getLevelPercent() { return m_levelPercent; }
     double getMana() { return m_mana; }
-    double getMaxMana() { return m_maxMana; }
+    double getMaxMana() { return std::max<double>(m_mana, m_maxMana); }
     double getMagicLevel() { return m_magicLevel; }
     double getMagicLevelPercent() { return m_magicLevelPercent; }
     double getBaseMagicLevel() { return m_baseMagicLevel; }

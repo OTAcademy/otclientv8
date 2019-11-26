@@ -26,6 +26,7 @@
 #include <framework/core/resourcemanager.h>
 #include <framework/core/filestream.h>
 #include <framework/graphics/apngloader.h>
+#include <framework/util/qrcodegen.h>
 
 Image::Image(const Size& size, int bpp, uint8 *pixels)
 {
@@ -292,3 +293,20 @@ void Texture::generateSoftwareMipmaps(std::vector<uint8> inPixels)
     }
 }
 */
+
+ImagePtr Image::fromQRCode(const std::string& code, int border)
+{
+    enum qrcodegen_Ecc errCorLvl = qrcodegen_Ecc_HIGH;  // Error correction level
+
+    uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
+    uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
+    bool ok = qrcodegen_encodeText(code.c_str(), tempBuffer, qrcode, errCorLvl, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
+    int size = qrcodegen_getSize(qrcode);
+    ImagePtr image(new Image(Size(size + border * 2, size + border * 2)));
+    for (int x = 0; x < size + border * 2; ++x) {
+        for (int y = 0; y < size + border * 2; ++y) {
+            image->setPixel(x, y, qrcodegen_getModule(qrcode, x - border, y - border) ? Color::black : Color::white);
+        }
+    }
+    return image;
+}

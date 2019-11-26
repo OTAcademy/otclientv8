@@ -178,9 +178,6 @@ SoundSourcePtr SoundManager::play(std::string filename, float fadetime, float ga
 
     ensureContext();
 
-    if(gain == 0)
-        gain = 1.0f;
-
     filename = resolveSoundFile(filename);
     SoundSourcePtr soundSource = createSoundSource(filename);
     if(!soundSource) {

@@ -424,6 +424,7 @@ protected:
     EdgeGroup<int> m_imageBorder;
 
 public:
+    void setQRCode(const std::string& code, int border);
     void setImageSource(const std::string& source);
     void setImageSourceBase64(const std::string & data);
     void setImageSourceHTTP(const std::string& data);

@@ -700,6 +700,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Tile>("addThing", &Tile::addThing);
     g_lua.bindClassMemberFunction<Tile>("getThing", &Tile::getThing);
     g_lua.bindClassMemberFunction<Tile>("getThings", &Tile::getThings);
+    g_lua.bindClassMemberFunction<Tile>("getEffects", &Tile::getEffects);
     g_lua.bindClassMemberFunction<Tile>("getItems", &Tile::getItems);
     g_lua.bindClassMemberFunction<Tile>("getThingStackPos", &Tile::getThingStackPos);
     g_lua.bindClassMemberFunction<Tile>("getThingCount", &Tile::getThingCount);

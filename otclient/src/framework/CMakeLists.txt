@@ -35,6 +35,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/util/stats.h
     ${CMAKE_CURRENT_LIST_DIR}/util/extras.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/extras.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/qrcodegen.c
+    ${CMAKE_CURRENT_LIST_DIR}/util/qrcodegen.h
 
     # stdext
     ${CMAKE_CURRENT_LIST_DIR}/stdext/any.h
@@ -62,6 +64,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/stdext/time.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/traits.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/types.h
+    ${CMAKE_CURRENT_LIST_DIR}/stdext/uri.h
+    ${CMAKE_CURRENT_LIST_DIR}/stdext/uri.cpp
 
     # core
     ${CMAKE_CURRENT_LIST_DIR}/core/application.cpp
@@ -513,6 +517,8 @@ if(FRAMEWORK_NET)
         ${CMAKE_CURRENT_LIST_DIR}/http/http.h
         ${CMAKE_CURRENT_LIST_DIR}/http/session.cpp
         ${CMAKE_CURRENT_LIST_DIR}/http/session.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/websocket.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/http/websocket.h
         ${CMAKE_CURRENT_LIST_DIR}/http/result.h
     )
     set(framework_DEFINITIONS ${framework_DEFINITIONS} -DFW_NET)

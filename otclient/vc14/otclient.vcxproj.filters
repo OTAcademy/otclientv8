@@ -552,6 +552,15 @@
     <ClCompile Include="..\src\extras\proxy\client.cpp">
       <Filter>Extras\proxy</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\framework\http\websocket.cpp">
+      <Filter>Source Files\framework\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\stdext\uri.cpp">
+      <Filter>Source Files\framework\stdext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\util\qrcodegen.c">
+      <Filter>Source Files\framework\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework\const.h">
@@ -1105,6 +1114,12 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\stdext\fastrand.h">
       <Filter>Header Files\framework\stdext</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\http\websocket.h">
+      <Filter>Header Files\framework\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\util\qrcodegen.h">
+      <Filter>Header Files\framework\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
