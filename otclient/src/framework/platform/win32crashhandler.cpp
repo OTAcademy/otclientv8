@@ -189,6 +189,8 @@ LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS e)
 #define TRACE_MAX_FUNCTION_NAME_LENGTH 1024
 #define TRACE_LOG_ERRORS FALSE
 #define TRACE_DUMP_NAME "exception.dmp"
+#define TRACE_DUMP_NAME_QUIET "exception2.dmp"
+#define TRACE_DUMP_NAME_FULL "exception_full.dmp"
 
 LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
 {
@@ -230,14 +232,38 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
 #endif
 
     auto dumpFilePath = g_resources.getWriteDir();
-    dumpFilePath /= TRACE_DUMP_NAME;
-    //MessageBoxA(NULL, dumpFilePath.string().c_str(), "Crash. Log file saved to:", 0);
-    HANDLE dumpFile = CreateFileA(dumpFilePath.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
-    exceptionInformation.ThreadId = GetCurrentThreadId();
-    exceptionInformation.ExceptionPointers = exception;
-    exceptionInformation.ClientPointers = FALSE;
-    MiniDumpWriteDump(process, GetProcessId(process), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL);
+    if (quiet_crash) {
+        dumpFilePath /= TRACE_DUMP_NAME_QUIET;
+    } else {
+        dumpFilePath /= TRACE_DUMP_NAME;
+    }
+    {
+        HANDLE dumpFile = CreateFileA(dumpFilePath.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
+        exceptionInformation.ThreadId = GetCurrentThreadId();
+        exceptionInformation.ExceptionPointers = exception;
+        exceptionInformation.ClientPointers = FALSE;
+        int flags = MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory;
+        MiniDumpWriteDump(process, GetProcessId(process), dumpFile, (MINIDUMP_TYPE)flags, exception ? &exceptionInformation : NULL, NULL, NULL);
+    }
+    {
+        dumpFilePath = g_resources.getWriteDir();
+        dumpFilePath /= TRACE_DUMP_NAME_FULL;
+        HANDLE dumpFile = CreateFileA(dumpFilePath.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
+        exceptionInformation.ThreadId = GetCurrentThreadId();
+        exceptionInformation.ExceptionPointers = exception;
+        exceptionInformation.ClientPointers = FALSE;
+        int flags = MiniDumpWithPrivateReadWriteMemory |
+            MiniDumpWithDataSegs |
+            MiniDumpWithHandleData |
+            MiniDumpWithFullMemoryInfo |
+            MiniDumpWithThreadInfo |
+            MiniDumpWithUnloadedModules;
+        MiniDumpWriteDump(process, GetProcessId(process), dumpFile, (MINIDUMP_TYPE)flags, exception ? &exceptionInformation : NULL, NULL, NULL);
+    }
+
+    Sleep(1000);
     ExceptionHandler(exception);
 
     return EXCEPTION_CONTINUE_SEARCH;

@@ -435,6 +435,7 @@ void Game::processVipAdd(uint id, const std::string& name, uint status, const st
 
 void Game::processVipStateChange(uint id, uint status)
 {
+    if (m_vips.find(id) == m_vips.end()) return;
     std::get<1>(m_vips[id]) = status;
     g_lua.callGlobalField("g_game", "onVipStateChange", id, status);
 }

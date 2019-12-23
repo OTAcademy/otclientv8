@@ -29,6 +29,7 @@
 #include <framework/core/eventdispatcher.h>
 #include <boost/algorithm/string.hpp>
 #include <tchar.h>
+#include <Psapi.h>
 
 void Platform::processArgs(std::vector<std::string>& args)
 {
@@ -172,6 +173,13 @@ double Platform::getTotalSystemMemory()
     status.dwLength = sizeof(status);
     GlobalMemoryStatusEx(&status);
     return status.ullTotalPhys;
+}
+
+double Platform::getMemoryUsage()
+{
+    PROCESS_MEMORY_COUNTERS pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+    return pmc.WorkingSetSize;
 }
 
 #ifndef PRODUCT_PROFESSIONAL

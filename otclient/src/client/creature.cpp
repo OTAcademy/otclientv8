@@ -51,6 +51,7 @@ Creature::Creature() : Thing()
 {
     m_id = 0;
     m_healthPercent = 100;
+    m_manaPercent = -1;
     m_speed = 200;
     m_direction = Otc::South;
     m_walkDirection = Otc::South;
@@ -244,10 +245,8 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
 
         if(m_outfit.getCategory() == ThingCategoryEffect)
             animationPhase = std::min<int>(animationPhase+1, animationPhases);
-
-        size_t hash = (m_outfit.getAuxId() << 16) + (m_outfit.getCategory() << 8) + animationPhase;
-        auto outfit = drawQueue.addOutfit(hash, Rect(dest - getDisplacement() - Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), Size(Otc::TILE_PIXELS * 4, Otc::TILE_PIXELS * 4)));
-        type->newDraw(Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3), 0, 0, 0, 0, animationPhase, drawQueue, lightView, NewDrawOutfit);
+        
+        type->newDraw(dest - getDisplacement(), 0, 0, 0, 0, animationPhase, drawQueue, lightView);
     } else {
         int animationPhase = m_walkAnimationPhase;
 
@@ -367,21 +366,25 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
         drawQueue.add(backgroundRect, nullptr, Rect(0, 0, 1, 1), Color::black);
         drawQueue.add(healthRect, nullptr, Rect(0, 0, 1, 1), fillColor);
 
-        if(drawFlags & Otc::DrawManaBar && isLocalPlayer()) {
-            LocalPlayerPtr player = g_game.getLocalPlayer();
-            if(player) {
+        if(drawFlags & Otc::DrawManaBar) {
+            int manaPercent = m_manaPercent;
+            if (isLocalPlayer()) {
+                LocalPlayerPtr player = g_game.getLocalPlayer();
+                if (player) {
+                    double maxMana = player->getMaxMana();
+                    if (maxMana == 0) {
+                        manaPercent = 100;
+                    } else {
+                        manaPercent = (player->getMana() * 100) / maxMana;
+                    }
+                }
+            }
+            if(manaPercent >= 0) {
                 backgroundRect.moveTop(backgroundRect.bottom());
                 drawQueue.add(backgroundRect, nullptr, Rect(0, 0, 1, 1), Color::black);
 
                 Rect manaRect = backgroundRect.expanded(-1);
-                double maxMana = player->getMaxMana();
-                if (maxMana < player->getMana())
-                    maxMana = player->getMana();
-                if(maxMana == 0) {
-                    manaRect.setWidth(25);
-                } else {
-                    manaRect.setWidth(player->getMana() / (maxMana * 1.0) * 25);
-                }
+                manaRect.setWidth(((float)manaPercent / 100.f) * 25);
 
                 drawQueue.add(manaRect, nullptr, Rect(0, 0, 1, 1), Color::blue);
             }

@@ -3,13 +3,10 @@ local context = G.botContext
 -- MAIN BOT FUNCTION
 -- macro(timeout, callback)
 -- macro(timeout, name, callback)
+-- macro(timeout, name, callback, parent)
 -- macro(timeout, name, hotkey, callback)
 -- macro(timeout, name, hotkey, callback, parent)
 context.macro = function(timeout, name, hotkey, callback, parent)
-  if not parent then
-    parent = context.panel
-  end
-  
   if type(timeout) ~= 'number' or timeout < 1 then
     error("Invalid timeout for macro: " .. tostring(timeout))
   end
@@ -18,8 +15,9 @@ context.macro = function(timeout, name, hotkey, callback, parent)
     name = ""
     hotkey = ""
   elseif type(hotkey) == 'function' then
+    parent = callback
     callback = hotkey
-    hotkey = ""
+    hotkey = ""    
   elseif type(callback) ~= 'function' then
     error("Invalid callback for macro: " .. tostring(callback))
   end
@@ -29,6 +27,9 @@ context.macro = function(timeout, name, hotkey, callback, parent)
   if type(name) ~= 'string' or type(hotkey) ~= 'string' then
     error("Invalid name or hotkey for macro")
   end
+  if not parent then
+    parent = context.panel
+  end  
   if hotkey:len() > 0 then
     hotkey = retranslateKeyComboDesc(hotkey)
   end
@@ -65,13 +66,13 @@ end
 -- hotkey(keys, callback)
 -- hotkey(keys, name, callback)
 -- hotkey(keys, name, callback, parent)
-context.hotkey = function(keys, name, callback, single, parent)
-  if not parent then
-    parent = context.panel
-  end
+context.hotkey = function(keys, name, callback, parent, single)
   if type(name) == 'function' then
     callback = name
     name = ""
+  end
+  if not parent then
+    parent = context.panel
   end
   keys = retranslateKeyComboDesc(keys)
   if not keys or #keys == 0 then
@@ -114,7 +115,7 @@ context.singlehotkey = function(keys, name, callback, parent)
     callback = name
     name = ""
   end
-  return context.hotkey(keys, name, callback, true, parent) 
+  return context.hotkey(keys, name, callback, parent, true) 
 end  
 
 -- schedule(timeout, callback)

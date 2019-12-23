@@ -475,6 +475,8 @@ void Client::registerLuaFunctions()
     g_lua.bindClassStaticFunction<Creature>("create", []{ return CreaturePtr(new Creature); });
     g_lua.bindClassMemberFunction<Creature>("getId", &Creature::getId);
     g_lua.bindClassMemberFunction<Creature>("getName", &Creature::getName);
+    g_lua.bindClassMemberFunction<Creature>("setManaPercent", &LocalPlayer::setManaPercent);
+    g_lua.bindClassMemberFunction<Creature>("getManaPercent", &LocalPlayer::getManaPercent);
     g_lua.bindClassMemberFunction<Creature>("getHealthPercent", &Creature::getHealthPercent);
     g_lua.bindClassMemberFunction<Creature>("getSpeed", &Creature::getSpeed);
     g_lua.bindClassMemberFunction<Creature>("setSpeed", &Creature::setSpeed);
@@ -700,6 +702,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Tile>("addThing", &Tile::addThing);
     g_lua.bindClassMemberFunction<Tile>("getThing", &Tile::getThing);
     g_lua.bindClassMemberFunction<Tile>("getThings", &Tile::getThings);
+    g_lua.bindClassMemberFunction<Tile>("getEffect", &Tile::getEffect);
     g_lua.bindClassMemberFunction<Tile>("getEffects", &Tile::getEffects);
     g_lua.bindClassMemberFunction<Tile>("getItems", &Tile::getItems);
     g_lua.bindClassMemberFunction<Tile>("getThingStackPos", &Tile::getThingStackPos);

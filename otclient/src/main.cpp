@@ -39,7 +39,7 @@ int main(int argc, const char* argv[]) {
 #endif
 
 #ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1585018640) {
+    if (time(nullptr) > 1587018640) {
         control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
     }
 #endif
@@ -53,7 +53,7 @@ int main(int argc, const char* argv[]) {
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName(compactName);
-    g_app.setVersion("1.4");
+    g_app.setVersion("1.5");
 
 #ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {

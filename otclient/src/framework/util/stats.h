@@ -79,7 +79,7 @@ private:
         int64_t start = 0;
     } stats[STATS_LAST + 1];
 
-    std::set<UIWidget*> widgets;
+    //std::set<UIWidget*> widgets;
     int createdWidgets = 0;
     int destroyedWidgets = 0;
 };

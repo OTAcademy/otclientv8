@@ -5,6 +5,7 @@
 #include <map>
 #include <framework/stdext/time.h>
 #include <framework/ui/uiwidget.h>
+#include <framework/ui/ui.h>
 
 Stats g_stats;
 
@@ -122,63 +123,61 @@ void Stats::clearSlow(int type) {
 }
 
 
-void Stats::addWidget(UIWidget* widget)
+void Stats::addWidget(UIWidget*)
 {
     createdWidgets += 1;
-    widgets.insert(widget);
+//    widgets.insert(widget);
 }
 
-void Stats::removeWidget(UIWidget* widget)
+void Stats::removeWidget(UIWidget*)
 {
     destroyedWidgets += 1;
-    widgets.erase(widget);
+//    widgets.erase(widget);
+}
+
+struct WidgetTreeNode {
+    UIWidgetPtr widget;
+    int children_count;
+    std::list<WidgetTreeNode> children;
+};
+
+void collectWidgets(WidgetTreeNode& node)
+{
+    for (auto& child : node.widget->getChildren()) {
+        node.children.push_back(WidgetTreeNode { child, 0, {} });
+        collectWidgets(node.children.back());
+    }
+
+    for (auto& child : node.children) {
+        node.children_count += 1 + child.children_count;
+    }
+}
+
+void printNode(std::stringstream& ret, WidgetTreeNode& node, int depth, int limit, bool pretty)
+{
+    if (depth >= limit || node.children_count < 50) return;
+    ret << std::string(depth, '-') << node.widget->getId() << "|" << node.children_count << "\n";
+    for (auto& child : node.children) {
+        printNode(ret, child, depth + 1, limit, pretty);
+    }
 }
 
 std::string Stats::getWidgetsInfo(int limit, bool pretty)
 {
     std::stringstream ret;
     if (pretty)
-        ret << "Widgets: " << widgets.size() << " (" << destroyedWidgets << "/" << createdWidgets << ")\n";
+        ret << "Widgets: " << (createdWidgets - destroyedWidgets) << " (" << destroyedWidgets << "/" << createdWidgets << ")\n";
     else
-        ret << widgets.size() << "|" << destroyedWidgets << "|" << createdWidgets << "\n";
+        ret << (createdWidgets - destroyedWidgets) << "|" << destroyedWidgets << "|" << createdWidgets << "\n";
     if (pretty)
-        ret << "Widget" << std::setw(44) << "Childrens" << std::setw(10) << "\n";
+        ret << "Widget" << std::setw(44) << "Children" << std::setw(10) << "\n";
     else
         ret << "Widget|Childerns" << "\n";
 
-    for (int z = 0; z < 2; ++z) {
-        if (z == 1) {
-            ret << (pretty ? "Parent of parent\n" : "\n");
-        }
-        std::map<std::string, int> parents;
-        std::multimap<int, std::string> sortedParents;
-        for (auto& widget : widgets) {
-            auto parent = widget->getParent();
-            if (!parent || parent->getId().empty())
-                continue;
-            if (z == 1) {
-                parent = parent->getParent();
-                if (!parent || parent->getId().empty())
-                    continue;
-            }
-            parents.emplace(parent->getId(), 0).first->second += 1;
-        }
-        for (auto& parent : parents) {
-            sortedParents.emplace(parent.second, parent.first);
-        }
 
-        int i = 0;
-        for (auto it = sortedParents.rbegin(); it != sortedParents.rend(); ++it) {
-            if (i++ > limit)
-                break;
-            if (pretty) {
-                std::string name = it->second.substr(0, 45);
-                ret << name << std::setw(50 - name.size()) << it->first << std::setw(10) << "\n";
-            } else {
-                ret << it->second << "|" << it->first << "\n";
-            }
-        }
-    }
+    WidgetTreeNode node{ g_ui.getRootWidget() , 0, {} };
+    collectWidgets(node);
+    printNode(ret, node, 0, limit, pretty);
 
     return ret.str();
 }

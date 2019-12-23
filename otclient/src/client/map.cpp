@@ -824,6 +824,7 @@ std::tuple<std::vector<Otc::Direction>, Otc::PathFindResult> Map::findPath(const
                 int speed = 100;
 
                 Position neighborPos = currentNode->pos.translated(i, j);
+                if (neighborPos.x < 0 || neighborPos.y < 0) continue;
                 if(g_map.isAwareOfPosition(neighborPos)) {
                     wasSeen = true;
                     if(const TilePtr& tile = getTile(neighborPos)) {
@@ -962,6 +963,7 @@ PathFindResult_ptr Map::newFindPath(const Position& start, const Position& goal,
                 if (i == 0 && j == 0)
                     continue;
                 Position neighbor = node->pos.translated(i, j);
+                if (neighbor.x < 0 || neighbor.y < 0) continue;
                 auto it = nodes.find(neighbor);
                 if (it == nodes.end()) {
                     auto blockAndTile = g_minimap.threadGetTile(neighbor);
@@ -1107,6 +1109,7 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
                 if (i == 0 && j == 0)
                     continue;
                 Position neighbor = node->pos.translated(i, j);
+                if (neighbor.x < 0 || neighbor.y < 0) continue;
                 auto it = nodes.find(neighbor);
                 if (it == nodes.end()) {
                     bool wasSeen = false;

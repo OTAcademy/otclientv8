@@ -151,6 +151,8 @@ connect(const LuaObjectPtr& obj, const std::string& field, const Lambda& f, bool
 
 template<typename... T>
 int LuaObject::luaCallLuaField(const std::string& field, const T&... args) {
+    AutoStat s(STATS_LUA, getClassName() + ":" + field);
+
     // note that the field must be retrieved from this object lua value
     // to force using the __index metamethod of it's metatable
     // so cannot use LuaObject::getField here

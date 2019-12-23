@@ -293,9 +293,13 @@ void Protocol::onError(const boost::system::error_code& err)
 #ifdef FW_PROXY
 void Protocol::onProxyPacket(ProxyPacketPtr packet)
 {
+    if (m_disconnected)
+        return;
     auto self(asProtocol());
     boost::asio::post(g_ioService, [&, self, packet]
     {
+        if (m_disconnected)
+            return;
         m_inputMessage->reset();
 
         // first update message header size
@@ -315,9 +319,11 @@ void Protocol::onProxyDisconnected(boost::system::error_code ec)
 {
     if (m_disconnected)
         return;
-    m_disconnected = true;
     auto self(asProtocol());
     boost::asio::post(g_ioService, [&, self, ec] {
+        if (m_disconnected)
+            return;
+        m_disconnected = true;
         onError(ec);
     });
 }

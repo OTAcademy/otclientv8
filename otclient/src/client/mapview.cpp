@@ -463,24 +463,22 @@ void MapView::updateVisibleTilesCache()
 
     const int numDiagonals = m_drawDimension.width() + m_drawDimension.height() - 1;
     float depth = Otc::MAX_DEPTH;
-    m_mustDrawVisibleTilesCache = false;
+    m_mustDrawVisibleTilesCache = true;
 
     size_t i = 0;
     for (int iz = m_cachedLastVisibleFloor; iz >= (m_floorFading ? m_cachedFirstFadingFloor : m_cachedFirstVisibleFloor); --iz) {
-        for (int diagonal = 0; diagonal < numDiagonals && !m_mustDrawVisibleTilesCache; ++diagonal) {
+        for (int diagonal = 0; diagonal < numDiagonals; ++diagonal) {
             int advance = std::max<int>(diagonal - m_drawDimension.height(), 0);
-            for (int iy = diagonal - advance, ix = advance; iy >= 0 && ix < m_drawDimension.width() && !m_mustDrawVisibleTilesCache; --iy, ++ix) {
+            for (int iy = diagonal - advance, ix = advance; iy >= 0 && ix < m_drawDimension.width(); --iy, ++ix) {
                 Position tilePos = cameraPosition.translated(ix - m_virtualCenterOffset.x, iy - m_virtualCenterOffset.y);
                 tilePos.coveredUp(cameraPosition.z - iz);
                 if (const TilePtr& tile = g_map.getTile(tilePos)) {
                     if (!tile->isDrawable())
                         continue;
                     if (i >= m_cachedVisibleTiles.size()) {
-                        m_mustDrawVisibleTilesCache = true;
                         break;
                     }
                     if (m_cachedVisibleTiles[i].first != tile || m_cachedVisibleTiles[i].second != g_map.isCompletelyCovered(tilePos, m_cachedFirstVisibleFloor)) {
-                        m_mustDrawVisibleTilesCache = true;
                         break;
                     }
                     i += 1;

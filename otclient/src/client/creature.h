@@ -56,6 +56,7 @@ public:
 
     void setId(uint32 id) { m_id = id; }
     void setName(const std::string& name);
+    void setManaPercent(int8 value) { m_manaPercent = value; }
     void setHealthPercent(uint8 healthPercent);
     void setDirection(Otc::Direction direction);
     void setOutfit(const Outfit& outfit);
@@ -86,6 +87,7 @@ public:
     uint32 getId() { return m_id; }
     std::string getName() { return m_name; }
     uint8 getHealthPercent() { return m_healthPercent; }
+    int8 getManaPercent() { return m_manaPercent; }
     Otc::Direction getDirection() { return m_direction; }
     Otc::Direction getWalkDirection() { return m_walkDirection; }
     Outfit getOutfit() { return m_outfit; }
@@ -171,6 +173,7 @@ protected:
     uint32 m_id;
     std::string m_name;
     uint8 m_healthPercent;
+    int8 m_manaPercent;
     Otc::Direction m_direction;
     Otc::Direction m_walkDirection;
     Outfit m_outfit;

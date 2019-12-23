@@ -15,7 +15,8 @@ Services = {
 -- Servers accept http login url, websocket login url or ip:port:version
 Servers = {
   OTClientV8 = "http://otclient.ovh/api/login.php",
-  OTClientV8Websocket = "wss://otclient.ovh:3000/",
+  OTClientV8Websocket = "ws://otclient.ovh:3000/",
+  WS = "ws://127.0.0.1:88/",
   OTClientV8proxy = "http://otclient.ovh/api/login.php?proxy=1",
   OTClientV8c = "otclient.ovh:7171:1099:25:30:80:90",
   OTClientV8Test = "http://otclient.ovh/api/login2.php",
@@ -42,15 +43,15 @@ if Services.crash ~= nil and Services.crash:len() > 4 then
   local normalLog = g_logger.getLastLog()
   local crashed = false
   if crashLog:len() > 0 then
-    g_http.post(Services.crash .. "?txt=0", crashLog)
+    g_http.post(Services.crash .. "?txt=0&version=" .. g_app.getVersion(), crashLog)
     crashed = true
   end
   if crashLogTxt:len() > 0 then
-    g_http.post(Services.crash .. "?txt=1", crashLogTxt)
+    g_http.post(Services.crash .. "?txt=1&version=" .. g_app.getVersion(), crashLogTxt)
     crashed = true
   end
   if crashed and normalLog:len() > 0 then
-    g_http.post(Services.crash .. "?txt=2", normalLog)
+    g_http.post(Services.crash .. "?txt=2&version=" .. g_app.getVersion(), normalLog)
   end
   g_resources.deleteCrashLog()
 end

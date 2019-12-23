@@ -310,27 +310,33 @@ function EnterGame.checkWebsocket()
     if webSocket then
       webSocket:close()
       webSocket = nil
+      newLogin.code:setText("")
     end
     return
   end
   if webSocket then
     if webSocket.url == url then
+      if newLogin:isHidden() and newLogin.code:getText():len() > 1 then
+        newLogin:show()
+        newLogin:raise()
+      end
       return
     end
     webSocket:close()
     webSocket = nil
   end
-
+  newLogin.code:setText("")
   webSocket = HTTP.WebSocketJSON(url, {
     onOpen = function(message, webSocketId)
       if webSocket and webSocket.id == webSocketId then
-        webSocket.send({login=true})
+        webSocket.send({type="init", uid=G.UUID, version=APP_VERSION})
       end
     end,
     onMessage = function(message, webSocketId)
       if webSocket and webSocket.id == webSocketId then
         if message.type == "login" then
           webSocketLoginPacket = nil
+          EnterGame.hide()
           onHTTPResult(message, nil)
         elseif message.type == "quick_login" and message.code and message.qrcode then
           EnterGame.showNewLogin(message.code, message.qrcode)
@@ -357,7 +363,6 @@ end
 
 function EnterGame.hideNewLogin()
   newLogin:hide()
-  newLoginUrl = nil
 end
 
 function EnterGame.showNewLogin(code, qrcode)

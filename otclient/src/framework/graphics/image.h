@@ -44,6 +44,7 @@ public:
     bool nextMipmap();
 
     void setPixel(int x, int y, uint8 *pixel) { memcpy(&m_pixels[(y * m_size.width() + x) * m_bpp], pixel, m_bpp);}
+    void setPixel(int x, int y, uint32_t argb) { setPixel(x, y, (uint8*)&argb); }
     void setPixel(int x, int y, const Color& color) { uint32 tmp = color.argb(); setPixel(x,y,(uint8*)&tmp); }
 
     std::vector<uint8>& getPixels() { return m_pixels; }

@@ -8,6 +8,7 @@ configEditorText = nil
 configList = nil
 botTabs = nil
 botPanel = nil
+local botWebSockets = {}
 local botMessages = nil
 local configCopy = ""
 local enableButton = nil
@@ -33,6 +34,7 @@ function init()
     onGameStart = online, 
     onGameEnd = offline, 
     onTalk = botOnTalk,
+    onTextMessage = botOnTextMessage,
     onUse = botOnUse,
     onUseWith = botOnUseWith,
     onChannelList = botChannelList,
@@ -160,6 +162,7 @@ function terminate()
     onGameStart = online, 
     onGameEnd = offline, 
     onTalk = botOnTalk,
+    onTextMessage = botOnTextMessage,
     onUse = botOnUse,
     onUseWith = botOnUseWith,
     onChannelList = botChannelList,
@@ -343,6 +346,11 @@ function clearConfig()
   
   botMessages:destroyChildren()
   botMessages:updateLayout()
+  
+  for socket in pairs(botWebSockets) do
+    g_http.cancel(socket)
+    botWebSockets[socket] = nil
+  end
 
   for i, widget in pairs(g_ui.getRootWidget():getChildren()) do
     if widget.botWidget then
@@ -385,7 +393,7 @@ function refreshConfig()
   end
   errorOccured = false
   g_game.enableTileThingLuaCallback(false)
-  local status, result = pcall(function() return executeBot(config.script, config.storage, botTabs, botMsgCallback, saveConfig) end)
+  local status, result = pcall(function() return executeBot(config.script, config.storage, botTabs, botMsgCallback, saveConfig, botWebSockets) end)
   if not status then    
     errorOccured = true
     statusLabel:setText("Error: " .. tostring(result))
@@ -471,6 +479,11 @@ end
 function botOnTalk(name, level, mode, text, channelId, pos)
   if compiledConfig == nil then return false end
   safeBotCall(function() compiledConfig.callbacks.onTalk(name, level, mode, text, channelId, pos) end)
+end
+
+function botOnTextMessage(mode, text)
+  if compiledConfig == nil then return false end
+  safeBotCall(function() compiledConfig.callbacks.onTextMessage(mode, text) end)
 end
 
 function botAddThing(tile, thing)

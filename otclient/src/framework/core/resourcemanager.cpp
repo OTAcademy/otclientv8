@@ -193,13 +193,37 @@ bool ResourceManager::setup(const std::string& existentFile)
     for(const std::string& dir : possiblePaths) {
         std::string path = dir + "/data.zip";
         if (PHYSFS_mount(path.c_str(), NULL, 0)) {
-            if (PHYSFS_exists(existentFile.c_str())) {
-                m_dataDir = dir;
-                m_loadedFromArchive = true;
-                g_logger.debug(stdext::format("Found work dir at '%s'", "data.zip"));
-                return true;
+            if (!PHYSFS_exists(existentFile.c_str())) {
+                continue;
             }
-            PHYSFS_unmount(path.c_str());
+
+            if (!PHYSFS_mount(dir.c_str(), NULL, 0)) {
+                continue;
+            }
+            PHYSFS_File* file = PHYSFS_openRead("data.zip");
+            if (!file) {
+                g_logger.fatal(stdext::format("Can't open data.zip"));
+                return false;
+            }
+
+            m_memoryDataBufferSize = PHYSFS_fileLength(file);
+            if (m_memoryDataBufferSize > 0) {
+                m_memoryDataBuffer = new char[m_memoryDataBufferSize];
+                PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
+            }
+            PHYSFS_close(file);     
+            PHYSFS_unmount(dir.c_str());
+
+            if (PHYSFS_mountMemory(m_memoryDataBuffer, m_memoryDataBufferSize, [](void* pointer) { delete[](char*)pointer; }, "memory_data.zip", NULL, 0)) {
+                if (PHYSFS_exists(existentFile.c_str())) {
+                    m_dataDir = dir;
+                    m_loadedFromArchive = true;
+                    g_logger.debug(stdext::format("Found work dir at '%s'", path.c_str()));
+                    return true;
+                }
+                PHYSFS_unmount("memory_data.zip");
+            } 
+            delete[] m_memoryDataBuffer;
         }
     }
 
@@ -569,26 +593,6 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
         binaryName = binaryName.substr(1);
 
     auto downloads = g_http.downloads();
-    
-    if (!m_loadedFromMemory) {
-        g_logger.info("Updating client, loading data.zip");
-
-        if (!PHYSFS_unmount((m_dataDir + "/data.zip").c_str()))
-            return g_logger.fatal(stdext::format("can't unmount data.zip: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-        if(!PHYSFS_mount(m_dataDir.c_str(), NULL, 0))
-            return g_logger.fatal(stdext::format("Can't mount dir with data: %s", m_dataDir));
-
-        PHYSFS_File* file = PHYSFS_openRead("data.zip");
-        if(!file)
-            return g_logger.fatal(stdext::format("Can't open data.zip"));
-
-        m_memoryDataBufferSize = PHYSFS_fileLength(file);
-        if (m_memoryDataBufferSize > 0) {
-            m_memoryDataBuffer = new char[m_memoryDataBufferSize];
-            PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
-        }
-        PHYSFS_close(file);        
-    }
 
     if(!m_memoryDataBuffer || m_memoryDataBufferSize < 1024)
         return g_logger.fatal(stdext::format("Invalid buffer of memory data.zip"));

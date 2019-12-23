@@ -44,6 +44,7 @@ public:
     void openUrl(std::string url);
     std::string getCPUName();
     double getTotalSystemMemory();
+    double getMemoryUsage();
     std::string getOSName();
     std::string traceback(const std::string& where, int level = 1, int maxDepth = 32);
 };
