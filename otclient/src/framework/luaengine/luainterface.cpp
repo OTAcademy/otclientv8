@@ -1354,6 +1354,17 @@ int LuaInterface::getTop()
     return lua_gettop(L);
 }
 
+std::string LuaInterface::getSource(int level)
+{
+    lua_Debug ar;
+    ar.short_src[0] = 0;
+    ar.currentline = 0;
+    if (lua_getstack(L, level, &ar) == 1) {
+        lua_getinfo(L, "Sl", &ar);
+    }
+    return std::string(ar.short_src) + ":" + std::to_string(ar.currentline);
+}
+
 void LuaInterface::loadFiles(std::string directory, bool recursive, std::string contains)
 {
     for(const std::string& fileName : g_resources.listDirectoryFiles(directory)) {

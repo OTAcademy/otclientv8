@@ -36,6 +36,17 @@
 
 UIWidget::UIWidget()
 {
+    // source for stats
+    m_source = g_lua.getSource(2);
+    // find correct source
+    int level = 3;
+    while((m_source.find("corelib") != std::string::npos || m_source.find("gamelib") != std::string::npos || m_source.find("[C]") != std::string::npos) && level < 8) {
+        std::string tmp_src = g_lua.getSource(level);
+        if (tmp_src.length() <= 3) break;
+        m_source = tmp_src;
+        level += 1;
+    }
+    
     m_lastFocusReason = Fw::ActiveFocusReason;
     m_states = Fw::DefaultState;
     m_autoFocusPolicy = Fw::AutoFocusLast;
@@ -865,6 +876,7 @@ void UIWidget::setParent(const UIWidgetPtr& parent)
     // set new parent
     if(parent) {
         m_parent = parent;
+        m_parentId = parent->getId();
 
         // add to parent if needed
         if(!parent->hasChild(self))

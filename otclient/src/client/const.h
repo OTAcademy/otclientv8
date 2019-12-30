@@ -434,6 +434,10 @@ namespace Otc
         GameExtendedOpcode = 80,
         GameMinimapLimitedToSingleFloor = 81,
 
+        GameDoubleLevel = 83,
+        GameDoubleSoul = 84,
+        GameDoublePlayerGoodsMoney = 85,
+
         // 90-99 otclientv8 features
         GameNewWalking = 90,
         GameSlowerManualWalking = 91,

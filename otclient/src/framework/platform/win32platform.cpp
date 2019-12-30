@@ -148,11 +148,16 @@ ticks_t Platform::getFileModificationTime(std::string file)
     return uli.QuadPart;
 }
 
-void Platform::openUrl(std::string url)
+bool Platform::openUrl(std::string url, bool now)
 {
-    g_dispatcher.scheduleEvent([url] {
-        ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
-    }, 50);
+    if (now) {
+        return (int)ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL) >= 32;
+    } else {
+        g_dispatcher.scheduleEvent([url] {
+            ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
+        }, 50);
+    }
+    return true;
 }
 
 std::string Platform::getCPUName()

@@ -763,6 +763,7 @@ LRESULT WIN32Window::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_MOVE: {
             m_position.x = (short)LOWORD(lParam);
             m_position.y = (short)HIWORD(lParam);
+            releaseAllKeys();
             break;
         }
         case WM_GETMINMAXINFO: {
@@ -802,6 +803,7 @@ LRESULT WIN32Window::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 m_onResize(m_size);
             }
 
+            releaseAllKeys();
             break;
         }
         default:

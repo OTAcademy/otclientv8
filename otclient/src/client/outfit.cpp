@@ -54,6 +54,45 @@ void Outfit::newDraw(Point org_dest, DrawQueue& drawQueue, bool isWalking, Light
     }
 
     int zPattern = 0;
+    if (getMount() != 0) {
+        zPattern = std::min<int>(1, type->getNumPatternZ() - 1);
+    }
+
+    bool hasMultiLayerOutfit = false;
+    for (int yPattern = 0; yPattern < type->getNumPatternY(); yPattern++) {
+        if (yPattern > 0 && !(getAddons() & (1 << (yPattern - 1)))) {
+            continue;
+        }
+        if (type->getLayers() > 1) {
+            hasMultiLayerOutfit = true;
+        }
+    }
+
+    if (!hasMultiLayerOutfit) { // optimization
+        if (getMount() != 0) {
+            auto datType = g_things.rawGetThingType(getMount(), ThingCategoryCreature);
+            if (datType->getIdleAnimator()) {
+                if (isWalking) {
+                    mountAnimationPhase += datType->getIdleAnimator()->getAnimationPhases() - 1;
+                } else {
+                    mountAnimationPhase = datType->getIdleAnimator()->getPhase();
+                }
+            }
+
+            org_dest -= datType->getDisplacement();
+            datType->newDraw(org_dest, 0, m_xPattern, 0, 0, mountAnimationPhase, drawQueue, lightView);
+            org_dest += type->getDisplacement();
+        }
+
+        for (int yPattern = 0; yPattern < type->getNumPatternY(); yPattern++) {
+            if (yPattern > 0 && !(getAddons() & (1 << (yPattern - 1)))) {
+                continue;
+            }
+            type->newDraw(org_dest, 0, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView);
+        }
+        return;
+    }
+
     if(getMount() != 0) {
         auto datType = g_things.rawGetThingType(getMount(), ThingCategoryCreature);
         if (datType->getIdleAnimator()) {
@@ -65,8 +104,7 @@ void Outfit::newDraw(Point org_dest, DrawQueue& drawQueue, bool isWalking, Light
         }
         Point mount_dest = org_dest;
         mount_dest -= datType->getDisplacement();
-        datType->newDraw(mount_dest, 0, m_xPattern, 0, 0, mountAnimationPhase, drawQueue, lightView, NewDrawMount);
-        zPattern = std::min<int>(1, type->getNumPatternZ() - 1);
+        datType->newDraw(mount_dest, 0, m_xPattern, 0, 0, mountAnimationPhase, drawQueue, lightView);
         dest -= datType->getDisplacement();
         dest += type->getDisplacement();
     }
@@ -84,15 +122,17 @@ void Outfit::newDraw(Point org_dest, DrawQueue& drawQueue, bool isWalking, Light
             continue;
         }
         type->newDraw(dest, 0, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfit);
-        if(type->getLayers() > 1) {
-            type->newDraw(dest, SpriteMask, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
-            if (outfit->patterns.empty()) continue;
-            auto& colors = outfit->patterns.back().colors;
-            colors[0] = getHeadColor();
-            colors[1] = getBodyColor();
-            colors[2] = getLegsColor();
-            colors[3] = getFeetColor();
+        if (type->getLayers() <= 1) {
+            continue;
         }
+
+        type->newDraw(dest, SpriteMask, m_xPattern, yPattern, zPattern, m_animationPhase, drawQueue, lightView, NewDrawOutfitLayers);
+        if (outfit->patterns.empty()) continue;
+        auto& colors = outfit->patterns.back().colors;
+        colors[0] = getHeadColor();
+        colors[1] = getBodyColor();
+        colors[2] = getLegsColor();
+        colors[3] = getFeetColor();
     }
 }
 

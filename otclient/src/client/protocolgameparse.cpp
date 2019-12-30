@@ -1105,8 +1105,8 @@ void ProtocolGame::parsePlayerGoods(const InputMessagePtr& msg)
 {
     std::vector<std::tuple<ItemPtr, int>> goods;
 
-    int money;
-    if(g_game.getClientVersion() >= 973)
+    uint64_t money;
+    if(g_game.getFeature(Otc::GameDoublePlayerGoodsMoney))
         money = msg->getU64();
     else
         money = msg->getU32();
@@ -1507,7 +1507,12 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
     else
         experience = msg->getU32();
 
-    double level = msg->getU16();
+    double level;
+    if (g_game.getFeature(Otc::GameDoubleLevel))
+        level = msg->getU32();
+    else 
+        level = msg->getU16();
+
     double levelPercent = msg->getU8();
 
     if(g_game.getFeature(Otc::GameExperienceBonus)) {
@@ -1542,7 +1547,12 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
         baseMagicLevel = magicLevel;
 
     double magicLevelPercent = msg->getU8();
-    double soul = msg->getU8();
+    double soul;
+    if (g_game.getFeature(Otc::GameDoubleSoul))
+        soul = msg->getU16();
+    else
+        soul = msg->getU8();
+
     double stamina = 0;
     if(g_game.getFeature(Otc::GamePlayerStamina))
         stamina = msg->getU16();
@@ -1677,8 +1687,13 @@ void ProtocolGame::parseTalk(const InputMessagePtr& msg)
     std::string name = g_game.formatCreatureName(msg->getString());
 
     int level = 0;
-    if(g_game.getFeature(Otc::GameMessageLevel))
-        level = msg->getU16();
+    if (g_game.getFeature(Otc::GameMessageLevel)) {
+        if (g_game.getFeature(Otc::GameDoubleLevel)) {
+            level = msg->getU32();
+        } else {
+            level = msg->getU16();
+        }
+    }
 
     Otc::MessageMode mode = Proto::translateMessageModeFromServer(msg->getU8());
     int channelId = 0;

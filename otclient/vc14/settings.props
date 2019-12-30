@@ -34,6 +34,7 @@
         gdi32.lib;
         advapi32.lib;
 		Ole32.lib;
+        psapi.lib;
 		bcrypt.lib;		
 		ucrt.lib;
 		vcruntime.lib;

@@ -139,7 +139,7 @@ protected:
 
     // npc trade
     void processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string, int, int, int> >& items);
-    void processPlayerGoods(int money, const std::vector<std::tuple<ItemPtr, int> >& goods);
+    void processPlayerGoods(uint64_t money, const std::vector<std::tuple<ItemPtr, int> >& goods);
     void processCloseNpcTrade();
 
     // player trade

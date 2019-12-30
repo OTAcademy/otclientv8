@@ -117,11 +117,16 @@ ticks_t Platform::getFileModificationTime(std::string file)
     return 0;
 }
 
-void Platform::openUrl(std::string url)
+bool Platform::openUrl(std::string url, bool now)
 {
-    if(url.find("http://") == std::string::npos)
-        url.insert(0, "http://");
-    system(stdext::format("xdg-open %s", url).c_str());
+    if(now) {
+        return system(stdext::format("xdg-open %s", url).c_str()) == 0;
+    } else {
+        g_dispatcher.scheduleEvent([url] {
+            system(stdext::format("xdg-open %s", url).c_str());
+        }, 50);
+    }
+    return true;
 }
 
 std::string Platform::getCPUName()

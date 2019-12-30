@@ -123,16 +123,16 @@ void Stats::clearSlow(int type) {
 }
 
 
-void Stats::addWidget(UIWidget*)
+void Stats::addWidget(UIWidget* widget)
 {
     createdWidgets += 1;
-//    widgets.insert(widget);
+    widgets.insert(widget);
 }
 
-void Stats::removeWidget(UIWidget*)
+void Stats::removeWidget(UIWidget* widget)
 {
     destroyedWidgets += 1;
-//    widgets.erase(widget);
+    widgets.erase(widget);
 }
 
 struct WidgetTreeNode {
@@ -143,13 +143,12 @@ struct WidgetTreeNode {
 
 void collectWidgets(WidgetTreeNode& node)
 {
+    node.widget->setRootChild(true);
+    node.children_count = node.widget->getChildren().size();
     for (auto& child : node.widget->getChildren()) {
         node.children.push_back(WidgetTreeNode { child, 0, {} });
         collectWidgets(node.children.back());
-    }
-
-    for (auto& child : node.children) {
-        node.children_count += 1 + child.children_count;
+        node.children_count += node.children.back().children_count;
     }
 }
 
@@ -164,20 +163,83 @@ void printNode(std::stringstream& ret, WidgetTreeNode& node, int depth, int limi
 
 std::string Stats::getWidgetsInfo(int limit, bool pretty)
 {
-    std::stringstream ret;
-    if (pretty)
-        ret << "Widgets: " << (createdWidgets - destroyedWidgets) << " (" << destroyedWidgets << "/" << createdWidgets << ")\n";
-    else
-        ret << (createdWidgets - destroyedWidgets) << "|" << destroyedWidgets << "|" << createdWidgets << "\n";
-    if (pretty)
-        ret << "Widget" << std::setw(44) << "Children" << std::setw(10) << "\n";
-    else
-        ret << "Widget|Childerns" << "\n";
-
+    int unusedWidgets = 0;
+    // let's find invalid widgets
+    for (auto& w : widgets) {
+        w->setRootChild(false);
+    }
 
     WidgetTreeNode node{ g_ui.getRootWidget() , 0, {} };
     collectWidgets(node);
+    
+    std::map<std::string, std::pair<int, int>> unusedWidgetsMap;
+    std::map<std::string, std::pair<int, int>> allWidgetsMap;
+
+    for (auto& w : widgets) {
+        if (!w->isRootChild()) {
+            unusedWidgets += 1;
+            auto it = unusedWidgetsMap.emplace(w->getSource(), std::make_pair(0, 0)).first;
+            it->second.first += 1;
+            it->second.second += w->getUseCount();
+        }
+        auto it = allWidgetsMap.emplace(w->getSource(), std::make_pair(0, 0)).first;
+        it->second.first += 1;
+        it->second.second += w->getUseCount();
+    }
+
+    std::stringstream ret;
+    if (pretty)
+        ret << "Widgets: " << (createdWidgets - destroyedWidgets) << " (" << destroyedWidgets << "/" << createdWidgets << "/" << unusedWidgets << ")\n";
+    else
+        ret << (createdWidgets - destroyedWidgets) << "|" << destroyedWidgets << "|" << createdWidgets << "|" << unusedWidgets << "\n";
+    if (pretty)
+        ret << "Textures: " << (createdTextures - destroyedTextures) << " (" << destroyedTextures << "/" << createdTextures << ")\n";
+    else
+        ret << (createdTextures - destroyedTextures) << "|" << destroyedTextures << "|" << createdTextures << "\n";
+    
+    ret << "Active widgets (Widget|Childerns)" << "\n";
+
     printNode(ret, node, 0, limit, pretty);
+
+    if (pretty) {
+        ret << "\n\n" << "All Widgets (Source|Widgets|UseCount)" << "\n\n";
+    } else {
+        ret << "AllWidgets|Source|Widgets|UseCount" << "\n";
+    }
+
+    int i = 0;
+    std::multimap<int, std::pair<std::string, int>> allWidgetsMapSorted;
+    for (auto& it : allWidgetsMap) {
+        if (it.second.first > 20) {
+            allWidgetsMapSorted.emplace(it.second.first, std::make_pair(it.first, it.second.second));
+            if (++i >= limit) {
+                break;
+            }
+        }
+    }
+
+    for (auto it = allWidgetsMapSorted.rbegin(); it != allWidgetsMapSorted.rend(); ++it) {
+        ret << it->second.first << "|" << it->first << "|" << it->second.second << "\n";
+    }
+
+    if (pretty) {
+        ret << "\n\n" << "Unused Widgets (Source|Widgets|UseCount)" << "\n\n";
+    } else {
+        ret << "UnusedWidgets|Source|Widgets|UseCount" << "\n";
+    }
+
+    i = 0;
+    std::multimap<int, std::pair<std::string, int>> unusedWidgetsMapSorted;
+    for (auto& it : unusedWidgetsMap) {
+        unusedWidgetsMapSorted.emplace(it.second.first, std::make_pair(it.first, it.second.second));
+        if (++i >= limit) {
+            break;
+        }
+    }
+
+    for (auto it = unusedWidgetsMapSorted.rbegin(); it != unusedWidgetsMapSorted.rend(); ++it) {
+        ret << it->second.first << "|" << it->first << "|" << it->second.second << "\n";
+    }
 
     return ret.str();
 }

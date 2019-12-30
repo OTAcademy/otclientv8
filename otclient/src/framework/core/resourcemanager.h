@@ -101,6 +101,7 @@ private:
     bool m_failsafe = false;
     char* m_memoryDataBuffer = nullptr;
     size_t m_memoryDataBufferSize = 0;
+    uint32_t customEncryption = 0;
     std::string m_dataDir;
 };
 

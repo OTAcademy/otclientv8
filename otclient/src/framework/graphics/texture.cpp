@@ -26,11 +26,14 @@
 #include "image.h"
 
 #include <framework/core/application.h>
+#include <framework/util/stats.h>
 
 Texture::Texture()
 {
     m_id = 0;
     m_time = 0;
+
+    g_stats.addTexture();
 }
 
 Texture::Texture(const Size& size, bool depthTexture)
@@ -50,6 +53,8 @@ Texture::Texture(const Size& size, bool depthTexture)
     setupPixels(0, m_glSize, nullptr, 4);
     setupWrap();
     setupFilters();
+
+    g_stats.addTexture();
 }
 
 Texture::Texture(const ImagePtr& image, bool buildMipmaps, bool compress)
@@ -58,8 +63,9 @@ Texture::Texture(const ImagePtr& image, bool buildMipmaps, bool compress)
     m_time = 0;
 
     createTexture();
-
     uploadPixels(image, buildMipmaps, compress);
+
+    g_stats.addTexture();
 }
 
 Texture::~Texture()
@@ -70,6 +76,8 @@ Texture::~Texture()
     // free texture from gl memory
     if(g_graphics.ok() && m_id != 0)
         glDeleteTextures(1, &m_id);
+
+    g_stats.removeTexture();
 }
 
 void Texture::uploadPixels(const ImagePtr& image, bool buildMipmaps, bool compress)

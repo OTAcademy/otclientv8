@@ -15,7 +15,7 @@ local serverSelector
 local clientVersionSelector
 local serverHostTextEdit
 local rememberPasswordBox
-local protos = {"740", "760", "772", "800", "810", "854", "860", "1077", "1090", "1096", "1098", "1099", "1100"}
+local protos = {"740", "760", "772", "792", "800", "810", "854", "860", "1077", "1090", "1096", "1098", "1099", "1100"}
 
 local webSocket
 local webSocketLoginPacket
@@ -53,9 +53,13 @@ local function onCharacterList(protocol, characters, account, otui)
     loadBox:destroy()
     loadBox = nil
   end
-  
-  CharacterList.create(characters, account, otui)
+    
+  CharacterList.create(characters, account, otui, webSocket)
   CharacterList.show()
+
+  if webSocket then
+    webSocket = nil
+  end
 
   g_settings.save()
 end
@@ -177,10 +181,6 @@ local function onHTTPResult(data, err)
     end
   end
   
-  if webSocket then
-    webSocket:close()
-    webSocket = nil
-  end
   onCharacterList(nil, characters, account, nil)  
 end
 
@@ -310,22 +310,16 @@ function EnterGame.checkWebsocket()
     if webSocket then
       webSocket:close()
       webSocket = nil
-      newLogin.code:setText("")
     end
     return
   end
   if webSocket then
     if webSocket.url == url then
-      if newLogin:isHidden() and newLogin.code:getText():len() > 1 then
-        newLogin:show()
-        newLogin:raise()
-      end
       return
     end
     webSocket:close()
     webSocket = nil
   end
-  newLogin.code:setText("")
   webSocket = HTTP.WebSocketJSON(url, {
     onOpen = function(message, webSocketId)
       if webSocket and webSocket.id == webSocketId then
@@ -338,8 +332,8 @@ function EnterGame.checkWebsocket()
           webSocketLoginPacket = nil
           EnterGame.hide()
           onHTTPResult(message, nil)
-        elseif message.type == "quick_login" and message.code and message.qrcode then
-          EnterGame.showNewLogin(message.code, message.qrcode)
+        elseif message.type == "quick_login" and message.qrcode then
+          EnterGame.showNewLogin(message.qrcode)
         end
       end
     end,
@@ -365,10 +359,15 @@ function EnterGame.hideNewLogin()
   newLogin:hide()
 end
 
-function EnterGame.showNewLogin(code, qrcode)
+function EnterGame.showNewLogin(qrcode)
   if enterGame:isHidden() then return end
-  newLogin.code:setText(code)
-  newLogin.qrcode:setQRCode(qrcode, 1)
+  newLogin.qrcode:setQRCode("https://quath.co/0/" .. qrcode, 1)
+  newLogin.qrcode:setEnabled(true)
+  local clickFunction = function()
+    g_platform.openUrl("qauth://" .. qrcode)
+  end
+  newLogin.qrcode.onClick = clickFunction
+  newLogin.quathlogo.onClick = clickFunction
   if newLogin:isHidden() then
     newLogin:show()
     newLogin:raise()

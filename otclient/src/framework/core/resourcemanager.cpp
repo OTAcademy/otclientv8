@@ -192,39 +192,48 @@ bool ResourceManager::setup(const std::string& existentFile)
 
     for(const std::string& dir : possiblePaths) {
         std::string path = dir + "/data.zip";
-        if (PHYSFS_mount(path.c_str(), NULL, 0)) {
-            if (!PHYSFS_exists(existentFile.c_str())) {
-                continue;
-            }
+        if (!PHYSFS_mount(path.c_str(), NULL, 0)) {
+            continue;
+        }
+        if (!PHYSFS_exists(existentFile.c_str())) {
+            PHYSFS_unmount(path.c_str());
+            continue;
+        }
+        if (!PHYSFS_unmount(path.c_str())) {
+            continue;
+        }
 
+        if (dir != localDir) {
             if (!PHYSFS_mount(dir.c_str(), NULL, 0)) {
                 continue;
             }
-            PHYSFS_File* file = PHYSFS_openRead("data.zip");
-            if (!file) {
-                g_logger.fatal(stdext::format("Can't open data.zip"));
-                return false;
-            }
+        }
 
-            m_memoryDataBufferSize = PHYSFS_fileLength(file);
-            if (m_memoryDataBufferSize > 0) {
-                m_memoryDataBuffer = new char[m_memoryDataBufferSize];
-                PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
-            }
-            PHYSFS_close(file);     
+        PHYSFS_File* file = PHYSFS_openRead("data.zip");
+        if (!file) {
+            g_logger.fatal(stdext::format("Can't open data.zip"));
+            return false;
+        }
+
+        m_memoryDataBufferSize = PHYSFS_fileLength(file);
+        if (m_memoryDataBufferSize > 0) {
+            m_memoryDataBuffer = new char[m_memoryDataBufferSize];
+            PHYSFS_readBytes(file, m_memoryDataBuffer, m_memoryDataBufferSize);
+        }
+        PHYSFS_close(file);     
+        if (dir != localDir)
             PHYSFS_unmount(dir.c_str());
 
-            if (PHYSFS_mountMemory(m_memoryDataBuffer, m_memoryDataBufferSize, [](void* pointer) { delete[](char*)pointer; }, "memory_data.zip", NULL, 0)) {
-                if (PHYSFS_exists(existentFile.c_str())) {
-                    m_dataDir = dir;
-                    m_loadedFromArchive = true;
-                    g_logger.debug(stdext::format("Found work dir at '%s'", path.c_str()));
-                    return true;
-                }
-                PHYSFS_unmount("memory_data.zip");
-            } 
-            delete[] m_memoryDataBuffer;
-        }
+        if (PHYSFS_mountMemory(m_memoryDataBuffer, m_memoryDataBufferSize, [](void* pointer) { delete[](char*)pointer; }, "memory_data.zip", NULL, 0)) {
+            if (PHYSFS_exists(existentFile.c_str())) {
+                m_dataDir = dir;
+                m_loadedFromArchive = true;
+                g_logger.debug(stdext::format("Found work dir at '%s'", path.c_str()));
+                return true;
+            }
+            PHYSFS_unmount("memory_data.zip");
+        } 
+        delete[] m_memoryDataBuffer;
     }
 
     if (loadDataFromSelf(existentFile)) {
@@ -384,7 +393,7 @@ std::string ResourceManager::readFileContents(const std::string& fileName, bool 
     static std::string unencryptedExtensions[] = { ".otml", ".otmm", ".dmp", ".log", ".dll", ".exe", ".zip" };
 
     if (!decryptBuffer(buffer)) {
-        bool ignore = !isLoadedFromArchive();
+        bool ignore = (customEncryption == 0);
         for (auto& it : unencryptedExtensions) {
             if (fileName.find(it) == fileName.size() - it.size()) {
                 ignore = true;
@@ -774,12 +783,11 @@ bool ResourceManager::decryptBuffer(std::string& buffer) {
 
     uint32_t addlerCheck = stdext::adler32((const uint8_t*)&new_buffer[0], size);
     if (adler != addlerCheck) {
-        static uint32_t seed = 0;
         uint32_t cseed = adler ^ addlerCheck;
-        if (seed == 0) {
-            seed = cseed;
+        if (customEncryption == 0) {
+            customEncryption = cseed;
         }
-        if ((addlerCheck ^ seed) != adler) {
+        if ((addlerCheck ^ customEncryption) != adler) {
             return false;
         }
     }

@@ -59,6 +59,7 @@ protected:
     friend class UIManager;
 
     std::string m_id;
+    std::string m_source;
     Rect m_rect;
     Point m_virtualOffset;
     stdext::boolean<true> m_enabled;
@@ -71,6 +72,7 @@ protected:
     stdext::boolean<false> m_clipping;
     UILayoutPtr m_layout;
     UIWidgetPtr m_parent;
+    std::string m_parentId;
     UIWidgetList m_children;
     UIWidgetList m_lockedChildren;
     UIWidgetPtr m_focusedChild;
@@ -253,7 +255,9 @@ public:
     bool containsPoint(const Point& point) { return m_rect.contains(point); }
 
     std::string getId() { return m_id; }
+    std::string getSource() { return m_source; }
     UIWidgetPtr getParent() { return m_parent; }
+    std::string getParentId() { return m_parentId; }
     UIWidgetPtr getFocusedChild() { return m_focusedChild; }
     UIWidgetList getChildren() { return m_children; }
     UIWidgetPtr getFirstChild() { return getChildByIndex(1); }
@@ -267,6 +271,17 @@ public:
     Point getVirtualOffset() { return m_virtualOffset; }
     std::string getStyleName() { return m_style->tag(); }
     Point getLastClickPosition() { return m_lastClickPosition; }
+
+    // for stats only
+    bool isRootChild()
+    {
+        return m_isRootChild;
+    }
+
+    void setRootChild(bool v)
+    {
+        m_isRootChild = v;
+    }
 
 
 // base style
@@ -295,6 +310,7 @@ protected:
     float m_rotation;
     int m_autoRepeatDelay;
     Point m_lastClickPosition;
+    bool m_isRootChild = false; // for stats
 
 public:
     void setX(int x) { move(x, getY()); }

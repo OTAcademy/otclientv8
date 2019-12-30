@@ -91,6 +91,10 @@ function updateFeatures(version)
         g_game.enableFeature(GameAdditionalVipInfo)
     end
 
+    if(version >= 972) then
+        g_game.enableFeature(GameDoublePlayerGoodsMoney)
+    end
+
     if(version >= 980) then
         g_game.enableFeature(GamePreviewState)
         g_game.enableFeature(GameClientVersion)
