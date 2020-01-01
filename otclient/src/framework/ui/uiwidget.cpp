@@ -891,7 +891,7 @@ void UIWidget::setId(const std::string& id)
         m_id = id;
         callLuaField("onIdChange", id);
         if (m_parent) {
-            m_parent->onChildIdChange(this);
+            m_parent->onChildIdChange(static_self_cast<UIWidget>());
         }
     }
 }

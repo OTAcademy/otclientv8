@@ -29,6 +29,7 @@
 #include <framework/core/eventdispatcher.h>
 #include <framework/core/application.h>
 #include <framework/core/resourcemanager.h>
+#include <framework/util/extras.h>
 
 UIManager g_ui;
 
@@ -287,6 +288,9 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
 
     if(m_draggingWidget == widget)
         updateDraggingWidget(nullptr);
+
+    if (!g_extras.debugWidgets)
+        return;
 
     if(widget == m_rootWidget || !m_rootWidget)
         return;

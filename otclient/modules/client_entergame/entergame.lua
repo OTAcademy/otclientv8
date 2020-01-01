@@ -80,24 +80,34 @@ end
 
 local function validateThings(things)
   local incorrectThings = ""
+  local missingFiles = false
+  local versionForMissingFiles = 0
   if things ~= nil then
     local thingsNode = {}
     for thingtype, thingdata in pairs(things) do
       thingsNode[thingtype] = thingdata[1]
       if not g_resources.fileExists("/data/things/" .. thingdata[1]) then
-        correctThings = false
         incorrectThings = incorrectThings .. "Missing file: " .. thingdata[1] .. "\n"
-      end
-      local localChecksum = g_resources.fileChecksum("/data/things/" .. thingdata[1]):lower()
-      if localChecksum ~= thingdata[2]:lower() and #thingdata[2] > 1 then
-        if g_resources.isLoadedFromArchive() then -- ignore checksum if it's test/debug version
-          incorrectThings = incorrectThings .. "Invalid checksum of file: " .. thingdata[1] .. " (is " .. localChecksum .. ", should be " .. thingdata[2]:lower() .. ")\n"
+        missingFiles = true
+        versionForMissingFiles = thingdata[1]:split("/")[1]
+      else
+        local localChecksum = g_resources.fileChecksum("/data/things/" .. thingdata[1]):lower()
+        if localChecksum ~= thingdata[2]:lower() and #thingdata[2] > 1 then
+          if g_resources.isLoadedFromArchive() then -- ignore checksum if it's test/debug version
+            incorrectThings = incorrectThings .. "Invalid checksum of file: " .. thingdata[1] .. " (is " .. localChecksum .. ", should be " .. thingdata[2]:lower() .. ")\n"
+          end
         end
       end
     end
     g_settings.setNode("things", thingsNode)
   else
     g_settings.setNode("things", {})
+  end
+  if missingFiles then
+  
+    incorrectThings = incorrectThings .. "\nYou should open data/things and create directory " .. versionForMissingFiles .. 
+    ".\nIn this directory (data/things/" .. versionForMissingFiles .. ") you should put missing\nfiles (Tibia.dat and Tibia.spr) " ..
+    "from correct Tibia version."
   end
   return incorrectThings
 end
@@ -448,7 +458,7 @@ function EnterGame.doLogin()
   
   local incorrectThings = validateThings(things)
   if #incorrectThings > 0 then
-    g_logger.info(incorrectThings)
+    g_logger.error(incorrectThings)
     if Updater then
       return Updater.updateThings(things, incorrectThings)
     else

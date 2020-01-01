@@ -21,6 +21,7 @@ public:
         DEFINE_OPTION(debugRender, "Debug render");
         DEFINE_OPTION(debugProxy, "Debug proxy");
         DEFINE_OPTION(showPredictions, "Show predictions");
+        DEFINE_OPTION(debugWidgets, "Debug widgets");
 
         DEFINE_OPTION(disablePredictiveWalking, "Disable predictive walking");
     }
@@ -37,6 +38,7 @@ public:
     bool debugProxy = false;
     bool disablePredictiveWalking = false;
     bool showPredictions = false;
+    bool debugWidgets = false;
 
     int testMode = 0;
 
