@@ -207,19 +207,19 @@ std::string Stats::getWidgetsInfo(int limit, bool pretty)
         ret << "AllWidgets|Source|Widgets|UseCount" << "\n";
     }
 
-    int i = 0;
     std::multimap<int, std::pair<std::string, int>> allWidgetsMapSorted;
     for (auto& it : allWidgetsMap) {
         if (it.second.first > 20) {
             allWidgetsMapSorted.emplace(it.second.first, std::make_pair(it.first, it.second.second));
-            if (++i >= limit) {
-                break;
-            }
         }
     }
 
+    int i = 0;
     for (auto it = allWidgetsMapSorted.rbegin(); it != allWidgetsMapSorted.rend(); ++it) {
         ret << it->second.first << "|" << it->first << "|" << it->second.second << "\n";
+        if (++i >= limit) {
+            break;
+        }
     }
 
     if (pretty) {
@@ -228,17 +228,17 @@ std::string Stats::getWidgetsInfo(int limit, bool pretty)
         ret << "UnusedWidgets|Source|Widgets|UseCount" << "\n";
     }
 
-    i = 0;
     std::multimap<int, std::pair<std::string, int>> unusedWidgetsMapSorted;
     for (auto& it : unusedWidgetsMap) {
         unusedWidgetsMapSorted.emplace(it.second.first, std::make_pair(it.first, it.second.second));
+    }
+
+    i = 0;
+    for (auto it = unusedWidgetsMapSorted.rbegin(); it != unusedWidgetsMapSorted.rend(); ++it) {
+        ret << it->second.first << "|" << it->first << "|" << it->second.second << "\n";
         if (++i >= limit) {
             break;
         }
-    }
-
-    for (auto it = unusedWidgetsMapSorted.rbegin(); it != unusedWidgetsMapSorted.rend(); ++it) {
-        ret << it->second.first << "|" << it->first << "|" << it->second.second << "\n";
     }
 
     return ret.str();

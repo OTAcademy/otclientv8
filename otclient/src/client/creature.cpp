@@ -753,6 +753,9 @@ void Creature::setName(const std::string& name)
 
 void Creature::setHealthPercent(uint8 healthPercent)
 {
+    if (healthPercent > 100)
+        healthPercent = 100;
+
     if(healthPercent > 92)
         m_informationColor = Color(0x00, 0xBC, 0x00);
     else if(healthPercent > 60)

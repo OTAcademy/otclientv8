@@ -288,7 +288,6 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
     if(m_draggingWidget == widget)
         updateDraggingWidget(nullptr);
 
-#ifndef NDEBUG
     if(widget == m_rootWidget || !m_rootWidget)
         return;
 
@@ -299,17 +298,16 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
 
     m_checkEvent = g_dispatcher.scheduleEvent([this] {
         g_lua.collectGarbage();
-        UIWidgetList backupList = m_destroyedWidgets;
+        UIWidgetList backupList(std::move(m_destroyedWidgets));
         m_destroyedWidgets.clear();
         g_dispatcher.scheduleEvent([backupList] {
             g_lua.collectGarbage();
             for(const UIWidgetPtr& widget : backupList) {
                 if(widget->ref_count() != 1)
-                    g_logger.warning(stdext::format("widget '%s' (parent: '%s') destroyed but still have %d reference(s) left", widget->getId(), widget->getParent() ? widget->getParent()->getId() : "", widget->getUseCount()-1));
+                    g_logger.warning(stdext::format("widget '%s' (parent: '%s' (%s), source: '%s') destroyed but still have %d reference(s) left", widget->getId(), widget->getParent() ? widget->getParent()->getId() : "", widget->getParentId(), widget->getSource(), widget->getUseCount()-1));
             }
         }, 1);
     }, 1000);
-#endif
 }
 
 void UIManager::clearStyles()
@@ -501,13 +499,6 @@ UIWidgetPtr UIManager::createWidgetFromOTML(const OTMLNodePtr& widgetNode, const
         stdext::throw_exception(stdext::format("unable to create widget of type '%s'", widgetType));
 
     widget->callLuaField("onSetup");
-
-    std::string widgetId = widget->getId();
-    if (parent && !widgetId.empty()) {
-        if (!parent->hasLuaField(widgetId)) {
-            parent->setLuaField(widgetId, widget);
-        }
-    }
 
     return widget;
 }

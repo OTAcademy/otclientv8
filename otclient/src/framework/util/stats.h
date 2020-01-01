@@ -75,6 +75,7 @@ public:
     inline void addTexture() { createdTextures += 1; }
     inline void removeTexture() { destroyedTextures += 1; }
 
+
 private:
     struct {
         StatsMap data;

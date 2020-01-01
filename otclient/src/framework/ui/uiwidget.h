@@ -75,6 +75,7 @@ protected:
     std::string m_parentId;
     UIWidgetList m_children;
     UIWidgetList m_lockedChildren;
+    std::map<UIWidgetPtr, std::string> m_childrenShortcuts;
     UIWidgetPtr m_focusedChild;
     OTMLNodePtr m_style;
     Timer m_clickTimer;
@@ -83,6 +84,7 @@ protected:
 
 public:
     void addChild(const UIWidgetPtr& child);
+    void onChildIdChange(const UIWidgetPtr& child);
     void insertChild(int index, const UIWidgetPtr& child);
     void removeChild(UIWidgetPtr child);
     void focusChild(const UIWidgetPtr& child, Fw::FocusReason reason);

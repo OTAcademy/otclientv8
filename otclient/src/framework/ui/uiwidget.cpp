@@ -33,6 +33,7 @@
 #include <framework/core/application.h>
 #include <framework/luaengine/luainterface.h>
 #include <framework/util/stats.h>
+#include <framework/util/extras.h>
 
 UIWidget::UIWidget()
 {
@@ -173,6 +174,15 @@ void UIWidget::addChild(const UIWidgetPtr& child)
     m_children.push_back(child);
     child->setParent(static_self_cast<UIWidget>());
 
+    // otml extension
+    std::string widgetId = child->getId();
+    if (!widgetId.empty()) {
+        if (!hasLuaField(widgetId)) {
+            setLuaField(widgetId, child);
+            m_childrenShortcuts[child] = widgetId;
+        }
+    }
+
     // create default layout
     if(!m_layout)
         m_layout = UIAnchorLayoutPtr(new UIAnchorLayout(static_self_cast<UIWidget>()));
@@ -190,6 +200,29 @@ void UIWidget::addChild(const UIWidgetPtr& child)
     }
 
     g_ui.onWidgetAppear(child);
+}
+
+void UIWidget::onChildIdChange(const UIWidgetPtr& child)
+{
+    if (!hasChild(child)) {
+        g_logger.traceWarning("onChildIdChange: invalid child");
+        return;
+    }
+
+    // update shortcut
+    auto shortcut = m_childrenShortcuts.find(child);
+    if (shortcut != m_childrenShortcuts.end()) {
+        setLuaField(shortcut->second, nullptr);
+        m_childrenShortcuts.erase(shortcut);
+    }
+
+    std::string widgetId = child->getId();
+    if (!widgetId.empty()) {
+        if (!hasLuaField(widgetId)) {
+            setLuaField(widgetId, child);
+            m_childrenShortcuts[child] = widgetId;
+        }
+    }
 }
 
 void UIWidget::insertChild(int index, const UIWidgetPtr& child)
@@ -246,6 +279,12 @@ void UIWidget::removeChild(UIWidgetPtr child)
 
         auto it = std::find(m_children.begin(), m_children.end(), child);
         m_children.erase(it);
+
+        auto shortcut = m_childrenShortcuts.find(child);
+        if (shortcut != m_childrenShortcuts.end()) {
+            setLuaField(shortcut->second, nullptr);
+            m_childrenShortcuts.erase(shortcut);
+        }
 
         // reset child parent
         assert(child->getParent() == static_self_cast<UIWidget>());
@@ -839,9 +878,6 @@ void UIWidget::destroyChildren()
     m_lockedChildren.clear();
     while(!m_children.empty()) {
         UIWidgetPtr child = m_children.front();
-        m_children.pop_front();
-        child->setParent(nullptr);
-        m_layout->removeWidget(child);
         child->destroy();
     }
 
@@ -854,6 +890,9 @@ void UIWidget::setId(const std::string& id)
     if(id != m_id) {
         m_id = id;
         callLuaField("onIdChange", id);
+        if (m_parent) {
+            m_parent->onChildIdChange(this);
+        }
     }
 }
 
