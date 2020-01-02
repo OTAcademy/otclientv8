@@ -378,6 +378,8 @@ void ThingType::unserialize(uint16 clientId, ThingCategory category, const FileS
     m_texturesFramesRects.resize(m_animationPhases);
     m_texturesFramesOriginRects.resize(m_animationPhases);
     m_texturesFramesOffsets.resize(m_animationPhases);
+
+    m_lastUsage = g_clock.seconds();
 }
 
 void ThingType::exportImage(std::string fileName)
@@ -472,6 +474,22 @@ void ThingType::unserializeOtml(const OTMLNodePtr& node)
         }
     }
 }
+
+void ThingType::unload()
+{
+    m_textures.clear();
+    m_texturesFramesRects.clear();
+    m_texturesFramesOriginRects.clear();
+    m_texturesFramesOffsets.clear();
+
+    m_textures.resize(m_animationPhases);
+    m_texturesFramesRects.resize(m_animationPhases);
+    m_texturesFramesOriginRects.resize(m_animationPhases);
+    m_texturesFramesOffsets.resize(m_animationPhases);
+
+    m_loaded = false;
+}
+
 
 void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView, bool lightOnly, Color* markColor)
 {
@@ -584,6 +602,8 @@ void ThingType::newDraw(const Point& dest, int layer, int xPattern, int yPattern
 
 const TexturePtr& ThingType::getTexture(int animationPhase)
 {
+    m_lastUsage = g_clock.seconds();
+
     int spriteSize = g_sprites.spriteSize();
     TexturePtr& animationPhaseTexture = m_textures[animationPhase];
     if(!animationPhaseTexture) {
@@ -659,6 +679,7 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
         }
         animationPhaseTexture = TexturePtr(new Texture(fullImage, true));
         animationPhaseTexture->setSmooth(true);
+        m_loaded = true;
     }
     return animationPhaseTexture;
 }

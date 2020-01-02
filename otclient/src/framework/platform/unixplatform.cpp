@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <framework/stdext/stdext.h>
+#include <framework/core/eventdispatcher.h>
 
 #include <sys/stat.h>
 #include <execinfo.h>

@@ -133,6 +133,7 @@ public:
 
     void unserialize(uint16 clientId, ThingCategory category, const FileStreamPtr& fin);
     void unserializeOtml(const OTMLNodePtr& node);
+    void unload();
 
     void serialize(const FileStreamPtr& fin);
     void exportImage(std::string fileName);
@@ -145,6 +146,8 @@ public:
     ThingCategory getCategory() { return m_category; }
     bool isNull() { return m_null; }
     bool hasAttr(ThingAttr attr) { return m_attribs.has(attr); }
+    bool isLoaded() { return m_loaded; }
+    ticks_t getLastUsage() { return m_lastUsage; }
 
     Size getSize() { return m_size; }
     int getWidth() { return m_size.width(); }
@@ -246,6 +249,9 @@ private:
     std::vector<std::vector<Rect>> m_texturesFramesRects;
     std::vector<std::vector<Rect>> m_texturesFramesOriginRects;
     std::vector<std::vector<Point>> m_texturesFramesOffsets;
+
+    bool m_loaded = false;
+    time_t m_lastUsage;
 };
 
 #endif

@@ -25,6 +25,7 @@
 
 #include <framework/global.h>
 #include <framework/core/declarations.h>
+#include <framework/core/eventdispatcher.h>
 
 #include "thingtype.h"
 #include "itemtype.h"
@@ -34,6 +35,7 @@ class ThingTypeManager
 public:
     void init();
     void terminate();
+    void check();
 
     bool loadDat(std::string file);
     bool loadOtml(std::string file);
@@ -95,6 +97,9 @@ private:
     uint32 m_otbMajorVersion;
     uint32 m_datSignature;
     uint16 m_contentRevision;
+
+    ScheduledEventPtr m_checkEvent;
+    int m_checkIndex[ThingLastCategory];
 };
 
 extern ThingTypeManager g_things;

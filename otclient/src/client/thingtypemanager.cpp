@@ -34,6 +34,7 @@
 #include <framework/core/binarytree.h>
 #include <framework/xml/tinyxml.h>
 #include <framework/otml/otml.h>
+#include <framework/util/stats.h>
 
 ThingTypeManager g_things;
 
@@ -48,9 +49,13 @@ void ThingTypeManager::init()
     m_datLoaded = false;
     m_xmlLoaded = false;
     m_otbLoaded = false;
-    for(int i = 0; i < ThingLastCategory; ++i)
+    for (int i = 0; i < ThingLastCategory; ++i) {
         m_thingTypes[i].resize(1, m_nullThingType);
+        m_checkIndex[i] = 0;
+    }
     m_itemTypes.resize(1, m_nullItemType);
+
+    check();
 }
 
 void ThingTypeManager::terminate()
@@ -61,6 +66,30 @@ void ThingTypeManager::terminate()
     m_reverseItemTypes.clear();
     m_nullThingType = nullptr;
     m_nullItemType = nullptr;
+
+    if (m_checkEvent) {
+        m_checkEvent->cancel();
+        m_checkEvent = nullptr;
+    }
+}
+
+void ThingTypeManager::check()
+{    
+    // removes unused textures from memory after 60s, 500 checks / s
+    m_checkEvent = g_dispatcher.scheduleEvent(std::bind(&ThingTypeManager::check, &g_things), 1000);
+
+    for (int i = 0; i < ThingLastCategory; ++i) {
+        int limit = std::min<int>(m_checkIndex[i] + 100, m_thingTypes[i].size());
+        for (int j = m_checkIndex[i]; j < limit; ++j) {
+            if (m_thingTypes[i][j]->isLoaded() && m_thingTypes[i][j]->getLastUsage() + 60 < g_clock.seconds()) {
+                m_thingTypes[i][j]->unload();
+            }
+        }
+        m_checkIndex[i] = limit;
+        if (m_checkIndex[i] >= m_thingTypes[i].size()) {
+            m_checkIndex[i] = 0;
+        }
+    }
 }
 
 #ifdef WITH_ENCRYPTION
