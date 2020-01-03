@@ -15,8 +15,6 @@ Services = {
 -- Servers accept http login url, websocket login url or ip:port:version
 Servers = {
   OTClientV8 = "http://otclient.ovh/api/login.php",
-  OTClientV8Websocket = "ws://otclient.ovh:3000/",
-  WS = "ws://127.0.0.1:88/",
   OTClientV8proxy = "http://otclient.ovh/api/login.php?proxy=1",
   OTClientV8c = "otclient.ovh:7171:1099:25:30:80:90",
   OTClientV8Test = "http://otclient.ovh/api/login2.php",
