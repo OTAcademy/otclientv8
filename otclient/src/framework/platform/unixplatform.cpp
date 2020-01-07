@@ -130,6 +130,18 @@ bool Platform::openUrl(std::string url, bool now)
     return true;
 }
 
+bool Platform::openDir(std::string path, bool now)
+{
+    if(now) {
+        return system(stdext::format("xdg-open %s", path).c_str()) == 0;
+    } else {
+        g_dispatcher.scheduleEvent([path] {
+            system(stdext::format("xdg-open %s", path).c_str());
+        }, 50);
+    }
+    return true;
+}
+
 std::string Platform::getCPUName()
 {
     std::string line;

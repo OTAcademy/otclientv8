@@ -175,7 +175,7 @@ local function onHTTPResult(data, err)
     g_proxy.clear()
     if proxies then
       for i, proxy in ipairs(proxies) do
-        g_proxy.addProxy(tonumber(proxy["localPort"]), proxy["host"], tonumber(proxy["port"]), tonumber(proxy["priority"]))
+        g_proxy.addProxy(proxy["host"], tonumber(proxy["port"]), tonumber(proxy["priority"]))
       end
     end
   end

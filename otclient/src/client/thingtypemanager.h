@@ -99,7 +99,7 @@ private:
     uint16 m_contentRevision;
 
     ScheduledEventPtr m_checkEvent;
-    int m_checkIndex[ThingLastCategory];
+    size_t m_checkIndex[ThingLastCategory];
 };
 
 extern ThingTypeManager g_things;

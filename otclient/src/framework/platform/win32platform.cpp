@@ -160,6 +160,18 @@ bool Platform::openUrl(std::string url, bool now)
     return true;
 }
 
+bool Platform::openDir(std::string path, bool now)
+{
+    if (now) {
+        return (int)ShellExecuteW(NULL, L"open", L"explorer.exe", stdext::utf8_to_utf16(path).c_str(), NULL, SW_SHOWNORMAL) >= 32;
+    } else {
+        g_dispatcher.scheduleEvent([path] {
+            ShellExecuteW(NULL, L"open", L"explorer.exe", stdext::utf8_to_utf16(path).c_str(), NULL, SW_SHOWNORMAL);
+        }, 50);
+    }
+    return true;
+}
+
 std::string Platform::getCPUName()
 {
     char buf[1024];

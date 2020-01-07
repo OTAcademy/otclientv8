@@ -66,7 +66,7 @@ public:
     std::list<std::string> listDirectoryFiles(const std::string & directoryPath = "", bool fullPath = false, bool raw = false);
 
     std::string resolvePath(std::string path);
-    std::filesystem::path getWriteDir() { return m_writeDir; }
+    std::string getWriteDir() { return m_writeDir.string(); }
     std::string getWorkDir() { return "/"; }
     std::string getBinaryName() { return m_binaryPath.filename().string(); }
 

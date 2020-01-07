@@ -157,7 +157,7 @@ LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS e)
     g_logger.info(ss.str());
 
     // write stacktrace to crashreport.log
-    auto dumpFilePath = g_resources.getWriteDir();
+    auto dumpFilePath = std::filesystem::path(g_resources.getWriteDir());
     dumpFilePath /= "crashreport.log";
     std::ofstream fout(dumpFilePath, std::ios::out | std::ios::app);
     if(fout.is_open() && fout.good()) {
@@ -231,7 +231,7 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
 #error "This platform is not supported."
 #endif
 
-    auto dumpFilePath = g_resources.getWriteDir();
+    auto dumpFilePath = std::filesystem::path(g_resources.getWriteDir());
     if (quiet_crash) {
         dumpFilePath /= TRACE_DUMP_NAME_QUIET;
     } else {
@@ -247,7 +247,7 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
         MiniDumpWriteDump(process, GetProcessId(process), dumpFile, (MINIDUMP_TYPE)flags, exception ? &exceptionInformation : NULL, NULL, NULL);
     }
     {
-        dumpFilePath = g_resources.getWriteDir();
+        dumpFilePath = std::filesystem::path(g_resources.getWriteDir());
         dumpFilePath /= TRACE_DUMP_NAME_FULL;
         HANDLE dumpFile = CreateFileA(dumpFilePath.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;

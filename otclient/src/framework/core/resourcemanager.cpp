@@ -486,6 +486,7 @@ std::list<std::string> ResourceManager::listDirectoryFiles(const std::string& di
     }
 
     PHYSFS_freeList(rc);
+    files.sort();
     return files;
 }
 

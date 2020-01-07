@@ -874,10 +874,18 @@ void UIWidget::destroyChildren()
     if(layout)
         layout->disableUpdates();
 
+    for(auto& field : m_childrenShortcuts) {
+        setLuaField(field.second, nullptr);
+    }
+    m_childrenShortcuts.clear();
+
     m_focusedChild = nullptr;
     m_lockedChildren.clear();
-    while(!m_children.empty()) {
+    while (!m_children.empty()) {
         UIWidgetPtr child = m_children.front();
+        m_children.pop_front();
+        child->setParent(nullptr);
+        m_layout->removeWidget(child);
         child->destroy();
     }
 

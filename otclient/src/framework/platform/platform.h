@@ -42,6 +42,7 @@ public:
     bool removeFile(std::string file);
     ticks_t getFileModificationTime(std::string file);
     bool openUrl(std::string url, bool now = false);
+    bool openDir(std::string path, bool now = false);
     std::string getCPUName();
     double getTotalSystemMemory();
     double getMemoryUsage();

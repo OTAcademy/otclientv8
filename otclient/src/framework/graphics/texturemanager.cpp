@@ -82,13 +82,18 @@ void TextureManager::reload()
 
 TexturePtr TextureManager::getTexture(const std::string& fileName)
 {
+    auto it = m_textures.find(fileName);
+    if (it != m_textures.end()) {
+        return it->second;
+    }
+
     TexturePtr texture;
 
     // before must resolve filename to full path
     std::string filePath = g_resources.resolvePath(fileName);
 
     // check if the texture is already loaded
-    auto it = m_textures.find(filePath);
+    it = m_textures.find(filePath);
     if(it != m_textures.end()) {
         texture = it->second;
     }
@@ -111,6 +116,7 @@ TexturePtr TextureManager::getTexture(const std::string& fileName)
             texture->setTime(stdext::time());
             texture->setSmooth(true);
             m_textures[filePath] = texture;
+            m_textures[fileName] = texture;
         }
     }
 

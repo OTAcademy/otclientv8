@@ -561,6 +561,35 @@ ThingPtr Tile::getTopMultiUseThing()
     return m_things[0];
 }
 
+ThingPtr Tile::getTopMultiUseThingEx(Point offset)
+{
+    if (CreaturePtr topCreature = getTopCreatureEx(offset))
+        return topCreature;
+
+    for (uint i = 0; i < m_things.size(); ++i) {
+        ThingPtr thing = m_things[i];
+        if (thing->isForceUse() && !thing->isCreature())
+            return thing;
+    }
+
+    for (uint i = 0; i < m_things.size(); ++i) {
+        ThingPtr thing = m_things[i];
+        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom() && !thing->isOnTop() && !thing->isCreature()) {
+            if (i > 0 && thing->isSplash())
+                return m_things[i - 1];
+            return thing;
+        }
+    }
+
+    for (uint i = 0; i < m_things.size(); ++i) {
+        ThingPtr thing = m_things[i];
+        if (!thing->isGround() && !thing->isOnTop() && !thing->isCreature())
+            return thing;
+    }
+
+    return m_things[0];
+}
+
 bool Tile::isWalkable(bool ignoreCreatures)
 {
     if(!getGround())

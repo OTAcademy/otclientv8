@@ -90,6 +90,7 @@ public:
     CreaturePtr getTopCreatureEx(Point offset);
     ThingPtr getTopMoveThing();
     ThingPtr getTopMultiUseThing();
+    ThingPtr getTopMultiUseThingEx(Point offset);
 
     const Position& getPosition() { return m_position; }
     int getDrawElevation() { return m_drawElevation; }

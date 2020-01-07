@@ -504,11 +504,12 @@ void ProtocolGame::parseLogin(const InputMessagePtr& msg)
 
     if(g_game.getFeature(Otc::GameIngameStore)) {
         // URL to ingame store images
-        msg->getString();
+        std::string url = msg->getString();
 
         // premium coin package size
         // e.g you can only buy packs of 25, 50, 75, .. coins in the market
-        msg->getU16();
+        int coinsPacketSize = msg->getU16();
+        g_lua.callGlobalField("g_game", "onStoreInit", url, coinsPacketSize);
     }
 
     m_localPlayer->setId(playerId);
