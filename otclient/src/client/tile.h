@@ -120,7 +120,7 @@ public:
     bool hasBlockingCreature();
     bool limitsFloorsView(bool isFreeView = false);
     bool canErase();
-    int getElevation() const;
+    int getElevation();
     bool hasElevation(int elevation = 1);
     void overwriteMinimapColor(uint8 color) { m_minimapColor = color; }
 

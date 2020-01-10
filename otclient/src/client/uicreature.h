@@ -32,22 +32,26 @@ class UICreature : public UIWidget
 public:
     void drawSelf(Fw::DrawPane drawPane);
 
-    void setCreature(const CreaturePtr& creature) { m_creature = creature; }
-    void setFixedCreatureSize(bool fixed) { m_fixedCreatureSize = fixed; }
+    void setCreature(const CreaturePtr& creature) { m_creature = creature; m_redraw = true; }
+    void setFixedCreatureSize(bool fixed) { m_fixedCreatureSize = fixed; m_redraw = true; }
     void setOutfit(const Outfit& outfit);
 
     CreaturePtr getCreature() { return m_creature; }
     bool isFixedCreatureSize() { return m_fixedCreatureSize; }
 
     void setAutoRotating(bool value) { m_autoRotating = value; }
-    void setDirection(Otc::Direction direction) { m_direction = direction; }
+    void setDirection(Otc::Direction direction) { m_direction = direction; m_redraw = true; }
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
+    void onGeometryChange(const Rect& oldRect, const Rect& newRect) override;
 
     CreaturePtr m_creature;
     stdext::boolean<false> m_fixedCreatureSize;
     stdext::boolean<false> m_autoRotating;
+    stdext::boolean<false> m_redraw;
+    int m_outfitNumber = 0;
+    FrameBufferPtr m_framebuffer;
     Otc::Direction m_direction = Otc::South;
 };
 

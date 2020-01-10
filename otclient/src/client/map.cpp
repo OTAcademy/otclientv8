@@ -1076,7 +1076,13 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
     it = params.find("allowUnseen");
     bool allowUnseen = it != params.end() && it->second != "0" && it->second != "";
     it = params.find("allowOnlyVisibleTiles");
-    bool allowOnlyVisibleTiles = it != params.end() && it->second != "0" && it->second != "";    
+    bool allowOnlyVisibleTiles = it != params.end() && it->second != "0" && it->second != "";
+    it = params.find("marginMin");
+    bool hasMargin = it != params.end();
+    it = params.find("marginMax");
+    hasMargin = hasMargin || (it != params.end());
+    
+        
     Position destPos;
     it = params.find("destination");
     if (it != params.end()) {
@@ -1100,8 +1106,13 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
         ret[node->pos.toString()] = std::make_tuple(node->totalCost, node->distance, 
                                                     node->prev ? node->prev->pos.getDirectionFromPosition(node->pos) : -1,
                                                     node->prev ? node->prev->pos.toString() : "");
-        if (node->pos == destPos)
-            break;
+        if (node->pos == destPos) {
+            if (hasMargin) {
+                maxDistance = std::min<int>(node->distance + 4, maxDistance);
+            } else {
+                break;
+            }
+        }
         if (node->distance >= maxDistance)
             continue;
         for (int i = -1; i <= 1; ++i) {

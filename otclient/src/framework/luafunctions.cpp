@@ -168,6 +168,8 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_clock", "micros", &Clock::micros, &g_clock);
     g_lua.bindSingletonFunction("g_clock", "millis", &Clock::millis, &g_clock);
     g_lua.bindSingletonFunction("g_clock", "seconds", &Clock::seconds, &g_clock);
+    g_lua.bindSingletonFunction("g_clock", "realMillis", &Clock::realMillis, &g_clock);
+    g_lua.bindSingletonFunction("g_clock", "realMicros", &Clock::realMicros, &g_clock);
 
     // ConfigManager
     g_lua.registerSingletonClass("g_configs");

@@ -727,7 +727,7 @@ bool Tile::canErase()
     return m_walkingCreatures.empty() && m_effects.empty() && m_things.empty() && m_flags == 0 && m_minimapColor == 0;
 }
 
-int Tile::getElevation() const
+int Tile::getElevation()
 {
     int elevation = 0;
     for(const ThingPtr& thing : m_things)

@@ -23,10 +23,13 @@
 #include "uicreature.h"
 #include <framework/otml/otml.h>
 #include <framework/graphics/graphics.h>
+#include <framework/graphics/framebuffermanager.h>
 
 void UICreature::drawSelf(Fw::DrawPane drawPane)
 {
     if((drawPane & Fw::ForegroundPane) == 0)
+        return;
+    if (!m_framebuffer)
         return;
 
     UIWidget::drawSelf(drawPane);
@@ -34,27 +37,45 @@ void UICreature::drawSelf(Fw::DrawPane drawPane)
     if(m_creature) {
         if (m_autoRotating) {
             auto ticks = (g_clock.millis() % 4000) / 4;
+            Otc::Direction new_dir;
             if (ticks < 250) 
             {
-                m_direction = Otc::South;
+                new_dir = Otc::South;
             }
             else if (ticks < 500) 
             {
-                m_direction = Otc::East;
+                new_dir = Otc::East;
             }
             else if (ticks < 750) 
             {
-                m_direction = Otc::North;
+                new_dir = Otc::North;
             }
             else 
             {
-                m_direction = Otc::West;
+                new_dir = Otc::West;
+            }
+            if (new_dir != m_direction) {
+                m_direction = new_dir;
+                m_redraw = true;
             }
         }
 
+        if (m_creature->getOutfitNumber() != m_outfitNumber) {
+            m_outfitNumber = m_creature->getOutfitNumber();
+            m_redraw = true;
+        }
+
         Rect drawRect = getPaddingRect();
+        if (m_redraw) {
+            m_redraw = false;
+            m_framebuffer->bind();
+            g_painter->setAlphaWriting(true);
+            g_painter->clear(Color::alpha);
+            m_creature->drawOutfit(Rect(0, 0, m_framebuffer->getSize()), !m_fixedCreatureSize, m_direction);
+            m_framebuffer->release();
+        }
         g_painter->setColor(m_imageColor);
-        m_creature->drawOutfit(drawRect, !m_fixedCreatureSize, m_direction);
+        m_framebuffer->draw(drawRect);
     }
 }
 
@@ -64,6 +85,7 @@ void UICreature::setOutfit(const Outfit& outfit)
         m_creature = CreaturePtr(new Creature);
     m_direction = Otc::South;
     m_creature->setOutfit(outfit);
+    m_redraw = true;
 }
 
 void UICreature::onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode)
@@ -99,4 +121,15 @@ void UICreature::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
             setOutfit(outfit);
         }
     }
+}
+
+void UICreature::onGeometryChange(const Rect& oldRect, const Rect& newRect)
+{
+    UIWidget::onGeometryChange(oldRect, newRect);
+    if (!m_framebuffer) {
+        m_framebuffer = g_framebuffers.createFrameBuffer(false);
+        m_framebuffer->setSmooth(true);
+    }
+    m_framebuffer->resize(newRect.size());
+    m_redraw = true;
 }

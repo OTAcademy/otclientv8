@@ -287,26 +287,20 @@ void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction dire
     else
         exactSize = g_things.rawGetThingType(m_outfit.getAuxId(), m_outfit.getCategory())->getExactSize();
 
-    int frameSize;
+    /*
+    int frameSize = exactSize;
     if(!resize)
         frameSize = std::max<int>(exactSize, 2 * Otc::TILE_PIXELS);
-    else if(!(frameSize = exactSize))
-        return;
 
-    if (frameSize > 2048)
+    if (frameSize < 1 || frameSize > 2048)
         return;
-
+        */
     if (direction == Otc::InvalidDirection)
         direction = m_direction;
 
-    const FrameBufferPtr& outfitBuffer = g_framebuffers.getTemporaryFrameBuffer();
-    outfitBuffer->resize(Size(frameSize, frameSize));
-    outfitBuffer->bind();
-    g_painter->setAlphaWriting(true);
-    g_painter->clear(Color::alpha);
-    internalDrawOutfit(Point(frameSize - Otc::TILE_PIXELS, frameSize - Otc::TILE_PIXELS) + getDisplacement(), 1, false, true, direction);
-    outfitBuffer->release();
-    outfitBuffer->draw(destRect, Rect(0,0,frameSize,frameSize));
+    float scale = destRect.width() / (float)exactSize;
+
+    internalDrawOutfit((Point(exactSize - Otc::TILE_PIXELS, exactSize - Otc::TILE_PIXELS) + getDisplacement()) * scale, scale, false, true, direction);
 }
 
 void Creature::drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags, DrawQueue& drawQueue)
@@ -787,6 +781,9 @@ void Creature::setDirection(Otc::Direction direction)
 
 void Creature::setOutfit(const Outfit& outfit)
 {
+    // optimization for UICreature
+    m_outfitNumber = g_clock.micros();
+
     Outfit oldOutfit = m_outfit;
     if(outfit.getCategory() != ThingCategoryCreature) {
         if(!g_things.isValidDatId(outfit.getAuxId(), outfit.getCategory()))
@@ -805,6 +802,9 @@ void Creature::setOutfit(const Outfit& outfit)
 
 void Creature::setOutfitColor(const Color& color, int duration)
 {
+    // optimization for UICreature
+    m_outfitNumber = g_clock.micros();
+
     if(m_outfitColorUpdateEvent) {
         m_outfitColorUpdateEvent->cancel();
         m_outfitColorUpdateEvent = nullptr;

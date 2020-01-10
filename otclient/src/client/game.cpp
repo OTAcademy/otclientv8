@@ -761,8 +761,6 @@ void Game::stop()
 
     m_protocolGame->sendStop();
     m_denyBotCall = true;
-
-    m_localPlayer->lockWalk(100);
 }
 
 void Game::look(const ThingPtr& thing, bool isBattleList)
@@ -778,19 +776,27 @@ void Game::look(const ThingPtr& thing, bool isBattleList)
 
 void Game::move(const ThingPtr& thing, const Position& toPos, int count)
 {
-    if(count <= 0)
+    if (count <= 0)
         count = 1;
 
-    if(!canPerformGameAction() || !thing || thing->getPosition() == toPos)
+    if (!canPerformGameAction() || !thing || thing->getPosition() == toPos)
         return;
 
     uint id = thing->getId();
-    if(thing->isCreature()) {
+    if (thing->isCreature()) {
         CreaturePtr creature = thing->static_self_cast<Creature>();
         id = Proto::Creature;
     }
 
     m_protocolGame->sendMove(thing->getPosition(), id, thing->getStackPos(), toPos, count);
+}
+
+void Game::moveRaw(const Position& pos, int id, int stackpos, const Position& toPos, int count)
+{
+    if (!canPerformGameAction())
+        return;
+
+    m_protocolGame->sendMove(pos, id, stackpos, toPos, count);
 }
 
 void Game::moveToParentContainer(const ThingPtr& thing, int count)

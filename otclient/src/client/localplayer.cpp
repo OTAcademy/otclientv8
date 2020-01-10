@@ -73,7 +73,7 @@ bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
         return false;
 
     // last walk is not done yet
-    if (m_walking && (m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking())
+    if (m_walking && (m_walkTimer.ticksElapsed() < getStepDuration()) && !isAutoWalking() && !isServerWalking())
         return false;
 
     auto tile = g_map.getTile(getPrewalkingPosition(true));
@@ -81,7 +81,7 @@ bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
         return false;
 
     // cannot walk while already walking
-    if ((m_walking && !isAutoWalking()) && (!isPreWalking() || !m_lastPrewalkDone))
+    if ((m_walking && !isAutoWalking() && !isServerWalking()) && (!isPreWalking() || !m_lastPrewalkDone))
         return false;
 
     // Without new walking limit only to 1 prewalk
