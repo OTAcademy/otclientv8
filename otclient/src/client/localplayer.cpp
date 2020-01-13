@@ -190,7 +190,6 @@ void LocalPlayer::cancelNewWalk(Otc::Direction dir)
     }
 
     m_idleTimer.restart();
-    lockWalk();
 
     if (retryAutoWalk()) return;
 

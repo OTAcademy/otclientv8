@@ -123,6 +123,7 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_map", "cleanTile", &Map::cleanTile, &g_map);
     g_lua.bindSingletonFunction("g_map", "cleanTexts", &Map::cleanTexts, &g_map);
     g_lua.bindSingletonFunction("g_map", "getTile", &Map::getTile, &g_map);
+    g_lua.bindSingletonFunction("g_map", "getOrCreateTile", &Map::getOrCreateTile, &g_map);
     g_lua.bindSingletonFunction("g_map", "getTiles", &Map::getTiles, &g_map);
     g_lua.bindSingletonFunction("g_map", "setCentralPosition", &Map::setCentralPosition, &g_map);
     g_lua.bindSingletonFunction("g_map", "getCentralPosition", &Map::getCentralPosition, &g_map);
@@ -323,7 +324,6 @@ void Client::registerLuaFunctions()
     
     g_lua.bindSingletonFunction("g_game", "getMaxPreWalkingSteps", &Game::getMaxPreWalkingSteps, &g_game);
     g_lua.bindSingletonFunction("g_game", "setMaxPreWalkingSteps", &Game::setMaxPreWalkingSteps, &g_game);
-    g_lua.bindSingletonFunction("g_game", "setExtendedNewWalking", &Game::setMaxPreWalkingSteps, &g_game);
     g_lua.bindSingletonFunction("g_game", "ignoreServerDirection", &Game::ignoreServerDirection, &g_game);
     g_lua.bindSingletonFunction("g_game", "showRealDirection", &Game::showRealDirection, &g_game);
     g_lua.bindSingletonFunction("g_game", "enableTileThingLuaCallback", &Game::enableTileThingLuaCallback, &g_game);
@@ -512,6 +512,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Creature>("canBeSeen", &Creature::canBeSeen);
     g_lua.bindClassMemberFunction<Creature>("jump", &Creature::jump);
     g_lua.bindClassMemberFunction<Creature>("getPrewalkingPosition", &Creature::getPrewalkingPosition);
+    g_lua.bindClassMemberFunction<Creature>("getAge", &Creature::getAge);
 
     g_lua.registerClass<ItemType>();
     g_lua.bindClassMemberFunction<ItemType>("getServerId", &ItemType::getServerId);

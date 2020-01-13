@@ -361,11 +361,11 @@ public:
     void setMaxPreWalkingSteps(uint value) { m_maxPreWalkingSteps = value; }
     uint getMaxPreWalkingSteps() { return m_maxPreWalkingSteps; }
 
-    void setExtendedNewWalking(bool value) { m_extendedNewWalking = false; }
-    uint getWalkId() { return m_walkId; }
-
     void showRealDirection(bool value) { m_showRealDirection = value; }
     bool shouldShowingRealDirection() { return m_showRealDirection; }
+
+    uint getWalkId() { return m_walkId; }
+    uint getWalkPreditionId() { return m_walkPrediction; }
 
     void ignoreServerDirection(bool value) { m_ignoreServerDirection = value; }
     bool isIgnoringServerDirection()
@@ -402,7 +402,6 @@ private:
     uint m_walkId = 0;
     uint m_walkPrediction = 0;
     uint m_maxPreWalkingSteps = 2;
-    bool m_extendedNewWalking = false;
     stdext::timer m_pingTimer;
     std::map<uint32_t, stdext::timer> m_newPingIds;
     uint m_seq;

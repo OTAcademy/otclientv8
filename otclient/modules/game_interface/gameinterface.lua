@@ -878,9 +878,6 @@ function refreshViewMode()
 
     gameBottomPanel:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
     gameBottomPanel:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
-    bottomSplitter:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
-    bottomSplitter:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
-    bottomSplitter:setMarginLeft(0)
     
     modules.client_topmenu.getTopMenu():setImageColor('white')
     gameBottomPanel:setImageColor('white')
@@ -888,6 +885,9 @@ function refreshViewMode()
   
     if modules.game_console then
       modules.game_console.switchMode(false)
+    end
+    if modules.game_actionbar then
+      modules.game_actionbar.switchMode(false)    
     end
   else
     g_game.changeMapAwareRange(29, 19)
@@ -900,16 +900,14 @@ function refreshViewMode()
     else
       gameMapPanel:setZoom(11)    
     end
-    
-    gameBottomPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
-    gameBottomPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
-    bottomSplitter:addAnchor(AnchorLeft, 'parent', AnchorLeft)
-    bottomSplitter:addAnchor(AnchorRight, 'parent', AnchorRight)
-           
+               
     modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')  
     
     if modules.game_console then
       modules.game_console.switchMode(true)
+    end
+    if modules.game_actionbar then
+      modules.game_actionbar.switchMode(true)    
     end
   end
 end
@@ -922,15 +920,6 @@ function updateSize()
   local classic = g_settings.getBoolean("classicView")
   local height = gameMapPanel:getHeight()
   local width = gameMapPanel:getWidth()
-
-  if not classic and modules.game_console then
-    local newMargin = modules.game_console.consolePanel:getMarginLeft()
-    newMargin = math.max(0, newMargin)
-    newMargin = math.min(modules.game_console.consolePanel:getParent():getWidth() - modules.game_console.consolePanel:getWidth(), newMargin)
-    bottomSplitter:setMarginLeft(newMargin)
-    modules.game_console.consolePanel:setMarginLeft(newMargin)
-    bottomSplitter:setMarginLeft(newMargin)
-  end
      
   if not classic then
     local rheight = gameRootPanel:getHeight()

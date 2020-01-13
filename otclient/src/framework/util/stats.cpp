@@ -196,7 +196,15 @@ std::string Stats::getWidgetsInfo(int limit, bool pretty)
         ret << "Textures: " << (createdTextures - destroyedTextures) << " (" << destroyedTextures << "/" << createdTextures << ")\n";
     else
         ret << (createdTextures - destroyedTextures) << "|" << destroyedTextures << "|" << createdTextures << "\n";
-    
+    if (pretty)
+        ret << "Creatures: " << (createdCreatures - destroyedCreatures) << " (" << destroyedCreatures << "/" << createdCreatures << ")\n";
+    else
+        ret << (createdCreatures - destroyedCreatures) << "|" << destroyedCreatures << "|" << createdCreatures << "\n";
+    if (pretty)
+        ret << "Things: " << (createdThings - destroyedThings) << " (" << destroyedThings << "/" << createdThings << ")\n";
+    else
+        ret << (createdThings - destroyedThings) << "|" << destroyedThings << "|" << createdThings << "\n";
+
     ret << "Active widgets (Widget|Childerns)" << "\n";
 
     printNode(ret, node, 0, limit, pretty);

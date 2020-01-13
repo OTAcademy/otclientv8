@@ -68,6 +68,13 @@ Creature::Creature() : Thing()
     m_footStep = 0;
     //m_speedFormula.fill(-1);
     m_outfitColor = Color::white;
+
+    g_stats.addCreature();
+}
+
+Creature::~Creature()
+{
+    g_stats.removeCreature();
 }
 
 void Creature::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView, bool lightOnly)
@@ -525,28 +532,26 @@ void Creature::onPositionChange(const Position& newPos, const Position& oldPos)
 void Creature::onAppear()
 {
     // cancel any disappear event
-    if(m_disappearEvent) {
+    if (m_disappearEvent) {
         m_disappearEvent->cancel();
         m_disappearEvent = nullptr;
     }
 
     // creature appeared the first time or wasn't seen for a long time
-    if(m_removed) {
+    if (m_removed) {
         stopWalk();
         m_removed = false;
         callLuaField("onAppear");
-    // walk
-    } else if(m_oldPosition != m_position && m_oldPosition.isInRange(m_position,1,1) && m_allowAppearWalk) {
+        // walk
+    } else if (m_oldPosition != m_position && m_oldPosition.isInRange(m_position, 1, 1) && m_allowAppearWalk) {
         m_allowAppearWalk = false;
         walk(m_oldPosition, m_position);
         callLuaField("onWalk", m_oldPosition, m_position);
-    // teleport
-    } else if(m_oldPosition != m_position) {
-        if (m_oldPosition.isInRange(m_position, 1, 1, 1) && !m_oldPosition.isInRange(m_position, 0, 0, 1)) {
-            setDirection(m_oldPosition.getDirectionFromPosition(m_position));
-        }
+        // teleport
+    } else if (m_oldPosition != m_position) {
         stopWalk();
-        callLuaField("onTeleport", m_oldPosition, m_position);
+        callLuaField("onDisappear");
+        callLuaField("onAppear");
     } // else turn
 }
 

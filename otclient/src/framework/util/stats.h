@@ -75,6 +75,11 @@ public:
     inline void addTexture() { createdTextures += 1; }
     inline void removeTexture() { destroyedTextures += 1; }
 
+    inline void addThing() { createdThings += 1; }
+    inline void removeThing() { destroyedThings += 1; }
+
+    inline void addCreature() { createdCreatures += 1; }
+    inline void removeCreature() { destroyedCreatures += 1; }
 
 private:
     struct {
@@ -88,6 +93,10 @@ private:
     int destroyedWidgets = 0;
     int createdTextures = 0;
     int destroyedTextures = 0;
+    int createdThings = 0;
+    int destroyedThings = 0;
+    int createdCreatures = 0;
+    int destroyedCreatures = 0;
 };
 
 extern Stats g_stats;

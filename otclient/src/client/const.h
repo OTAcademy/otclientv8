@@ -443,6 +443,7 @@ namespace Otc
         GameSlowerManualWalking = 91,
 
         GameBot = 95,
+        GameBiggerMap = 96,
 
         GameForceLight = 97,
         GameNoDebug = 98,

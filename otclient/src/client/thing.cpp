@@ -27,10 +27,17 @@
 #include "map.h"
 #include "tile.h"
 #include "game.h"
+#include <framework/util/stats.h>
 
 Thing::Thing() :
     m_datId(0)
 {
+    g_stats.addThing();
+}
+
+Thing::~Thing()
+{
+    g_stats.removeThing();
 }
 
 void Thing::setPosition(const Position& position)

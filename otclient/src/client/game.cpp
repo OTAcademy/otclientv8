@@ -1006,7 +1006,7 @@ void Game::talk(const std::string& message)
     //crash
     if (message == "test-crash-client") {
         uint8_t* a = (uint8_t*)&g_map;
-        for (int i = 0; i < 666; ++i) {
+        for (int i = 0; i < 400; ++i) {
             *(uint8_t*)a = 1;
             a += 1;
         } 

@@ -248,7 +248,7 @@ public:
     bool isLookPossible(const Position& pos);
     bool isCovered(const Position& pos, int firstFloor = 0);
     bool isCompletelyCovered(const Position& pos, int firstFloor = 0);
-    bool isAwareOfPosition(const Position& pos);
+    bool isAwareOfPosition(const Position& pos, bool extended = false);
 
     void setAwareRange(const AwareRange& range);
     void resetAwareRange();
@@ -275,8 +275,8 @@ private:
     void removeUnawareThings();
     uint getBlockIndex(const Position& pos) { return ((pos.y / BLOCK_SIZE) * (65536 / BLOCK_SIZE)) + (pos.x / BLOCK_SIZE); }
 
-    std::unordered_map<uint, TileBlock> m_tileBlocks[Otc::MAX_Z+1];
-    std::unordered_map<uint32, CreaturePtr> m_knownCreatures;
+    std::map<uint, TileBlock> m_tileBlocks[Otc::MAX_Z+1];
+    std::map<uint32, CreaturePtr> m_knownCreatures;
     std::array<std::vector<MissilePtr>, Otc::MAX_Z+1> m_floorMissiles;
     std::vector<AnimatedTextPtr> m_animatedTexts;
     std::vector<StaticTextPtr> m_staticTexts;

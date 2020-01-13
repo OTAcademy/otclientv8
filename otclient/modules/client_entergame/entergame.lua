@@ -15,7 +15,7 @@ local serverSelector
 local clientVersionSelector
 local serverHostTextEdit
 local rememberPasswordBox
-local protos = {"740", "760", "772", "792", "800", "810", "854", "860", "1077", "1090", "1096", "1098", "1099", "1100"}
+local protos = {"740", "760", "772", "792", "800", "810", "854", "860", "961", "1077", "1090", "1096", "1098", "1099", "1100"}
 
 -- private functions
 local function onProtocolError(protocol, message, errorCode)

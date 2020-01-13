@@ -20,7 +20,8 @@ function init()
     onPositionChange = onPositionChange,
     onWalk = onWalk,
     onTeleport = onTeleport,
-    onWalkFinish = onWalkFinish
+    onWalkFinish = onWalkFinish,
+    onCancelWalk = onCancelWalk
   })
 
   modules.game_interface.getRootPanel().onFocusChange = stopSmartWalk
@@ -255,7 +256,12 @@ function onWalkFinish(player)
   end
 end
 
+function onCancelWalk(player)
+  player:lockWalk(50)
+end
+
 function walk(dir) 
+  print("walk " .. g_clock.millis() .. " " .. dir)
   lastManualWalk = g_clock.millis()
   local player = g_game.getLocalPlayer()
   if not player or g_game.isDead() or player:isDead() then
@@ -267,6 +273,7 @@ function walk(dir)
   end
 
   if player:isAutoWalking() then
+    print("auto")
     if lastStop + 100 < g_clock.millis() then
       lastStop = g_clock.millis()
       player:stopAutoWalk()
@@ -296,6 +303,7 @@ function walk(dir)
       if ticksToNextWalk < 30 and lastFinishedStep + 400 > g_clock.millis() and nextWalkDir == nil then -- clicked walk 20 ms too early, try to execute again as soon possible to keep smooth walking
         nextWalkDir = dir
       end
+      print("cant walk")
       return
     end
   end
@@ -370,6 +378,7 @@ function walk(dir)
     end
   end
 
+  print("walk exec " .. g_clock.millis() .. " " .. dir)
   g_game.walk(dir, preWalked)  
   
   if not firstStep and lastWalkDir ~= dir then

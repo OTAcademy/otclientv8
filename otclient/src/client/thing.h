@@ -35,7 +35,7 @@ class Thing : public LuaObject
 {
 public:
     Thing();
-    virtual ~Thing() { }
+    virtual ~Thing();
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false) { }
     virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView) { }

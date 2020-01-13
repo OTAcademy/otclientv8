@@ -4,6 +4,10 @@ Panel
     !text: tr('Classic view')
 
   OptionCheckBox
+    id: actionBar
+    !text: tr("Show action bar")
+    
+  OptionCheckBox
     id: showPing
     !text: tr('Show connection ping')
     !tooltip: tr('Display connection speed to the server (milliseconds)')

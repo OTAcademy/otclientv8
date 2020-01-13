@@ -49,7 +49,9 @@ local defaultOptions = {
   walkTurnDelay = 100,
   walkStairsDelay = 50,
   walkTeleportDelay = 200,
-  walkCtrlTurnDelay = 150
+  walkCtrlTurnDelay = 150,
+  
+  actionBar = true
 }
 
 local optionsWindow
@@ -306,6 +308,12 @@ function setOption(key, value, force)
   --  g_game.ignoreServerDirection(value)
   --elseif key == 'realDirection' then
   --  g_game.showRealDirection(value)
+  elseif key == 'actionBar' then
+    if value then
+      modules.game_actionbar.show()
+    else
+      modules.game_actionbar.hide()
+    end
   elseif key == 'hotkeyDelay' then
     generalPanel:getChildById('hotkeyDelayLabel'):setText(tr('Hotkey delay: %s ms', value))  
   elseif key == 'walkFirstStepDelay' then

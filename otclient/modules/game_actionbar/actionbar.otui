@@ -1,0 +1,44 @@
+ActionTabBar < TabBar
+  height: 36
+
+ActionTabBarButton < TabBarButton
+  height: 36
+  width: 36
+  font: cipsoftFont
+  
+Panel
+  id: actionPanel
+  anchors.top: parent.top
+  anchors.left: parent.left
+  anchors.right: parent.right
+  image-source: /images/ui/panel_bottom
+  image-border: 4
+
+  $on:
+    height: 40
+    
+  $!on:
+    height: 0
+
+  TabButton
+    id: prevButton
+    icon: /images/game/console/leftarrow
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 1
+
+  ActionTabBar
+    id: tabBar
+    anchors.left: prev.right
+    anchors.top: parent.top
+    anchors.right: next.left
+    margin-left: 2
+    margin-right: 25
+    margin-top: 2
+
+  TabButton
+    id: nextButton
+    icon: /images/game/console/rightarrow
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 1

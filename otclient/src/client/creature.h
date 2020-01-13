@@ -43,6 +43,7 @@ public:
     };
 
     Creature();
+    virtual ~Creature();
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
     virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
@@ -160,6 +161,11 @@ public:
         return m_elevation;
     }
 
+    ticks_t getAge()
+    {
+        return m_age.ticksElapsed();
+    }
+
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
     virtual void updateWalkOffset(int totalPixelsWalked);
@@ -234,6 +240,9 @@ protected:
     float m_jumpDuration;
     PointF m_jumpOffset;
     Timer m_jumpTimer;
+    
+    // age
+    Timer m_age;
 };
 
 // @bindclass

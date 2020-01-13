@@ -533,10 +533,11 @@ void Map::removeUnawareThings()
             ++it;
     }
 
+    bool extended = g_game.getFeature(Otc::GameBiggerMap);
     if(!g_game.getFeature(Otc::GameKeepUnawareTiles)) {
         // remove tiles that we are not aware anymore
         for(int z = 0; z <= Otc::MAX_Z; ++z) {
-            std::unordered_map<uint, TileBlock>& tileBlocks = m_tileBlocks[z];
+            auto& tileBlocks = m_tileBlocks[z];
             for(auto it = tileBlocks.begin(); it != tileBlocks.end();) {
                 TileBlock& block = (*it).second;
                 bool blockEmpty = true;
@@ -545,7 +546,8 @@ void Map::removeUnawareThings()
                         continue;
 
                     const Position& pos = tile->getPosition();
-                    if(!isAwareOfPosition(pos))
+
+                    if(!isAwareOfPosition(pos, extended))
                         block.remove(pos);
                     else
                         blockEmpty = false;
@@ -685,9 +687,9 @@ bool Map::isCompletelyCovered(const Position& pos, int firstFloor)
     return false;
 }
 
-bool Map::isAwareOfPosition(const Position& pos)
+bool Map::isAwareOfPosition(const Position& pos, bool extended)
 {
-    if(pos.z < getFirstAwareFloor() || pos.z > getLastAwareFloor())
+    if((pos.z < getFirstAwareFloor() || pos.z > getLastAwareFloor()) && !extended)
         return false;
 
     Position groundedPos = pos;
@@ -702,6 +704,13 @@ bool Map::isAwareOfPosition(const Position& pos)
                 break;
             groundedPos.coveredDown();
         }
+    }
+
+    if (extended) {
+        return m_centralPosition.isInRange(groundedPos, m_awareRange.left * 2,
+                                           m_awareRange.right * 2,
+                                           m_awareRange.top * 2,    
+                                           m_awareRange.bottom * 2);
     }
     return m_centralPosition.isInRange(groundedPos, m_awareRange.left,
                                                     m_awareRange.right,
