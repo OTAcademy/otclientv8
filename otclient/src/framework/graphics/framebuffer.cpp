@@ -136,6 +136,29 @@ void FrameBuffer::draw(const Rect& dest)
     g_painter->drawTexturedRect(dest, m_texture, Rect(0, 0, getSize()));
 }
 
+std::vector<uint32_t> FrameBuffer::readPixels()
+{
+    internalBind();
+    Size size = getSize();
+    int width = size.width();
+    int height = size.height();
+    std::vector<uint32_t> ret(width * height * sizeof(GLubyte), 0);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLubyte*)(ret.data()));
+    internalRelease();
+    int halfWidth = width / 2;
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < halfWidth; ++x) {
+            std::swap(ret[y * width + x], ret[y * width + width - x - 1]);
+        }
+    }
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < halfWidth; ++x) {
+            std::swap(ret[y * width + x], ret[(height - y - 1) * width + width - x - 1]);
+        }
+    }
+    return ret;
+}
+
 void FrameBuffer::internalBind()
 {
     if (m_fbo) {

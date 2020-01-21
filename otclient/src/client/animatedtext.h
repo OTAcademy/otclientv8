@@ -49,6 +49,7 @@ public:
 
     AnimatedTextPtr asAnimatedText() { return static_self_cast<AnimatedText>(); }
     bool isAnimatedText() { return true; }
+    std::string getText() { return m_cachedText.getText(); }
 
 protected:
     virtual void onAppear();

@@ -490,29 +490,22 @@ void UIWidget::moveChildToIndex(const UIWidgetPtr& child, int index)
     } else {
         m_children.insert(m_children.begin() + index - 1, child);
     }
+
     updateChildrenIndexStates();
     updateLayout();
 }
 
 void UIWidget::reorderChildrens(const std::vector<UIWidgetPtr>& childrens) {
-    std::vector<size_t> currentOrder;
-    currentOrder.reserve(childrens.size());
-    for (size_t i = 0; i < m_children.size(); ++i) {
-        for (size_t c = 0; c < childrens.size(); ++c) {
-            if (childrens[c] == m_children[i]) {
-                currentOrder.push_back(i);
-            }
-        }
-    }
-
-    if (currentOrder.size() != childrens.size()) {
+    if (m_children.size() != childrens.size()) {
         g_logger.error("Invalid parameter for reorderChildren");
         return;
     }
 
+    m_children.clear();
     for (size_t i = 0; i < childrens.size(); ++i) {
-        m_children[currentOrder[i]] = childrens[i];
+        m_children.push_back(childrens[i]);
     }
+
     updateChildrenIndexStates();
     updateLayout();
 }
@@ -1565,8 +1558,6 @@ void UIWidget::onStyleApply(const std::string& styleName, const OTMLNodePtr& sty
     parseBaseStyle(styleNode);
     parseImageStyle(styleNode);
     parseTextStyle(styleNode);
-
-    g_app.repaint();
 }
 
 void UIWidget::onGeometryChange(const Rect& oldRect, const Rect& newRect)
@@ -1581,8 +1572,6 @@ void UIWidget::onGeometryChange(const Rect& oldRect, const Rect& newRect)
     }
 
     callLuaField("onGeometryChange", oldRect, newRect);
-
-    g_app.repaint();
 }
 
 void UIWidget::onLayoutUpdate()

@@ -25,6 +25,7 @@
 #include <framework/core/adaptiverenderer.h>
 #include <framework/core/clock.h>
 #include <framework/core/eventdispatcher.h>
+#include <framework/core/asyncdispatcher.h>
 #include <framework/platform/platformwindow.h>
 #include <framework/ui/uimanager.h>
 #include <framework/graphics/graphics.h>
@@ -33,6 +34,7 @@
 #include <framework/graphics/painter.h>
 #include <framework/graphics/framebuffermanager.h>
 #include <framework/graphics/atlas.h>
+#include <framework/graphics/image.h>
 #include <framework/input/mouse.h>
 #include <framework/util/extras.h>
 #include <framework/util/stats.h>
@@ -129,8 +131,8 @@ void GraphicalApplication::run()
 
     g_lua.callGlobalField("g_app", "onRun");
 
-    auto foregoundBuffer = g_framebuffers.createFrameBuffer();
-    foregoundBuffer->resize(g_painter->getResolution());
+    m_framebuffer = g_framebuffers.createFrameBuffer();
+    m_framebuffer->resize(g_painter->getResolution());
 
     auto lastRender = stdext::micros();
     auto lastForegroundRender = stdext::millis();
@@ -166,7 +168,7 @@ void GraphicalApplication::run()
         g_adaptiveRenderer.newFrame();
         bool updateForeground = false;
         
-        if(lastForegroundRender + g_adaptiveRenderer.foregroundUpdateInterval() <= stdext::millis()) {
+        if(m_mustRepaint || lastForegroundRender + g_adaptiveRenderer.foregroundUpdateInterval() <= stdext::millis()) {
             lastForegroundRender = stdext::millis();
             m_mustRepaint = false;
             updateForeground = true;
@@ -175,12 +177,12 @@ void GraphicalApplication::run()
 
         if(updateForeground) {
             AutoStat s(STATS_MAIN, "RenderForeground");
-            foregoundBuffer->resize(g_painter->getResolution());
-            foregoundBuffer->bind();
+            m_framebuffer->resize(g_painter->getResolution());
+            m_framebuffer->bind();
             g_painter->setAlphaWriting(true);
             g_painter->clear(Color::alpha);
             g_ui.render(Fw::ForegroundPane);
-            foregoundBuffer->release();
+            m_framebuffer->release();
         }
 
         g_painter->clear(Color::black);
@@ -193,7 +195,7 @@ void GraphicalApplication::run()
 
         g_painter->setColor(Color::white);
         g_painter->setOpacity(1.0);
-        foregoundBuffer->draw(Rect(0, 0, g_painter->getResolution()));
+        m_framebuffer->draw(Rect(0, 0, g_painter->getResolution()));
         
 
         {
@@ -241,4 +243,25 @@ void GraphicalApplication::inputEvent(const InputEvent& event)
     m_onInputEvent = true;
     g_ui.inputEvent(event);
     m_onInputEvent = false;
+}
+
+void GraphicalApplication::doScreenshot(std::string file)
+{
+    if (file.empty()) {
+        file = "screenshot.png";
+    }
+
+    m_framebuffer->bind();
+    g_painter->setAlphaWriting(true);
+    g_ui.render(Fw::BothPanes);
+
+    m_framebuffer->release();
+    m_mustRepaint = true;
+
+    auto size = m_framebuffer->getSize();
+    auto pixels = m_framebuffer->readPixels();
+    g_asyncDispatcher.dispatch([size, pixels, file] {
+        Image image(size, 4, (uint8_t*)pixels.data());
+        image.savePNG(file);
+    });
 }

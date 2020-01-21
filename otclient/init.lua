@@ -6,7 +6,6 @@ APP_VERSION = 1337      -- client version for updater and login to identify outd
 Services = {
   website = "http://otclient.ovh", -- currently not used
   updater = "http://otclient.ovh/api/updater.php",
-  news = "http://otclient.ovh/api/news.php",
   stats = "",
   crash = "http://otclient.ovh/api/crash.php",
   feedback = "http://otclient.ovh/api/feedback.php"
@@ -19,6 +18,7 @@ Servers = {
   OTClientV8c = "otclient.ovh:7171:1099:25:30:80:90",
   OTClientV8Test = "http://otclient.ovh/api/login2.php",
 }
+--USE_NEW_ENERGAME = true -- uses entergamev2 based on websockets instead of entergame
 ALLOW_CUSTOM_SERVERS = true -- if true it shows option ANOTHER on server list
 -- CONFIG END
 

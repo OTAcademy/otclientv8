@@ -46,6 +46,7 @@ bool SpriteManager::loadSpr(std::string file)
     m_signature = 0;
     m_spriteSize = 32;
     m_loaded = false;
+    m_newsprites = false;
     g_atlas.reset(0);
     g_atlas.reset(1);
 
@@ -57,15 +58,13 @@ bool SpriteManager::loadSpr(std::string file)
         m_spritesFile->cache();
 
         m_signature = m_spritesFile->getU32();
-        if (m_signature == *((uint32_t*)"V8HD")) {
-            g_logger.info("HD Sprites");
-            m_spriteSize = 64;
-            g_game.enableFeature(Otc::GameSpritesAlphaChannel);
-            g_game.enableFeature(Otc::GameSpritesU32);
+        if (m_signature == *((uint32_t*)"OTV8")) {
             m_signature = m_spritesFile->getU32();
+            m_newsprites = true;
+            // load sprites
+        } else {
+            m_spritesCount = g_game.getFeature(Otc::GameSpritesU32) ? m_spritesFile->getU32() : m_spritesFile->getU16();
         }
-
-        m_spritesCount = g_game.getFeature(Otc::GameSpritesU32) ? m_spritesFile->getU32() : m_spritesFile->getU16();
         m_spritesOffset = m_spritesFile->tell();
         m_loaded = true;
         g_lua.callGlobalField("g_sprites", "onLoadSpr", file);
@@ -145,21 +144,17 @@ void SpriteManager::saveReplacedSpr(std::string fileName, std::map<uint32_t, Ima
 
         fin->cache();
 
-        const char hdSignature[] = "V8HD";
-        fin->addU32(*((uint32_t*)hdSignature));
-
+        const char otcv8Signature[] = "OTV8";
+        fin->addU32(*((uint32_t*)otcv8Signature));
         fin->addU32(m_signature);
-        fin->addU32(m_spritesCount);
-
-        uint32 offset = fin->tell();
-        uint32 spriteAddress = offset + 4 * m_spritesCount;
-        for (int i = 1; i <= m_spritesCount; i++)
-            fin->addU32(0);
 
         for (int i = 1; i <= m_spritesCount; i++) {
-            if (!getSpriteImage(i))
+            ImagePtr sprite = getSpriteImage(i);
+            if (!sprite) {
+                fin->addU16(0);
                 continue;
-
+            }
+            /*
             spriteAddress = fin->tell();
             fin->seek(offset + (i - 1) * 4);
             fin->addU32(spriteAddress);
@@ -183,7 +178,7 @@ void SpriteManager::saveReplacedSpr(std::string fileName, std::map<uint32_t, Ima
             if (sprite->getPixelCount() != dataSize / 4)
                 stdext::throw_exception(stdext::format("Wrong pixel count for sprite %i - %i", i, sprite->getPixelCount()));
 
-            fin->write(sprite->getPixelData(), dataSize);
+            fin->write(sprite->getPixelData(), dataSize); */
         }
 
         fin->flush();

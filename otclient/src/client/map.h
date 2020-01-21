@@ -249,6 +249,7 @@ public:
     bool isCovered(const Position& pos, int firstFloor = 0);
     bool isCompletelyCovered(const Position& pos, int firstFloor = 0);
     bool isAwareOfPosition(const Position& pos, bool extended = false);
+    bool isAwareOfPositionForClean(const Position& pos, bool extended = false);
 
     void setAwareRange(const AwareRange& range);
     void resetAwareRange();

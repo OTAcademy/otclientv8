@@ -292,7 +292,6 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
         g_painter->setShaderProgram(m_shader);
     } 
 
-    g_painter->setAlphaWriting(false);
     g_painter->resetDepthFunc();
     g_painter->resetCompositionMode();
     g_painter->resetColor();
@@ -304,7 +303,6 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
         m_framebuffer->draw(rect, srcRect);
     }
     g_painter->resetShaderProgram();
-    g_painter->setAlphaWriting(true);
     g_painter->resetOpacity();
 
     // this could happen if the player position is not known yet

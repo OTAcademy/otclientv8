@@ -295,7 +295,7 @@ public:
     void buyStoreOffer(int offerId, int productType, const std::string& name = "");
     void requestTransactionHistory(int page, int entriesPerPage);
     void requestStoreOffers(const std::string& categoryName, int serviceType = 0);
-    void openStore(int serviceType = 0, const std::string& category = "");
+    void openStore(int serviceType = 0);
     void transferCoins(const std::string& recipient, int amount);
     void openTransactionHistory(int entriesPerPage);
 

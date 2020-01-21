@@ -36,6 +36,7 @@ public:
     void drawText(const Point& dest, const Rect& parentRect);
 
     std::string getName() { return m_name; }
+    std::string getText() { return m_cachedText.getText(); }
     Otc::MessageMode getMessageMode() { return m_mode; }
     std::string getFirstMessage() { return m_messages[0].first; }
 

@@ -120,6 +120,23 @@ struct MarketData {
     uint16 tradeAs;
 };
 
+struct StoreCategory {
+    std::string name;
+    std::string description;
+    int state;
+    std::string icon;
+    std::string parent;
+};
+
+struct StoreOffer {
+    int id;
+    std::string name;
+    std::string description;
+    int price;
+    int state;
+    std::string icon;
+};
+
 struct Light {
     Light() { intensity = 0; color = 215; }
     uint8 intensity;

@@ -50,7 +50,15 @@ std::string date_time_string()
     char date[32];
     std::time_t tnow;
     std::time(&tnow);
-    std::tm *ts = std::localtime(&tnow);
+    std::tm* ts = std::localtime(&tnow);
+    std::strftime(date, 32, "%b %d %Y %H:%M:%S", ts);
+    return std::string(date);
+}
+
+std::string timestamp_to_date(time_t tnow)
+{
+    char date[32];
+    std::tm* ts = std::localtime(&tnow);
     std::strftime(date, 32, "%b %d %Y %H:%M:%S", ts);
     return std::string(date);
 }

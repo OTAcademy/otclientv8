@@ -56,6 +56,8 @@ public:
         return m_iteration;
     }
 
+    void doScreenshot(std::string file);
+
 protected:
     void resize(const Size& size);
     void inputEvent(const InputEvent& event);
@@ -65,6 +67,7 @@ private:
     int m_maxFps = 100;
     stdext::boolean<false> m_onInputEvent;
     stdext::boolean<false> m_mustRepaint;
+    FrameBufferPtr m_framebuffer;
 };
 
 extern GraphicalApplication g_app;

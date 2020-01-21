@@ -133,6 +133,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
         } else if(thing->isAnimatedText()) {
             // this code will stack animated texts of the same color
             AnimatedTextPtr animatedText = thing->static_self_cast<AnimatedText>();
+
             AnimatedTextPtr prevAnimatedText;
             bool merged = false;
             /*
@@ -160,6 +161,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
             }
         } else if(thing->isStaticText()) {
             StaticTextPtr staticText = thing->static_self_cast<StaticText>();
+
             bool mustAdd = true;
             for(auto other : m_staticTexts) {
                 // try to combine messages
@@ -177,13 +179,19 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
 
         thing->setPosition(pos);
         thing->onAppear();
-    }
+
+        if (thing->isMissile()) {
+            g_lua.callGlobalField("g_map", "onMissle", thing);
+        } else if (thing->isAnimatedText()) {
+            AnimatedTextPtr animatedText = thing->static_self_cast<AnimatedText>();
+            g_lua.callGlobalField("g_map", "onAnimatedText", thing, animatedText->getText());
+        } else if (thing->isStaticText()) {
+            StaticTextPtr staticText = thing->static_self_cast<StaticText>();
+            g_lua.callGlobalField("g_map", "onStaticText", thing, staticText->getText());
+        }
+    } 
 
     notificateTileUpdate(pos, thing->isItem());
-
-    if (thing->isMissile()) {
-        g_lua.callGlobalField("g_map", "onMissle", thing);
-    }
 }
 
 void Map::setTileSpeed(const Position& pos, uint16_t speed, uint8_t blocking) {
@@ -533,7 +541,7 @@ void Map::removeUnawareThings()
             ++it;
     }
 
-    bool extended = g_game.getFeature(Otc::GameBiggerMap);
+    bool extended = g_game.getFeature(Otc::GameBiggerMapCache);
     if(!g_game.getFeature(Otc::GameKeepUnawareTiles)) {
         // remove tiles that we are not aware anymore
         for(int z = 0; z <= Otc::MAX_Z; ++z) {
@@ -547,7 +555,7 @@ void Map::removeUnawareThings()
 
                     const Position& pos = tile->getPosition();
 
-                    if(!isAwareOfPosition(pos, extended))
+                    if(!isAwareOfPositionForClean(pos, extended))
                         block.remove(pos);
                     else
                         blockEmpty = false;
@@ -689,18 +697,17 @@ bool Map::isCompletelyCovered(const Position& pos, int firstFloor)
 
 bool Map::isAwareOfPosition(const Position& pos, bool extended)
 {
-    if((pos.z < getFirstAwareFloor() || pos.z > getLastAwareFloor()) && !extended)
+    if ((pos.z < getFirstAwareFloor() || pos.z > getLastAwareFloor()) && !extended)
         return false;
 
     Position groundedPos = pos;
-    while(groundedPos.z != m_centralPosition.z) {
-        if(groundedPos.z > m_centralPosition.z) {
-            if(groundedPos.x == 65535 || groundedPos.y == 65535) // When pos == 65535,65535,15 we cant go up to 65536,65536,14
+    while (groundedPos.z != m_centralPosition.z) {
+        if (groundedPos.z > m_centralPosition.z) {
+            if (groundedPos.x == 65535 || groundedPos.y == 65535) // When pos == 65535,65535,15 we cant go up to 65536,65536,14
                 break;
             groundedPos.coveredUp();
-        }
-        else {
-            if(groundedPos.x == 0 || groundedPos.y == 0) // When pos == 0,0,0 we cant go down to -1,-1,1
+        } else {
+            if (groundedPos.x == 0 || groundedPos.y == 0) // When pos == 0,0,0 we cant go down to -1,-1,1
                 break;
             groundedPos.coveredDown();
         }
@@ -709,13 +716,43 @@ bool Map::isAwareOfPosition(const Position& pos, bool extended)
     if (extended) {
         return m_centralPosition.isInRange(groundedPos, m_awareRange.left * 2,
                                            m_awareRange.right * 2,
-                                           m_awareRange.top * 2,    
+                                           m_awareRange.top * 2,
                                            m_awareRange.bottom * 2);
     }
     return m_centralPosition.isInRange(groundedPos, m_awareRange.left,
-                                                    m_awareRange.right,
-                                                    m_awareRange.top,
-                                                    m_awareRange.bottom);
+                                       m_awareRange.right,
+                                       m_awareRange.top,
+                                       m_awareRange.bottom);
+}
+
+bool Map::isAwareOfPositionForClean(const Position& pos, bool extended)
+{
+    if ((pos.z < getFirstAwareFloor() || pos.z > getLastAwareFloor()) && !extended)
+        return false;
+
+    Position groundedPos = pos;
+    while (groundedPos.z != m_centralPosition.z) {
+        if (groundedPos.z > m_centralPosition.z) {
+            if (groundedPos.x == 65535 || groundedPos.y == 65535) // When pos == 65535,65535,15 we cant go up to 65536,65536,14
+                break;
+            groundedPos.coveredUp();
+        } else {
+            if (groundedPos.x == 0 || groundedPos.y == 0) // When pos == 0,0,0 we cant go down to -1,-1,1
+                break;
+            groundedPos.coveredDown();
+        }
+    }
+
+    if (extended) {
+        return m_centralPosition.isInRange(groundedPos, m_awareRange.left * 4,
+                                           m_awareRange.right * 4,
+                                           m_awareRange.top * 4,
+                                           m_awareRange.bottom * 4);
+    }
+    return m_centralPosition.isInRange(groundedPos, m_awareRange.left + 1,
+                                       m_awareRange.right + 1,
+                                       m_awareRange.top + 1,
+                                       m_awareRange.bottom + 1);
 }
 
 void Map::setAwareRange(const AwareRange& range)

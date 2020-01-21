@@ -978,14 +978,13 @@ void ProtocolGame::sendRequestStoreOffers(const std::string& categoryName, int s
     send(msg);
 }
 
-void ProtocolGame::sendOpenStore(int serviceType, const std::string& category)
+void ProtocolGame::sendOpenStore(int serviceType)
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientOpenStore);
 
     if(g_game.getFeature(Otc::GameIngameStoreServiceType)) {
         msg->addU8(serviceType);
-        msg->addString(category);
     }
 
     send(msg);

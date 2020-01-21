@@ -121,7 +121,7 @@ public:
     void sendBuyStoreOffer(int offerId, int productType, const std::string& name);
     void sendRequestTransactionHistory(int page, int entriesPerPage);
     void sendRequestStoreOffers(const std::string& categoryName, int serviceType);
-    void sendOpenStore(int serviceType, const std::string &category);
+    void sendOpenStore(int serviceType);
     void sendTransferCoins(const std::string& recipient, int amount);
     void sendOpenTransactionHistory(int entiresPerPage);
 
@@ -149,7 +149,7 @@ private:
     void parseCompleteStorePurchase(const InputMessagePtr& msg);
     void parseRequestPurchaseData(const InputMessagePtr& msg);
     void parseCoinBalance(const InputMessagePtr& msg);
-    void parseCoinBalanceUpdating(const InputMessagePtr& msg);
+    void parseCoinBalanceUpdate(const InputMessagePtr& msg);
     void parseBlessings(const InputMessagePtr& msg);
     void parseUnjustifiedStats(const InputMessagePtr& msg);
     void parsePvpSituations(const InputMessagePtr& msg);

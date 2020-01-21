@@ -54,6 +54,8 @@ public:
     uint getDepthRenderBuffer() { return m_depthRbo; }
     bool hasDepth() { return m_depth; }
 
+    std::vector<uint32_t> readPixels();
+
 private:
     void internalCreate();
     void internalBind();

@@ -84,6 +84,11 @@ public:
     void showStaticSquare(const Color& color) { m_showStaticSquare = true; m_staticSquareColor = color; }
     void hideStaticSquare() { m_showStaticSquare = false; }
 
+    void setInformationColor(const Color& color) { m_useCustomInformationColor = true; m_informationColor = color; }
+    void resetInformationColor() { m_useCustomInformationColor = false; }
+
+    Point getInformationOffset() { return m_informationOffset; }
+    void setInformationOffset(int x, int y) { m_informationOffset = Point(x, y); }
 
     uint32 getId() { return m_id; }
     std::string getName() { return m_name; }
@@ -161,11 +166,6 @@ public:
         return m_elevation;
     }
 
-    ticks_t getAge()
-    {
-        return m_age.ticksElapsed();
-    }
-
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
     virtual void updateWalkOffset(int totalPixelsWalked);
@@ -203,11 +203,14 @@ protected:
     stdext::boolean<false> m_passable;
     Color m_timedSquareColor;
     Color m_staticSquareColor;
+    Color m_nameColor;
     stdext::boolean<false> m_showTimedSquare;
     stdext::boolean<false> m_showStaticSquare;
     stdext::boolean<true> m_removed;
     CachedText m_nameCache;
     Color m_informationColor;
+    bool m_useCustomInformationColor = false;
+    Point m_informationOffset;
     Color m_outfitColor;
     ScheduledEventPtr m_outfitColorUpdateEvent;
     Timer m_outfitColorTimer;
@@ -239,10 +242,7 @@ protected:
     float m_jumpHeight;
     float m_jumpDuration;
     PointF m_jumpOffset;
-    Timer m_jumpTimer;
-    
-    // age
-    Timer m_age;
+    Timer m_jumpTimer;    
 };
 
 // @bindclass

@@ -247,7 +247,7 @@ function EnterGame.init()
 end
 
 function EnterGame.terminate()
-  if USE_NEW_ENERGAME then return end
+  if not enterGame then return end
   g_keyboard.unbindKeyDown('Ctrl+G')
   
   enterGame:destroy()
@@ -263,6 +263,7 @@ function EnterGame.terminate()
 end
 
 function EnterGame.show()
+  if not enterGame then return end
   if Updater and Updater.isVisible() or g_game.isOnline() then
     return EnterGame.hide()
   end
@@ -273,6 +274,7 @@ function EnterGame.show()
 end
 
 function EnterGame.hide()
+  if not enterGame then return end
   enterGame:hide()
 end
 

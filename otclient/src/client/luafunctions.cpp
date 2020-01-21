@@ -512,7 +512,10 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Creature>("canBeSeen", &Creature::canBeSeen);
     g_lua.bindClassMemberFunction<Creature>("jump", &Creature::jump);
     g_lua.bindClassMemberFunction<Creature>("getPrewalkingPosition", &Creature::getPrewalkingPosition);
-    g_lua.bindClassMemberFunction<Creature>("getAge", &Creature::getAge);
+    g_lua.bindClassMemberFunction<Creature>("setInformationColor", &Creature::setInformationColor);
+    g_lua.bindClassMemberFunction<Creature>("resetInformationColor", &Creature::resetInformationColor);
+    g_lua.bindClassMemberFunction<Creature>("setInformationOffset", &Creature::setInformationOffset);
+    g_lua.bindClassMemberFunction<Creature>("getInformationOffset", &Creature::getInformationOffset);
 
     g_lua.registerClass<ItemType>();
     g_lua.bindClassMemberFunction<ItemType>("getServerId", &ItemType::getServerId);
@@ -640,8 +643,12 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<StaticText>("setFont", &StaticText::setFont);
     g_lua.bindClassMemberFunction<StaticText>("setColor", &StaticText::setColor);
     g_lua.bindClassMemberFunction<StaticText>("getColor", &StaticText::getColor);
+    g_lua.bindClassMemberFunction<StaticText>("getText", &StaticText::getText);
 
     g_lua.registerClass<AnimatedText, Thing>();
+    g_lua.bindClassMemberFunction<AnimatedText>("getText", &AnimatedText::getText);
+    g_lua.bindClassMemberFunction<AnimatedText>("getOffset", &AnimatedText::getOffset);
+    g_lua.bindClassMemberFunction<AnimatedText>("getColor", &AnimatedText::getColor);
 
     g_lua.registerClass<Player, Creature>();
     g_lua.registerClass<Npc, Creature>();

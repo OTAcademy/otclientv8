@@ -68,7 +68,6 @@ Creature::Creature() : Thing()
     m_footStep = 0;
     //m_speedFormula.fill(-1);
     m_outfitColor = Color::white;
-
     g_stats.addCreature();
 }
 
@@ -288,6 +287,8 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
 
 void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction direction)
 {
+    if (getThingType()->isNull()) return;
+
     int exactSize;
     if(m_outfit.getCategory() == ThingCategoryCreature)
         exactSize = getExactSize();
@@ -321,7 +322,7 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
         fillColor = m_informationColor;
 
     // calculate main rects
-    Rect backgroundRect = Rect(point.x-(13.5), point.y, 27, 4);
+    Rect backgroundRect = Rect(point.x+m_informationOffset.x-(13.5), point.y+ m_informationOffset.y, 27, 4);
     backgroundRect.bind(parentRect);
 
     //debug            
@@ -336,7 +337,7 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
     }
 
     Size nameSize = m_nameCache.getTextSize();
-    Rect textRect = Rect(point.x - nameSize.width() / 2.0, point.y-12, nameSize);
+    Rect textRect = Rect(point.x + m_informationOffset.x - nameSize.width() / 2.0, point.y + m_informationOffset.y - 12, nameSize);
     textRect.bind(parentRect);
 
     // distance them
@@ -755,18 +756,20 @@ void Creature::setHealthPercent(uint8 healthPercent)
     if (healthPercent > 100)
         healthPercent = 100;
 
-    if(healthPercent > 92)
-        m_informationColor = Color(0x00, 0xBC, 0x00);
-    else if(healthPercent > 60)
-        m_informationColor = Color(0x50, 0xA1, 0x50);
-    else if(healthPercent > 30)
-        m_informationColor = Color(0xA1, 0xA1, 0x00);
-    else if(healthPercent > 8)
-        m_informationColor = Color(0xBF, 0x0A, 0x0A);
-    else if(healthPercent > 3)
-        m_informationColor = Color(0x91, 0x0F, 0x0F);
-    else
-        m_informationColor = Color(0x85, 0x0C, 0x0C);
+    if (!m_useCustomInformationColor) {
+        if (healthPercent > 92)
+            m_informationColor = Color(0x00, 0xBC, 0x00);
+        else if (healthPercent > 60)
+            m_informationColor = Color(0x50, 0xA1, 0x50);
+        else if (healthPercent > 30)
+            m_informationColor = Color(0xA1, 0xA1, 0x00);
+        else if (healthPercent > 8)
+            m_informationColor = Color(0xBF, 0x0A, 0x0A);
+        else if (healthPercent > 3)
+            m_informationColor = Color(0x91, 0x0F, 0x0F);
+        else
+            m_informationColor = Color(0x85, 0x0C, 0x0C);
+    }
 
     bool changed = m_healthPercent != healthPercent;
     m_healthPercent = healthPercent;

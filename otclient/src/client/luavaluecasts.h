@@ -40,6 +40,14 @@ bool luavalue_cast(int index, Position& pos);
 int push_luavalue(const MarketData& data);
 bool luavalue_cast(int index, MarketData& data);
 
+// store category
+int push_luavalue(const StoreCategory& category);
+bool luavalue_cast(int index, StoreCategory& data);
+
+// store offer
+int push_luavalue(const StoreOffer& offer);
+bool luavalue_cast(int index, StoreOffer& offer);
+
 // light
 int push_luavalue(const Light& light);
 bool luavalue_cast(int index, Light& light);

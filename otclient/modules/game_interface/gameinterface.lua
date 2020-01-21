@@ -830,7 +830,7 @@ function refreshViewMode()
 
   local minimumWidth = (g_settings.getNumber("rightPanels") + g_settings.getNumber("leftPanels") - 1) * 200
   if classic then
-    minimumWidth = minimumWidth + 300
+    minimumWidth = minimumWidth + 400
   end
   minimumWidth = math.max(minimumWidth, 800)
   g_window.setMinimumSize({ width = minimumWidth, height = 600 })
@@ -866,6 +866,7 @@ function refreshViewMode()
   end
 
   gameMapPanel:setVisibleDimension({ width = 15, height = 11 })
+  gameMapPanel:setMarginTop(0)
   
   if classic then  
     gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
@@ -886,30 +887,29 @@ function refreshViewMode()
     if modules.game_console then
       modules.game_console.switchMode(false)
     end
-    if modules.game_actionbar then
-      modules.game_actionbar.switchMode(false)    
-    end
   else
-    g_game.changeMapAwareRange(29, 19)
+    g_game.changeMapAwareRange(31, 21)
     gameMapPanel:fill('parent')
     gameRootPanel:fill('parent')
     gameMapPanel:setKeepAspectRatio(false)
     gameMapPanel:setLimitVisibleRange(false)
-    if g_game.getFeature(GameChangeMapAwareRange) then
-      gameMapPanel:setZoom(13)
-    else
-      gameMapPanel:setZoom(11)    
-    end
+    gameMapPanel:setZoom(14)
                
     modules.client_topmenu.getTopMenu():setImageColor('#ffffff66')  
     
     if modules.game_console then
       modules.game_console.switchMode(true)
     end
-    if modules.game_actionbar then
-      modules.game_actionbar.switchMode(true)    
-    end
   end
+  if modules.game_actionbar then
+    modules.game_actionbar.switchMode(not classic)    
+  end
+  
+  if g_settings.getBoolean("cacheMap") then
+    g_game.enableFeature(GameBiggerMapCache)
+  end
+  
+  updateSize()
 end
 
 function limitZoom()
@@ -930,11 +930,20 @@ function updateSize()
     local awareRange = g_map.getAwareRange()
     local dheight = dimenstion.height
     local dwidth = dimenstion.width
-    local tileSize = rheight / dheight    
-    local maxWidth = tileSize * (awareRange.width - 4)
-    local margin =  math.max(0, math.floor((rwidth - maxWidth) / 2))
-    gameMapPanel:setMarginLeft(margin)
-    gameMapPanel:setMarginRight(margin)
+    local tileSize = rheight / dheight
+    local maxWidth = tileSize * (awareRange.width + 1)
+    if g_game.getFeature(GameChangeMapAwareRange) then
+      local maxWidth = tileSize * (awareRange.width - 1)
+    end
+    gameMapPanel:setMarginTop(-tileSize * 2)    
+    if g_settings.getBoolean("cacheMap") then
+      gameMapPanel:setMarginLeft(0)
+      gameMapPanel:setMarginRight(0)    
+    else
+      local margin =  math.max(0, math.floor((rwidth - maxWidth) / 2))
+      gameMapPanel:setMarginLeft(margin)
+      gameMapPanel:setMarginRight(margin)
+    end
   end
   
     --[[

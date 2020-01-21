@@ -126,7 +126,7 @@ int push_luavalue(const MarketData& data)
 
 bool luavalue_cast(int index, MarketData& data)
 {
-    if(g_lua.isTable(index)) {
+    if (g_lua.isTable(index)) {
         g_lua.getField("category", index);
         data.category = g_lua.popInteger();
         g_lua.getField("name", index);
@@ -139,6 +139,78 @@ bool luavalue_cast(int index, MarketData& data)
         data.showAs = g_lua.popInteger();
         g_lua.getField("tradeAs", index);
         data.tradeAs = g_lua.popInteger();
+        return true;
+    }
+    return false;
+}
+
+int push_luavalue(const StoreCategory& category)
+{
+    g_lua.createTable(0, 5);
+    g_lua.pushString(category.name);
+    g_lua.setField("name");
+    g_lua.pushString(category.description);
+    g_lua.setField("description");
+    g_lua.pushInteger(category.state);
+    g_lua.setField("state");
+    g_lua.pushString(category.icon);
+    g_lua.setField("icon");
+    g_lua.pushString(category.parent);
+    g_lua.setField("parent");
+    return 1;
+}
+
+bool luavalue_cast(int index, StoreCategory& data)
+{
+    if (g_lua.isTable(index)) {
+        g_lua.getField("name", index);
+        data.name = g_lua.popString();
+        g_lua.getField("description", index);
+        data.description = g_lua.popString();
+        g_lua.getField("state", index);
+        data.state = g_lua.popInteger();
+        g_lua.getField("icon", index);
+        data.icon = g_lua.popString();
+        g_lua.getField("parent", index);
+        data.parent = g_lua.popString();
+        return true;
+    }
+    return false;
+}
+
+int push_luavalue(const StoreOffer& offer)
+{
+    g_lua.createTable(0, 6);
+    g_lua.pushInteger(offer.id);
+    g_lua.setField("id");
+    g_lua.pushString(offer.name);
+    g_lua.setField("name");
+    g_lua.pushString(offer.description);
+    g_lua.setField("description");
+    g_lua.pushInteger(offer.price);
+    g_lua.setField("price");
+    g_lua.pushInteger(offer.state);
+    g_lua.setField("state");
+    g_lua.pushString(offer.icon);
+    g_lua.setField("icon");
+    return 1;
+}
+
+bool luavalue_cast(int index, StoreOffer& data)
+{
+    if (g_lua.isTable(index)) {
+        g_lua.getField("id", index);
+        data.id = g_lua.popInteger();
+        g_lua.getField("name", index);
+        data.name = g_lua.popString();
+        g_lua.getField("description", index);
+        data.description = g_lua.popString();
+        g_lua.getField("state", index);
+        data.state = g_lua.popInteger();
+        g_lua.getField("price", index);
+        data.price = g_lua.popInteger();
+        g_lua.getField("icon", index);
+        data.icon = g_lua.popString();
         return true;
     }
     return false;

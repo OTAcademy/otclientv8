@@ -853,7 +853,7 @@ void Game::useWith(const ItemPtr& item, const ThingPtr& toThing, int subType)
     if(!pos.isValid()) // virtual item
         pos = Position(0xFFFF, 0, 0); // means that is an item in inventory
 
-    if(toThing->isCreature())
+    if(toThing->isCreature() && g_game.getProtocolVersion() >= 780)
         m_protocolGame->sendUseOnCreature(pos, item->getId(), subType ? subType : item->getStackPos(), toThing->getId());
     else
         m_protocolGame->sendUseItemWith(pos, item->getId(), subType ? subType : item->getStackPos(), toThing->getPosition(), toThing->getId(), toThing->getStackPos());
@@ -1445,11 +1445,11 @@ void Game::requestStoreOffers(const std::string& categoryName, int serviceType)
     m_protocolGame->sendRequestStoreOffers(categoryName, serviceType);
 }
 
-void Game::openStore(int serviceType, const std::string& category)
+void Game::openStore(int serviceType)
 {
     if(!canPerformGameAction())
         return;
-    m_protocolGame->sendOpenStore(serviceType, category);
+    m_protocolGame->sendOpenStore(serviceType);
 }
 
 void Game::transferCoins(const std::string& recipient, int amount)

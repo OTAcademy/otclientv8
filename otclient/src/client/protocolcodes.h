@@ -157,7 +157,7 @@ namespace Proto {
         GameServerVipLogout                 = 212,
         GameServerTutorialHint              = 220,
         GameServerAutomapFlag               = 221,
-        GameServerCoinBalance               = 223, // 1080
+        GameServerCoinBalance               = 223,
         GameServerStoreError                = 224, // 1080
         GameServerRequestPurchaseData       = 225, // 1080
         GameServerPreyFreeRolls             = 230,
@@ -169,7 +169,7 @@ namespace Proto {
         GameServerResourceBalance           = 238,
         GameServerQuestLog                  = 240,
         GameServerQuestLine                 = 241,
-        GameServerCoinBalanceUpdating       = 242, // 1080
+        GameServerCoinBalanceUpdate         = 242,
         GameServerChannelEvent              = 243, // 910
         GameServerItemInfo                  = 244, // 910
         GameServerPlayerInventory           = 245, // 910

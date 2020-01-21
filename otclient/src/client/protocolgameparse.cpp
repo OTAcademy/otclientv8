@@ -34,6 +34,7 @@
 #include "luavaluecasts.h"
 #include <framework/core/eventdispatcher.h>
 #include <framework/util/extras.h>
+#include <framework/stdext/string.h>
 
 void ProtocolGame::parseMessage(const InputMessagePtr& msg)
 {
@@ -371,8 +372,8 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 parsePreset(msg);
                 break;
             // PROTOCOL>=1080
-            case Proto::GameServerCoinBalanceUpdating:
-                parseCoinBalanceUpdating(msg);
+            case Proto::GameServerCoinBalanceUpdate:
+                parseCoinBalanceUpdate(msg);
                 break;
             case Proto::GameServerCoinBalance:
                 parseCoinBalance(msg);
@@ -383,6 +384,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerStoreCompletePurchase:
                 parseCompleteStorePurchase(msg);
                 break;
+            case Proto::GameServerStore:
+                parseStore(msg);
+                break;
             case Proto::GameServerStoreOffers:
                 parseStoreOffers(msg);
                 break;
@@ -391,9 +395,6 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 break;
             case Proto::GameServerStoreError:
                 parseStoreError(msg);
-                break;
-            case Proto::GameServerStore:
-                parseStore(msg);
                 break;
             // PROTOCOL>=1097
             case Proto::GameServerStoreButtonIndicators:
@@ -566,57 +567,54 @@ void ProtocolGame::parseRequestPurchaseData(const InputMessagePtr& msg)
 
 void ProtocolGame::parseStore(const InputMessagePtr& msg)
 {
-    parseCoinBalance(msg);
+    msg->getU8(); // unknown
+
+    std::vector<StoreCategory> categories;
 
     // Parse all categories
     int count = msg->getU16();
     for(int i = 0; i < count; i++) {
-        std::string category = msg->getString();
-        std::string description = msg->getString();
+        StoreCategory category;
+        
+        category.name = msg->getString();
+        category.description = msg->getString();
 
-        int highlightState = 0;
+        category.state = 0;
         if(g_game.getFeature(Otc::GameIngameStoreHighlights))
-            highlightState = msg->getU8();
+            category.state = msg->getU8();
 
-        std::vector<std::string> icons;
         int iconCount = msg->getU8();
         for(int i = 0; i < iconCount; i++) {
             std::string icon = msg->getString();
-            icons.push_back(icon);
+            category.icon = icon;
         }
 
-        // If this is a valid category name then
-        // the category we just parsed is a child of that
-        std::string parentCategory = msg->getString();
+        category.parent = msg->getString();
+        categories.push_back(category);
     }
+
+    g_lua.callGlobalField("g_game", "onStoreCategories", categories);
+}
+
+void ProtocolGame::parseCoinBalanceUpdate(const InputMessagePtr& msg)
+{
+    msg->getU8(); // 1 if is updating
 }
 
 void ProtocolGame::parseCoinBalance(const InputMessagePtr& msg)
 {
     bool update = msg->getU8() == 1;
-    int coins = -1;
-    int transferableCoins = -1;
+    if (!update) return;
 
-    if (g_game.getClientVersion() >= 1100) {
-        msg->getU8();
-        msg->getU8();
-    }
+    // amount of coins that can be used to buy prodcuts
+    // in the ingame store
+    int coins = msg->getU32();
 
-    if(update) {
-        // amount of coins that can be used to buy prodcuts
-        // in the ingame store
-        coins = msg->getU32();
+    // amount of coins that can be sold in market
+    // or be transfered to another player
+    int transferableCoins = msg->getU32();
 
-        // amount of coins that can be sold in market
-        // or be transfered to another player
-        transferableCoins = msg->getU32();
-    }
-}
-
-void ProtocolGame::parseCoinBalanceUpdating(const InputMessagePtr& msg)
-{
-    // coin balance can be updating and might not be accurate
-    bool isUpdating = msg->getU8() == 1;
+    g_lua.callGlobalField("g_game", "onCoinBalance", coins, transferableCoins);
 }
 
 void ProtocolGame::parseCompleteStorePurchase(const InputMessagePtr& msg)
@@ -628,43 +626,56 @@ void ProtocolGame::parseCompleteStorePurchase(const InputMessagePtr& msg)
     int coins = msg->getU32();
     int transferableCoins = msg->getU32();
 
-    g_logger.info(stdext::format("Purchase Complete: %s", message));
+    g_lua.callGlobalField("g_game", "onCoinBalance", coins, transferableCoins);
+    g_lua.callGlobalField("g_game", "onStorePurchase", message);
 }
 
 void ProtocolGame::parseStoreTransactionHistory(const InputMessagePtr &msg)
 {
     int currentPage;
+    bool hasNextPage;
     if(g_game.getClientVersion() <= 1096) {
         currentPage = msg->getU16();
-        bool hasNextPage = msg->getU8() == 1;
+        hasNextPage = msg->getU8() == 1;
     } else {
         currentPage = msg->getU32();
         int pageCount = msg->getU32();
+        hasNextPage = (pageCount > currentPage);
     }
+
+    std::vector<StoreOffer> offers;
 
     int entries = msg->getU8();
     for(int i = 0; i < entries; i++) {
-        int time = msg->getU16();
-        int productType = msg->getU8();
-        int coinChange = msg->getU32();
-        std::string productName = msg->getString();
-        g_logger.error(stdext::format("Time %i, type %i, change %i, product name %s", time, productType, coinChange, productName));
+        StoreOffer offer;
+        offer.id = 0;
+        int time = msg->getU32();
+        /*int productType = */msg->getU8();
+        offer.price = msg->getU32();
+        offer.name = msg->getString();
+        offer.description = std::string("Bought on: ") + stdext::timestamp_to_date(time);
+        offers.push_back(offer);
     }
+
+    g_lua.callGlobalField("g_game", "onStoreTransactionHistory", currentPage, hasNextPage, offers);
 }
 
 void ProtocolGame::parseStoreOffers(const InputMessagePtr& msg)
 {
     std::string categoryName = msg->getString();
+    std::vector<StoreOffer> offers;
 
-    int offers = msg->getU16();
-    for(int i = 0; i < offers; i++) {
-        int offerId = msg->getU32();
-        std::string offerName = msg->getString();
-        std::string offerDescription = msg->getString();
+    int offers_count = msg->getU16();
+    for(int i = 0; i < offers_count; i++) {
+        StoreOffer offer;
 
-        int price = msg->getU32();
-        int highlightState = msg->getU8();
-        if(highlightState == 2 && g_game.getFeature(Otc::GameIngameStoreHighlights) && g_game.getClientVersion() >= 1097) {
+        offer.id = msg->getU32();
+        offer.name = msg->getString();
+        offer.description = msg->getString();
+
+        offer.price = msg->getU32();
+        offer.state = msg->getU8();
+        if(offer.state == 2 && g_game.getFeature(Otc::GameIngameStoreHighlights) && g_game.getClientVersion() >= 1097) {
             int saleValidUntilTimestamp = msg->getU32();
             int basePrice = msg->getU32();
         }
@@ -677,7 +688,7 @@ void ProtocolGame::parseStoreOffers(const InputMessagePtr& msg)
 
         int icons = msg->getU8();
         for(int j = 0; j < icons; j++) {
-            std::string icon = msg->getString();
+            offer.icon = msg->getString();            
         }
 
         int subOffers = msg->getU16();
@@ -691,7 +702,11 @@ void ProtocolGame::parseStoreOffers(const InputMessagePtr& msg)
             }
             std::string serviceType = msg->getString();
         }
+
+        offers.push_back(offer);
     }
+
+    g_lua.callGlobalField("g_game", "onStoreOffers", categoryName, offers);
 }
 
 void ProtocolGame::parseStoreError(const InputMessagePtr& msg)
@@ -728,10 +743,10 @@ void ProtocolGame::parsePlayerHelpers(const InputMessagePtr& msg)
     int helpers = msg->getU16();
 
     CreaturePtr creature = g_map.getCreatureById(id);
-    if(creature)
-        g_game.processPlayerHelpers(helpers);
-    else
-        g_logger.traceError(stdext::format("could not get creature with id %d", id));
+    if (!creature) return;
+    g_game.processPlayerHelpers(helpers);
+//    else
+//        g_logger.traceError(stdext::format("could not get creature with id %d", id));
 }
 
 void ProtocolGame::parseGMActions(const InputMessagePtr& msg)
