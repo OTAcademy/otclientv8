@@ -869,6 +869,7 @@ function refreshViewMode()
   gameMapPanel:setMarginTop(0)
   
   if classic then  
+    g_game.changeMapAwareRange(19, 15)
     gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
     gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
     gameMapPanel:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
@@ -882,7 +883,6 @@ function refreshViewMode()
     
     modules.client_topmenu.getTopMenu():setImageColor('white')
     gameBottomPanel:setImageColor('white')
-    g_game.changeMapAwareRange(19, 15)
   
     if modules.game_console then
       modules.game_console.switchMode(false)

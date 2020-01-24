@@ -44,7 +44,7 @@ public:
 
 #ifdef WITH_ENCRYPTION
     void saveSpr(std::string fileName);
-    void saveReplacedSpr(std::string fileName, std::map<uint32_t, ImagePtr>& replacements);
+    void encryptSprites(std::string fileName);
     void dumpSprites(std::string dir);
 #endif
 
@@ -58,12 +58,12 @@ public:
 
 private:
     stdext::boolean<false> m_loaded;
-    bool m_newsprites = false;
     uint32 m_signature;
     int m_spritesCount;
     int m_spritesOffset;
     int m_spriteSize = 32;
     FileStreamPtr m_spritesFile;
+    std::vector<std::vector<uint8_t>> m_sprites;
 };
 
 extern SpriteManager g_sprites;

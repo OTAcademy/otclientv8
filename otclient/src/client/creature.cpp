@@ -1026,6 +1026,9 @@ int Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
     else
         interval /= speed;
 
+    if (g_game.getClientVersion() >= 900 && !g_game.getFeature(Otc::GameNewWalking))
+        interval = std::ceil((float)interval / (float)g_game.getServerBeat()) * g_game.getServerBeat();
+
     float factor = 3;
     if(g_game.getClientVersion() <= 810)
         factor = 2;

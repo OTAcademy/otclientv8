@@ -131,6 +131,9 @@ public:
         return m_walkMatrix.dump();
     }
 
+    void startServerWalking() { m_serverWalking = true; }
+    void finishServerWalking() { m_serverWalking = false; }
+
 protected:
     void walk(const Position& oldPos, const Position& newPos);
     void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);

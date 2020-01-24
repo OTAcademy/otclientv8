@@ -163,7 +163,7 @@ void ThingTypeManager::replaceTextures(std::string dir) {
             m_thingTypes[category][id]->replaceSprites(replacements, fileName);
         }
     }
-    g_sprites.saveReplacedSpr(dir + "/sprites.spr", replacements);
+    //g_sprites.saveReplacedSpr(dir + "/sprites.spr", replacements);
 }
 
 #endif

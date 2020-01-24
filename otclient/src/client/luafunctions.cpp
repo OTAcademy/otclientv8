@@ -103,6 +103,7 @@ void Client::registerLuaFunctions()
 #ifdef WITH_ENCRYPTION
     g_lua.bindSingletonFunction("g_sprites", "saveSpr", &SpriteManager::saveSpr, &g_sprites);
     g_lua.bindSingletonFunction("g_sprites", "dumpSprites", &SpriteManager::dumpSprites, &g_sprites);
+    g_lua.bindSingletonFunction("g_sprites", "encryptSprites", &SpriteManager::encryptSprites, &g_sprites);    
 #endif
     g_lua.bindSingletonFunction("g_sprites", "unload", &SpriteManager::unload, &g_sprites);
     g_lua.bindSingletonFunction("g_sprites", "isLoaded", &SpriteManager::isLoaded, &g_sprites);
@@ -705,6 +706,8 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<LocalPlayer>("autoWalk", &LocalPlayer::autoWalk);
     g_lua.bindClassMemberFunction<LocalPlayer>("preWalk", &LocalPlayer::preWalk);
     g_lua.bindClassMemberFunction<LocalPlayer>("dumpWalkMatrix", &LocalPlayer::dumpWalkMatrix);
+    g_lua.bindClassMemberFunction<LocalPlayer>("startServerWalking", &LocalPlayer::startServerWalking);
+    g_lua.bindClassMemberFunction<LocalPlayer>("finishServerWalking", &LocalPlayer::finishServerWalking);
 
     g_lua.registerClass<Tile>();
     g_lua.bindClassMemberFunction<Tile>("clean", &Tile::clean);

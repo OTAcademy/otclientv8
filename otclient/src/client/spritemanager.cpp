@@ -26,6 +26,7 @@
 #include <framework/core/filestream.h>
 #include <framework/graphics/image.h>
 #include <framework/graphics/atlas.h>
+#include <framework/util/crypt.h>
 
 SpriteManager g_sprites;
 
@@ -46,7 +47,7 @@ bool SpriteManager::loadSpr(std::string file)
     m_signature = 0;
     m_spriteSize = 32;
     m_loaded = false;
-    m_newsprites = false;
+    m_sprites.clear();
     g_atlas.reset(0);
     g_atlas.reset(1);
 
@@ -54,18 +55,25 @@ bool SpriteManager::loadSpr(std::string file)
         file = g_resources.guessFilePath(file, "spr");
 
         m_spritesFile = g_resources.openFile(file);
-        // cache file buffer to avoid lags from hard drive
         m_spritesFile->cache();
 
         m_signature = m_spritesFile->getU32();
         if (m_signature == *((uint32_t*)"OTV8")) {
             m_signature = m_spritesFile->getU32();
-            m_newsprites = true;
-            // load sprites
+            m_spritesCount = m_spritesFile->getU32();
+            m_sprites.resize(m_spritesCount + 1);
+            for (int i = 1; i <= m_spritesCount; ++i) {
+                int bufferSize = m_spritesFile->getU16();
+                if (bufferSize == 0) continue;
+                m_sprites[i].resize(bufferSize + 1);
+                m_sprites[i][0] = 0;
+                m_spritesFile->read(m_sprites[i].data() + 1, bufferSize);
+            }
+            m_spritesFile = nullptr;
         } else {
             m_spritesCount = g_game.getFeature(Otc::GameSpritesU32) ? m_spritesFile->getU32() : m_spritesFile->getU16();
+            m_spritesOffset = m_spritesFile->tell();
         }
-        m_spritesOffset = m_spritesFile->tell();
         m_loaded = true;
         g_lua.callGlobalField("g_sprites", "onLoadSpr", file);
         return true;
@@ -81,6 +89,8 @@ void SpriteManager::saveSpr(std::string fileName)
 {
     if (!m_loaded)
         stdext::throw_exception("failed to save, spr is not loaded");
+    if(!m_sprites.empty() || m_spritesFile)
+        stdext::throw_exception("not allowed");
 
     try {
         FileStreamPtr fin = g_resources.createFile(fileName);
@@ -132,7 +142,7 @@ void SpriteManager::saveSpr(std::string fileName)
     }
 }
 
-void SpriteManager::saveReplacedSpr(std::string fileName, std::map<uint32_t, ImagePtr>& replacements)
+void SpriteManager::encryptSprites(std::string fileName)
 {
     if (!m_loaded)
         stdext::throw_exception("failed to save, spr is not loaded");
@@ -147,6 +157,7 @@ void SpriteManager::saveReplacedSpr(std::string fileName, std::map<uint32_t, Ima
         const char otcv8Signature[] = "OTV8";
         fin->addU32(*((uint32_t*)otcv8Signature));
         fin->addU32(m_signature);
+        fin->addU32(m_spritesCount);
 
         for (int i = 1; i <= m_spritesCount; i++) {
             ImagePtr sprite = getSpriteImage(i);
@@ -154,31 +165,53 @@ void SpriteManager::saveReplacedSpr(std::string fileName, std::map<uint32_t, Ima
                 fin->addU16(0);
                 continue;
             }
-            /*
-            spriteAddress = fin->tell();
-            fin->seek(offset + (i - 1) * 4);
-            fin->addU32(spriteAddress);
-            fin->seek(spriteAddress);
+            uint8_t* pixels = sprite->getPixelData();
+            int pixelCount = sprite->getPixelCount() * 4;
+            std::vector<uint8_t> buffer(pixelCount + 1024, 0);
+            int bufferPos = 0;
 
-            uint16 dataSize = 64 * 64 * 4;
-            fin->addU16(dataSize);
-            fin->addU16(0); // transparent px
-            fin->addU16(dataSize / 4); // normal px
-
-            ImagePtr sprite = replacements[i];
-            if (!sprite) {
-                g_logger.info(stdext::format("Missing sprite for %i - upscaling", i));
-                sprite = getSpriteImage(i)->upscale();
-            }
-            if (!sprite) {
-                g_logger.info(stdext::format("Missing sprite for %i", i));
-                continue;
+            bool hasAlpha = false;
+            for (int i = 3; i < pixelCount; i += 4) {
+                if (pixels[i] != 0x00 && pixels[i] != 0xFF) {
+                    hasAlpha = true;
+                    break;
+                }
             }
 
-            if (sprite->getPixelCount() != dataSize / 4)
-                stdext::throw_exception(stdext::format("Wrong pixel count for sprite %i - %i", i, sprite->getPixelCount()));
+            buffer[bufferPos++] = (hasAlpha ? 1 : 0);
+            int skipedPixels = 0;
+            for (int i = 0; i < pixelCount; ) {
+                int transparent = 0, colored = 0;
+                for (int j = i; j < pixelCount; j += 4) {
+                    if (pixels[j + 3] == 0x00) {
+                        if (colored != 0) break;
+                        transparent += 1;
+                    } else {
+                        colored += 1;
+                    }
+                }
 
-            fin->write(sprite->getPixelData(), dataSize); */
+                *(uint16_t*)(buffer.data() + bufferPos) = transparent;
+                bufferPos += 2;
+                *(uint16_t*)(buffer.data() + bufferPos) = colored;
+                bufferPos += 2;
+
+                i += transparent * 4;
+
+                for (int c = 0; c < colored; ++c) {
+                    buffer[bufferPos++] = pixels[i];
+                    buffer[bufferPos++] = pixels[i + 1];
+                    buffer[bufferPos++] = pixels[i + 2];
+                    if (hasAlpha) {
+                        buffer[bufferPos++] = pixels[i + 3];
+                    }
+                    i += 4;
+                }
+            }
+
+            g_crypt.bencrypt(buffer.data(), bufferPos, (uint64_t)m_signature + i);
+            fin->addU16(bufferPos);
+            fin->write(buffer.data(), bufferPos);
         }
 
         fin->flush();
@@ -210,12 +243,58 @@ void SpriteManager::unload()
     m_spritesCount = 0;
     m_signature = 0;
     m_spritesFile = nullptr;
+    m_sprites.clear();
 }
 
 ImagePtr SpriteManager::getSpriteImage(int id)
 {
     try {
         int spriteDataSize = m_spriteSize * m_spriteSize * 4;
+
+        if (!m_sprites.empty()) {
+            if (id >= (int)m_sprites.size()) 
+                return nullptr;
+            auto& buffer = m_sprites[id];
+            if (buffer.size() < 5)
+                return nullptr;
+            if (buffer[0] == 0) {
+                buffer[0] = 1;
+                g_crypt.bdecrypt(buffer.data() + 1, buffer.size() - 1, (uint64_t)m_signature + id);
+            }
+
+            if (buffer[1] > 1) {
+                stdext::throw_exception("Invalid sprite encryption");
+            }
+
+            bool hasAlpha = (buffer[1] == 1);
+
+            ImagePtr image(new Image(Size(m_spriteSize, m_spriteSize)));
+            uint8* pixels = image->getPixelData();
+            int writePos = 0;
+
+            int bufferPos = 2;
+            while (bufferPos != buffer.size()) {
+                uint16_t transparentPixels = *(uint16_t*)(&buffer[bufferPos]);
+                bufferPos += 2;
+                uint16_t coloredPixels = *(uint16_t*)(&buffer[bufferPos]);
+                bufferPos += 2;
+                
+                writePos += transparentPixels * 4;
+                for (int i = 0; i < coloredPixels; ++i) {
+                    pixels[writePos++] = buffer[bufferPos++];
+                    pixels[writePos++] = buffer[bufferPos++];
+                    pixels[writePos++] = buffer[bufferPos++];
+                    if (hasAlpha) {
+                        pixels[writePos] = buffer[bufferPos++];
+                    } else {
+                        pixels[writePos] = 0xFF;
+                    }
+                    writePos += 1;
+                }
+            }
+
+            return image;
+        }
 
         if (id == 0 || !m_spritesFile)
             return nullptr;
