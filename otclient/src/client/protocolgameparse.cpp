@@ -461,6 +461,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 if (g_game.getFeature(Otc::GameNewWalking))
                     parsePredictiveCancelWalk(msg);
                 break;
+            case Proto::GameServerFloorDescription:
+                parseFloorDescription(msg);
+                break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
                 break;
@@ -844,7 +847,7 @@ void ProtocolGame::parseMapDescription(const InputMessagePtr& msg)
 {
     Position pos = getPosition(msg);
 
-    if(!m_mapKnown)
+    if (!m_mapKnown)
         m_localPlayer->setPosition(pos);
 
     g_map.setCentralPosition(pos);
@@ -852,12 +855,33 @@ void ProtocolGame::parseMapDescription(const InputMessagePtr& msg)
     AwareRange range = g_map.getAwareRange();
     setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), range.vertical());
 
-    if(!m_mapKnown) {
+    if (!m_mapKnown) {
         g_dispatcher.addEvent([] { g_lua.callGlobalField("g_game", "onMapKnown"); });
         m_mapKnown = true;
     }
 
     g_dispatcher.addEvent([] { g_lua.callGlobalField("g_game", "onMapDescription"); });
+}
+
+void ProtocolGame::parseFloorDescription(const InputMessagePtr& msg)
+{
+    Position pos = getPosition(msg);
+    int floor = msg->getU8();
+
+    if (pos.z == floor) {
+        if (!m_mapKnown)
+            m_localPlayer->setPosition(pos);
+        g_map.setCentralPosition(pos);
+        if (!m_mapKnown) {
+            g_dispatcher.addEvent([] { g_lua.callGlobalField("g_game", "onMapKnown"); });
+            m_mapKnown = true;
+        }
+
+        g_dispatcher.addEvent([] { g_lua.callGlobalField("g_game", "onMapDescription"); });
+    }
+
+    AwareRange range = g_map.getAwareRange();
+    setFloorDescription(msg, pos.x - range.left, pos.y - range.top, floor, range.horizontal(), range.vertical(), pos.z - floor, 0);
 }
 
 void ProtocolGame::parseMapMoveNorth(const InputMessagePtr& msg)
@@ -1422,6 +1446,7 @@ void ProtocolGame::parsePreyFreeRolls(const InputMessagePtr& msg)
     int slot = msg->getU8();
     int timeLeft = msg->getU16();
 
+    g_lua.callGlobalField("g_game", "onPreyFreeRolls", slot, timeLeft);
 }
 
 void ProtocolGame::parsePreyTimeLeft(const InputMessagePtr& msg)
@@ -1429,6 +1454,7 @@ void ProtocolGame::parsePreyTimeLeft(const InputMessagePtr& msg)
     int slot = msg->getU8();
     int timeLeft = msg->getU16();
 
+    g_lua.callGlobalField("g_game", "onPreyTimeLeft", slot, timeLeft);
 }
 
 void ProtocolGame::parsePreyData(const InputMessagePtr& msg)
@@ -1437,8 +1463,11 @@ void ProtocolGame::parsePreyData(const InputMessagePtr& msg)
     Otc::PreyState_t state = (Otc::PreyState_t)msg->getU8();
     if (state == Otc::PREY_STATE_LOCKED) {
         Otc::PreyUnlockState_t unlockState = (Otc::PreyUnlockState_t)msg->getU8();
+        int timeUntilFreeReroll = msg->getU16();
+        return g_lua.callGlobalField("g_game", "onPreyLocked", slot, unlockState, timeUntilFreeReroll);
     } else if (state == Otc::PREY_STATE_INACTIVE) {
-
+        int timeUntilFreeReroll = msg->getU16();
+        return g_lua.callGlobalField("g_game", "onPreyInactive", slot, timeUntilFreeReroll);
     } else if (state == Otc::PREY_STATE_ACTIVE) {
         std::string currentHolderName = msg->getString();
         Outfit currentHolderOutfit = getOutfit(msg, true);
@@ -1446,31 +1475,35 @@ void ProtocolGame::parsePreyData(const InputMessagePtr& msg)
         int bonusValue = msg->getU16();
         int bonusGrade = msg->getU8();
         int timeLeft = msg->getU16();
-    } else if (state == Otc::PREY_STATE_SELECTION) {
+        int timeUntilFreeReroll = msg->getU16();
+        return g_lua.callGlobalField("g_game", "onPreyActive", slot, currentHolderName, currentHolderOutfit, bonusType, bonusValue, bonusGrade, timeLeft, timeUntilFreeReroll);
+    } else if (state == Otc::PREY_STATE_SELECTION || state == Otc::PREY_STATE_SELECTION_CHANGE_MONSTER) {
+        Otc::PreyBonusType_t bonusType = Otc::PREY_BONUS_NONE;
+        int bonusValue = -1, bonusGrade = -1;
+        if (state == Otc::PREY_STATE_SELECTION_CHANGE_MONSTER) {
+            bonusType = (Otc::PreyBonusType_t)msg->getU8();
+            bonusValue = msg->getU16();
+            bonusGrade = msg->getU8();
+        }
+        std::vector<std::string> names;
+        std::vector<Outfit> outfits;
         int selectionSize = msg->getU8();
         for (int i = 0; i < selectionSize; ++i) {
-            std::string name = msg->getString();
-            Outfit outfit = getOutfit(msg, true);
+            names.push_back(msg->getString());
+            outfits.push_back(getOutfit(msg, true));
         }
-    } else if (state == Otc::PREY_STATE_SELECTION_CHANGE_MONSTER) {
-        Otc::PreyBonusType_t bonusType = (Otc::PreyBonusType_t)msg->getU8();
-        int bonusValue = msg->getU16();
-        int bonusGrade = msg->getU8();
-        int selectionSize = msg->getU8();
-        for (int i = 0; i < selectionSize; ++i) {
-            std::string name = msg->getString();
-            Outfit outfit = getOutfit(msg, true);
-        }
+        int timeUntilFreeReroll = msg->getU16();
+        return g_lua.callGlobalField("g_game", "onPreySelection", slot, bonusType, bonusValue, bonusGrade, names, outfits, timeUntilFreeReroll);
     } else {
         g_logger.error(stdext::format("Unknown prey data state: %i", (int)state));
     }
-    int timeUntilFreeReroll = msg->getU16();
 }
 
 
 void ProtocolGame::parsePreyPrices(const InputMessagePtr& msg)
 {
     int price = msg->getU32();
+    g_lua.callGlobalField("g_game", "onPreyPrice", price);
 }
 
 void ProtocolGame::parsePlayerInfo(const InputMessagePtr& msg)
@@ -2195,8 +2228,9 @@ void ProtocolGame::parseMessageDialog(const InputMessagePtr& msg)
 
 void ProtocolGame::parseResourceBalance(const InputMessagePtr& msg)
 {
-    msg->getU8();
-    msg->getU64();
+    uint8_t type = msg->getU8();
+    uint64_t amount = msg->getU64();
+    g_lua.callGlobalField("g_game", "onResourceBalance", type, amount);
 }
 
 void ProtocolGame::parseQuestTracker(const InputMessagePtr& msg)

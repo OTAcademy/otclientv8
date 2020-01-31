@@ -57,7 +57,6 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
 
     // VALUES
-
     setUniformValue(TRANSFORM_MATRIX_UNIFORM, m_transformMatrix);
     setUniformValue(PROJECTION_MATRIX_UNIFORM, m_projectionMatrix);
     setUniformValue(TEXTURE_MATRIX_UNIFORM, m_textureMatrix);

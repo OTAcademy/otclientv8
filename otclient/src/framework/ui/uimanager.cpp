@@ -335,6 +335,19 @@ bool UIManager::importStyle(std::string file)
     }
 }
 
+bool UIManager::importStyleFromString(std::string data)
+{
+    try {
+        OTMLDocumentPtr doc = OTMLDocument::parseString(data, g_lua.getCurrentSourcePath());
+        for(const OTMLNodePtr& styleNode : doc->children())
+            importStyleFromOTML(styleNode);
+        return true;
+    } catch(stdext::exception& e) {
+        g_logger.error(stdext::format("Failed to import UI styles from '%s': %s", g_lua.getCurrentSourcePath(), e.what()));
+        return false;
+    }
+}
+
 void UIManager::importStyleFromOTML(const OTMLNodePtr& styleNode)
 {
     std::string tag = styleNode->tag();

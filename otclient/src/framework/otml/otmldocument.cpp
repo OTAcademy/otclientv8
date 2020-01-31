@@ -41,6 +41,12 @@ OTMLDocumentPtr OTMLDocument::parse(const std::string& fileName)
     return parse(fin, source);
 }
 
+OTMLDocumentPtr OTMLDocument::parseString(const std::string& data, const std::string& source)
+{
+    std::istringstream is(data);
+    return parse(is, source);
+}
+
 OTMLDocumentPtr OTMLDocument::parse(std::istream& in, const std::string& source)
 {
     OTMLDocumentPtr doc(new OTMLDocument);

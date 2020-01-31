@@ -45,7 +45,7 @@ Protocol::~Protocol()
 void Protocol::connect(const std::string& host, uint16 port)
 {
 #ifdef FW_PROXY
-    if (host == "proxy" || host == "0.0.0.0") {
+    if (host == "proxy" || host == "0.0.0.0" || (host == "127.0.0.1" && g_proxy.isActive())) {
         m_disconnected = false;
         m_proxy = g_proxy.addSession(port,
                                      std::bind(&Protocol::onProxyPacket, asProtocol(), std::placeholders::_1),
@@ -169,7 +169,7 @@ void Protocol::internalRecvData(uint8* buffer, uint16 size)
     m_inputMessage->fillBuffer(buffer, size);
 
     if(m_checksumEnabled && !m_inputMessage->readChecksum()) {
-        g_logger.traceError("got a network message with invalid checksum");
+        g_logger.traceError(stdext::format("got a network message with invalid checksum, size: %i", (int)m_inputMessage->getMessageSize()));
         return;
     }
 

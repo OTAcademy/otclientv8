@@ -285,8 +285,6 @@ void Game::processPingBack()
     if (!g_game.getFeature(Otc::GameExtendedClientPing)) {
         if (m_pingReceived == m_pingSent)
             m_ping = m_pingTimer.elapsed_millis();
-        else
-            g_logger.error("got an invalid ping from server");
 
         g_lua.callGlobalField("g_game", "onPingBack", m_ping);
     }
@@ -1466,6 +1464,14 @@ void Game::openTransactionHistory(int entriesPerPage)
         return;
     m_protocolGame->sendOpenTransactionHistory(entriesPerPage);
 }
+
+void Game::preyAction(int slot, int actionType, int index)
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendPreyAction(slot, actionType, index);
+}
+
 
 void Game::ping()
 {

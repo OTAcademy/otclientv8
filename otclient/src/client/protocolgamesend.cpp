@@ -1008,6 +1008,20 @@ void ProtocolGame::sendOpenTransactionHistory(int entriesPerPage)
     send(msg);
 }
 
+void ProtocolGame::sendPreyAction(int slot, int actionType, int index)
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientPreyAction);
+    msg->addU8(slot);
+    msg->addU8(actionType);
+    if (actionType == 2 || actionType == 5) {
+        msg->addU8(index);
+    } else if (actionType == 4) {
+        msg->addU16(index); // raceid
+    }
+    send(msg);
+}
+
 
 void ProtocolGame::sendChangeMapAwareRange(int xrange, int yrange)
 {

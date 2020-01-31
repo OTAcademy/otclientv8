@@ -307,6 +307,8 @@ void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction dire
         direction = m_direction;
 
     float scale = destRect.width() / (float)exactSize;
+    if (scale > 1.)
+        scale = std::floor(scale);
 
     internalDrawOutfit((Point(exactSize - Otc::TILE_PIXELS, exactSize - Otc::TILE_PIXELS) + getDisplacement()) * scale, scale, false, true, direction);
 }

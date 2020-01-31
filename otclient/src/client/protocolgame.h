@@ -124,6 +124,7 @@ public:
     void sendOpenStore(int serviceType);
     void sendTransferCoins(const std::string& recipient, int amount);
     void sendOpenTransactionHistory(int entiresPerPage);
+    void sendPreyAction(int slot, int actionType, int index);
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);
@@ -172,6 +173,7 @@ private:
     void parseChallenge(const InputMessagePtr& msg);
     void parseDeath(const InputMessagePtr& msg);
     void parseMapDescription(const InputMessagePtr& msg);
+    void parseFloorDescription(const InputMessagePtr& msg);
     void parseMapMoveNorth(const InputMessagePtr& msg);
     void parseMapMoveEast(const InputMessagePtr& msg);
     void parseMapMoveSouth(const InputMessagePtr& msg);

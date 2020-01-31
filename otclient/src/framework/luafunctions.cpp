@@ -399,6 +399,7 @@ void Application::registerLuaFunctions()
     g_lua.registerSingletonClass("g_ui");
     g_lua.bindSingletonFunction("g_ui", "clearStyles", &UIManager::clearStyles, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "importStyle", &UIManager::importStyle, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "importStyleFromString", &UIManager::importStyleFromString, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "getStyle", &UIManager::getStyle, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "getStyleClass", &UIManager::getStyleClass, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "loadUI", &UIManager::loadUI, &g_ui);

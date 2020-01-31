@@ -299,6 +299,9 @@ public:
     void transferCoins(const std::string& recipient, int amount);
     void openTransactionHistory(int entriesPerPage);
 
+    // >= 1100, prey
+    void preyAction(int slot, int actionType, int index);
+
     //void reportRuleViolation2();
     void ping();
     void newPing();

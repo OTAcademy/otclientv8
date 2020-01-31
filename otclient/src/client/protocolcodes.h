@@ -71,6 +71,8 @@ namespace Proto {
         GameServerNewCancelWalk             = 69,
         GameServerPredictiveCancelWalk      = 70,
 
+        GameServerFloorDescription          = 75,
+
         GameServerClientCheck               = 99,
 
         // original tibia ONLY
@@ -282,6 +284,7 @@ namespace Proto {
         ClientBugReport                     = 230,
         ClientRuleViolation                 = 231,
         ClientDebugReport                   = 232,
+        ClientPreyAction                    = 235,
         ClientTransferCoins                 = 239, // 1080
         ClientRequestQuestLog               = 240,
         ClientRequestQuestLine              = 241,
