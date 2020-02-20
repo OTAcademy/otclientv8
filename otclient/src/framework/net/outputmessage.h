@@ -31,9 +31,9 @@ class OutputMessage : public LuaObject
 {
 public:
     enum {
-        BUFFER_MAXSIZE = 65536,
+        BUFFER_MAXSIZE = 327680,
         MAX_STRING_LENGTH = 65536,
-        MAX_HEADER_SIZE = 8
+        MAX_HEADER_SIZE = 12
     };
 
     OutputMessage();
@@ -52,11 +52,11 @@ public:
 
     void encryptRsa();
 
-    uint16 getWritePos() { return m_writePos; }
-    uint16 getMessageSize() { return m_messageSize; }
+    uint32 getWritePos() { return m_writePos; }
+    uint32 getMessageSize() { return m_messageSize; }
 
-    void setWritePos(uint16 writePos) { m_writePos = writePos; }
-    void setMessageSize(uint16 messageSize) { m_messageSize = messageSize; }
+    void setWritePos(uint32 writePos) { m_writePos = writePos; }
+    void setMessageSize(uint32 messageSize) { m_messageSize = messageSize; }
 
 protected:
     uint8* getWriteBuffer() { return m_buffer + m_writePos; }
@@ -64,7 +64,7 @@ protected:
     uint8* getDataBuffer() { return m_buffer + MAX_HEADER_SIZE; }
 
     void writeChecksum();
-    void writeMessageSize();
+    void writeMessageSize(bool bigSize);
 
     friend class Protocol;
 
@@ -72,9 +72,9 @@ private:
     bool canWrite(int bytes);
     void checkWrite(int bytes);
 
-    uint16 m_headerPos;
-    uint16 m_writePos;
-    uint16 m_messageSize;
+    uint32 m_headerPos;
+    uint32 m_writePos;
+    uint32 m_messageSize;
     uint8 m_buffer[BUFFER_MAXSIZE];
 };
 

@@ -453,7 +453,10 @@ namespace Otc
         GameFasterAnimations = 101,
         GameCenteredOutfits = 102,
 
-        LastGameFeature = 110
+        // advanced features
+        GamePacketSizeU32 = 110,
+
+        LastGameFeature = 120
     };
 
     enum PathFindResult {

@@ -101,7 +101,7 @@ void OutputMessage::addPaddingBytes(int bytes, uint8 byte)
 
 void OutputMessage::encryptRsa()
 {
-    int size = g_crypt.rsaGetSize();
+    uint32_t size = g_crypt.rsaGetSize();
     if(m_messageSize < size)
         throw stdext::exception("insufficient bytes in buffer to encrypt");
 
@@ -118,12 +118,16 @@ void OutputMessage::writeChecksum()
     m_messageSize += 4;
 }
 
-void OutputMessage::writeMessageSize()
+void OutputMessage::writeMessageSize(bool bigSize)
 {
-    assert(m_headerPos - 2 >= 0);
-    m_headerPos -= 2;
-    stdext::writeULE16(m_buffer + m_headerPos, m_messageSize);
-    m_messageSize += 2;
+    assert(m_headerPos - (bigSize ? 4 : 2) >= 0);
+    m_headerPos -= (bigSize ? 4 : 2);
+    if (bigSize) {
+        stdext::writeULE32(m_buffer + m_headerPos, m_messageSize);
+    } else {
+        stdext::writeULE16(m_buffer + m_headerPos, m_messageSize);
+    }
+    m_messageSize += (bigSize ? 4 : 2);
 }
 
 bool OutputMessage::canWrite(int bytes)

@@ -57,6 +57,7 @@ public:
     void enableXteaEncryption() { m_xteaEncryptionEnabled = true; }
 
     void enableChecksum() { m_checksumEnabled = true; }
+    void enableBigPackets() { m_bigPackets = true; }
 
     virtual void send(const OutputMessagePtr& outputMessage);
     virtual void recv();
@@ -78,14 +79,15 @@ protected:
     uint32 m_xteaKey[4];
 
 private:
-    void internalRecvHeader(uint8* buffer, uint16 size);
-    void internalRecvData(uint8* buffer, uint16 size);
+    void internalRecvHeader(uint8* buffer, uint32 size);
+    void internalRecvData(uint8* buffer, uint32 size);
 
     bool xteaDecrypt(const InputMessagePtr& inputMessage);
     void xteaEncrypt(const OutputMessagePtr& outputMessage);
 
     bool m_checksumEnabled;
     bool m_xteaEncryptionEnabled;
+    bool m_bigPackets;
     ConnectionPtr m_connection;
     InputMessagePtr m_inputMessage;
 

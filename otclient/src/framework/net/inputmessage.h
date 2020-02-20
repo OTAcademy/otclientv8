@@ -31,8 +31,8 @@ class InputMessage : public LuaObject
 {
 public:
     enum {
-        BUFFER_MAXSIZE = 65536,
-        MAX_HEADER_SIZE = 8
+        BUFFER_MAXSIZE = 327680,
+        MAX_HEADER_SIZE = 12
     };
 
     InputMessage();
@@ -40,8 +40,8 @@ public:
     void setBuffer(const std::string& buffer);
     std::string getBuffer() { return std::string((char*)m_buffer + m_headerPos, m_messageSize); }
 
-    void skipBytes(uint16 bytes) { m_readPos += bytes; }
-    void setReadPos(uint16 readPos) { m_readPos = readPos; }
+    void skipBytes(uint32 bytes) { m_readPos += bytes; }
+    void setReadPos(uint32 readPos) { m_readPos = readPos; }
     uint8 getU8();
     uint16 getU16();
     uint32 getU32();
@@ -59,23 +59,23 @@ public:
     int getReadSize() { return m_readPos - m_headerPos; }
     int getReadPos() { return m_readPos; }
     int getUnreadSize() { return m_messageSize - (m_readPos - m_headerPos); }
-    uint16 getMessageSize() { return m_messageSize; }
+    uint32 getMessageSize() { return m_messageSize; }
 
     bool eof() { return (m_readPos - m_headerPos) >= m_messageSize; }
 
 protected:
     void reset();
-    void fillBuffer(uint8 *buffer, uint16 size);
+    void fillBuffer(uint8 *buffer, uint32 size);
 
-    void setHeaderSize(uint16 size);
-    void setMessageSize(uint16 size) { m_messageSize = size; }
+    void setHeaderSize(uint32 size);
+    void setMessageSize(uint32 size) { m_messageSize = size; }
 
     uint8* getReadBuffer() { return m_buffer + m_readPos; }
     uint8* getHeaderBuffer() { return m_buffer + m_headerPos; }
     uint8* getDataBuffer() { return m_buffer + MAX_HEADER_SIZE; }
-    uint16 getHeaderSize() { return (MAX_HEADER_SIZE - m_headerPos); }
+    uint32 getHeaderSize() { return (MAX_HEADER_SIZE - m_headerPos); }
 
-    uint16 readSize() { return getU16(); }
+    uint32 readSize(bool bigSize) { return bigSize ? getU32() : getU16(); }
     bool readChecksum();
 
     friend class Protocol;
@@ -85,9 +85,9 @@ private:
     void checkRead(int bytes);
     void checkWrite(int bytes);
 
-    uint16 m_headerPos;
-    uint16 m_readPos;
-    uint16 m_messageSize;
+    uint32 m_headerPos;
+    uint32 m_readPos;
+    uint32 m_messageSize;
     uint8 m_buffer[BUFFER_MAXSIZE];
 };
 

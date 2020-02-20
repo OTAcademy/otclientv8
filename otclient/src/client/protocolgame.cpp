@@ -43,6 +43,9 @@ void ProtocolGame::onConnect()
 
     m_localPlayer = g_game.getLocalPlayer();
 
+    if (g_game.getFeature(Otc::GamePacketSizeU32))
+        enableBigPackets();
+
     if(g_game.getFeature(Otc::GameProtocolChecksum))
         enableChecksum();
 
@@ -60,7 +63,7 @@ void ProtocolGame::onRecv(const InputMessagePtr& inputMessage)
         m_firstRecv = false;
 
         if(g_game.getFeature(Otc::GameMessageSizeCheck)) {
-            int size = inputMessage->getU16();
+            int size = g_game.getFeature(Otc::GamePacketSizeU32) ? inputMessage->getU32() : inputMessage->getU16();
             if(size != inputMessage->getUnreadSize()) {
                 g_logger.traceError("invalid message size");
                 return;

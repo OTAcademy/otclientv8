@@ -857,6 +857,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Protocol>("generateXteaKey", &Protocol::generateXteaKey);
     g_lua.bindClassMemberFunction<Protocol>("enableXteaEncryption", &Protocol::enableXteaEncryption);
     g_lua.bindClassMemberFunction<Protocol>("enableChecksum", &Protocol::enableChecksum);
+    g_lua.bindClassMemberFunction<Protocol>("enableBigPackets", &Protocol::enableBigPackets);
 
     // InputMessage
     g_lua.registerClass<InputMessage>();

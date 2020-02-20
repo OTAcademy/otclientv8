@@ -234,7 +234,7 @@ int push_luavalue(const Imbuement& i)
     g_lua.pushBoolean(i.premiumOnly);
     g_lua.setField("premiumOnly");
     g_lua.createTable(i.sources.size(), 0);
-    for (int j = 0; j < i.sources.size(); ++j) {
+    for (size_t j = 0; j < i.sources.size(); ++j) {
         g_lua.createTable(0, 2);
         g_lua.pushObject(i.sources[j].first);
         g_lua.setField("item");

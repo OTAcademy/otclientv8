@@ -156,7 +156,7 @@ void Connection::internal_write()
     m_writeTimer.async_wait(std::bind(&Connection::onTimeout, asConnection(), std::placeholders::_1));
 }
 
-void Connection::read(uint16 bytes, const RecvCallback& callback)
+void Connection::read(uint32 bytes, const RecvCallback& callback)
 {
     if(!m_connected)
         return;
@@ -232,8 +232,8 @@ void Connection::onConnect(const boost::system::error_code& error)
         boost::asio::ip::tcp::no_delay option(true);
         m_socket.set_option(option);
         boost::system::error_code ecc;
-        m_socket.set_option(boost::asio::socket_base::send_buffer_size(65536), ecc);
-        m_socket.set_option(boost::asio::socket_base::receive_buffer_size(65536), ecc);
+        m_socket.set_option(boost::asio::socket_base::send_buffer_size(524288), ecc);
+        m_socket.set_option(boost::asio::socket_base::receive_buffer_size(524288), ecc);
 
         if(m_connectCallback)
             m_connectCallback();
