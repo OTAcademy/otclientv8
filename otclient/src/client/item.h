@@ -79,7 +79,7 @@ public:
     Item();
     virtual ~Item() { }
 
-    static ItemPtr create(int id);
+    static ItemPtr create(int id, int countOrSubtype = 1);
     static ItemPtr createFromOtb(int id);
 
     void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);

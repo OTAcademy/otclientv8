@@ -437,6 +437,7 @@ namespace Otc
         GameDoubleLevel = 83,
         GameDoubleSoul = 84,
         GameDoublePlayerGoodsMoney = 85,
+        GameCreatureWalkthrough = 86,
 
         // 90-99 otclientv8 features
         GameNewWalking = 90,
@@ -450,6 +451,7 @@ namespace Otc
 
         // Custom features for customer
         GameFasterAnimations = 101,
+        GameCenteredOutfits = 102,
 
         LastGameFeature = 110
     };

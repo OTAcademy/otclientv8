@@ -258,6 +258,7 @@ private:
     void parseResourceBalance(const InputMessagePtr& msg);
     void parseQuestTracker(const InputMessagePtr& msg);
     void parseImbuementWindow(const InputMessagePtr& msg);
+    void parseCloseImbuementWindow(const InputMessagePtr& msg);
     void parseKillTracker(const InputMessagePtr& msg);
     void parseSupplyTracker(const InputMessagePtr& msg);
     void parseImpactTracker(const InputMessagePtr& msg);
@@ -280,7 +281,10 @@ public:
     StaticTextPtr getStaticText(const InputMessagePtr& msg, int type = 0);
     ItemPtr getItem(const InputMessagePtr& msg, int id = 0);
     Position getPosition(const InputMessagePtr& msg);
-    void getImbuementInfo(const InputMessagePtr& msg);
+    Imbuement getImbuementInfo(const InputMessagePtr& msg);
+
+    int getRecivedPacketsCount() { return m_recivedPackeds; }
+    int getRecivedPacketsSize() { return m_recivedPackedsSize; }
 
 private:
     stdext::boolean<false> m_enableSendExtendedOpcode;
@@ -293,6 +297,8 @@ private:
     std::string m_sessionKey;
     std::string m_characterName;
     LocalPlayerPtr m_localPlayer;
+    int m_recivedPackeds = 0;
+    int m_recivedPackedsSize = 0;
 };
 
 #endif

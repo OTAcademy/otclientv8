@@ -48,6 +48,9 @@ bool luavalue_cast(int index, StoreCategory& data);
 int push_luavalue(const StoreOffer& offer);
 bool luavalue_cast(int index, StoreOffer& offer);
 
+// imbuement
+int push_luavalue(const Imbuement& offer);
+
 // light
 int push_luavalue(const Light& light);
 bool luavalue_cast(int index, Light& light);

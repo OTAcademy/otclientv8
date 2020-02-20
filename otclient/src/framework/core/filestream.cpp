@@ -310,15 +310,15 @@ std::string FileStream::getString()
 {
     std::string str;
     uint16 len = getU16();
-    if(len > 0 && len < 8192) {
-        char buffer[8192];
-        if(m_fileHandle) {
-            if(PHYSFS_readBytes(m_fileHandle, buffer, len) == 0)
+    if (len > 0) {
+        std::vector<uint8_t> buffer(len, 0);
+        if (m_fileHandle) {
+            if (PHYSFS_read(m_fileHandle, &buffer[0], 1, len) == 0)
                 throwError("read failed", true);
             else
-                str = std::string(buffer, len);
+                str = std::string(buffer.begin(), buffer.end());
         } else {
-            if(m_pos+len > m_data.size()) {
+            if (m_pos + len > m_data.size()) {
                 throwError("read failed");
                 return 0;
             }
@@ -326,7 +326,7 @@ std::string FileStream::getString()
             str = std::string((char*)&m_data[m_pos], len);
             m_pos += len;
         }
-    } else if(len != 0)
+    } else if (len != 0)
         throwError("read failed because string is too big");
     return str;
 }

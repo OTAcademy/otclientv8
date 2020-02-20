@@ -307,9 +307,6 @@ void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction dire
         direction = m_direction;
 
     float scale = destRect.width() / (float)exactSize;
-    if (scale > 1.)
-        scale = std::floor(scale);
-
     internalDrawOutfit((Point(exactSize - Otc::TILE_PIXELS, exactSize - Otc::TILE_PIXELS) + getDisplacement()) * scale, scale, false, true, direction);
 }
 
@@ -591,7 +588,7 @@ int Creature::getWalkAnimationPhases()
 {
     if (!getAnimator())
         return getAnimationPhases();
-    return getAnimator()->getAnimationPhases() + 1;
+    return getAnimator()->getAnimationPhases() + (g_game.getFeature(Otc::GameIdleAnimations) ? 1 : 0);
 }
 
 void Creature::updateWalkAnimation(int totalPixelsWalked)

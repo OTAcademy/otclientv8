@@ -180,6 +180,7 @@ public:
     void moveRaw(const Position& pos, int id, int stackpos, const Position& toPos, int count);
     void moveToParentContainer(const ThingPtr& thing, int count);
     void rotate(const ThingPtr& thing);
+    void wrap(const ThingPtr& thing);
     void use(const ThingPtr& thing);
     void useWith(const ItemPtr& fromThing, const ThingPtr& toThing, int subType = 0);
     void useInventoryItem(int itemId, int subType = 0);
@@ -299,8 +300,12 @@ public:
     void transferCoins(const std::string& recipient, int amount);
     void openTransactionHistory(int entriesPerPage);
 
-    // >= 1100, prey
+    // >= 1100
     void preyAction(int slot, int actionType, int index);
+
+    void applyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm);
+    void clearImbuement(uint8_t slot);
+    void closeImbuingWindow();
 
     //void reportRuleViolation2();
     void ping();
@@ -378,6 +383,16 @@ public:
 
     void enableTileThingLuaCallback(bool value) { m_tileThingsLuaCallback = value; }
     bool isTileThingLuaCallbackEnabled() { return m_tileThingsLuaCallback; }
+
+    int getRecivedPacketsCount()
+    {
+        return m_protocolGame ? m_protocolGame->getRecivedPacketsCount() : 0;
+    }
+
+    int getRecivedPacketsSize()
+    {
+        return m_protocolGame ? m_protocolGame->getRecivedPacketsSize() : 0;
+    }
 
 protected:
     void enableBotCall() { m_denyBotCall = false; }

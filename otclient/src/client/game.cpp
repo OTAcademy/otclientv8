@@ -815,6 +815,14 @@ void Game::rotate(const ThingPtr& thing)
     m_protocolGame->sendRotateItem(thing->getPosition(), thing->getId(), thing->getStackPos());
 }
 
+void Game::wrap(const ThingPtr& thing)
+{
+    if (!canPerformGameAction() || !thing)
+        return;
+
+    m_protocolGame->sendWrapableItem(thing->getPosition(), thing->getId(), thing->getStackPos());
+}
+
 void Game::use(const ThingPtr& thing)
 {
     if(!canPerformGameAction() || !thing)
@@ -1472,6 +1480,26 @@ void Game::preyAction(int slot, int actionType, int index)
     m_protocolGame->sendPreyAction(slot, actionType, index);
 }
 
+void Game::applyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm)
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendApplyImbuement(slot, imbuementId, protectionCharm);
+}
+
+void Game::clearImbuement(uint8_t slot)
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendClearImbuement(slot);
+}
+
+void Game::closeImbuingWindow()
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendCloseImbuingWindow();
+}
 
 void Game::ping()
 {

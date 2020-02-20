@@ -446,6 +446,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerImbuementWindow:
                 parseImbuementWindow(msg);
                 break;
+            case Proto::GaneServerCloseImbuementWindow:
+                parseCloseImbuementWindow(msg);
+                break;
             // otclient ONLY
             case Proto::GameServerExtendedOpcode:
                 parseExtendedOpcode(msg);
@@ -2241,49 +2244,63 @@ void ProtocolGame::parseQuestTracker(const InputMessagePtr& msg)
 
 void ProtocolGame::parseImbuementWindow(const InputMessagePtr& msg)
 {
-    msg->getU16();
-    int slot = msg->getU8();
-    for (int i = 0; i < slot; ++i) {
+    int itemId = msg->getU16();
+    int slots = msg->getU8();
+
+    std::map<int, std::tuple<Imbuement, int, int>> activeSlots;
+    for (int i = 0; i < slots; ++i) {
         bool info = msg->getU8() == 1;
         if (info) {
-            getImbuementInfo(msg);
-            msg->getU32();
-            msg->getU32();
+            Imbuement imbuement = getImbuementInfo(msg);
+            int duration = msg->getU32();
+            int removalCost = msg->getU32();
+            activeSlots[i] = std::make_tuple(imbuement, duration, removalCost);
         }
     }
 
-    int imbuements = msg->getU16();
-    for (int i = 0; i < imbuements; ++i) {
-        getImbuementInfo(msg);
-
+    int imbuements_size = msg->getU16();
+    std::vector<Imbuement> imbuements;
+    for (int i = 0; i < imbuements_size; ++i) {
+        imbuements.push_back(getImbuementInfo(msg));
     }
 
-    int needItems = msg->getU32();
-    for (int i = 0; i < needItems; ++i) {
-        msg->getU16();
-        msg->getU16();
+    std::vector<ItemPtr> needItems;
+    int needItems_count = msg->getU32();
+    for (int i = 0; i < needItems_count; ++i) {
+        int item = msg->getU16();
+        int count = msg->getU16();
+        needItems.push_back(Item::create(item, count));
     }
+
+    g_lua.callGlobalField("g_game", "onImbuementWindow", itemId, slots, activeSlots, imbuements, needItems);
 }
 
-void ProtocolGame::getImbuementInfo(const InputMessagePtr& msg)
+void ProtocolGame::parseCloseImbuementWindow(const InputMessagePtr&)
 {
-    msg->getU32();
-    msg->getString();
-    msg->getString();
-    msg->getString();
-    msg->getU16();
-    msg->getU32();
-    msg->getU8();
-    int size = msg->getU8();
-    for (int i = 0; i < size; ++i) {
-        msg->getU16();
-        msg->getString();
-        msg->getU16();
-    }
+    g_lua.callGlobalField("g_game", "onCloseImbuementWindow");
+}
 
-    msg->getU32();
-    msg->getU8();
-    msg->getU32();
+Imbuement ProtocolGame::getImbuementInfo(const InputMessagePtr& msg)
+{
+    Imbuement i;
+    i.id = msg->getU32();
+    i.name = msg->getString();
+    i.description = msg->getString();
+    i.group = msg->getString();
+    i.imageId = msg->getU16();
+    i.duration = msg->getU32();
+    i.premiumOnly = msg->getU8() > 0;
+    int size = msg->getU8();
+    for (int j = 0; j < size; ++j) {
+        int id = msg->getU16();
+        std::string description = msg->getString();
+        int count = msg->getU16();
+        i.sources.push_back(std::make_pair(Item::create(id, count), description));
+    }
+    i.cost = msg->getU32();
+    i.successRate = msg->getU8();
+    i.protectionCost = msg->getU32();
+    return i;
 }
 
 
@@ -2664,7 +2681,7 @@ CreaturePtr ProtocolGame::getCreature(const InputMessagePtr& msg, int type)
             }
         }
 
-        if(g_game.getClientVersion() >= 854)
+        if(g_game.getClientVersion() >= 854 || g_game.getFeature(Otc::GameCreatureWalkthrough))
             unpass = msg->getU8();
 
         if(creature) {

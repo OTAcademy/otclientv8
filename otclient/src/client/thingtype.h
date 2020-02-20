@@ -137,6 +137,20 @@ struct StoreOffer {
     std::string icon;
 };
 
+struct Imbuement {
+    int id;
+    std::string name;
+    std::string description;
+    std::string group;
+    int imageId;
+    int duration;
+    bool premiumOnly;
+    std::vector<std::pair<ItemPtr, std::string>> sources;
+    int cost;
+    int successRate;
+    int protectionCost;
+};
+
 struct Light {
     Light() { intensity = 0; color = 215; }
     uint8 intensity;

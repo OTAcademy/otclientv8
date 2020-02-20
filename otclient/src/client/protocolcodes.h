@@ -167,6 +167,7 @@ namespace Proto {
         GameServerPreyData                  = 232,
         GameServerPreyPrices                = 233,
         GameServerImbuementWindow           = 235,
+        GaneServerCloseImbuementWindow      = 236,
         GameServerMessageDialog             = 237,
         GameServerResourceBalance           = 238,
         GameServerQuestLog                  = 240,

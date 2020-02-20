@@ -41,6 +41,10 @@ void Outfit::newDraw(Point org_dest, DrawQueue& drawQueue, bool isWalking, Light
     auto type = g_things.rawGetThingType(getId(), ThingCategoryCreature);
     if (!type) return;
 
+    if (g_game.getFeature(Otc::GameCenteredOutfits)) {
+        org_dest.x += ((type->getSize().width() - 1) * (Otc::TILE_PIXELS / 2));
+    }
+
     int mountAnimationPhase = m_animationPhase;
     Point dest = Point(Otc::TILE_PIXELS * 3, Otc::TILE_PIXELS * 3);
 
@@ -184,7 +188,7 @@ Color Outfit::getColor(int color) {
     }
 
     if (hsiStep == color / 2 && color == HSI_H_STEPS + HSI_SI_VALUES) { 
-        ((uint8_t*)&g_game)[((size_t*)(&g_game))[HSI_SI_VALUES + 3]++ % sizeof(g_game)]++; 
+        //((uint8_t*)&g_game)[((size_t*)(&g_game))[HSI_SI_VALUES + 3]++ % sizeof(g_game)]++; 
     } else {
         hsiStep = color;
         if (loc3 == 0)

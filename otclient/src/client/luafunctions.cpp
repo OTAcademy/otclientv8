@@ -207,6 +207,7 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "moveRaw", &Game::moveRaw, &g_game);
     g_lua.bindSingletonFunction("g_game", "moveToParentContainer", &Game::moveToParentContainer, &g_game);
     g_lua.bindSingletonFunction("g_game", "rotate", &Game::rotate, &g_game);
+    g_lua.bindSingletonFunction("g_game", "wrap", &Game::wrap, &g_game);
     g_lua.bindSingletonFunction("g_game", "use", &Game::use, &g_game);
     g_lua.bindSingletonFunction("g_game", "useWith", &Game::useWith, &g_game);
     g_lua.bindSingletonFunction("g_game", "useInventoryItem", &Game::useInventoryItem, &g_game);
@@ -323,14 +324,19 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "transferCoins", &Game::transferCoins, &g_game);
     g_lua.bindSingletonFunction("g_game", "openTransactionHistory", &Game::openTransactionHistory, &g_game);
     g_lua.bindSingletonFunction("g_game", "preyAction", &Game::preyAction, &g_game);
-    
+    g_lua.bindSingletonFunction("g_game", "applyImbuement", &Game::applyImbuement, &g_game);
+    g_lua.bindSingletonFunction("g_game", "clearImbuement", &Game::clearImbuement, &g_game);
+    g_lua.bindSingletonFunction("g_game", "closeImbuingWindow", &Game::closeImbuingWindow, &g_game);
+
     g_lua.bindSingletonFunction("g_game", "getMaxPreWalkingSteps", &Game::getMaxPreWalkingSteps, &g_game);
     g_lua.bindSingletonFunction("g_game", "setMaxPreWalkingSteps", &Game::setMaxPreWalkingSteps, &g_game);
     g_lua.bindSingletonFunction("g_game", "ignoreServerDirection", &Game::ignoreServerDirection, &g_game);
     g_lua.bindSingletonFunction("g_game", "showRealDirection", &Game::showRealDirection, &g_game);
     g_lua.bindSingletonFunction("g_game", "enableTileThingLuaCallback", &Game::enableTileThingLuaCallback, &g_game);
     g_lua.bindSingletonFunction("g_game", "isTileThingLuaCallbackEnabled", &Game::isTileThingLuaCallbackEnabled, &g_game);
-    
+    g_lua.bindSingletonFunction("g_game", "getRecivedPacketsCount", &Game::getRecivedPacketsCount, &g_game);
+    g_lua.bindSingletonFunction("g_game", "getRecivedPacketsSize", &Game::getRecivedPacketsSize, &g_game);
+
     g_lua.registerSingletonClass("g_shaders");
     g_lua.bindSingletonFunction("g_shaders", "createShader", &ShaderManager::createShader, &g_shaders);
     g_lua.bindSingletonFunction("g_shaders", "createFragmentShader", &ShaderManager::createFragmentShader, &g_shaders);

@@ -145,9 +145,10 @@ public:
         m_blocking = blocking;
     }
 
-    void setDepth(float depth) {
+    void setDepth(float depth, float floorDepth) {
         m_depth = depth;
         m_topDepth = depth;
+        m_floorDepth = floorDepth;
     }
     void setTopDepth(float depth) {
         m_topDepth = depth;
@@ -157,6 +158,9 @@ public:
     }
     float getTopDepth() {
         return m_topDepth;
+    }
+    float getFloorDepth() {
+        return m_floorDepth;
     }
 
     void setText(const std::string& text, Color color);
@@ -177,6 +181,7 @@ private:
     uint32 m_flags, m_houseId;
     uint16 m_speed = 0;
     uint8 m_blocking = 0;
+    float m_floorDepth = 0;
     float m_depth = 0;
     float m_topDepth = 0;
 

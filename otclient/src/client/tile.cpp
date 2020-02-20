@@ -78,17 +78,26 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
     }
 
     // first bottom items
-    for(const ThingPtr& thing : m_things) {
-        if(!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
+    for (const ThingPtr& thing : m_things) {
+        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
             break;
         if (thing->isHidden())
             continue;
+        if (g_game.getFeature(Otc::GameCenteredOutfits)) {
+            if (thing->isGround()) {
+                drawQueue.setDepth(m_floorDepth);
+            } else {
+                drawQueue.setDepth(m_depth);
+            }
+        }
 
         thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
         m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
     }
 
+
     // now common items in reverse order
+    drawQueue.setDepth(m_depth);
     for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
         const ThingPtr& thing = *it;
         if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())

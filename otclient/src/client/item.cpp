@@ -50,10 +50,11 @@ Item::Item() :
 {
 }
 
-ItemPtr Item::create(int id)
+ItemPtr Item::create(int id, int countOrSubtype)
 {
     ItemPtr item(new Item);
     item->setId(id);
+    item->setCountOrSubType(countOrSubtype);
     return item;
 }
 

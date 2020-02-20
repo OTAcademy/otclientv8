@@ -497,6 +497,7 @@ void MapView::updateVisibleTilesCache()
     for(int iz = m_cachedLastVisibleFloor; iz >= (m_floorFading ? m_cachedFirstFadingFloor : m_cachedFirstVisibleFloor); --iz) {
         // loop through / diagonals beginning at top left and going to top right
         depth -= Otc::DIAGONAL_DEPTH * 8;
+        float floorDepth = depth;
         for (int diagonal = 0; diagonal < numDiagonals; ++diagonal) {
             depth -= Otc::DIAGONAL_DEPTH;
 
@@ -515,8 +516,8 @@ void MapView::updateVisibleTilesCache()
                         continue;
                     // skip tiles that are completely behind another tile
                     m_cachedVisibleTiles.push_back(std::make_pair(tile, g_map.isCompletelyCovered(tilePos, m_cachedFirstVisibleFloor)));
-                    tile->setDepth(depth);
-                    tile->calculateTopDepth();
+                    tile->setDepth(depth, floorDepth);
+                    //tile->calculateTopDepth();
                 }
             }
         }
