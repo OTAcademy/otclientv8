@@ -455,6 +455,7 @@ namespace Otc
 
         // advanced features
         GamePacketSizeU32 = 110,
+        GamePacketCompression = 111,
 
         LastGameFeature = 120
     };

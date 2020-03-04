@@ -33,6 +33,20 @@ Protocol::Protocol()
     m_checksumEnabled = false;
     m_bigPackets = false;
     m_inputMessage = InputMessagePtr(new InputMessage);
+
+    // compression
+    m_zstreamBuffer.resize(InputMessage::BUFFER_MAXSIZE);
+    m_zstream.next_in = m_inputMessage->getDataBuffer();
+    m_zstream.next_out = m_zstreamBuffer.data();
+    m_zstream.avail_in = 0;
+    m_zstream.avail_out = 0;
+    m_zstream.total_in = 0;
+    m_zstream.total_out = 0;
+    m_zstream.zalloc = nullptr;
+    m_zstream.zfree = nullptr;
+    m_zstream.opaque = nullptr;
+    m_zstream.data_type = Z_BINARY;
+    inflateInit2(&m_zstream, -15);
 }
 
 Protocol::~Protocol()
@@ -41,6 +55,7 @@ Protocol::~Protocol()
     assert(!g_app.isTerminated());
 #endif
     disconnect();
+    inflateEnd(&m_zstream);
 }
 
 void Protocol::connect(const std::string& host, uint16 port)
@@ -168,10 +183,16 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
     }
 
     m_inputMessage->fillBuffer(buffer, size);
-
-    if(m_checksumEnabled && !m_inputMessage->readChecksum()) {
-        g_logger.traceError(stdext::format("got a network message with invalid checksum, size: %i", (int)m_inputMessage->getMessageSize()));
-        return;
+    
+    bool decompress = false;
+    if(m_checksumEnabled) {
+        if (m_inputMessage->peekU32() == 0) { // compressed data
+            m_inputMessage->getU32();
+            decompress = true;
+        } else if (!m_inputMessage->readChecksum()) {
+            g_logger.traceError(stdext::format("got a network message with invalid checksum, size: %i", (int)m_inputMessage->getMessageSize()));
+            return;
+        }
     }
 
     if(m_xteaEncryptionEnabled) {
@@ -179,6 +200,25 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
             g_logger.traceError("failed to decrypt message");
             return;
         }
+    }
+
+    if (decompress) {
+        m_inputMessage->addZlibFooter();
+        m_zstream.next_in = m_inputMessage->getDataBuffer();
+        m_zstream.next_out = m_zstreamBuffer.data();
+        m_zstream.avail_in = m_inputMessage->getUnreadSize();
+        m_zstream.avail_out = m_zstreamBuffer.size();
+        if (inflate(&m_zstream, Z_SYNC_FLUSH) != Z_OK) {
+            g_logger.traceError("failed to decompress message");
+            return;
+        }
+        int decryptedSize = m_zstreamBuffer.size() - m_zstream.avail_out;
+        if (decryptedSize < m_inputMessage->getUnreadSize()) {
+            g_logger.traceError("invalid size of decompressed message");
+            return;
+        }
+        m_inputMessage->fillBuffer(m_zstreamBuffer.data(), decryptedSize);
+        m_inputMessage->setMessageSize(m_inputMessage->getHeaderSize() + decryptedSize);
     }
     onRecv(m_inputMessage);
 }

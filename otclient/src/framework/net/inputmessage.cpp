@@ -139,3 +139,14 @@ void InputMessage::checkWrite(int bytes)
     if(bytes > BUFFER_MAXSIZE)
         throw stdext::exception("InputMessage max buffer size reached");
 }
+
+void InputMessage::addZlibFooter()
+{
+    if (m_messageSize + 4 > BUFFER_MAXSIZE)
+        return;
+    m_buffer[m_messageSize + m_headerPos] = 0x00;
+    m_buffer[m_messageSize + m_headerPos + 1] = 0x00;
+    m_buffer[m_messageSize + m_headerPos + 2] = 0xFF;
+    m_buffer[m_messageSize + m_headerPos + 3] = 0xFF;
+    m_messageSize += 4;
+}

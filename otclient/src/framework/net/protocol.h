@@ -34,6 +34,8 @@
 #include <extras/proxy/proxy.h>
 #endif
 
+#include <zlib.h>
+
 // @bindclass
 class Protocol : public LuaObject
 {
@@ -90,7 +92,8 @@ private:
     bool m_bigPackets;
     ConnectionPtr m_connection;
     InputMessagePtr m_inputMessage;
-
+    z_stream m_zstream;
+    std::vector<uint8_t> m_zstreamBuffer;
 };
 
 #endif

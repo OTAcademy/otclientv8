@@ -78,6 +78,8 @@ protected:
     uint32 readSize(bool bigSize) { return bigSize ? getU32() : getU16(); }
     bool readChecksum();
 
+    void addZlibFooter();
+
     friend class Protocol;
 
 private:
