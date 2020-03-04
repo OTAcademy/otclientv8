@@ -1,6 +1,6 @@
 EnterGameWindow < StaticMainWindow
   !text: tr('Enter Game')
-  size: 240 354
+  size: 260 354
 
 EnterGameWindow
   id: enterGame
@@ -128,7 +128,7 @@ EnterGameWindow
       anchors.left: parent.left
       anchors.top: serverLabel.bottom
       margin-top: 2
-      width: 130
+      width: 150
 
     MenuLabel
       id: clientLabel

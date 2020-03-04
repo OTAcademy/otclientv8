@@ -144,7 +144,7 @@ function setupAction(index, action, config)
 
   if config then
     action.hotkey = config.hotkey
-    if action.hotkey then
+    if action.hotkey and action.hotkey:len() > 0 then
       local gameRootPanel = modules.game_interface.getRootPanel()
       g_keyboard.bindKeyPress(action.hotkey, action.callback, gameRootPanel)
     end
@@ -265,7 +265,9 @@ function actionOnMouseRelease(action, mousePosition, mouseButton)
         menu:addOption(tr('With crosshair'), function() return setupActionType(action, ActionTypes.USE_WITH) end)
       end
       if g_game.getClientVersion() >= 910 then
-        menu:addOption(tr('Use'), function() return setupActionType(action, ActionTypes.USE) end)
+        if not action.item:getItem():isMultiUse() then
+          menu:addOption(tr('Use'), function() return setupActionType(action, ActionTypes.USE) end)
+        end
         menu:addOption(tr('Equip'), function() return setupActionType(action, ActionTypes.EQUIP) end)
       end
     end
@@ -298,11 +300,11 @@ function actionOnMouseRelease(action, mousePosition, mouseButton)
       end
       assignWindow.addButton.onClick = function()
         local gameRootPanel = modules.game_interface.getRootPanel()
-        if action.hotkey then
+        if action.hotkey and action.hotkey:len() > 0 then
           g_keyboard.unbindKeyPress(action.hotkey, action.callback, gameRootPanel)
         end
         action.hotkey = assignWindow.comboPreview.keyCombo
-        if action.hotkey then
+        if action.hotkey and action.hotkey:len() > 0 then
           g_keyboard.bindKeyPress(action.hotkey, action.callback, gameRootPanel)
         end
         action.hotkeyLabel:setText(action.hotkey or "")
@@ -316,7 +318,7 @@ function actionOnMouseRelease(action, mousePosition, mouseButton)
       action.text:setText("")
       action.hotkeyLabel:setText("")
       local gameRootPanel = modules.game_interface.getRootPanel()
-      if action.hotkey then
+      if action.hotkey and action.hotkey:len() > 0 then
         g_keyboard.unbindKeyPress(action.hotkey, action.callback, gameRootPanel)
       end
       action.hotkey = nil
@@ -341,8 +343,13 @@ function actionOnItemChange(widget)
         setupActionType(action, ActionTypes.USE_WITH)
       end
     else
-      --g_game.getClientVersion() >= 910
-      setupActionType(action, ActionTypes.USE)      
+      if g_game.getClientVersion() >= 910 then
+        if not action.actionType or action.actionType <= ActionTypes.EQUIP then
+          setupActionType(action, ActionTypes.USE)
+        end
+      else
+        setupActionType(action, ActionTypes.USE)      
+      end
     end
   end
 end

@@ -455,5 +455,7 @@ function EnterGame.onLoginError(err)
   end
   local errorBox = displayErrorBox(tr('Login Error'), err)
   errorBox.onOk = EnterGame.show
-  EnterGame.clearAccountFields()
+  if err:lower():find("invalid") or err:lower():find("not correct") or err:lower():find("or password") then
+    EnterGame.clearAccountFields()
+  end
 end

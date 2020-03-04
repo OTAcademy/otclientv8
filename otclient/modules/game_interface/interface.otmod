@@ -36,6 +36,8 @@ Module
     - game_textedit
     - game_actionbar
     - game_prey
+    - game_imbuement
+    - game_dailyreward
     - game_bot
   @onLoad: init()
   @onUnload: terminate()
