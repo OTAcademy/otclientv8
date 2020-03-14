@@ -484,7 +484,7 @@ void Game::processOpenOutfitWindow(const Outfit& currentOutfit, const std::vecto
     g_lua.callGlobalField("g_game", "onOpenOutfitWindow", virtualOutfitCreature, outfitList, virtualMountCreature, mountList);
 }
 
-void Game::processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string, int, int, int> >& items)
+void Game::processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string, int, int64_t, int64_t> >& items)
 {
     g_lua.callGlobalField("g_game", "onOpenNpcTrade", items);
 }
@@ -1479,6 +1479,14 @@ void Game::preyAction(int slot, int actionType, int index)
         return;
     m_protocolGame->sendPreyAction(slot, actionType, index);
 }
+
+void Game::preyRequest()
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendPreyRequest();
+}
+
 
 void Game::applyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm)
 {

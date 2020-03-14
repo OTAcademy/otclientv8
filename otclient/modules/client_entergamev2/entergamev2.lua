@@ -14,6 +14,7 @@ function init()
   entergameWindow.registration:hide()
   entergameWindow.characters:hide()
   entergameWindow.createcharacter:hide()
+  entergameWindow.settings:hide()
   
   -- entergame
   entergameWindow.entergame.register.onClick = function()
@@ -71,17 +72,31 @@ function init()
     protocol:logout()
     entergameWindow.characters:hide()
     entergameWindow.entergame:show()  
+    entergameWindow.entergame.mainPanel.account:setText("")
+    entergameWindow.entergame.mainPanel.password:setText("")
   end
   entergameWindow.characters.createcharacter.onClick = function()
     entergameWindow.characters:hide()
     entergameWindow.createcharacter:show()
+    entergameWindow.createcharacter.mainPanel.name:setText("")
   end
+  entergameWindow.characters.settings.onClick = function()
+    entergameWindow.characters:hide()
+    entergameWindow.settings:show()
+  end  
   
   -- create character
   entergameWindow.createcharacter.back.onClick = function()
     entergameWindow.createcharacter:hide()
     entergameWindow.characters:show()
   end
+  entergameWindow.createcharacter.mainPanel.createButton.onClick = createcharacter
+
+  entergameWindow.settings.back.onClick = function()
+    entergameWindow.settings:hide()
+    entergameWindow.characters:show()
+  end
+  entergameWindow.settings.mainPanel.updateButton.onClick = updateSettings
   
   -- pick server
   local server = nil
@@ -111,10 +126,12 @@ function init()
   protocol.onLogin = onLogin
   protocol.onLogout = logout
   protocol.onMessage = serverMessage
+  protocol.onLoading = showLoading
   protocol.onQAuth = updateQAuth
   protocol.onCharacters = updateCharacters
   protocol.onNews = updateNews
   protocol.onMotd = updateMotd
+  protocol.onCharacterCreate = onCharacterCreate
   
   -- game stuff
   connect(g_game, { onLoginError = onLoginError,
@@ -298,6 +315,7 @@ function onLogin(data)
     loadingBox:destroy()
     loadingBox = nil
   end
+
   if data["error"] and data["error"]:len() > 0 then
     entergameWindow.entergame:show()
     return message("Login error", data["error"])
@@ -307,6 +325,10 @@ function onLogin(data)
   if incorrectThings:len() > 0 then
     entergameWindow.entergame:show()
     return message("Login error - missing things", incorrectThings)
+  end
+  
+  if infoBox then
+    infoBox:destroy()
   end
   
   local version = data["version"]  
@@ -321,8 +343,13 @@ function onLogin(data)
     g_game.setCustomProtocolVersion(customProtocol)    
   end
   
+  local email = data["email"]
+  local security = data["security"]
+  entergameWindow.settings.mainPanel.email:setText(email)
+  entergameWindow.settings.mainPanel.security:setCurrentIndex(math.max(1, security))  
   
   entergameWindow.characters:show()
+  entergameWindow.entergame:hide()
 end
 
 function logout()
@@ -415,4 +442,43 @@ end
 
 function onLogout()
 
+end
+
+function createcharacter()
+  local name = entergameWindow.createcharacter.mainPanel.name:getText()
+  local gender = entergameWindow.createcharacter.mainPanel.gender:getCurrentOption().text
+  local vocation = entergameWindow.createcharacter.mainPanel.vocation:getCurrentOption().text
+  local town = entergameWindow.createcharacter.mainPanel.town:getCurrentOption().text
+  if name:len() < 3 or name:len() > 20 then
+    return message("Error", "Invalid character name")
+  end
+  protocol:createCharacter(name, gender, vocation, town)
+  showLoading("Creating character", "Creating new character...")
+end
+
+function onCharacterCreate(err, msg)
+  if loadingBox then
+    loadingBox:destroy()
+    loadingBox = nil
+  end
+
+  if err then
+    return message("Error", err)
+  end
+  message("Success", msg)
+  entergameWindow.createcharacter:hide()
+  entergameWindow.characters:show()
+end
+
+function updateSettings()
+  local email = entergameWindow.settings.mainPanel.email:getText()
+  local security = entergameWindow.settings.mainPanel.security.currentIndex  
+  
+  protocol:updateSettings({
+    email=email,
+    security=security
+  })
+  
+  entergameWindow.settings:hide()
+  entergameWindow.characters:show()
 end

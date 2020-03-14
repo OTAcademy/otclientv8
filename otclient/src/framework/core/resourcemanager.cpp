@@ -718,6 +718,11 @@ void ResourceManager::encrypt(const std::string& seed) {
         for(auto&& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path(dir))) {
             if (!std::filesystem::is_regular_file(entry.path()))
                 continue;
+            std::string str(entry.path().string());
+            // skip encryption for bot configs
+            if (str.find("game_bot") != std::string::npos && str.find("default_config") != std::string::npos) {
+                continue;
+            }
             toEncrypt.push(entry.path());
         }
     }

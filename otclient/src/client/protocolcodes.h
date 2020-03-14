@@ -286,6 +286,7 @@ namespace Proto {
         ClientRuleViolation                 = 231,
         ClientDebugReport                   = 232,
         ClientPreyAction                    = 235,
+        ClientPreyRequest                   = 237,
         ClientTransferCoins                 = 239, // 1080
         ClientRequestQuestLog               = 240,
         ClientRequestQuestLine              = 241,

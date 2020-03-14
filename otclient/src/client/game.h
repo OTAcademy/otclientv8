@@ -138,7 +138,7 @@ protected:
                                  const std::vector<std::tuple<int, std::string> >& mountList);
 
     // npc trade
-    void processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string, int, int, int> >& items);
+    void processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string, int, int64_t, int64_t> >& items);
     void processPlayerGoods(uint64_t money, const std::vector<std::tuple<ItemPtr, int> >& goods);
     void processCloseNpcTrade();
 
@@ -302,6 +302,7 @@ public:
 
     // >= 1100
     void preyAction(int slot, int actionType, int index);
+    void preyRequest();
 
     void applyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm);
     void clearImbuement(uint8_t slot);

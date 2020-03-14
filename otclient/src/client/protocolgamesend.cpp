@@ -1022,6 +1022,12 @@ void ProtocolGame::sendPreyAction(int slot, int actionType, int index)
     send(msg);
 }
 
+void ProtocolGame::sendPreyRequest()
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientPreyRequest);
+    send(msg);
+}
 
 void ProtocolGame::sendChangeMapAwareRange(int xrange, int yrange)
 {

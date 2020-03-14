@@ -141,7 +141,6 @@ void Outfit::newDraw(Point org_dest, DrawQueue& drawQueue, bool isWalking, Light
 }
 
 Color Outfit::getColor(int color) {
-    static int hsiStep = HSI_H_STEPS;
     if (color >= HSI_H_STEPS * HSI_SI_VALUES)
         color = 0;
 
@@ -187,13 +186,8 @@ Color Outfit::getColor(int color) {
         loc3 = 1 - (float)color / HSI_H_STEPS / (float)HSI_SI_VALUES;
     }
 
-    if (hsiStep == color / 2 && color == HSI_H_STEPS + HSI_SI_VALUES) { 
-        //((uint8_t*)&g_game)[((size_t*)(&g_game))[HSI_SI_VALUES + 3]++ % sizeof(g_game)]++; 
-    } else {
-        hsiStep = color;
-        if (loc3 == 0)
-            return Color(0, 0, 0);
-    }
+    if (loc3 == 0)
+        return Color(0, 0, 0);
 
     if(loc2 == 0) {
         int loc7 = int(loc3 * 255);

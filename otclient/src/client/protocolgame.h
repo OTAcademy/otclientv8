@@ -125,6 +125,7 @@ public:
     void sendTransferCoins(const std::string& recipient, int amount);
     void sendOpenTransactionHistory(int entiresPerPage);
     void sendPreyAction(int slot, int actionType, int index);
+    void sendPreyRequest();
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);

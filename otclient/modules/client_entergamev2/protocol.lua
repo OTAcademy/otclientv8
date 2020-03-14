@@ -126,11 +126,27 @@ function EnterGameV2Protocol:register(name, email, password, callback)
 end
 
 function EnterGameV2Protocol:createCharacter(name, gender, vocation, town)
-  
+  self:send({
+    type="createcharacter",
+    name=name,
+    gender=gender,
+    vocation=vocation,
+    town=town
+  })
+end
+
+function EnterGameV2Protocol:updateSettings(settings)
+  self:send({
+    type="settings",
+    settings=settings
+  })
 end
 
 -- private functions
 function EnterGameV2Protocol:reconnect()
+  if #self.sendQueue > 1 then
+    self.sendQueue = {} -- TEMPORARY
+  end
   self.reconnectEvent = nil
   if self.terminated then return end
   self:setUrl(self.url)
@@ -192,6 +208,10 @@ function EnterGameV2Protocol:onSocketMessage(message)
     if self.onMessage then
       self.onMessage(message["title"], message["text"])
     end 
+  elseif message["type"] == "loading" then
+    if self.onMessage then
+      self.onLoading(message["title"], message["text"])
+    end 
   elseif message["type"] == "news" then
     if self.onNews then
       self.onNews(message["news"])
@@ -200,5 +220,9 @@ function EnterGameV2Protocol:onSocketMessage(message)
     if self.onMotd then
       self.onMotd(message["text"])
     end
+  elseif message["type"] == "createcharacter" then
+    if self.onMessage then
+      self.onCharacterCreate(message["error"], message["message"])
+    end 
   end
 end

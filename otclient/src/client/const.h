@@ -438,6 +438,7 @@ namespace Otc
         GameDoubleSoul = 84,
         GameDoublePlayerGoodsMoney = 85,
         GameCreatureWalkthrough = 86,
+        GameDoubleTradeMoney = 87,
 
         // 90-99 otclientv8 features
         GameNewWalking = 90,
