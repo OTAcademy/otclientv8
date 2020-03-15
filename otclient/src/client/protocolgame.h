@@ -280,7 +280,7 @@ public:
     ThingPtr getMappedThing(const InputMessagePtr & msg);
     CreaturePtr getCreature(const InputMessagePtr& msg, int type = 0);
     StaticTextPtr getStaticText(const InputMessagePtr& msg, int type = 0);
-    ItemPtr getItem(const InputMessagePtr& msg, int id = 0);
+    ItemPtr getItem(const InputMessagePtr& msg, int id = 0, bool hasDescription = true);
     Position getPosition(const InputMessagePtr& msg);
     Imbuement getImbuementInfo(const InputMessagePtr& msg);
 

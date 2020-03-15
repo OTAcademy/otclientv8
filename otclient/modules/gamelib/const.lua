@@ -170,7 +170,8 @@ GameDoubleTradeMoney = 87
 
 GameNewWalking = 90
 GameSlowerManualWalking = 91
-GameExtendedNewWalking = 92
+
+GameItemTooltip = 93
 GameBot = 95
 GameBiggerMapCache = 96
 GameForceLight = 97

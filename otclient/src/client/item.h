@@ -91,6 +91,7 @@ public:
     void setCount(int count) { m_countOrSubType = count; }
     void setSubType(int subType) { m_countOrSubType = subType; }
     void setColor(const Color& c) { m_color = c; }
+    void setTooltip(const std::string& str) { m_tooltip = str; }
 
     int getCountOrSubType() { return m_countOrSubType; }
     int getSubType();
@@ -100,6 +101,7 @@ public:
     uint16 getServerId() { return m_serverId; }
     std::string getName();
     bool isValid();
+    std::string getTooltip() { return m_tooltip; }
 
     void unserializeItem(const BinaryTreePtr& in);
     void serializeItem(const OutputBinaryTreePtr& out);
@@ -159,6 +161,7 @@ private:
     ItemVector m_containerItems;
     Color m_color;
     bool m_async;
+    std::string m_tooltip;
 
     uint8 m_phase;
     ticks_t m_lastPhase;

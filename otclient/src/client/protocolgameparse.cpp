@@ -2551,7 +2551,7 @@ ThingPtr ProtocolGame::getThing(const InputMessagePtr& msg)
     else if(id == Proto::StaticText) // otclient only
         thing = getStaticText(msg, id);
     else // item
-        thing = getItem(msg, id);
+        thing = getItem(msg, id, false);
 
     return thing;
 }
@@ -2734,7 +2734,7 @@ CreaturePtr ProtocolGame::getCreature(const InputMessagePtr& msg, int type)
     return creature;
 }
 
-ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
+ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id, bool hasDescription)
 {
     if(id == 0)
         id = msg->getU16();
@@ -2758,6 +2758,10 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
             msg->getU8();
             //item->setPhase(msg->getU8());
         }
+    }
+
+    if (g_game.getFeature(Otc::GameItemTooltip) && hasDescription) {
+        item->setTooltip(msg->getString());
     }
 
     return item;

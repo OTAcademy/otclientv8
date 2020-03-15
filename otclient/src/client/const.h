@@ -444,6 +444,8 @@ namespace Otc
         GameNewWalking = 90,
         GameSlowerManualWalking = 91,
 
+        GameItemTooltip = 93,
+
         GameBot = 95,
         GameBiggerMapCache = 96,
         GameForceLight = 97,

@@ -19,7 +19,7 @@ Servers = {
   OTClientV8Test = "http://otclient.ovh/api/login2.php",
   Evoulinia = "evolunia.net:7171:1098",
   GarneraTest = "garnera-global.net:7171:1100",
-  LocalTestServ = "127.0.0.1:7171:1098:110:30"
+  LocalTestServ = "127.0.0.1:7171:1098:110:30:93"
 }
 --Server = "ws://otclient.ovh:3000/"
 --Server = "ws://127.0.0.1:88/"

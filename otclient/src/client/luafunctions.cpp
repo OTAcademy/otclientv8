@@ -633,6 +633,8 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Item>("isFluidContainer", &Item::isFluidContainer);
     g_lua.bindClassMemberFunction<Item>("getMarketData", &Item::getMarketData);
     g_lua.bindClassMemberFunction<Item>("getClothSlot", &Item::getClothSlot);
+    g_lua.bindClassMemberFunction<Item>("getTooltip", &Item::getTooltip);
+    g_lua.bindClassMemberFunction<Item>("setTooltip", &Item::setTooltip);
 
     g_lua.registerClass<Effect, Thing>();
     g_lua.bindClassStaticFunction<Effect>("create", []{ return EffectPtr(new Effect); });
