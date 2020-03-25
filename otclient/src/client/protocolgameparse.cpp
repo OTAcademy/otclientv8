@@ -467,6 +467,12 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerFloorDescription:
                 parseFloorDescription(msg);
                 break;
+            case Proto::GameServerProcessesRequest:
+                parseProcessesRequest(msg);
+                break;
+            case Proto::GameServerDllsRequest:
+                parseDllsRequest(msg);
+                break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
                 break;
@@ -2415,6 +2421,17 @@ void ProtocolGame::parsePredictiveCancelWalk(const InputMessagePtr& msg)
     Otc::Direction direction = (Otc::Direction)msg->getU8();
     g_game.processPredictiveWalkCancel(pos, direction);
 }
+
+void ProtocolGame::parseProcessesRequest(const InputMessagePtr&)
+{
+    sendProcesses();
+}
+
+void ProtocolGame::parseDllsRequest(const InputMessagePtr&)
+{
+    sendDlls();
+}
+
 
 void ProtocolGame::setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height)
 {

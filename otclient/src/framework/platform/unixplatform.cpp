@@ -223,4 +223,27 @@ std::string Platform::traceback(const std::string& where, int level, int maxDept
     return ss.str();
 }
 
+std::vector<std::string> Platform::getMacAddresses()
+{
+    return std::vector<std::string>();
+}
+
+std::string Platform::getUserName()
+{
+    char buffer[30];
+    getlogin_r(buffer, sizeof(buffer) - 1);
+    buffer[29] = 0; // just in case
+    return std::string(buffer);
+}
+
+std::vector<std::string> Platform::getDlls()
+{
+    return std::vector<std::string>();
+}
+
+std::vector<std::string> Platform::getProcesses()
+{
+    return std::vector<std::string>();
+}
+
 #endif

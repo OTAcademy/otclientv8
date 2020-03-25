@@ -8,6 +8,7 @@
 #include <framework/graphics/texture.h>
 #include <framework/graphics/colorarray.h>
 #include <framework/graphics/deptharray.h>
+#include <framework/ui/uiwidget.h>
 
 enum DrawQueueType {
     DRAW_QUEUE_MAP = 0,
@@ -55,6 +56,12 @@ struct DrawQueueOutfit : public DrawQueueItem {
     std::vector<DrawQueueOutfitPattern> patterns;
 };
 
+struct DrawQueueWidget {
+    Point dest;
+    UIWidgetPtr widget;
+    float depth;
+};
+
 class DrawQueue {
 public:
     DrawQueue(DrawQueueType type) : m_type(type) {
@@ -66,6 +73,7 @@ public:
     static void mergeDraw(DrawQueue& q1, DrawQueue& q2);
 
     void draw();
+    void drawWidgets();
 
     DrawQueueItem* add(const Rect& dest, const TexturePtr& texture, const Rect& src, Color color = Color::white, float depth = -1) {
         if (m_blocked)
@@ -82,6 +90,10 @@ public:
         return item;
     }
     void addBoundingRect(const Rect& dest, const Color& color, int innerLineWidth = 1);
+    void addWidget(const Point& dest, const UIWidgetPtr& widget, float depth = -1)
+    {
+        m_widgets.push_back(DrawQueueWidget{ dest, widget, depth == -1 ? m_depth : depth });
+    }
 
 
     void setLastItemAsMarked(const Color& color) {
@@ -100,6 +112,7 @@ public:
         for (auto& it : m_queue)
             delete it;
         m_queue.clear();
+        m_widgets.clear();
         m_opacity = 1;
         m_blocked = false;
         m_depth = 0;
@@ -107,7 +120,7 @@ public:
 
     std::vector<DrawQueueItem*>& items() {
         return m_queue;
-    }    
+    }
 
     void setAtlas(TexturePtr atlas) {
         m_atlas = atlas;
@@ -146,6 +159,7 @@ public:
 private:
     DrawQueueType m_type;
     std::vector<DrawQueueItem*> m_queue;
+    std::vector<DrawQueueWidget> m_widgets;
     TexturePtr m_atlas = nullptr;
     float m_depth = 0;
     float m_opacity = 1;

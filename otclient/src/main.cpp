@@ -39,7 +39,7 @@ int main(int argc, const char* argv[]) {
 #endif
 
 #ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1587018640) {
+    if (time(nullptr) > 1600018640) {
         control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
     }
 #endif

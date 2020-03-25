@@ -272,7 +272,7 @@ ImagePtr SpriteManager::getSpriteImage(int id)
             uint8* pixels = image->getPixelData();
             int writePos = 0;
 
-            int bufferPos = 2;
+            size_t bufferPos = 2;
             while (bufferPos != buffer.size()) {
                 uint16_t transparentPixels = *(uint16_t*)(&buffer[bufferPos]);
                 bufferPos += 2;

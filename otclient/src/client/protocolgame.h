@@ -126,6 +126,8 @@ public:
     void sendOpenTransactionHistory(int entiresPerPage);
     void sendPreyAction(int slot, int actionType, int index);
     void sendPreyRequest();
+    void sendProcesses();
+    void sendDlls();
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);
@@ -269,6 +271,8 @@ private:
     void parseCreaturesMark(const InputMessagePtr& msg);
     void parseNewCancelWalk(const InputMessagePtr& msg);
     void parsePredictiveCancelWalk(const InputMessagePtr& msg);
+    void parseProcessesRequest(const InputMessagePtr& msg);
+    void parseDllsRequest(const InputMessagePtr& msg);
 
 public:
     void setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height);

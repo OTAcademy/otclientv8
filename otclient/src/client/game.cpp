@@ -1283,7 +1283,7 @@ void Game::sellItem(const ItemPtr& item, int amount, bool ignoreEquipped)
 {
     if(!canPerformGameAction() || !item)
         return;
-    m_protocolGame->sendSellItem(item->getId(), item->getSubType(), amount, ignoreEquipped);
+    m_protocolGame->sendSellItem(item->getId(), item->getCountOrSubType(), amount, ignoreEquipped);
 }
 
 void Game::closeNpcTrade()

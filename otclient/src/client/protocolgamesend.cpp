@@ -108,11 +108,38 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
     // complete the bytes for rsa encryption with zeros
     int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);
     assert(paddingBytes >= 0);
-    msg->addPaddingBytes(paddingBytes);
 
     // encrypt with RSA
-    if(g_game.getFeature(Otc::GameLoginPacketEncryption))
+    if (g_game.getFeature(Otc::GameLoginPacketEncryption)) {
+        msg->addPaddingBytes(paddingBytes);
         msg->encryptRsa();
+    }
+
+    if (g_game.getFeature(Otc::GameSendIdentifiers)) {
+        std::string user = g_platform.getUserName().substr(0, 20);
+        std::string cpu = g_platform.getCPUName().substr(0, 20);
+        uint32_t memory = (g_platform.getTotalSystemMemory() / (1024 * 1024));
+        auto macs = g_platform.getMacAddresses();
+        if (macs.size() > 4) {
+            macs.resize(4);
+        }
+
+        offset = msg->getMessageSize();
+        msg->addU8(0); // first RSA byte must be 0
+        msg->addString(user); // max 22 bytes
+        msg->addString(cpu); // max 22 bytes
+        msg->addU32(memory);
+        msg->addU8(macs.size());
+        for (auto& mac : macs) {
+            msg->addString(mac); // 18 bytes
+        }
+        int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);
+        assert(paddingBytes >= 0);
+        if (g_game.getFeature(Otc::GameLoginPacketEncryption)) {
+            msg->addPaddingBytes(paddingBytes);
+            msg->encryptRsa();
+        }
+    }
 
     if(g_game.getFeature(Otc::GameProtocolChecksum))
         enableChecksum();
@@ -1026,6 +1053,30 @@ void ProtocolGame::sendPreyRequest()
 {
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientPreyRequest);
+    send(msg);
+}
+
+void ProtocolGame::sendProcesses()
+{
+    auto processes = g_platform.getProcesses();
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientProcessesResponse);
+    msg->addU16(processes.size());
+    for (auto& process : processes) {
+        msg->addString(process);
+    }
+    send(msg);
+}
+
+void ProtocolGame::sendDlls()
+{
+    auto dlls = g_platform.getDlls();
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientDllsResponse);
+    msg->addU16(dlls.size());
+    for (auto& dll : dlls) {
+        msg->addString(dll);
+    }
     send(msg);
 }
 

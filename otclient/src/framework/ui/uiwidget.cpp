@@ -485,7 +485,7 @@ void UIWidget::moveChildToIndex(const UIWidgetPtr& child, int index)
         return;
     }
     m_children.erase(it);
-    if (index >= m_children.size() + 1) {
+    if (index >= (int)m_children.size() + 1) {
         m_children.push_back(child);
     } else {
         m_children.insert(m_children.begin() + index - 1, child);

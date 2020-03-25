@@ -32,6 +32,7 @@ Protocol::Protocol()
     m_xteaEncryptionEnabled = false;
     m_checksumEnabled = false;
     m_bigPackets = false;
+    m_compression = false;
     m_inputMessage = InputMessagePtr(new InputMessage);
 
     // compression
@@ -202,7 +203,7 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
         }
     }
 
-    if (decompress) {
+    if (decompress || m_compression) {
         m_inputMessage->addZlibFooter();
         m_zstream.next_in = m_inputMessage->getDataBuffer();
         m_zstream.next_out = m_zstreamBuffer.data();
@@ -213,8 +214,8 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
             return;
         }
         int decryptedSize = m_zstreamBuffer.size() - m_zstream.avail_out;
-        if (decryptedSize < m_inputMessage->getUnreadSize()) {
-            g_logger.traceError("invalid size of decompressed message");
+        if (decryptedSize == 0) {
+            g_logger.traceError(stdext::format("invalid size of decompressed message - %i", (int)decryptedSize));
             return;
         }
         m_inputMessage->fillBuffer(m_zstreamBuffer.data(), decryptedSize);

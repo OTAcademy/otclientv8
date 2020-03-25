@@ -125,6 +125,10 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_platform", "getMemoryUsage", &Platform::getMemoryUsage, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getOSName", &Platform::getOSName, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getFileModificationTime", &Platform::getFileModificationTime, &g_platform);
+    g_lua.bindSingletonFunction("g_platform", "getMacAddresses", &Platform::getMacAddresses, &g_platform);
+    g_lua.bindSingletonFunction("g_platform", "getUserName", &Platform::getUserName, &g_platform);
+    g_lua.bindSingletonFunction("g_platform", "getDlls", &Platform::getDlls, &g_platform);
+    g_lua.bindSingletonFunction("g_platform", "getProcesses", &Platform::getProcesses, &g_platform);
 
     // Application
     g_lua.registerSingletonClass("g_app");

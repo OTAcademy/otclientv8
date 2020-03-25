@@ -145,6 +145,7 @@ void MapView::drawTiles(bool map, bool creatures, bool isFading, const TilePtr& 
         if (isFading) {
             drawQueueMap.draw();
             drawQueueCreatures.draw();
+            drawQueueCreatures.drawWidgets();
         }
     }
 
@@ -156,8 +157,10 @@ void MapView::drawTiles(bool map, bool creatures, bool isFading, const TilePtr& 
 
     if (map)
         drawQueueMap.draw();
-    if (creatures)
+    if (creatures) {
         drawQueueCreatures.draw();
+        drawQueueCreatures.drawWidgets();
+    }
 }
 
 void MapView::drawTileTexts(const Rect& rect, const Rect& srcRect)
@@ -216,6 +219,9 @@ void MapView::draw(const Rect& rect, const TilePtr& crosshairTile) {
                 isFading = true;
             }
         }
+    }
+    if (g_adaptiveRenderer.getLevel() == 0) {
+        isFading = true;
     }
 
     bool updateMap = m_mustDrawVisibleTilesCache || m_mapRenderTimer.elapsed_millis() >= g_adaptiveRenderer.mapRenderInterval();

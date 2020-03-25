@@ -455,6 +455,7 @@ namespace Otc
         // Custom features for customer
         GameFasterAnimations = 101,
         GameCenteredOutfits = 102,
+        GameSendIdentifiers = 103,
 
         // advanced features
         GamePacketSizeU32 = 110,

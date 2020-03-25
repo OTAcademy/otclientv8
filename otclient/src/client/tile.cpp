@@ -110,7 +110,7 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
     }
 
     // top
-    drawQueue.setDepth(m_topDepth - 1);
+    drawQueue.setDepth(m_topDepth - 2);
 
     int limit = g_adaptiveRenderer.effetsLimit();
     for (auto i = (int)m_effects.size() > limit ? m_effects.size() - limit : 0; i < m_effects.size(); ++i) {
@@ -135,7 +135,7 @@ void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightVi
 }
 
 void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView) {
-    drawQueue.setDepth(m_topDepth);
+    drawQueue.setDepth(m_topDepth - 1);
 
     for(const CreaturePtr& creature : m_walkingCreatures) {
         if (creature->isHidden())

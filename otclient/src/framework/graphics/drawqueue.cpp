@@ -105,3 +105,18 @@ void DrawQueue::draw() {
         g_atlas.reset(location);
     }
 }
+
+void DrawQueue::drawWidgets()
+{
+    if (m_widgets.empty()) 
+        return;
+    float oldDepth = g_painter->getDepth();
+    for (auto& queued_widget : m_widgets) {
+        g_painter->setDepth(queued_widget.depth);
+        Rect dest_rect = queued_widget.widget->getRect();
+        dest_rect = Rect(queued_widget.dest - Point(dest_rect.width() / 2, dest_rect.height() / 2), dest_rect.width(), dest_rect.height());
+        queued_widget.widget->setRect(dest_rect);
+        queued_widget.widget->draw(dest_rect, Fw::BothPanes);
+    }
+    g_painter->setDepth(oldDepth);
+}

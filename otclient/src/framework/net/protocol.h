@@ -60,6 +60,7 @@ public:
 
     void enableChecksum() { m_checksumEnabled = true; }
     void enableBigPackets() { m_bigPackets = true; }
+    void enableCompression() { m_compression = true; }
 
     virtual void send(const OutputMessagePtr& outputMessage);
     virtual void recv();
@@ -90,6 +91,7 @@ private:
     bool m_checksumEnabled;
     bool m_xteaEncryptionEnabled;
     bool m_bigPackets;
+    bool m_compression;
     ConnectionPtr m_connection;
     InputMessagePtr m_inputMessage;
     z_stream m_zstream;

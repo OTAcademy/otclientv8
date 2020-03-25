@@ -51,8 +51,9 @@ public:
     UIWidget();
     virtual ~UIWidget();
 
-protected:
     virtual void draw(const Rect& visibleRect, Fw::DrawPane drawPane);
+
+protected:
     virtual void drawSelf(Fw::DrawPane drawPane);
     virtual void drawChildren(const Rect& visibleRect, Fw::DrawPane drawPane);
 

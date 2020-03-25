@@ -30,17 +30,19 @@
 #include <boost/algorithm/string.hpp>
 #include <tchar.h>
 #include <Psapi.h>
+#include <iphlpapi.h>
+#include <tlhelp32.h>
 
 void Platform::processArgs(std::vector<std::string>& args)
 {
     int nargs;
-    wchar_t **wchar_argv = CommandLineToArgvW(GetCommandLineW(), &nargs);
-    if(!wchar_argv)
+    wchar_t** wchar_argv = CommandLineToArgvW(GetCommandLineW(), &nargs);
+    if (!wchar_argv)
         return;
 
     args.clear();
-    if(wchar_argv) {
-        for(int i=0;i<nargs;++i)
+    if (wchar_argv) {
+        for (int i = 0; i < nargs; ++i)
             args.push_back(stdext::utf16_to_utf8(wchar_argv[i]));
     }
 }
@@ -48,17 +50,17 @@ void Platform::processArgs(std::vector<std::string>& args)
 bool Platform::spawnProcess(std::string process, const std::vector<std::string>& args)
 {
     std::string commandLine;
-    for(uint i = 0; i < args.size(); ++i)
+    for (uint i = 0; i < args.size(); ++i)
         commandLine += stdext::format(" \"%s\"", args[i]);
 
     boost::replace_all(process, "/", "\\");
-    if(!boost::ends_with(process, ".exe"))
+    if (!boost::ends_with(process, ".exe"))
         process += ".exe";
 
     std::wstring wfile = stdext::utf8_to_utf16(process);
     std::wstring wcommandLine = stdext::utf8_to_utf16(commandLine);
 
-    if((size_t)ShellExecuteW(NULL, L"open", wfile.c_str(), wcommandLine.c_str(), NULL, SW_SHOWNORMAL) > 32)
+    if ((size_t)ShellExecuteW(NULL, L"open", wfile.c_str(), wcommandLine.c_str(), NULL, SW_SHOWNORMAL) > 32)
         return true;
     return false;
 }
@@ -70,7 +72,7 @@ int Platform::getProcessId()
 
 bool Platform::isProcessRunning(const std::string& name)
 {
-    if(FindWindowA(name.c_str(), NULL) != NULL)
+    if (FindWindowA(name.c_str(), NULL) != NULL)
         return true;
     return false;
 }
@@ -78,11 +80,11 @@ bool Platform::isProcessRunning(const std::string& name)
 bool Platform::killProcess(const std::string& name)
 {
     HWND window = FindWindowA(name.c_str(), NULL);
-    if(window == NULL)
+    if (window == NULL)
         return false;
     DWORD pid = GetProcessId(window);
     HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
-    if(handle == NULL)
+    if (handle == NULL)
         return false;
     bool ok = TerminateProcess(handle, 1) != 0;
     CloseHandle(handle);
@@ -115,14 +117,14 @@ bool Platform::fileExists(std::string file)
     boost::replace_all(file, "/", "\\");
     std::wstring wfile = stdext::utf8_to_utf16(file);
     DWORD dwAttrib = GetFileAttributesW(wfile.c_str());
-    return (dwAttrib != INVALID_FILE_ATTRIBUTES &&  !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+    return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 bool Platform::copyFile(std::string from, std::string to)
 {
     boost::replace_all(from, "/", "\\");
     boost::replace_all(to, "/", "\\");
-    if(CopyFileW(stdext::utf8_to_utf16(from).c_str(), stdext::utf8_to_utf16(to).c_str(), FALSE) == 0)
+    if (CopyFileW(stdext::utf8_to_utf16(from).c_str(), stdext::utf8_to_utf16(to).c_str(), FALSE) == 0)
         return false;
     return true;
 }
@@ -130,7 +132,7 @@ bool Platform::copyFile(std::string from, std::string to)
 bool Platform::removeFile(std::string file)
 {
     boost::replace_all(file, "/", "\\");
-    if(DeleteFileW(stdext::utf8_to_utf16(file).c_str()) == 0)
+    if (DeleteFileW(stdext::utf8_to_utf16(file).c_str()) == 0)
         return false;
     return true;
 }
@@ -143,7 +145,7 @@ ticks_t Platform::getFileModificationTime(std::string file)
     memset(&fileAttrData, 0, sizeof(fileAttrData));
     GetFileAttributesExW(wfile.c_str(), GetFileExInfoStandard, &fileAttrData);
     ULARGE_INTEGER uli;
-    uli.LowPart  = fileAttrData.ftLastWriteTime.dwLowDateTime;
+    uli.LowPart = fileAttrData.ftLastWriteTime.dwLowDateTime;
     uli.HighPart = fileAttrData.ftLastWriteTime.dwHighDateTime;
     return uli.QuadPart;
 }
@@ -178,7 +180,7 @@ std::string Platform::getCPUName()
     memset(buf, 0, sizeof(buf));
     DWORD bufSize = sizeof(buf);
     HKEY hKey;
-    if(RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return "";
     RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL, (LPBYTE)buf, (LPDWORD)&bufSize);
     return buf;
@@ -260,8 +262,8 @@ double Platform::getMemoryUsage()
 
 std::string Platform::getOSName()
 {
-    typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
-    typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
+    typedef void (WINAPI* PGNSI)(LPSYSTEM_INFO);
+    typedef BOOL(WINAPI* PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
 
     std::string ret;
     OSVERSIONINFOEX osvi;
@@ -277,164 +279,162 @@ std::string Platform::getOSName()
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     bOsVersionInfoEx = VerifyVersionInfo(&osvi, 0, 0);
 
-    if(!bOsVersionInfoEx)
+    if (!bOsVersionInfoEx)
         return std::string();
 
-    pGNSI = (PGNSI) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetNativeSystemInfo");
-    if(NULL != pGNSI)
+    pGNSI = (PGNSI)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetNativeSystemInfo");
+    if (NULL != pGNSI)
         pGNSI(&si);
     else
         GetSystemInfo(&si);
 
-    if(VER_PLATFORM_WIN32_NT==osvi.dwPlatformId && osvi.dwMajorVersion > 4) {
-        if(osvi.dwMajorVersion == 6) {
-            if(osvi.dwMinorVersion == 0) {
-                if(osvi.wProductType == VER_NT_WORKSTATION)
+    if (VER_PLATFORM_WIN32_NT == osvi.dwPlatformId && osvi.dwMajorVersion > 4) {
+        if (osvi.dwMajorVersion == 6) {
+            if (osvi.dwMinorVersion == 0) {
+                if (osvi.wProductType == VER_NT_WORKSTATION)
                     ret += "Windows Vista ";
                 else ret += "Windows Server 2008 ";
             }
 
-            if(osvi.dwMinorVersion == 1 || osvi.dwMinorVersion == 2)
-            {
-                if(osvi.wProductType == VER_NT_WORKSTATION && osvi.dwMinorVersion == 1)
+            if (osvi.dwMinorVersion == 1 || osvi.dwMinorVersion == 2) {
+                if (osvi.wProductType == VER_NT_WORKSTATION && osvi.dwMinorVersion == 1)
                     ret += "Windows 7 ";
-                 else
-                    if(osvi.wProductType == VER_NT_WORKSTATION && osvi.dwMinorVersion == 2)
+                else
+                    if (osvi.wProductType == VER_NT_WORKSTATION && osvi.dwMinorVersion == 2)
                         ret += "Windows 8 ";
                     else
                         ret += "Windows Server 2008 R2 ";
             }
 
-            pGPI = (PGPI) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetProductInfo");
+            pGPI = (PGPI)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetProductInfo");
 
-            pGPI( osvi.dwMajorVersion, osvi.dwMinorVersion, 0, 0, &dwType);
+            pGPI(osvi.dwMajorVersion, osvi.dwMinorVersion, 0, 0, &dwType);
 
-            switch(dwType)
-            {
-                case PRODUCT_ULTIMATE:
-                    ret += "Ultimate Edition";
-                    break;
-                case PRODUCT_PROFESSIONAL:
-                    ret += "Professional";
-                    break;
-                case PRODUCT_HOME_PREMIUM:
-                    ret += "Home Premium Edition";
-                    break;
-                case PRODUCT_HOME_BASIC:
-                    ret += "Home Basic Edition";
-                    break;
-                case PRODUCT_ENTERPRISE:
-                    ret += "Enterprise Edition";
-                    break;
-                case PRODUCT_BUSINESS:
-                    ret += "Business Edition";
-                    break;
-                case PRODUCT_STARTER:
-                    ret += "Starter Edition";
-                    break;
-                case PRODUCT_CLUSTER_SERVER:
-                    ret += "Cluster Server Edition";
-                    break;
-                case PRODUCT_DATACENTER_SERVER:
-                    ret += "Datacenter Edition";
-                    break;
-                case PRODUCT_DATACENTER_SERVER_CORE:
-                    ret += "Datacenter Edition (core installation)";
-                    break;
-                case PRODUCT_ENTERPRISE_SERVER:
-                    ret += "Enterprise Edition";
-                    break;
-                case PRODUCT_ENTERPRISE_SERVER_CORE:
-                    ret += "Enterprise Edition (core installation)";
-                    break;
-                case PRODUCT_ENTERPRISE_SERVER_IA64:
-                    ret += "Enterprise Edition for Itanium-based Systems";
-                    break;
-                case PRODUCT_SMALLBUSINESS_SERVER:
-                    ret += "Small Business Server";
-                    break;
-                case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
-                    ret += "Small Business Server Premium Edition";
-                    break;
-                case PRODUCT_STANDARD_SERVER:
-                    ret += "Standard Edition";
-                    break;
-                case PRODUCT_STANDARD_SERVER_CORE:
-                    ret += "Standard Edition (core installation)";
-                    break;
-                case PRODUCT_WEB_SERVER:
-                    ret += "Web Server Edition";
-                    break;
+            switch (dwType) {
+            case PRODUCT_ULTIMATE:
+                ret += "Ultimate Edition";
+                break;
+            case PRODUCT_PROFESSIONAL:
+                ret += "Professional";
+                break;
+            case PRODUCT_HOME_PREMIUM:
+                ret += "Home Premium Edition";
+                break;
+            case PRODUCT_HOME_BASIC:
+                ret += "Home Basic Edition";
+                break;
+            case PRODUCT_ENTERPRISE:
+                ret += "Enterprise Edition";
+                break;
+            case PRODUCT_BUSINESS:
+                ret += "Business Edition";
+                break;
+            case PRODUCT_STARTER:
+                ret += "Starter Edition";
+                break;
+            case PRODUCT_CLUSTER_SERVER:
+                ret += "Cluster Server Edition";
+                break;
+            case PRODUCT_DATACENTER_SERVER:
+                ret += "Datacenter Edition";
+                break;
+            case PRODUCT_DATACENTER_SERVER_CORE:
+                ret += "Datacenter Edition (core installation)";
+                break;
+            case PRODUCT_ENTERPRISE_SERVER:
+                ret += "Enterprise Edition";
+                break;
+            case PRODUCT_ENTERPRISE_SERVER_CORE:
+                ret += "Enterprise Edition (core installation)";
+                break;
+            case PRODUCT_ENTERPRISE_SERVER_IA64:
+                ret += "Enterprise Edition for Itanium-based Systems";
+                break;
+            case PRODUCT_SMALLBUSINESS_SERVER:
+                ret += "Small Business Server";
+                break;
+            case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
+                ret += "Small Business Server Premium Edition";
+                break;
+            case PRODUCT_STANDARD_SERVER:
+                ret += "Standard Edition";
+                break;
+            case PRODUCT_STANDARD_SERVER_CORE:
+                ret += "Standard Edition (core installation)";
+                break;
+            case PRODUCT_WEB_SERVER:
+                ret += "Web Server Edition";
+                break;
             }
         }
 
-        if(osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2) {
-            if(GetSystemMetrics(SM_SERVERR2))
-                ret +=  "Windows Server 2003 R2, ";
-            else if(osvi.wSuiteMask & VER_SUITE_STORAGE_SERVER)
-                ret +=  "Windows Storage Server 2003";
-            else if(osvi.wSuiteMask & VER_SUITE_WH_SERVER)
-                ret +=  "Windows Home Server";
-            else if(osvi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
-                ret +=  "Windows XP Professional x64 Edition";
+        if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2) {
+            if (GetSystemMetrics(SM_SERVERR2))
+                ret += "Windows Server 2003 R2, ";
+            else if (osvi.wSuiteMask & VER_SUITE_STORAGE_SERVER)
+                ret += "Windows Storage Server 2003";
+            else if (osvi.wSuiteMask & VER_SUITE_WH_SERVER)
+                ret += "Windows Home Server";
+            else if (osvi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+                ret += "Windows XP Professional x64 Edition";
             else
                 ret += "Windows Server 2003, ";
 
-            if(osvi.wProductType != VER_NT_WORKSTATION) {
-                if(si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_IA64) {
-                    if(osvi.wSuiteMask & VER_SUITE_DATACENTER)
-                        ret +=  "Datacenter Edition for Itanium-based Systems";
-                    else if(osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
-                        ret +=  "Enterprise Edition for Itanium-based Systems";
+            if (osvi.wProductType != VER_NT_WORKSTATION) {
+                if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) {
+                    if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                        ret += "Datacenter Edition for Itanium-based Systems";
+                    else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                        ret += "Enterprise Edition for Itanium-based Systems";
                 }
 
-                else if(si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64) {
-                    if(osvi.wSuiteMask & VER_SUITE_DATACENTER)
-                        ret +=  "Datacenter x64 Edition";
-                    else if(osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
-                        ret +=  "Enterprise x64 Edition";
+                else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+                    if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                        ret += "Datacenter x64 Edition";
+                    else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                        ret += "Enterprise x64 Edition";
                     else
-                        ret +=  "Standard x64 Edition";
+                        ret += "Standard x64 Edition";
                 } else {
-                    if(osvi.wSuiteMask & VER_SUITE_COMPUTE_SERVER)
-                        ret +=  "Compute Cluster Edition";
-                    else if(osvi.wSuiteMask & VER_SUITE_DATACENTER)
-                        ret +=  "Datacenter Edition";
-                    else if(osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
-                        ret +=  "Enterprise Edition";
-                    else if(osvi.wSuiteMask & VER_SUITE_BLADE)
-                        ret +=  "Web Edition";
-                    else ret +=  "Standard Edition";
+                    if (osvi.wSuiteMask & VER_SUITE_COMPUTE_SERVER)
+                        ret += "Compute Cluster Edition";
+                    else if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                        ret += "Datacenter Edition";
+                    else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                        ret += "Enterprise Edition";
+                    else if (osvi.wSuiteMask & VER_SUITE_BLADE)
+                        ret += "Web Edition";
+                    else ret += "Standard Edition";
                 }
             }
         }
 
-        if(osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1) {
+        if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1) {
             ret += "Windows XP ";
-            if(osvi.wSuiteMask & VER_SUITE_PERSONAL)
-                ret +=  "Home Edition";
-            else ret +=  "Professional";
+            if (osvi.wSuiteMask & VER_SUITE_PERSONAL)
+                ret += "Home Edition";
+            else ret += "Professional";
         }
 
-        if(osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0 ) {
+        if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0) {
             ret += "Windows 2000 ";
-            if(osvi.wProductType == VER_NT_WORKSTATION) {
-                ret +=  "Professional";
+            if (osvi.wProductType == VER_NT_WORKSTATION) {
+                ret += "Professional";
             } else {
-                if(osvi.wSuiteMask & VER_SUITE_DATACENTER)
-                    ret +=  "Datacenter Server";
-                else if(osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
-                    ret +=  "Advanced Server";
-                else ret +=  "Server";
+                if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                    ret += "Datacenter Server";
+                else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                    ret += "Advanced Server";
+                else ret += "Server";
             }
         }
 
         ret += stdext::format(" (build %d)", osvi.dwBuildNumber);
 
-        if(osvi.dwMajorVersion >= 6 ) {
-            if(si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64 )
-                ret +=  ", 64-bit";
-            else if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_INTEL )
+        if (osvi.dwMajorVersion >= 6) {
+            if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+                ret += ", 64-bit";
+            else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
                 ret += ", 32-bit";
         }
     } else {
@@ -450,6 +450,88 @@ std::string Platform::traceback(const std::string& where, int level, int maxDept
     ss << "\nat:";
     ss << "\n\t[C++]: " << where;
     return ss.str();
+}
+
+std::vector<std::string> Platform::getMacAddresses()
+{
+    std::vector<std::string> ret;
+    IP_ADAPTER_INFO AdapterInfo[32];
+    DWORD dwBufLen = sizeof(AdapterInfo);
+
+    DWORD dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);
+    if (dwStatus != ERROR_SUCCESS) {
+        return ret;
+    }
+
+    PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo; // Contains pointer to  current adapter info
+    do {
+        char buffer[20];
+        sprintf_s(buffer, sizeof(buffer), "%02x%02x%02x%02x%02x%02x%02x%02x", pAdapterInfo->Address[0], pAdapterInfo->Address[1], pAdapterInfo->Address[2],
+                  pAdapterInfo->Address[3], pAdapterInfo->Address[4], pAdapterInfo->Address[5], pAdapterInfo->Address[6], pAdapterInfo->Address[7]);
+        ret.push_back(std::string(buffer));
+        pAdapterInfo = pAdapterInfo->Next;    // Progress through linked list
+    } while (pAdapterInfo);                    // Terminate if last adapter
+    std::sort(ret.begin(), ret.end());
+    return ret;
+}
+
+
+std::string Platform::getUserName()
+{
+    char buffer[30];
+    DWORD length = sizeof(buffer) - 1;
+    GetUserNameA(buffer, &length);
+    buffer[29] = 0; // just in case
+    return std::string(buffer);
+}
+
+std::vector<std::string> Platform::getDlls()
+{
+    HMODULE hMods[1024];
+    DWORD cbNeeded;
+
+    std::vector<std::string> ret;
+    HANDLE hProcess = GetCurrentProcess();
+    if (!hProcess) 
+        return ret;
+
+    if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded)) {
+        for (unsigned int i = 0; i < (cbNeeded / sizeof(HMODULE)); i++) {
+            char szModName[MAX_PATH];
+            if (GetModuleFileNameExA(hProcess, hMods[i], szModName,
+                                    sizeof(szModName) / sizeof(TCHAR))) {
+                ret.push_back(szModName);
+            }
+        }
+    }
+
+    return ret;
+}
+
+std::vector<std::string> Platform::getProcesses()
+{
+    std::vector<std::string> ret;
+
+    HANDLE hProcessSnap;
+    PROCESSENTRY32 pe32;
+    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+    if (hProcessSnap == INVALID_HANDLE_VALUE) {
+        return ret;
+    }
+
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+    if (!Process32First(hProcessSnap, &pe32)) {
+        CloseHandle(hProcessSnap);
+        return ret;
+    }
+
+    do {
+        ret.push_back(pe32.szExeFile);
+    } while (Process32Next(hProcessSnap, &pe32));
+    CloseHandle(hProcessSnap);
+
+    return ret;
 }
 
 #endif

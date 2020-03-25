@@ -32,8 +32,9 @@
 #include <framework/core/timer.h>
 #include <framework/graphics/fontmanager.h>
 #include <framework/graphics/cachedtext.h>
+#include <framework/ui/uiwidget.h>
 
-// @bindclass
+ // @bindclass
 class Creature : public Thing
 {
 public:
@@ -166,6 +167,23 @@ public:
         return m_elevation;
     }
 
+    // widgets
+    void addTopWidget(const UIWidgetPtr& widget);
+    void addBottomWidget(const UIWidgetPtr& widget);
+    void addDirectionalWidget(const UIWidgetPtr& widget);
+    void removeTopWidget(const UIWidgetPtr& widget);
+    void removeBottomWidget(const UIWidgetPtr& widget);
+    void removeDirectionalWidget(const UIWidgetPtr& widget);
+    std::list<UIWidgetPtr> getTopWidgets();
+    std::list<UIWidgetPtr> getBottomWidgets();
+    std::list<UIWidgetPtr> getDirectionalWdigets();
+    void clearWidgets();
+    void clearTopWidgets();
+    void clearBottomWidgets();
+    void clearDirectionalWidgets();
+    void drawTopWidgets(const Point& rect, DrawQueue& drawQueue);
+    void drawBottomWidgets(const Point& rect, DrawQueue& drawQueue);
+
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
     virtual void updateWalkOffset(int totalPixelsWalked);
@@ -242,7 +260,12 @@ protected:
     float m_jumpHeight;
     float m_jumpDuration;
     PointF m_jumpOffset;
-    Timer m_jumpTimer;    
+    Timer m_jumpTimer;
+
+    // widgets
+    std::list<UIWidgetPtr> m_bottomWidgets;
+    std::list<UIWidgetPtr> m_directionalWidgets;
+    std::list<UIWidgetPtr> m_topWidgets;
 };
 
 // @bindclass

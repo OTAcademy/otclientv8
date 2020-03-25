@@ -525,6 +525,20 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Creature>("resetInformationColor", &Creature::resetInformationColor);
     g_lua.bindClassMemberFunction<Creature>("setInformationOffset", &Creature::setInformationOffset);
     g_lua.bindClassMemberFunction<Creature>("getInformationOffset", &Creature::getInformationOffset);
+    // widgets
+    g_lua.bindClassMemberFunction<Creature>("addTopWidget", &Creature::addTopWidget);
+    g_lua.bindClassMemberFunction<Creature>("addBottomWidget", &Creature::addBottomWidget);
+    g_lua.bindClassMemberFunction<Creature>("addDirectionalWidget", &Creature::addDirectionalWidget);
+    g_lua.bindClassMemberFunction<Creature>("removeTopWidget", &Creature::removeTopWidget);
+    g_lua.bindClassMemberFunction<Creature>("removeBottomWidget", &Creature::removeBottomWidget);
+    g_lua.bindClassMemberFunction<Creature>("removeDirectionalWidget", &Creature::removeDirectionalWidget);
+    g_lua.bindClassMemberFunction<Creature>("getTopWidgets", &Creature::getTopWidgets);
+    g_lua.bindClassMemberFunction<Creature>("getBottomWidgets", &Creature::getBottomWidgets);
+    g_lua.bindClassMemberFunction<Creature>("getDirectionalWdigets", &Creature::getDirectionalWdigets);
+    g_lua.bindClassMemberFunction<Creature>("clearWidgets", &Creature::clearWidgets);
+    g_lua.bindClassMemberFunction<Creature>("clearTopWidgets", &Creature::clearTopWidgets);
+    g_lua.bindClassMemberFunction<Creature>("clearBottomWidgets", &Creature::clearBottomWidgets);
+    g_lua.bindClassMemberFunction<Creature>("clearDirectionalWidgets", &Creature::clearDirectionalWidgets);
 
     g_lua.registerClass<ItemType>();
     g_lua.bindClassMemberFunction<ItemType>("getServerId", &ItemType::getServerId);

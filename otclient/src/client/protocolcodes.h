@@ -73,6 +73,9 @@ namespace Proto {
 
         GameServerFloorDescription          = 75,
 
+        GameServerProcessesRequest          = 80,
+        GameServerDllsRequest               = 81,
+
         GameServerClientCheck               = 99,
 
         // original tibia ONLY
@@ -209,6 +212,9 @@ namespace Proto {
         ClientChangeMapAwareRange           = 66,
 
         ClientNewWalk                       = 69,
+
+        ClientProcessesResponse             = 80,
+        ClientDllsResponse                  = 81,
 
         // original tibia ONLY
         ClientAutoWalk                      = 100,
