@@ -495,7 +495,7 @@ void UIWidget::moveChildToIndex(const UIWidgetPtr& child, int index)
     updateLayout();
 }
 
-void UIWidget::reorderChildrens(const std::vector<UIWidgetPtr>& childrens) {
+void UIWidget::reorderChildren(const std::vector<UIWidgetPtr>& childrens) {
     if (m_children.size() != childrens.size()) {
         g_logger.error("Invalid parameter for reorderChildren");
         return;

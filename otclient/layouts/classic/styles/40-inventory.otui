@@ -1,0 +1,36 @@
+InventoryWindow < HeadlessMiniWindow
+  height: 178
+  &forceOpen: true
+  !text: tr('Inventory')
+  icon: /images/topbuttons/inventory
+
+InventoryWindowContents < MiniWindowContents
+  margin-top: 0
+  
+  UIButton
+    id: minimizeButton
+    anchors.top: parent.top
+    anchors.left: parent.left
+    size: 14 14
+    image-source: /images/ui/miniwindow_buttons
+    image-clip: 0 0 14 14
+    margin-top: 3
+    margin-left: 4
+
+    $hover:
+      image-clip: 0 14 14 14
+
+    $pressed:
+      image-clip: 0 28 14 14
+
+    $on:
+      image-clip: 14 0 14 14
+
+    $on hover:
+      image-clip: 14 14 14 14
+
+    $on pressed:
+      image-clip: 14 28 14 14
+    
+    @onClick: |
+      self:getParent():getParent().minimizeButton:onClick()

@@ -34,6 +34,8 @@ namespace stdext {
 
 std::string resolve_path(const std::string& filePath, std::string sourcePath)
 {
+    if (filePath.empty())
+        return "";
     if(stdext::starts_with(filePath, "/"))
         return filePath;
     if(!stdext::ends_with(sourcePath, "/")) {

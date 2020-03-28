@@ -47,6 +47,12 @@ void ModuleManager::discoverModules()
         modules.insert(modules.end(), subFilesAndDirs.begin(), subFilesAndDirs.end());
     }
 
+    dirs = g_resources.listDirectoryFiles("/mods", true);
+    for (auto& dir : dirs) {
+        auto subFilesAndDirs = g_resources.listDirectoryFiles(dir, true);
+        modules.insert(modules.end(), subFilesAndDirs.begin(), subFilesAndDirs.end());
+    }
+
     for (auto& mod : modules) {
         if (g_resources.isFileType(mod, "otmod")) {
             ModulePtr module = discoverModule(mod);

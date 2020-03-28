@@ -229,17 +229,17 @@ bool luavalue_cast(int index, std::function<void(Args...)>& func) {
             // note that we must catch exceptions, because this lambda can be called from anywhere
             // and most of them won't catch exceptions (e.g. dispatcher)
             g_lua.getWeakRef(funcWeakRef);
-            try {
-                if(g_lua.isFunction()) {
-                    int numArgs = g_lua.polymorphicPush(args...);
-                    int rets = g_lua.safeCall(numArgs);
-                    g_lua.pop(rets);
+            auto error = std::make_shared<std::string>();
+            if(g_lua.isFunction()) {
+                int numArgs = g_lua.polymorphicPush(args...);
+                int rets = g_lua.safeCall(numArgs, -1, error);
+                if (!error->empty()) {
+                    g_logger.error(stdext::format("lua function callback failed: %s", *error));
                 } else {
-                    throw LuaException("attempt to call an expired lua function from C++,"
-                                       "did you forget to hold a reference for that function?", 0);
+                    g_lua.pop(rets);
                 }
-            } catch(LuaException& e) {
-                g_logger.error(stdext::format("lua function callback failed: %s", e.what()));
+            } else {
+                g_logger.error("attempt to call an expired lua function from C++, did you forget to hold a reference for that function?");
             }
         };
         return true;

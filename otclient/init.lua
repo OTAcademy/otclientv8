@@ -1,6 +1,7 @@
 -- CONFIG
 APP_NAME = "otclientv8" -- important, change it, it's name for config dir and files in appdata
 APP_VERSION = 1337      -- client version for updater and login to identify outdated client
+DEFAULT_LAYOUT = "classic"
 
 -- If you don't use updater or other service, set it to updater = ""
 Services = {
@@ -8,7 +9,8 @@ Services = {
   updater = "http://otclient.ovh/api/updater.php",
   stats = "",
   crash = "http://otclient.ovh/api/crash.php",
-  feedback = "http://otclient.ovh/api/feedback.php"
+  feedback = "http://otclient.ovh/api/feedback.php",
+  status = "http://otclient.ovh/api/status.php"
 }
 
 -- Servers accept http login url, websocket login url or ip:port:version
@@ -21,6 +23,7 @@ Servers = {
   GarneraTest = "garnera-global.net:7171:1100",
   LocalTestServ = "127.0.0.1:7171:1098:110:30:93"
 }
+
 --Server = "ws://otclient.ovh:3000/"
 --Server = "ws://127.0.0.1:88/"
 --USE_NEW_ENERGAME = true -- uses entergamev2 based on websockets instead of entergame
@@ -61,6 +64,14 @@ end
 
 -- settings
 g_configs.loadSettings("/config.otml")
+
+-- set layout
+local settings = g_configs.getSettings()
+local layout = DEFAULT_LAYOUT
+if settings:exists('layout') then
+  layout = settings:getValue('layout')
+end
+g_resources.setLayout(layout)
 
 -- load mods
 g_modules.discoverModules()

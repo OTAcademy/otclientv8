@@ -93,6 +93,12 @@ public:
 
     void installDlls(std::filesystem::path dest);
 
+    void setLayout(std::string layout);
+    std::string getLayout()
+    {
+        return m_layout;
+    }
+
 
 private:
     std::filesystem::path m_binaryPath, m_writeDir;
@@ -103,6 +109,7 @@ private:
     size_t m_memoryDataBufferSize = 0;
     uint32_t customEncryption = 0;
     std::string m_dataDir;
+    std::string m_layout;
 };
 
 extern ResourceManager g_resources;

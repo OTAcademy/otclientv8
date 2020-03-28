@@ -8,12 +8,14 @@ oldZoom = nil
 oldPos = nil
 
 function init()
-  minimapButton = modules.client_topmenu.addRightGameToggleButton('minimapButton', 
-    tr('Minimap') .. ' (Ctrl+M)', '/images/topbuttons/minimap', toggle)
-  minimapButton:setOn(true)
-
   minimapWindow = g_ui.loadUI('minimap', modules.game_interface.getRightPanel())
   minimapWindow:setContentMinimumHeight(64)
+
+  if not minimapWindow.forceOpen then
+    minimapButton = modules.client_topmenu.addRightGameToggleButton('minimapButton', 
+      tr('Minimap') .. ' (Ctrl+M)', '/images/topbuttons/minimap', toggle)
+    minimapButton:setOn(true)
+  end
 
   minimapWidget = minimapWindow:recursiveGetChildById('minimap')
 
@@ -64,10 +66,13 @@ function terminate()
   g_keyboard.unbindKeyDown('Ctrl+Shift+M')
 
   minimapWindow:destroy()
-  minimapButton:destroy()
+  if minimapButton then
+    minimapButton:destroy()
+  end
 end
 
 function toggle()
+  if not minimapButton then return end
   if minimapButton:isOn() then
     minimapWindow:close()
     minimapButton:setOn(false)
@@ -78,7 +83,9 @@ function toggle()
 end
 
 function onMiniWindowClose()
-  minimapButton:setOn(false)
+  if minimapButton then
+    minimapButton:setOn(false)
+  end
 end
 
 function preload()

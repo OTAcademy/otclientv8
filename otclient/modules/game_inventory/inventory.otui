@@ -74,18 +74,17 @@ AmmoSlot < InventoryItem
 
 PurseButton < UIButton
   id: purseButton
-  size: 24 24
+  size: 34 12
   !tooltip: tr('Open purse')
   icon-source: /images/game/slots/purse
-  icon-size: 24 24
-
-MarketButton < UIButton
-  id: marketButton
-  size: 24 24
-  !tooltip: tr('Open Market')
-  icon-source: /images/game/slots/coins
-  icon-size: 24 24
+  icon-clip: 0 0 34 12
   
+  $on:
+    icon-clip: 0 12 34 12
+
+  $pressed:
+    icon-clip: 0 12 34 12
+
 CombatBox < UICheckBox
   size: 20 20
   image-clip: 0 0 20 20
@@ -98,7 +97,8 @@ CombatBox < UICheckBox
 InventoryButton < Button
   font: verdana-11px-antialised
   height: 18
-  margin-top: 1
+  margin-top: 2
+  text-align: center
 
 SoulCapLabel < GameLabel
   text-align: center
@@ -124,17 +124,13 @@ SafeFightBox < CombatBox
 MountButton < CombatBox
   image-source: /images/game/combatmodes/mount    
 
-MiniWindow
+InventoryWindow
   id: inventoryWindow
-  !text: tr('Inventory')
-  icon: /images/topbuttons/inventory
-  height: 200
   @onClose: modules.game_inventory.onMiniWindowClose()
   &save: true
   &autoOpen: 3
-  --&forceOpen: true
 
-  MiniWindowContents
+  InventoryWindowContents
     anchors.left: parent.left
         
     Panel
@@ -166,7 +162,7 @@ MiniWindow
       NeckSlot
         anchors.top: slot1.top
         anchors.right: slot1.left
-        margin-top: 10
+        margin-top: 13
         margin-right: 5
 
       LeftSlot
@@ -182,7 +178,7 @@ MiniWindow
       BackSlot
         anchors.top: slot1.top
         anchors.left: slot1.right
-        margin-top: 10
+        margin-top: 13
         margin-left: 5
 
       RightSlot
@@ -205,6 +201,11 @@ MiniWindow
         anchors.top: slot9.bottom
         anchors.horizontalCenter: slot9.horizontalCenter
 
+      PurseButton
+        anchors.left: slot3.left
+        anchors.bottom: slot3.top        
+        margin-bottom: 3
+  
       Panel
         id: conditionPanel
         layout:
@@ -217,7 +218,7 @@ MiniWindow
         margin-top: 4
         border-width: 1
         border-color: #00000077
-        background-color: #ffffff11
+        background-color: #ffffff22
         
     Panel
       margin-top: 5
@@ -269,7 +270,16 @@ MiniWindow
         anchors.top: prev.bottom
         layout:
           type: verticalBox
-          
+        
+        UIButton
+          id: buttonPvp
+          height: 20
+          icon: /images/game/combatmodes/pvp
+          icon-clip: 0 0 42 20
+
+          $on:
+            icon-clip: 0 20 42 20
+        
         InventoryButton
           !text: tr('Stop')
           @onClick: g_game.stop(); g_game.cancelAttackAndFollow()
@@ -285,15 +295,3 @@ MiniWindow
         InventoryButton
           !text: tr('Logout')
           @onClick: modules.game_interface.tryLogout()
-
-      MarketButton
-        anchors.left: buttonsPanel.left
-        anchors.bottom: buttonsPanel.bottom        
-        margin-bottom: 3
-        margin-left: 3
-        
-      PurseButton
-        anchors.right: buttonsPanel.right
-        anchors.bottom: buttonsPanel.bottom        
-        margin-bottom: 3
-        margin-right: 2

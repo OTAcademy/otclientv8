@@ -581,6 +581,7 @@ void Creature::onDisappear()
             self->setPosition(Position());
         self->m_oldPosition = Position();
         self->m_disappearEvent = nullptr;
+        self->clearWidgets();
     });
 }
 

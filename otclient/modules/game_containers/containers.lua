@@ -51,9 +51,15 @@ function refreshContainerItems(container)
 end
 
 function toggleContainerPages(containerWindow, pages)
-  containerWindow:getChildById('miniwindowScrollBar'):setMarginTop(pages and 42 or 22)
-  containerWindow:getChildById('contentsPanel'):setMarginTop(pages and 42 or 22)
-  containerWindow:getChildById('pagePanel'):setVisible(pages)
+  if containerWindow.contentsPanel.originalMarginTop then
+    containerWindow:getChildById('miniwindowScrollBar'):setMarginTop(pages and containerWindow.contentsPanel.originalMarginTop + 20 or containerWindow.contentsPanel.originalMarginTop)
+    containerWindow:getChildById('contentsPanel'):setMarginTop(pages and containerWindow.contentsPanel.originalMarginTop + 20 or containerWindow.contentsPanel.originalMarginTop)
+    containerWindow:getChildById('pagePanel'):setVisible(pages)  
+  else
+    containerWindow:getChildById('miniwindowScrollBar'):setMarginTop(pages and 42 or 22)
+    containerWindow:getChildById('contentsPanel'):setMarginTop(pages and 42 or 22)
+    containerWindow:getChildById('pagePanel'):setVisible(pages)
+  end
 end
 
 function refreshContainerPages(container)
@@ -136,6 +142,7 @@ function onContainerOpen(container, previousContainer)
   container.window = containerWindow
   container.itemsPanel = containerPanel
 
+  containerWindow.contentsPanel.originalMarginTop = containerWindow.contentsPanel:getMarginTop()
   toggleContainerPages(containerWindow, container:hasPages())
   refreshContainerPages(container)
 

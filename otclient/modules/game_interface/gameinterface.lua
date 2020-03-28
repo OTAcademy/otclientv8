@@ -877,7 +877,9 @@ function refreshViewMode()
   
   if classic then  
     g_game.changeMapAwareRange(19, 15)
-    gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
+    if not modules.client_topmenu.getTopMenu().hideIngame then
+      gameRootPanel:addAnchor(AnchorTop, 'topMenu', AnchorBottom)
+    end
     gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanels', AnchorRight)
     gameMapPanel:addAnchor(AnchorRight, 'gameRightPanels', AnchorLeft)
     gameMapPanel:addAnchor(AnchorBottom, 'gameBottomPanel', AnchorTop)    

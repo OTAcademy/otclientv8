@@ -471,10 +471,10 @@ void WIN32Window::internalRestoreGLContext()
 {
 #ifdef OPENGL_ES
     if(!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext))
-        g_logger.fatal("Unable to make current EGL context");
+        g_logger.fatal(stdext::format("Unable to make current EGL context (error: %i, report it)", (int)eglGetError()));
 #else
     if(!wglMakeCurrent(m_deviceContext, m_wglContext))
-        g_logger.fatal("Unable to make current WGL context");
+        g_logger.fatal(stdext::format("Unable to make current WGL context (error: %i, report it)", GetLastError()));
 #endif
 }
 

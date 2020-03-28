@@ -501,11 +501,16 @@ std::string ResourceManager::resolvePath(std::string path)
     }
     stdext::replace_all(path, "//", "/");
     if(!PHYSFS_exists(path.c_str())) {
-        static std::string extra_check[] = { "/data", "/modules", "/mods" };
+        static const std::string layouts_prefix = "/layouts/";
+        if (!m_layout.empty()) {
+            if (PHYSFS_exists((layouts_prefix + m_layout + path).c_str())) {
+                return layouts_prefix + m_layout + path;
+            }
+        }
+        static const std::string extra_check[] = { "/mods", "/data", "/modules" };
         for (auto extra : extra_check) {
             if (PHYSFS_exists((extra + path).c_str())) {
-                path = extra + path;
-                break;
+                return extra + path;
             }
         }
     }
@@ -533,6 +538,7 @@ std::list<std::string> ResourceManager::listUpdateableFiles() {
     queue.push("/data");
     queue.push("/modules");
     queue.push("/mods");
+    queue.push("/layouts");
     while (!queue.empty()) {
         auto file = queue.front();
         queue.pop();
@@ -702,7 +708,7 @@ void ResourceManager::updateClient(const std::vector<std::string>& files, std::s
 
 #ifdef WITH_ENCRYPTION
 void ResourceManager::encrypt(const std::string& seed) {
-    const std::string dirsToCheck[] = { "data", "modules", "mods" };
+    const std::string dirsToCheck[] = { "data", "modules", "mods", "layouts" };
     const std::string luaExtension = ".lua";
 
     g_logger.setLogFile("encryption.log");
@@ -860,4 +866,18 @@ void ResourceManager::installDlls(std::filesystem::path dest)
         std::filesystem::copy_file(dll_path, out_path);
     }
 #endif
+}
+
+void ResourceManager::setLayout(std::string layout)
+{
+    stdext::tolower(layout);
+    stdext::replace_all(layout, "/", "");
+    if (layout == "default") {
+        layout = "";
+    }
+    if (!layout.empty() && !PHYSFS_exists((std::string("/layouts/") + layout).c_str())) {
+        g_logger.error(stdext::format("Layour %s doesn't exist, using default", layout));
+        return;
+    }
+    m_layout = layout;
 }

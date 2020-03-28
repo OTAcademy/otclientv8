@@ -1,0 +1,6 @@
+InventoryWindow < MiniWindow
+  !text: tr('Inventory')
+  icon: /images/topbuttons/inventory
+  height: 200
+
+InventoryWindowContents < MiniWindowContents

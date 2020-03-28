@@ -156,6 +156,7 @@ function setupAction(index, action, config)
     if config.item > 0 then
       setupActionType(action, config.action)
     end
+    action.item:setOn(config.item > 0)
     action.item:setItemId(config.item)
     action.item:setItemCount(config.count)
   end
@@ -274,6 +275,7 @@ function actionOnMouseRelease(action, mousePosition, mouseButton)
     menu:addSeparator()
     menu:addOption(tr('Set text'), function() 
       modules.game_textedit.singlelineEditor(action.text:getText(), function(newText)
+        action.item:setOn(false)
         action.item:setItemId(0)
         action.text:setText(newText)
         if action.text:getText():len() > 0 then
@@ -338,6 +340,7 @@ function actionOnItemChange(widget)
   local action = widget:getParent()
   if action.item:getItemId() > 0 then
     action.text:setText("")
+    action.item:setOn(true)
     if action.item:getItem():isMultiUse() then
       if not action.actionType or action.actionType <= 1 then
         setupActionType(action, ActionTypes.USE_WITH)
