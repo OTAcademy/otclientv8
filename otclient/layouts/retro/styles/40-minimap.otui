@@ -248,7 +248,7 @@ MinimapWindow < HeadlessMiniWindow
   &forceOpen: true
 
   MiniWindowContents
-    margin: 3
+    margin: 5
 
     Minimap
       id: minimap

@@ -223,8 +223,14 @@ function setOption(key, value, force)
     g_window.setVerticalSync(value)
   elseif key == 'showFps' then
     modules.client_topmenu.setFpsVisible(value)
+    if modules.game_stats and modules.game_stats.ui.fps then
+      modules.game_stats.ui.fps:setVisible(value)
+    end
   elseif key == 'showPing' then
     modules.client_topmenu.setPingVisible(value)
+    if modules.game_stats and modules.game_stats.ui.ping then
+      modules.game_stats.ui.ping:setVisible(value)
+    end
   elseif key == 'fullscreen' then
     g_window.setFullscreen(value)
   elseif key == 'enableAudio' then

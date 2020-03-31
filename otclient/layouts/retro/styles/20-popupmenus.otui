@@ -1,7 +1,7 @@
 PopupMenuButton < UIButton
   height: 18
   size: 0 21
-  text-offset: 4 0
+  text-offset: 4 2
   text-align: left
   font: verdana-11px-antialised
 
@@ -35,7 +35,7 @@ PopupMenuSeparator < UIWidget
   phantom: true
 
 PopupMenu < UIPopupMenu
-  width: 50
+  width: 120
   image-source: /images/ui/menubox
   image-border: 3
   padding: 5

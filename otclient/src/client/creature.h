@@ -48,7 +48,7 @@ public:
 
     virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
     virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
-    virtual void drawOutfit(const Rect& destRect, bool resize, Otc::Direction direction = Otc::InvalidDirection);
+    virtual void drawOutfit(const Rect& destRect, float scale = 0, bool raw = false, Otc::Direction direction = Otc::InvalidDirection);
 
     void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr, bool lightOnly = false);
     void newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView* lightView);

@@ -156,7 +156,7 @@ public:
 private:
     uint16 m_clientId;
     uint16 m_serverId;
-    uint8 m_countOrSubType;
+    uint16 m_countOrSubType;
     stdext::packed_storage<uint8> m_attribs;
     ItemVector m_containerItems;
     Color m_color;

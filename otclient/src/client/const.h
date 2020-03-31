@@ -430,6 +430,7 @@ namespace Otc
         GameAdditionalSkills = 76,
         GameDistanceEffectU16 = 77,
         GamePrey = 78,
+        GameDoubleMagicLevel = 79,
 
         GameExtendedOpcode = 80,
         GameMinimapLimitedToSingleFloor = 81,

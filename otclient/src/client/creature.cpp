@@ -291,7 +291,7 @@ void Creature::newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView*
         drawQueue.setLastItemAsMarked(updatedMarkedColor());
 }
 
-void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction direction)
+void Creature::drawOutfit(const Rect& destRect, float scale, bool raw, Otc::Direction direction)
 {
     if (getThingType()->isNull()) return;
 
@@ -301,18 +301,31 @@ void Creature::drawOutfit(const Rect& destRect, bool resize, Otc::Direction dire
     else
         exactSize = g_things.rawGetThingType(m_outfit.getAuxId(), m_outfit.getCategory())->getExactSize();
 
-    /*
-    int frameSize = exactSize;
-    if(!resize)
-        frameSize = std::max<int>(exactSize, 2 * Otc::TILE_PIXELS);
-
-    if (frameSize < 1 || frameSize > 2048)
-        return;
-        */
     if (direction == Otc::InvalidDirection)
         direction = m_direction;
 
-    float scale = destRect.width() / (float)exactSize;
+    if (raw) {
+        int frameSize = exactSize;
+        if (scale < 0.1)
+            frameSize = std::max<int>(exactSize, 2 * Otc::TILE_PIXELS);
+
+        if (frameSize < 1 || frameSize > 2048)
+            return;
+
+        const FrameBufferPtr& outfitBuffer = g_framebuffers.getTemporaryFrameBuffer();
+        outfitBuffer->resize(Size(frameSize, frameSize));
+        outfitBuffer->bind();
+        g_painter->setAlphaWriting(true);
+        g_painter->clear(Color::alpha);
+        internalDrawOutfit(Point(frameSize - Otc::TILE_PIXELS, frameSize - Otc::TILE_PIXELS) + getDisplacement(), 1, false, true, Otc::South);
+        outfitBuffer->release();
+        outfitBuffer->draw(destRect, Rect(0, 0, frameSize, frameSize));
+        return;
+    }
+
+    if (scale < 0.1) {
+        float scale = destRect.width() / (float)exactSize;
+    }
     internalDrawOutfit((Point(exactSize - Otc::TILE_PIXELS, exactSize - Otc::TILE_PIXELS) + getDisplacement()) * scale, scale, false, true, direction);
 }
 

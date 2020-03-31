@@ -5,6 +5,7 @@ PageButton < Button
 
 ContainerWindow < MiniWindow
   height: 150
+  
 
   UIItem
     id: containerItemWidget
@@ -12,8 +13,8 @@ ContainerWindow < MiniWindow
     size: 16 16
     anchors.top: parent.top
     anchors.left: parent.left
-    margin-top: 4
-    margin-left: 4
+    margin-top: 1
+    margin-left: 3
 
   UIButton
     id: upButton
@@ -35,10 +36,15 @@ ContainerWindow < MiniWindow
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: miniwindowTopBar.bottom
-    height: 20
     margin: 1 3 0 3
     background: #00000066
-    visible: false
+    height: 20
+    
+    $on:
+      visible: true
+
+    $!on:
+      visible: false
 
     Label
       id: pageLabel

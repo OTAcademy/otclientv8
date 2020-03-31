@@ -91,7 +91,7 @@ ConsolePanel < Panel
     anchors.left: prev.right
     anchors.top: parent.top
     anchors.right: next.left
-    margin-top: 1
+    margin-top: 0
     tab-spacing: 2
     movable: true
 

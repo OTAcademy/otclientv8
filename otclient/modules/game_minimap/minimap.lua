@@ -111,12 +111,16 @@ function loadMap(clean)
     
   if otmm then
     local minimapFile = '/minimap.otmm'
-    if g_resources.fileExists(minimapFile) then
+    if g_resources.fileExists('/data' .. minimapFile) then
+      g_minimap.loadOtmm('/data' .. minimapFile)    
+    elseif g_resources.fileExists(minimapFile) then
       g_minimap.loadOtmm(minimapFile)
     end
   else
     local minimapFile = '/minimap_' .. clientVersion .. '.otcm'
-    if g_resources.fileExists(minimapFile) then
+    if g_resources.fileExists('/data' .. minimapFile) then
+      g_map.loadOtcm('/data' .. minimapFile)
+    elseif g_resources.fileExists(minimapFile) then
       g_map.loadOtcm(minimapFile)
     end
   end

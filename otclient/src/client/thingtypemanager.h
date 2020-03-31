@@ -55,6 +55,11 @@ public:
     ItemTypeList findItemTypesByName(std::string name);
     ItemTypeList findItemTypesByString(std::string str);
 
+    std::set<int> getMarketCategories()
+    {
+        return m_marketCategories;
+    }
+
     const ThingTypePtr& getNullThingType() { return m_nullThingType; }
     const ItemTypePtr& getNullItemType() { return m_nullItemType; }
 
@@ -85,6 +90,7 @@ private:
     ThingTypeList m_thingTypes[ThingLastCategory];
     ItemTypeList m_reverseItemTypes;
     ItemTypeList m_itemTypes;
+    std::set<int> m_marketCategories;
 
     ThingTypePtr m_nullThingType;
     ItemTypePtr m_nullItemType;

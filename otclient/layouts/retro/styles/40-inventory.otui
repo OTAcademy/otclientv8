@@ -95,10 +95,13 @@ CombatBox < UICheckBox
 
 
 InventoryButton < Button
-  font: verdana-11px-antialised
   height: 18
   margin-top: 2
   text-align: center
+  font: cipsoftFont
+  color: white
+  size: 45 20
+  text-offset: 2 2
 
 SoulCapLabel < GameLabel
   text-align: center
@@ -124,16 +127,46 @@ SafeFightBox < CombatBox
 MountButton < CombatBox
   image-source: /images/game/combatmodes/mount    
 
-InventoryWindow < MiniWindow
+InventoryWindow < HeadlessMiniWindow
   icon: /images/topbuttons/inventory
-  height: 200
+  height: 178
   id: inventoryWindow
   @onClose: modules.game_inventory.onMiniWindowClose()
   &save: true
   &autoOpen: 3
+  &forceOpen: true
 
   MiniWindowContents
     anchors.left: parent.left
+    margin-top: 0
+    
+    UIButton
+      id: minimizeButton
+      anchors.top: parent.top
+      anchors.left: parent.left
+      size: 14 14
+      image-source: /images/ui/miniwindow_buttons
+      image-clip: 0 0 14 14
+      margin-top: 3
+      margin-left: 4
+
+      $hover:
+        image-clip: 0 14 14 14
+
+      $pressed:
+        image-clip: 0 28 14 14
+
+      $on:
+        image-clip: 14 0 14 14
+
+      $on hover:
+        image-clip: 14 14 14 14
+
+      $on pressed:
+        image-clip: 14 28 14 14
+      
+      @onClick: |
+        self:getParent():getParent().minimizeButton:onClick()
         
     Panel
       id: inventoryPanel
@@ -297,3 +330,4 @@ InventoryWindow < MiniWindow
         InventoryButton
           !text: tr('Logout')
           @onClick: modules.game_interface.tryLogout()
+

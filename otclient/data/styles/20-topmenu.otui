@@ -99,6 +99,7 @@ TopMenu < TopMenuPanel
     anchors.bottom: parent.bottom
     anchors.horizontalCenter: parent.horizontalCenter
     text-align: center
+    text-auto-resize: true
 
   TopMenuButtonsPanel
     id: rightButtonsPanel

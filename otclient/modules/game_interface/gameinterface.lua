@@ -553,9 +553,9 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
   if g_game.getFeature(GameBot) and useThing and useThing:isItem() then
     menu:addSeparator()
     if useThing:getSubType() > 1 then
-      menu:addOption("ID: " .. useThing:getId() .. " SubType: " .. useThing:getSubType())    
+      menu:addOption("ID: " .. useThing:getId() .. " SubType: " .. useThing:getSubType(), function() end)    
     else
-      menu:addOption("ID: " .. useThing:getId())
+      menu:addOption("ID: " .. useThing:getId(), function() end)
     end
   end
 
@@ -945,6 +945,9 @@ function updateSize()
       maxWidth = tileSize * (awareRange.width - 1)
     end
     gameMapPanel:setMarginTop(-tileSize)
+    if modules.game_stats then
+      modules.game_stats.ui:setMarginTop(tileSize)
+    end
     if g_settings.getBoolean("cacheMap") then
       gameMapPanel:setMarginLeft(0)
       gameMapPanel:setMarginRight(0)    
@@ -960,7 +963,11 @@ function updateSize()
           child.onGeometryChange(child)
         end
       end
-    end    
+    end
+  else
+    if modules.game_stats then
+      modules.game_stats.ui:setMarginTop(0)
+    end  
   end
   
     --[[

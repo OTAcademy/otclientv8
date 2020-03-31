@@ -33,26 +33,32 @@ public:
     void drawSelf(Fw::DrawPane drawPane);
 
     void setCreature(const CreaturePtr& creature) { m_creature = creature; m_redraw = true; }
-    void setFixedCreatureSize(bool fixed) { m_fixedCreatureSize = fixed; m_redraw = true; }
+    void setFixedCreatureSize(bool fixed) { m_scale = fixed ? 1.0 : 0; m_redraw = true; }
     void setOutfit(const Outfit& outfit);
 
     CreaturePtr getCreature() { return m_creature; }
-    bool isFixedCreatureSize() { return m_fixedCreatureSize; }
+    bool isFixedCreatureSize() { return m_scale > 0; }
 
     void setAutoRotating(bool value) { m_autoRotating = value; }
     void setDirection(Otc::Direction direction) { m_direction = direction; m_redraw = true; }
+
+    void setScale(float scale) { m_scale = scale; m_redraw = true; }
+    float getScale() { return m_scale; }
+
+    void setRaw(bool value) { m_raw = value; m_redraw = true; }
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
     void onGeometryChange(const Rect& oldRect, const Rect& newRect) override;
 
     CreaturePtr m_creature;
-    stdext::boolean<false> m_fixedCreatureSize;
     stdext::boolean<false> m_autoRotating;
     stdext::boolean<false> m_redraw;
     int m_outfitNumber = 0;
     FrameBufferPtr m_framebuffer;
     Otc::Direction m_direction = Otc::South;
+    float m_scale = 1.0;
+    bool m_raw = false;
 };
 
 #endif

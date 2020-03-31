@@ -244,9 +244,7 @@ MinimapFlagWindow < MainWindow
     anchors.bottom: parent.bottom
 
 MinimapWindow < MiniWindow
-  !text: tr('Minimap')
   height: 150
-  icon: /images/topbuttons/minimap
 
   Label
     text: ?

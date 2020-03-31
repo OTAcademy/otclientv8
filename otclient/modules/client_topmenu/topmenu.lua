@@ -70,7 +70,7 @@ end
 
 function online()
   if topMenu.hideIngame then
-    topMenu:hide()
+    hide()
   else
     modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'topMenu', AnchorBottom)
   end
@@ -93,7 +93,7 @@ end
 
 function offline()
   if topMenu.hideIngame then
-    topMenu:show()
+    show()
   end
   if topMenu.onlineLabel then
     topMenu.onlineLabel:show()
@@ -222,11 +222,31 @@ function toggle()
   if not topMenu then
     return
   end
-
+  
   if topMenu:isVisible() then
-    topMenu:hide()
+    hide()
   else
-    topMenu:show()
+    show()
+  end
+end
+
+function hide()
+  topMenu:hide()
+  if not topMenu.hideIngame then
+    modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'parent', AnchorTop)
+  end
+  if modules.game_stats then
+    modules.game_stats.show()
+  end
+end
+
+function show()
+  topMenu:show()
+  if not topMenu.hideIngame then
+    modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'topMenu', AnchorBottom)
+  end
+  if modules.game_stats then
+    modules.game_stats.hide()
   end
 end
 
@@ -241,7 +261,7 @@ function updateStatus()
       statusUpdateEvent = scheduleEvent(updateStatus, 5000)
       return
     end
-    if data.online then
+    if data.online and topMenu.onlineLabel then
       topMenu.onlineLabel:setText(data.online)
     end
     if data.discord_online and topMenu.discordLabel then

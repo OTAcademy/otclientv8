@@ -142,6 +142,13 @@ int push_luavalue(const std::vector<T>& vec);
 template<typename T>
 bool luavalue_cast(int index, std::vector<T>& vec);
 
+// set
+template<typename T>
+int push_luavalue(const std::set<T>& vec);
+
+template<typename T>
+bool luavalue_cast(int index, std::set<T>& vec);
+
 // deque
 template<class T>
 int push_luavalue(const std::deque<T>& vec);
@@ -314,10 +321,11 @@ bool luavalue_cast(int index, std::list<T>& list)
 }
 
 template<typename T>
-int push_luavalue(const std::vector<T>& vec) {
+int push_luavalue(const std::vector<T>& vec)
+{
     g_lua.createTable(vec.size(), 0);
     int i = 1;
-    for(const T& v : vec) {
+    for (const T& v : vec) {
         push_internal_luavalue(v);
         g_lua.rawSeti(i);
         i++;
@@ -328,12 +336,41 @@ int push_luavalue(const std::vector<T>& vec) {
 template<typename T>
 bool luavalue_cast(int index, std::vector<T>& vec)
 {
-    if(g_lua.isTable(index)) {
+    if (g_lua.isTable(index)) {
         g_lua.pushNil();
-        while(g_lua.next(index < 0 ? index-1 : index)) {
+        while (g_lua.next(index < 0 ? index - 1 : index)) {
             T value;
-            if(luavalue_cast(-1, value))
+            if (luavalue_cast(-1, value))
                 vec.push_back(value);
+            g_lua.pop();
+        }
+        return true;
+    }
+    return false;
+}
+
+template<typename T>
+int push_luavalue(const std::set<T>& set)
+{
+    g_lua.createTable(set.size(), 0);
+    int i = 1;
+    for (const T& v : set) {
+        push_internal_luavalue(v);
+        g_lua.rawSeti(i);
+        i++;
+    }
+    return 1;
+}
+
+template<typename T>
+bool luavalue_cast(int index, std::set<T>& set)
+{
+    if (g_lua.isTable(index)) {
+        g_lua.pushNil();
+        while (g_lua.next(index < 0 ? index - 1 : index)) {
+            T value;
+            if (luavalue_cast(-1, value))
+                set.insert(value);
             g_lua.pop();
         }
         return true;

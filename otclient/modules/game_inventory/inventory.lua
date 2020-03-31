@@ -375,9 +375,9 @@ function onSetSafeFight(self, checked)
   g_game.setSafeFight(not checked)
   if buttonPvp then
     if not checked then
-      buttonPvp:setColor(false)
+      buttonPvp:setOn(false)
     else
-      buttonPvp:setColor(true)  
+      buttonPvp:setOn(true)  
     end
   end
 end

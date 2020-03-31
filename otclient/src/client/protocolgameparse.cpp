@@ -1142,8 +1142,8 @@ void ProtocolGame::parseOpenNpcTrade(const InputMessagePtr& msg)
 
         std::string name = msg->getString();
         int weight = msg->getU32();
-        int64_t buyPrice = g_game.getFeature(Otc::GameDoubleTradeMoney) ? msg->getU64() : msg->getU32();
-        int64_t sellPrice = g_game.getFeature(Otc::GameDoubleTradeMoney) ? msg->getU64() : msg->getU32();
+        int64_t buyPrice = g_game.getFeature(Otc::GameDoubleTradeMoney) ? msg->getU64() : static_cast<int32_t>(msg->getU32());
+        int64_t sellPrice = g_game.getFeature(Otc::GameDoubleTradeMoney) ? msg->getU64() : static_cast<int32_t>(msg->getU32());
         items.push_back(std::make_tuple(item, name, weight, buyPrice, sellPrice));
     }
 
@@ -1596,7 +1596,11 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
         maxMana = msg->getU16();
     }
 
-    double magicLevel = msg->getU8();
+    double magicLevel;
+    if (g_game.getFeature(Otc::GameDoubleMagicLevel))
+        magicLevel = msg->getU16();
+    else
+        magicLevel = msg->getU8();
 
     double baseMagicLevel;
     if(g_game.getFeature(Otc::GameSkillsBase))

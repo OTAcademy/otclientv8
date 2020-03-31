@@ -64,6 +64,7 @@ void ThingTypeManager::terminate()
         m_thingTypes[i].clear();
     m_itemTypes.clear();
     m_reverseItemTypes.clear();
+    m_marketCategories.clear();
     m_nullThingType = nullptr;
     m_nullItemType = nullptr;
 
@@ -187,6 +188,7 @@ bool ThingTypeManager::loadDat(std::string file)
             m_thingTypes[category].resize(count, m_nullThingType);
         }
 
+        m_marketCategories.clear();
         for(int category = 0; category < ThingLastCategory; ++category) {
             uint16 firstId = 1;
             if(category == ThingCategoryItem)
@@ -195,6 +197,10 @@ bool ThingTypeManager::loadDat(std::string file)
                 ThingTypePtr type(new ThingType);
                 type->unserialize(id, (ThingCategory)category, fin);
                 m_thingTypes[category][id] = type;
+                if (type->isMarketable()) {
+                    auto marketData = type->getMarketData();
+                    m_marketCategories.insert(marketData.category);
+                }
             }
         }
 

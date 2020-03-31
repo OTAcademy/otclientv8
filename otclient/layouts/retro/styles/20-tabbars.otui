@@ -30,9 +30,8 @@ TabBarButton < UIButton
   size: 17 18
   image-source: /images/ui/tabbutton_square
   image-color: #dfdfdf
-  image-clip: 0 0 17 18
+  image-clip: 0 0 98 18
   image-border: 3
-  image-border-bottom: 0
   icon-color: #dfdfdf
   color: #dfdfdf
   anchors.top: parent.top
@@ -46,7 +45,7 @@ TabBarButton < UIButton
     margin-left: 5
 
   $hover !checked:
-    image-clip: 0 18 17 18
+    image-clip: 0 18 98 18
     color: #dfdfdf
 
   $disabled:
@@ -54,7 +53,7 @@ TabBarButton < UIButton
     icon-color: #dfdfdf
 
   $checked:
-    image-clip: 0 36 17 18
+    image-clip: 0 36 98 18
     color: #dfdfdf
 
   $on !checked:
@@ -74,6 +73,9 @@ TabBarVertical < UITabBar
     anchors.right: scrollBar.left
     anchors.bottom: parent.bottom
     vertical-scrollbar: scrollBar
+    margin-right: 1
+    padding-top: 10
+    
   VerticalScrollBar
     id: scrollBar
     anchors.top: parent.top
@@ -84,7 +86,7 @@ TabBarVertical < UITabBar
     $!on:
       width: 0
 
-TabBarVerticalPanel < Panel
+TabBarVerticalPanel < Panel 
 TabBarVerticalButton < UIButton
   size: 48 48
   color: #aaaaaa

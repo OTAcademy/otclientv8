@@ -38,6 +38,7 @@ Module
     - game_actionbar
     - game_prey
     - game_imbuing
+    - game_stats
     - game_bot
   @onLoad: init()
   @onUnload: terminate()
