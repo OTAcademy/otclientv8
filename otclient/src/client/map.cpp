@@ -1195,7 +1195,7 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
                         speed = mtile.getSpeed();
                     }
                     bool hasStairs = isNotPathable && mapColor >= 210 && mapColor <= 213;
-                    if ((!wasSeen && !allowUnseen) || (hasStairs && !ignoreStairs && neighbor != destPos) || (isNotPathable && !ignoreNonPathable) || (isNotWalkable && !ignoreNonWalkable)) {
+                    if ((!wasSeen && !allowUnseen) || (hasStairs && !ignoreStairs && neighbor != destPos) || (isNotPathable && !ignoreNonPathable && neighbor != destPos) || (isNotWalkable && !ignoreNonWalkable)) {
                         it = nodes.emplace(neighbor, nullptr).first;
                     } else if ((hasCreature && !ignoreCreatures)) {
                         it = nodes.emplace(neighbor, nullptr).first;
@@ -1235,4 +1235,35 @@ std::map<std::string, std::tuple<int, int, int, std::string>> Map::findEveryPath
     }
 
     return ret;
+}
+
+int Map::getMinimapColor(const Position& pos)
+{
+    int color = 0;
+    if (const TilePtr& tile = getTile(pos)) {
+        color = tile->getMinimapColorByte();
+    }
+    if (color == 0) {
+        const MinimapTile& mtile = g_minimap.getTile(pos);
+        color = mtile.color;
+    }
+    return color;
+}
+
+bool Map::isPatchable(const Position& pos)
+{
+    if (const TilePtr& tile = getTile(pos)) {
+        return tile->isPathable();
+    }
+    const MinimapTile& mtile = g_minimap.getTile(pos);
+    return !mtile.hasFlag(MinimapTileNotPathable);
+}
+
+bool Map::isWalkable(const Position& pos, bool ignoreCreatures)
+{
+    if (const TilePtr& tile = getTile(pos)) {
+        return tile->isWalkable(ignoreCreatures);
+    }
+    const MinimapTile& mtile = g_minimap.getTile(pos);
+    return !mtile.hasFlag(MinimapTileNotPathable);
 }

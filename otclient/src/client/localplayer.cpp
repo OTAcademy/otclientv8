@@ -426,6 +426,7 @@ void LocalPlayer::onPositionChange(const Position& newPos, const Position& oldPo
 void LocalPlayer::turn(Otc::Direction direction)
 {
     Creature::setDirection(direction);
+    callLuaField("onTurn", direction);
 }
 
 void LocalPlayer::setStates(int states)

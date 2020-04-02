@@ -148,6 +148,9 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
 
     if(g_game.getFeature(Otc::GameLoginPacketEncryption))
         enableXteaEncryption();
+
+    if (g_game.getFeature(Otc::GamePacketCompression))
+        enableCompression();
 }
 
 void ProtocolGame::sendEnterGame()

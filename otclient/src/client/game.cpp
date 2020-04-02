@@ -88,6 +88,8 @@ void Game::resetGameStates()
     m_pingSent = 0;
     m_pingReceived = 0;
     m_walkId = 0;
+    m_coins = 0;
+    m_transferableCoins = 0;
     m_newPingIds.clear();
     m_unjustifiedPoints = UnjustifiedPoints();
 

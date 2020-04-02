@@ -272,6 +272,10 @@ public:
     // tuple = <cost, distance, prevPos>
     std::map<std::string, std::tuple<int, int, int, std::string>> findEveryPath(const Position& start, int maxDistance, const std::map<std::string, std::string>& params);
 
+    int getMinimapColor(const Position& pos);
+    bool isPatchable(const Position& pos);
+    bool isWalkable(const Position& pos, bool ignoreCreatures);
+
 private:
     void removeUnawareThings();
     uint getBlockIndex(const Position& pos) { return ((pos.y / BLOCK_SIZE) * (65536 / BLOCK_SIZE)) + (pos.x / BLOCK_SIZE); }

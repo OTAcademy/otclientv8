@@ -45,7 +45,7 @@ public:
     void setScale(float scale) { m_scale = scale; m_redraw = true; }
     float getScale() { return m_scale; }
 
-    void setRaw(bool value) { m_raw = value; m_redraw = true; }
+    void setOptimized(bool value) { m_optimized = value; m_redraw = true; }
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
@@ -58,7 +58,7 @@ protected:
     FrameBufferPtr m_framebuffer;
     Otc::Direction m_direction = Otc::South;
     float m_scale = 1.0;
-    bool m_raw = false;
+    bool m_optimized = false;
 };
 
 #endif

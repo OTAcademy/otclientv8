@@ -625,6 +625,7 @@ void ProtocolGame::parseCoinBalance(const InputMessagePtr& msg)
     // amount of coins that can be sold in market
     // or be transfered to another player
     int transferableCoins = msg->getU32();
+    g_game.setTibiaCoins(coins, transferableCoins);
 
     g_lua.callGlobalField("g_game", "onCoinBalance", coins, transferableCoins);
 }

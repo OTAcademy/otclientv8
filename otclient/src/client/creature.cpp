@@ -452,6 +452,7 @@ bool Creature::isInsideOffset(Point offset)
 void Creature::turn(Otc::Direction direction)
 {
     setDirection(direction);
+    callLuaField("onTurn", direction);
 }
 
 void Creature::walk(const Position& oldPos, const Position& newPos)

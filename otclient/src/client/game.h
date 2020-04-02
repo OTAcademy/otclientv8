@@ -367,6 +367,20 @@ public:
     std::string formatCreatureName(const std::string &name);
     int findEmptyContainerId();
 
+    void setTibiaCoins(int coins, int transferableCoins)
+    {
+        m_coins = coins;
+        m_transferableCoins = transferableCoins;
+    }
+    int getTibiaCoins()
+    {
+        return m_coins;
+    }
+    int getTransferableTibiaCoins()
+    {
+        return m_transferableCoins;
+    }
+
     void setMaxPreWalkingSteps(uint value) { m_maxPreWalkingSteps = value; }
     uint getMaxPreWalkingSteps() { return m_maxPreWalkingSteps; }
 
@@ -448,6 +462,8 @@ private:
     int m_clientVersion;
     std::string m_clientSignature;
     int m_clientCustomOs;
+    int m_coins;
+    int m_transferableCoins;
 
     bool m_showRealDirection = false;
     bool m_ignoreServerDirection = true;

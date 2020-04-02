@@ -167,6 +167,9 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_map", "findItemsById", &Map::findItemsById, &g_map);
     g_lua.bindSingletonFunction("g_map", "getAwareRange", &Map::getAwareRangeAsSize, &g_map);
     g_lua.bindSingletonFunction("g_map", "findEveryPath", &Map::findEveryPath, &g_map);
+    g_lua.bindSingletonFunction("g_map", "getMinimapColor", &Map::getMinimapColor, &g_map);
+    g_lua.bindSingletonFunction("g_map", "isPatchable", &Map::isPatchable, &g_map);
+    g_lua.bindSingletonFunction("g_map", "isWalkable", &Map::isWalkable, &g_map);
 
     g_lua.registerSingletonClass("g_minimap");
     g_lua.bindSingletonFunction("g_minimap", "clean", &Minimap::clean, &g_minimap);
@@ -329,6 +332,9 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "applyImbuement", &Game::applyImbuement, &g_game);
     g_lua.bindSingletonFunction("g_game", "clearImbuement", &Game::clearImbuement, &g_game);
     g_lua.bindSingletonFunction("g_game", "closeImbuingWindow", &Game::closeImbuingWindow, &g_game);
+    g_lua.bindSingletonFunction("g_game", "setTibiaCoins", &Game::setTibiaCoins, &g_game);
+    g_lua.bindSingletonFunction("g_game", "getTibiaCoins", &Game::getTibiaCoins, &g_game);
+    g_lua.bindSingletonFunction("g_game", "getTransferableTibiaCoins", &Game::getTransferableTibiaCoins, &g_game);
 
     g_lua.bindSingletonFunction("g_game", "getMaxPreWalkingSteps", &Game::getMaxPreWalkingSteps, &g_game);
     g_lua.bindSingletonFunction("g_game", "setMaxPreWalkingSteps", &Game::setMaxPreWalkingSteps, &g_game);
@@ -823,7 +829,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UICreature>("setDirection", &UICreature::setDirection);
     g_lua.bindClassMemberFunction<UICreature>("setScale", &UICreature::setScale);
     g_lua.bindClassMemberFunction<UICreature>("getScale", &UICreature::getScale);
-    g_lua.bindClassMemberFunction<UICreature>("setRaw", &UICreature::setRaw);
+    g_lua.bindClassMemberFunction<UICreature>("setOptimized", &UICreature::setOptimized);
 
     g_lua.registerClass<UIMap, UIWidget>();
     g_lua.bindClassStaticFunction<UIMap>("create", []{ return UIMapPtr(new UIMap); });

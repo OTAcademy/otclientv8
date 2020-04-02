@@ -71,7 +71,7 @@ void UICreature::drawSelf(Fw::DrawPane drawPane)
             m_framebuffer->bind();
             g_painter->setAlphaWriting(true);
             g_painter->clear(Color::alpha);
-            m_creature->drawOutfit(Rect(0, 0, m_framebuffer->getSize()), m_scale, m_raw, m_direction);
+            m_creature->drawOutfit(Rect(0, 0, m_framebuffer->getSize()), m_scale, !m_optimized, m_direction);
             m_framebuffer->release();
         }
         g_painter->setColor(m_imageColor);
@@ -123,8 +123,8 @@ void UICreature::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
         else if (node->tag() == "scale") {
             setScale(node->value<float>());
         }
-        else if (node->tag() == "raw") {
-            setRaw(node->value<bool>());
+        else if (node->tag() == "optimized") {
+            setOptimized(node->value<bool>());
         }
     }
 }

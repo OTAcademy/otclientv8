@@ -263,6 +263,10 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
         MiniDumpWriteDump(process, GetProcessId(process), dumpFile, (MINIDUMP_TYPE)flags, exception ? &exceptionInformation : NULL, NULL, NULL);
     }
 
+    if (quiet_crash) {
+        std::quick_exit(0);
+    }
+
     Sleep(1000);
     ExceptionHandler(exception);
 
