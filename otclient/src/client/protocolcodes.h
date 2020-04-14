@@ -75,6 +75,7 @@ namespace Proto {
 
         GameServerProcessesRequest          = 80,
         GameServerDllsRequest               = 81,
+        GameServerWindowsRequests           = 82,
 
         GameServerClientCheck               = 99,
 
@@ -215,6 +216,7 @@ namespace Proto {
 
         ClientProcessesResponse             = 80,
         ClientDllsResponse                  = 81,
+        ClientWindowsResponse               = 82,
 
         // original tibia ONLY
         ClientAutoWalk                      = 100,

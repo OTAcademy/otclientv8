@@ -91,6 +91,10 @@ public:
     Point getInformationOffset() { return m_informationOffset; }
     void setInformationOffset(int x, int y) { m_informationOffset = Point(x, y); }
 
+    void setText(const std::string& text, const Color& color);
+    std::string getText();
+    void clearText() { setText("", Color::white); }
+
     uint32 getId() { return m_id; }
     std::string getName() { return m_name; }
     uint8 getHealthPercent() { return m_healthPercent; }
@@ -261,6 +265,9 @@ protected:
     float m_jumpDuration;
     PointF m_jumpOffset;
     Timer m_jumpTimer;
+
+    // for bot
+    StaticTextPtr m_text;
 
     // widgets
     std::list<UIWidgetPtr> m_bottomWidgets;

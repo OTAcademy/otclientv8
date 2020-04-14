@@ -28,6 +28,8 @@ Servers = {
 --Server = "ws://127.0.0.1:88/"
 --USE_NEW_ENERGAME = true -- uses entergamev2 based on websockets instead of entergame
 ALLOW_CUSTOM_SERVERS = true -- if true it shows option ANOTHER on server list
+
+g_app.setName("OTCv8")
 -- CONFIG END
 
 -- print first terminal message

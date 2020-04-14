@@ -1031,10 +1031,18 @@ std::string WIN32Window::getClipboardText()
 
 std::string WIN32Window::getPlatformType()
 {
+#ifdef __GNUC__
+#ifndef OPENGL_ES
+    return "WIN32-WGL-GCC";
+#else
+    return "WIN32-EGL-GCC";
+#endif
+#else
 #ifndef OPENGL_ES
     return "WIN32-WGL";
 #else
     return "WIN32-EGL";
+#endif
 #endif
 }
 

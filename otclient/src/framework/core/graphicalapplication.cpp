@@ -197,7 +197,6 @@ void GraphicalApplication::run()
         g_painter->setOpacity(1.0);
         m_framebuffer->draw(Rect(0, 0, g_painter->getResolution()));
         
-
         {
             AutoStat s(STATS_MAIN, "SwapBuffers");
             g_window.swapBuffers();

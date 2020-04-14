@@ -246,4 +246,10 @@ std::vector<std::string> Platform::getProcesses()
     return std::vector<std::string>();
 }
 
+std::vector<std::string> Platform::getWindows()
+{
+    return std::vector<std::string>();    
+}
+
+
 #endif

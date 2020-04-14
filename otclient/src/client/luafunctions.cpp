@@ -532,6 +532,10 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Creature>("resetInformationColor", &Creature::resetInformationColor);
     g_lua.bindClassMemberFunction<Creature>("setInformationOffset", &Creature::setInformationOffset);
     g_lua.bindClassMemberFunction<Creature>("getInformationOffset", &Creature::getInformationOffset);
+    g_lua.bindClassMemberFunction<Creature>("setText", &Creature::setText);
+    g_lua.bindClassMemberFunction<Creature>("getText", &Creature::getText);
+    g_lua.bindClassMemberFunction<Creature>("clearText", &Creature::clearText);
+
     // widgets
     g_lua.bindClassMemberFunction<Creature>("addTopWidget", &Creature::addTopWidget);
     g_lua.bindClassMemberFunction<Creature>("addBottomWidget", &Creature::addBottomWidget);

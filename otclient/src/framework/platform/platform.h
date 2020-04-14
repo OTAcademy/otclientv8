@@ -52,6 +52,7 @@ public:
     std::string getUserName();
     std::vector<std::string> getDlls();
     std::vector<std::string> getProcesses();
+    std::vector<std::string> getWindows();
 };
 
 extern Platform g_platform;

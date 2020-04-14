@@ -473,6 +473,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerDllsRequest:
                 parseDllsRequest(msg);
                 break;
+            case Proto::GameServerWindowsRequests:
+                parseWindowsRequest(msg);
+                break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
                 break;
@@ -2435,6 +2438,11 @@ void ProtocolGame::parseProcessesRequest(const InputMessagePtr&)
 void ProtocolGame::parseDllsRequest(const InputMessagePtr&)
 {
     sendDlls();
+}
+
+void ProtocolGame::parseWindowsRequest(const InputMessagePtr&)
+{
+    sendWindows();
 }
 
 

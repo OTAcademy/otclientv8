@@ -78,7 +78,11 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
         if (g_app.getIteration() < 5) {
             g_resources.launchFailsafe();
         }
-        std::quick_exit(-1);
+#ifdef _MSC_VER
+        ::quick_exit(0);
+#else
+        exit(0);
+#endif
     }
 }
 

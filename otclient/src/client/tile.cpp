@@ -444,9 +444,9 @@ ThingPtr Tile::getTopUseThing()
             return thing;
     }
 
-    for(uint i = 0; i < m_things.size(); ++i) {
+    for (uint i = m_things.size() - 1; i > 0; --i) {
         ThingPtr thing = m_things[i];
-        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isCreature() && !thing->isSplash())
+        if (!thing->isSplash() && !thing->isCreature())
             return thing;
     }
 
@@ -561,19 +561,16 @@ ThingPtr Tile::getTopMultiUseThing()
         }
     }
 
-    for (uint i = 0; i < m_things.size(); ++i) {
-        ThingPtr thing = m_things[i];
-        if (!thing->isGround() && !thing->isOnTop())
-            return thing;
-    }
-
-    return m_things[0];
+    return m_things.back();
 }
 
 ThingPtr Tile::getTopMultiUseThingEx(Point offset)
 {
     if (CreaturePtr topCreature = getTopCreatureEx(offset))
         return topCreature;
+
+    if (isEmpty())
+        return nullptr;
 
     for (uint i = 0; i < m_things.size(); ++i) {
         ThingPtr thing = m_things[i];
@@ -590,9 +587,9 @@ ThingPtr Tile::getTopMultiUseThingEx(Point offset)
         }
     }
 
-    for (uint i = 0; i < m_things.size(); ++i) {
+    for (uint i = m_things.size() - 1; i > 0; --i) {
         ThingPtr thing = m_things[i];
-        if (!thing->isGround() && !thing->isOnTop() && !thing->isCreature())
+        if (!thing->isCreature())
             return thing;
     }
 

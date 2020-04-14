@@ -420,6 +420,12 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
         m_nameCache.draw(textRect);
     }
 
+    if (m_text) {
+        auto extraTextSize = m_text->getCachedText().getTextSize();
+        Rect extraTextRect = Rect(point.x + m_informationOffset.x - extraTextSize.width() / 2.0, point.y + m_informationOffset.y + 15, extraTextSize);
+        m_text->drawText(extraTextRect.center(), extraTextRect);
+    }
+
     if (m_skull != Otc::SkullNone && m_skullTexture) {
         Rect skullRect = Rect(backgroundRect.x() + 13.5 + 12, backgroundRect.y() + 5, m_skullTexture->getSize());
         drawQueue.add(skullRect, m_skullTexture, Rect(0, 0, m_skullTexture->getSize()), Color::white);
@@ -1104,7 +1110,9 @@ int Creature::getDisplacementY()
 
     if (m_outfit.getMount() != 0) {
         auto datType = g_things.rawGetThingType(m_outfit.getMount(), ThingCategoryCreature);
-        return datType->getDisplacementY();
+        if (datType) {
+            return datType->getDisplacementY();
+        }
     }
 
     return Thing::getDisplacementY();
@@ -1141,6 +1149,24 @@ ThingType* Creature::rawGetThingType()
 {
     return g_things.rawGetThingType(m_outfit.getId(), ThingCategoryCreature);
 }
+
+void Creature::setText(const std::string& text, const Color& color)
+{
+    if (!m_text) {
+        m_text = StaticTextPtr(new StaticText());
+    }
+    m_text->setText(text);
+    m_text->setColor(color);
+}
+
+std::string Creature::getText()
+{
+    if (!m_text) {
+        return "";
+    }
+    return m_text->getText();
+}
+
 
 // widgets
 void Creature::addTopWidget(const UIWidgetPtr& widget)

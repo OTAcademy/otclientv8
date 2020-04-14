@@ -39,7 +39,7 @@ int main(int argc, const char* argv[]) {
 #endif
 
 #ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1600018640) {
+    if (time(nullptr) > 1610018640) {
         control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
     }
 #endif
@@ -53,7 +53,7 @@ int main(int argc, const char* argv[]) {
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName(compactName);
-    g_app.setVersion("2.2.1");
+    g_app.setVersion("2.3");
 
 #ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
@@ -81,7 +81,11 @@ int main(int argc, const char* argv[]) {
             }
             if (g_app.getIteration() < 5) {
                 if (g_resources.launchFailsafe()) {
-                    std::quick_exit(-1);
+#ifdef _MSC_VER
+                    quick_exit(0);
+#else
+                    exit(0);
+#endif
                 }
                 return;
             }
@@ -105,6 +109,12 @@ int main(int argc, const char* argv[]) {
 
     if(!g_lua.safeRunScript("init.lua"))
         g_logger.fatal("Unable to run script init.lua!");
+
+#ifdef WIN32
+    // support for progdn proxy system, if you don't have this dll nothing will happen
+    // however, it is highly recommended to use otcv8 proxy system
+    LoadLibraryA("progdn32.dll");
+#endif
 
     // the run application main loop
     g_app.run();

@@ -129,6 +129,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_platform", "getUserName", &Platform::getUserName, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getDlls", &Platform::getDlls, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getProcesses", &Platform::getProcesses, &g_platform);
+    g_lua.bindSingletonFunction("g_platform", "getWindows", &Platform::getWindows, &g_platform);
 
     // Application
     g_lua.registerSingletonClass("g_app");

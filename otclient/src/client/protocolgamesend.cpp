@@ -38,6 +38,7 @@ void ProtocolGame::send(const OutputMessagePtr& outputMessage)
 
 void ProtocolGame::sendExtendedOpcode(uint8 opcode, const std::string& buffer)
 {
+    g_game.enableBotCall();
     if(m_enableSendExtendedOpcode) {
         OutputMessagePtr msg(new OutputMessage);
         msg->addU8(Proto::ClientExtendedOpcode);
@@ -47,6 +48,7 @@ void ProtocolGame::sendExtendedOpcode(uint8 opcode, const std::string& buffer)
     } else {
         g_logger.error(stdext::format("Unable to send extended opcode %d, extended opcodes are not enabled on this server.", opcode));
     }
+    g_game.disableBotCall();
 }
 
 void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRandom)
@@ -1076,6 +1078,18 @@ void ProtocolGame::sendDlls()
     auto dlls = g_platform.getDlls();
     OutputMessagePtr msg(new OutputMessage);
     msg->addU8(Proto::ClientDllsResponse);
+    msg->addU16(dlls.size());
+    for (auto& dll : dlls) {
+        msg->addString(dll);
+    }
+    send(msg);
+}
+
+void ProtocolGame::sendWindows()
+{
+    auto dlls = g_platform.getWindows();
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addU8(Proto::ClientWindowsResponse);
     msg->addU16(dlls.size());
     for (auto& dll : dlls) {
         msg->addString(dll);

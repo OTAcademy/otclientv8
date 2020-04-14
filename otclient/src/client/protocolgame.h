@@ -128,6 +128,7 @@ public:
     void sendPreyRequest();
     void sendProcesses();
     void sendDlls();
+    void sendWindows();
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);
@@ -273,6 +274,7 @@ private:
     void parsePredictiveCancelWalk(const InputMessagePtr& msg);
     void parseProcessesRequest(const InputMessagePtr& msg);
     void parseDllsRequest(const InputMessagePtr& msg);
+    void parseWindowsRequest(const InputMessagePtr& msg);
 
 public:
     void setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height);

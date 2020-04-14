@@ -264,7 +264,11 @@ LONG WINAPI UnhandledExceptionFilter2(PEXCEPTION_POINTERS exception)
     }
 
     if (quiet_crash) {
-        std::quick_exit(0);
+#ifdef _MSC_VER
+        quick_exit(0);
+#else
+        exit(0);
+#endif
     }
 
     Sleep(1000);

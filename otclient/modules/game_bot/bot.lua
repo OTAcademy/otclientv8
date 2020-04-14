@@ -67,9 +67,6 @@ function terminate()
   })
   
   terminateCallbacks()
-
-  removeEvent(checkEvent)
-
   editWindow:destroy()
 
   botWindow:destroy()
@@ -117,6 +114,7 @@ end
 
 
 function refresh()
+  if not g_game.isOnline() then return end
   save()
   clear()
   
@@ -219,7 +217,7 @@ function save()
   end
   
   local status, result = pcall(function() 
-    return json.encode(botStorage) 
+    return json.encode(botStorage, 2) 
   end)
   if not status then
     return onError("Error while saving bot storage. Storage won't be saved. Details: " .. result)

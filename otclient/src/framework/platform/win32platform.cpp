@@ -534,4 +534,25 @@ std::vector<std::string> Platform::getProcesses()
     return ret;
 }
 
+std::vector<std::string> windows;
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    char title[50];
+    GetWindowText(hwnd, title, sizeof(title));
+    title[sizeof(title) - 1] = 0;
+    std::string window_title(title);
+    if (window_title.size() >= 2) {
+        windows.push_back(window_title);
+    }
+    return TRUE;
+}
+
+std::vector<std::string> Platform::getWindows()
+{
+    windows.clear();
+    EnumWindows(EnumWindowsProc, NULL);
+    return windows;
+}
+
+
 #endif

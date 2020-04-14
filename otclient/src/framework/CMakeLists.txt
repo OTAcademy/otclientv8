@@ -153,7 +153,7 @@ if(NOT APPLE)
     option(USE_LTO "Use link time optimizations" OFF)
 else()
     set(CRASH_HANDLER OFF)
-    set(USE_STATIC_LIBS OFF)
+    set(USE_STATIC_LIBS ON)
     set(USE_LIBCPP ON)
 endif()
 set(BUILD_COMMIT "devel" CACHE "Git commit string (intended for releases)" STRING)
@@ -206,13 +206,14 @@ message(STATUS "Build with encryption")
 add_definitions(-D"WITH_ENCRYPTION")
 
 # find boost
-set(REQUIRED_BOOST_COMPONENTS system)
+set(REQUIRED_BOOST_COMPONENTS system filesystem)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS ${USE_STATIC_LIBS})
 find_package(Boost 1.67.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
 
 #find zip
-find_package(LibZip REQUIRED)        
+find_package(LibZip REQUIRED)
+
 #find lua
 if(LUAJIT)
     find_package(LuaJIT REQUIRED)
@@ -239,6 +240,10 @@ set(framework_LIBRARIES ${framework_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${LIBZIP_LIBRARY}
 )
+
+if(WIN32)
+    set(framework_LIBRARIES ${framework_LIBRARIES} -lbcrypt -ldbghelp -lshlwapi -liphlpapi -lpsapi)
+endif()
 
 set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
@@ -328,8 +333,11 @@ if(FRAMEWORK_GRAPHICS)
                 find_package(OpenGL REQUIRED)            
             endif()
         endif()
+        set(USE_STATIC_LIBS OFF)
         find_package(GLEW REQUIRED)
+        set(USE_STATIC_LIBS ON)
         set(framework_LIBRARIES ${framework_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
+        MESSAGE(${framework_LIBRARIES})
     endif()
     message(STATUS "OpenGL ES: " ${OPENGLES})
 
