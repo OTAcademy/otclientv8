@@ -640,6 +640,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Item>("setCount", &Item::setCount);
     g_lua.bindClassMemberFunction<Item>("getCount", &Item::getCount);
     g_lua.bindClassMemberFunction<Item>("getSubType", &Item::getSubType);
+    g_lua.bindClassMemberFunction<Item>("getCountOrSubType", &Item::getCountOrSubType);
     g_lua.bindClassMemberFunction<Item>("getId", &Item::getId);
     g_lua.bindClassMemberFunction<Item>("getServerId", &Item::getServerId);
     g_lua.bindClassMemberFunction<Item>("getName", &Item::getName);
@@ -810,6 +811,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIItem>("getItemId", &UIItem::getItemId);
     g_lua.bindClassMemberFunction<UIItem>("getItemCount", &UIItem::getItemCount);
     g_lua.bindClassMemberFunction<UIItem>("getItemSubType", &UIItem::getItemSubType);
+    g_lua.bindClassMemberFunction<UIItem>("getItemCountOrSubType", &UIItem::getItemCountOrSubType);
     g_lua.bindClassMemberFunction<UIItem>("getItem", &UIItem::getItem);
     g_lua.bindClassMemberFunction<UIItem>("isVirtual", &UIItem::isVirtual);
     g_lua.bindClassMemberFunction<UIItem>("isItemVisible", &UIItem::isItemVisible);

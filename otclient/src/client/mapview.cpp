@@ -523,7 +523,7 @@ void MapView::updateVisibleTilesCache()
                     // skip tiles that are completely behind another tile
                     m_cachedVisibleTiles.push_back(std::make_pair(tile, g_map.isCompletelyCovered(tilePos, m_cachedFirstVisibleFloor)));
                     tile->setDepth(depth, floorDepth);
-                    //tile->calculateTopDepth();
+                    tile->calculateTopDepth();
                 }
             }
         }

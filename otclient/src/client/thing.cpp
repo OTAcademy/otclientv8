@@ -52,6 +52,10 @@ void Thing::setPosition(const Position& position)
 
 int Thing::getStackPriority()
 {
+    // bug fix for old versions
+    if (g_game.getClientVersion() <= 800 && isSplash()) {
+        return 1;
+    }
     if(isGround())
         return 0;
     else if(isGroundBorder())
