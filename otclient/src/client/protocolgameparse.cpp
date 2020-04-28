@@ -456,6 +456,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerChangeMapAwareRange:
                 parseChangeMapAwareRange(msg);
                 break;
+            case Proto::GameServerFeatures:
+                parseFeatures(msg);
+                break;
             case Proto::GameServerNewCancelWalk:
                 if (g_game.getFeature(Otc::GameNewWalking))
                     parseNewCancelWalk(msg);
@@ -2375,6 +2378,20 @@ void ProtocolGame::parseChangeMapAwareRange(const InputMessagePtr& msg)
 
     g_map.setAwareRange(range);
     g_lua.callGlobalField("g_game", "onMapChangeAwareRange", xrange, yrange);
+}
+
+void ProtocolGame::parseFeatures(const InputMessagePtr& msg)
+{
+    int features = msg->getU16();
+    for (int i = 0; i < features; ++i) {
+        Otc::GameFeature feature = (Otc::GameFeature)msg->getU8();
+        bool enabled = msg->getU8() > 0;
+        if (enabled) {
+            g_game.enableFeature(feature);
+        } else {
+            g_game.disableFeature(feature);
+        }
+    }
 }
 
 void ProtocolGame::parseCreaturesMark(const InputMessagePtr& msg)

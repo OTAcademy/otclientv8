@@ -848,7 +848,8 @@ void ResourceManager::installDlls(std::filesystem::path dest)
     static std::list<std::string> dlls = {
         {"libEGL.dll"},
         {"libGLESv2.dll"},
-        {"d3dcompiler_46.dll"}
+        {"d3dcompiler_46.dll"},
+        {"d3dcompiler_47.dll"}
     };
 
     int added_dlls = 0;

@@ -59,20 +59,20 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
     msg->addU16(g_game.getOs());
     msg->addU16(g_game.getCustomProtocolVersion());
 
-    if(g_game.getFeature(Otc::GameClientVersion))
+    if (g_game.getFeature(Otc::GameClientVersion))
         msg->addU32(g_game.getClientVersion());
 
-    if(g_game.getFeature(Otc::GameContentRevision))
+    if (g_game.getFeature(Otc::GameContentRevision))
         msg->addU16(g_things.getContentRevision());
 
-    if(g_game.getFeature(Otc::GamePreviewState))
+    if (g_game.getFeature(Otc::GamePreviewState))
         msg->addU8(0);
 
     int offset = msg->getMessageSize();
     // first RSA byte must be 0
     msg->addU8(0);
 
-    if(g_game.getFeature(Otc::GameLoginPacketEncryption)) {
+    if (g_game.getFeature(Otc::GameLoginPacketEncryption)) {
         // xtea key
         generateXteaKey();
         msg->addU32(m_xteaKey[0]);
@@ -82,11 +82,11 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
         msg->addU8(0); // is gm set?
     }
 
-    if(g_game.getFeature(Otc::GameSessionKey)) {
+    if (g_game.getFeature(Otc::GameSessionKey)) {
         msg->addString(m_sessionKey);
         msg->addString(m_characterName);
     } else {
-        if(g_game.getFeature(Otc::GameAccountNames))
+        if (g_game.getFeature(Otc::GameAccountNames))
             msg->addString(m_accountName);
         else
             msg->addU32(stdext::from_string<uint32>(m_accountName));
@@ -94,18 +94,27 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
         msg->addString(m_characterName);
         msg->addString(m_accountPassword);
 
-        if(g_game.getFeature(Otc::GameAuthenticator))
+        if (g_game.getFeature(Otc::GameAuthenticator))
             msg->addString(m_authenticatorToken);
     }
 
-    if(g_game.getFeature(Otc::GameChallengeOnLogin)) {
+    if (g_game.getFeature(Otc::GameChallengeOnLogin)) {
         msg->addU32(challengeTimestamp);
         msg->addU8(challengeRandom);
     }
 
     std::string extended = callLuaField<std::string>("getLoginExtendedData");
-    if(!extended.empty())
+    if (!extended.empty()) {
         msg->addString(extended);
+    } else {
+        msg->addString(std::string("OTCv8"));
+        std::string version = g_app.getVersion();
+        stdext::replace_all(version, ".", "");
+        if (version.length() == 2) {
+            version += "0";
+        }
+        msg->addU16(atoi(version.c_str()));
+    }
 
     // complete the bytes for rsa encryption with zeros
     int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);

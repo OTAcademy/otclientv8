@@ -236,12 +236,6 @@ void Tile::addThing(const ThingPtr& thing, int stackPos)
                 if((append && otherPriority > priority) || (!append && otherPriority >= priority))
                     break;
             }
-
-            if (thing->isItem()) {
-                Position pos = getPosition();
-                g_logger.info(stdext::format("Add: %i %i %i - %i - %i - %i", (int)pos.x, (int)pos.y, (int)pos.z, (int)thing->getId(), stackPos, priority, (int)thing->getStackPriority()));
-            }
-
         } else if(stackPos > (int)m_things.size())
             stackPos = m_things.size();
 

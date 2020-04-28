@@ -68,6 +68,8 @@ namespace Proto {
         GameServerNewPing                   = 64,
         GameServerChangeMapAwareRange       = 66,
 
+        GameServerFeatures                  = 67,
+
         GameServerNewCancelWalk             = 69,
         GameServerPredictiveCancelWalk      = 70,
 

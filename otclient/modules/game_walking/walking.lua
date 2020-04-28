@@ -375,8 +375,11 @@ function walk(dir, ticks)
     elseif player:isServerWalking() then
       g_game.stop()
       return
-    else
+    elseif not toTile then
+      player:lockWalk(100) -- bug fix for missing stairs down on map
       return
+    else
+      return -- not walkable tile
     end
   end
 

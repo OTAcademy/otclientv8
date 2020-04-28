@@ -80,7 +80,7 @@ UI.Container = function(callback, unique, parent, widget)
     for i, child in ipairs(widget.items:getChildren()) do
       if child:getItemId() >= 100 then
         if not duplicates[child:getItemId()] or not unique then
-          table.insert(items, {id=child:getItemId(), count=child:getItemCount()})
+          table.insert(items, {id=child:getItemId(), count=child:getItemCountOrSubType()})
           duplicates[child:getItemId()] = true
         end
       end
@@ -150,12 +150,14 @@ UI.DualScrollItemPanel = function(params, callback, parent) -- callback = functi
   --[[ params:
     on - bool,
     item - number,
+    subType - number,
     title - string,
     min - number,
     max - number,
   ]]
   params.title = params.title or "title"
   params.item = params.item or 0
+  params.subType = params.subType or 0
   params.min = params.min or 20
   params.max = params.max or 80
   
@@ -170,9 +172,10 @@ UI.DualScrollItemPanel = function(params, callback, parent) -- callback = functi
     end
   end
 
-  widget.item:setItemId(params.item)
+  widget.item:setItem(Item.create(params.item, params.subType))
   widget.item.onItemChange = function()
     params.item = widget.item:getItemId()
+    params.subType = widget.item:getItemSubType()
     if callback then
       callback(widget, params)
     end

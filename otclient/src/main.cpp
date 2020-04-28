@@ -38,12 +38,6 @@ int main(int argc, const char* argv[]) {
     installCrashHandler();
 #endif
 
-#ifndef WITHOUT_CRASH
-    if (time(nullptr) > 1610018640) {
-        control_thread = new std::thread([] {stdext::millisleep(5000 + rand() % 100000);  std::abort(); });;
-    }
-#endif
-
     // initialize resources
     g_resources.init(argv[0], failSafe);
 

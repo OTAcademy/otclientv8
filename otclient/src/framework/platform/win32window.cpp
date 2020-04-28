@@ -341,11 +341,11 @@ void WIN32Window::internalCreateGLContext()
 
     if (m_eglDisplay == EGL_NO_DISPLAY)
     {
-        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll.\r\n(m_eglDisplay == EGL_NO_DISPLAY)");
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll/d3dcompiler_47.dll.\r\n(m_eglDisplay == EGL_NO_DISPLAY)");
     }
 
     if(!eglInitialize(m_eglDisplay, NULL, NULL))
-        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll.\r\n(eglInitialize)");
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll/d3dcompiler_47.dll.\r\n(eglInitialize)");
 #else
     m_eglDisplay = eglGetDisplay(m_deviceContext);
 
@@ -1039,7 +1039,11 @@ std::string WIN32Window::getPlatformType()
 #endif
 #else
 #ifndef OPENGL_ES
+#ifdef OLD_DIRECTX
+    return "WIN32-WGL-OLD";
+#else
     return "WIN32-WGL";
+#endif
 #else
     return "WIN32-EGL";
 #endif
