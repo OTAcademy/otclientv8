@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SQL
+
 #include "mysql.h"
 
 #include <mysql/errmsg.h>
@@ -275,3 +277,5 @@ MySQLResult::MySQLResult(MYSQL_RES* result)
         m_names[field->name] = i++;
     }
 }
+
+#endif

@@ -20,18 +20,18 @@
 * THE SOFTWARE.
 */
 
+#include <framework/graphics/atlas.h>
 #include <framework/graphics/painter.h>
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/colorarray.h>
 #include <framework/graphics/deptharray.h>
 #include <framework/platform/platformwindow.h>
 
-#include <framework/graphics/ogl/shadersources.h>
-#include <framework/graphics/ogl/newshader.h>
+#include <framework/graphics/shaders/shaders.h>
 #include <framework/platform/platformwindow.h>
 #include <framework/util/extras.h>
 
-Painter* g_painter = nullptr;
+Painter* g_painterNew = nullptr;
 
 Painter::Painter()
 {
@@ -39,61 +39,32 @@ Painter::Painter()
     m_oldStateIndex = 0;
     m_color = Color::white;
     m_opacity = 1.0f;
-    m_depth = 0;
     m_compositionMode = CompositionMode_Normal;
     m_blendEquation = BlendEquation_Add;
-    m_depthFunc = DepthFunc_None;
     m_shaderProgram = nullptr;
     m_texture = nullptr;
     m_alphaWriting = false;
+#ifdef WITH_DEPTH_BUFFER
+    m_depth = 0;
+    m_depthFunc = DepthFunc_None;
+#endif
     setResolution(g_window.getSize());
 
     m_drawProgram = nullptr;
     resetState();
 
-    m_drawTexturedProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawTexturedProgram);
-    m_drawTexturedProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader);
-    m_drawTexturedProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslTextureSrcFragmentShader);
-    m_drawTexturedProgram->link();
-
-    m_drawSolidColorProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawSolidColorProgram);
-    m_drawSolidColorProgram->addShaderFromSourceCode(Shader::Vertex, glslMainVertexShader + glslPositionOnlyVertexShader);
-    m_drawSolidColorProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslSolidColorFragmentShader);
-    m_drawSolidColorProgram->link();
-
-    m_drawSolidColorOnTextureProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawSolidColorOnTextureProgram);
-    m_drawSolidColorOnTextureProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader);
-    m_drawSolidColorOnTextureProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslSolidColorOnTextureFragmentShader);
-    m_drawSolidColorOnTextureProgram->link();
-
-    m_drawOutfitLayersProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawOutfitLayersProgram);
-    m_drawOutfitLayersProgram->addShaderFromSourceCode(Shader::Vertex, glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader);
-    m_drawOutfitLayersProgram->addShaderFromSourceCode(Shader::Fragment, glslMainFragmentShader + glslOutfitLayersFragmentShader);
-    m_drawOutfitLayersProgram->link();
-
-    m_drawLightProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawLightProgram);
-    m_drawLightProgram->addShaderFromSourceCode(Shader::Vertex, lightVertexShader);
-    m_drawLightProgram->addShaderFromSourceCode(Shader::Fragment, lightFragmentShader);
-    m_drawLightProgram->link();
-
-    m_drawNewProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawNewProgram);
-    m_drawNewProgram->addShaderFromSourceCode(Shader::Vertex, newVertexShader);
-    m_drawNewProgram->addShaderFromSourceCode(Shader::Fragment, newFragmentShader);
-    m_drawNewProgram->link();
-
-    m_drawLightDepthProgram = PainterShaderProgramPtr(new PainterShaderProgram);
-    assert(m_drawLightDepthProgram);
-    m_drawLightDepthProgram->addShaderFromSourceCode(Shader::Vertex, lightDepthVertexShader);
-    m_drawLightDepthProgram->addShaderFromSourceCode(Shader::Fragment, lightDepthFragmentShader);
-    m_drawLightDepthProgram->link();
+    m_drawTexturedProgram = PainterShaderProgram::create(glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader,
+                                                    glslMainFragmentShader + glslTextureSrcFragmentShader);
+    m_drawSolidColorProgram = PainterShaderProgram::create(glslMainVertexShader + glslPositionOnlyVertexShader,
+                                                      glslMainFragmentShader + glslSolidColorFragmentShader);
+    m_drawSolidColorOnTextureProgram = PainterShaderProgram::create(glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader,
+                                                               glslMainFragmentShader + glslSolidColorOnTextureFragmentShader);
+    m_drawOutfitLayersProgram = PainterShaderProgram::create(glslOutfitVertexShader, glslOutfitFragmentShader, true);
+    m_drawNewProgram = PainterShaderProgram::create(newVertexShader, newFragmentShader);
+    m_drawTextProgram = PainterShaderProgram::create(textVertexShader, textFragmentShader);
 
     PainterShaderProgram::release();
+    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
 }
 
 void Painter::bind()
@@ -117,15 +88,17 @@ void Painter::resetState()
 {
     resetColor();
     resetOpacity();
-    resetDepth();
     resetCompositionMode();
     resetBlendEquation();
-    resetDepthFunc();
     resetClipRect();
     resetShaderProgram();
     resetTexture();
     resetAlphaWriting();
     resetTransformMatrix();
+#ifdef WITH_DEPTH_BUFFER
+    resetDepth();
+    resetDepthFunc();
+#endif
 }
 
 void Painter::refreshState()
@@ -133,29 +106,33 @@ void Painter::refreshState()
     updateGlViewport();
     updateGlCompositionMode();
     updateGlBlendEquation();
-    updateDepthFunc();
     updateGlClipRect();
     updateGlTexture();
     updateGlAlphaWriting();
+#ifdef WITH_DEPTH_BUFFER
+    updateDepthFunc();
+#endif
 }
 
 void Painter::saveState()
 {
-    assert(m_oldStateIndex < 10);
+    VALIDATE(m_oldStateIndex < 10);
     m_olderStates[m_oldStateIndex].resolution = m_resolution;
     m_olderStates[m_oldStateIndex].transformMatrix = m_transformMatrix;
     m_olderStates[m_oldStateIndex].projectionMatrix = m_projectionMatrix;
     m_olderStates[m_oldStateIndex].textureMatrix = m_textureMatrix;
     m_olderStates[m_oldStateIndex].color = m_color;
     m_olderStates[m_oldStateIndex].opacity = m_opacity;
-    m_olderStates[m_oldStateIndex].depth = m_depth;
     m_olderStates[m_oldStateIndex].compositionMode = m_compositionMode;
     m_olderStates[m_oldStateIndex].blendEquation = m_blendEquation;
-    m_olderStates[m_oldStateIndex].depthFunc = m_depthFunc;
     m_olderStates[m_oldStateIndex].clipRect = m_clipRect;
     m_olderStates[m_oldStateIndex].shaderProgram = m_shaderProgram;
     m_olderStates[m_oldStateIndex].texture = m_texture;
     m_olderStates[m_oldStateIndex].alphaWriting = m_alphaWriting;
+#ifdef WITH_DEPTH_BUFFER
+    m_olderStates[m_oldStateIndex].depth = m_depth;
+    m_olderStates[m_oldStateIndex].depthFunc = m_depthFunc;
+#endif
     m_oldStateIndex++;
 }
 
@@ -174,25 +151,31 @@ void Painter::restoreSavedState()
     setTextureMatrix(m_olderStates[m_oldStateIndex].textureMatrix);
     setColor(m_olderStates[m_oldStateIndex].color);
     setOpacity(m_olderStates[m_oldStateIndex].opacity);
-    setDepth(m_olderStates[m_oldStateIndex].depth);
     setCompositionMode(m_olderStates[m_oldStateIndex].compositionMode);
     setBlendEquation(m_olderStates[m_oldStateIndex].blendEquation);
-    setDepthFunc(m_olderStates[m_oldStateIndex].depthFunc);
     setClipRect(m_olderStates[m_oldStateIndex].clipRect);
     setShaderProgram(m_olderStates[m_oldStateIndex].shaderProgram);
     setTexture(m_olderStates[m_oldStateIndex].texture);
     setAlphaWriting(m_olderStates[m_oldStateIndex].alphaWriting);
+#ifdef WITH_DEPTH_BUFFER
+    setDepth(m_olderStates[m_oldStateIndex].depth);
+    setDepthFunc(m_olderStates[m_oldStateIndex].depthFunc);
+#endif
 }
 
 void Painter::clear(const Color& color)
 {
     glClearColor(color.rF(), color.gF(), color.bF(), color.aF());
+#ifdef WITH_DEPTH_BUFFER
 #ifdef OPENGL_ES
     glClearDepthf(0.99f);
 #else
     glClearDepth(0.99f);
 #endif
+    glClear(GL_COLOR_BUFFER_BIT);
+#else
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
 }
 
 void Painter::clearRect(const Color& color, const Rect& rect)
@@ -200,12 +183,16 @@ void Painter::clearRect(const Color& color, const Rect& rect)
     Rect oldClipRect = m_clipRect;
     setClipRect(rect);
     glClearColor(color.rF(), color.gF(), color.bF(), color.aF());
+#ifdef WITH_DEPTH_BUFFER
 #ifdef OPENGL_ES
     glClearDepthf(0.99f);
 #else
     glClearDepth(0.99f);
 #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#else
+    glClear(GL_COLOR_BUFFER_BIT);
+#endif
     setClipRect(oldClipRect);
 }
 
@@ -225,15 +212,15 @@ void Painter::setBlendEquation(Painter::BlendEquation blendEquation)
     updateGlBlendEquation();
 }
 
+#ifdef WITH_DEPTH_BUFFER
 void Painter::setDepthFunc(DepthFunc func)
 {
-    if (!g_graphics.canUseDepth())
-        return;
     if (m_depthFunc == func)
         return;
     m_depthFunc = func;
     updateDepthFunc();
 }
+#endif
 
 void Painter::setClipRect(const Rect& clipRect)
 {
@@ -243,12 +230,14 @@ void Painter::setClipRect(const Rect& clipRect)
     updateGlClipRect();
 }
 
-void Painter::setTexture(Texture* texture)
+void Painter::setTexture(const TexturePtr& texture)
 {
     if (m_texture == texture)
         return;
 
     m_texture = texture;
+    if (m_texture)
+        m_texture->update();
 
     uint glTextureId;
     if (texture) {
@@ -294,7 +283,7 @@ void Painter::setResolution(const Size& resolution)
     m_resolution = resolution;
 
     setProjectionMatrix(projectionMatrix);
-    if (g_painter == this)
+    if (g_painterNew == this)
         updateGlViewport();
 }
 
@@ -341,12 +330,12 @@ void Painter::rotate(float x, float y, float angle)
 void Painter::pushTransformMatrix()
 {
     m_transformMatrixStack.push_back(m_transformMatrix);
-    assert(m_transformMatrixStack.size() < 100);
+    VALIDATE(m_transformMatrixStack.size() < 100);
 }
 
 void Painter::popTransformMatrix()
 {
-    assert(m_transformMatrixStack.size() > 0);
+    VALIDATE(m_transformMatrixStack.size() > 0);
     setTransformMatrix(m_transformMatrixStack.back());
     m_transformMatrixStack.pop_back();
 }
@@ -392,8 +381,6 @@ void Painter::updateGlCompositionMode()
 
 void Painter::updateGlBlendEquation()
 {
-    if (!g_graphics.canUseBlendEquation())
-        return;
     if (m_blendEquation == BlendEquation_Add)
         glBlendEquation(GL_FUNC_ADD); // GL_FUNC_ADD
     else if (m_blendEquation == BlendEquation_Max)
@@ -402,11 +389,9 @@ void Painter::updateGlBlendEquation()
         glBlendEquation(GL_FUNC_SUBTRACT); // GL_MAX
 }
 
+#ifdef WITH_DEPTH_BUFFER
 void Painter::updateDepthFunc()
 {
-    if (!g_graphics.canUseDepth())
-        return;
-
     if (m_depthFunc != DepthFunc_None) {
         glEnable(GL_DEPTH_TEST);
     }
@@ -445,6 +430,7 @@ void Painter::updateDepthFunc()
         break;
     }
 }
+#endif
 
 void Painter::updateGlClipRect()
 {
@@ -472,6 +458,7 @@ void Painter::updateGlViewport()
 
 void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArray* colorArray)
 {
+    coordsBuffer.cache();
     int vertexCount = coordsBuffer.getVertexCount();
     if (vertexCount == 0)
         return;
@@ -492,7 +479,9 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
     }
 
     m_drawProgram->setOpacity(m_opacity);
+#ifdef WITH_DEPTH_BUFFER
     m_drawProgram->setDepth(m_depth);
+#endif
     if (m_drawProgram != m_drawOutfitLayersProgram) {
         m_drawProgram->setColor(m_color);
     } else {
@@ -501,15 +490,13 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
     m_drawProgram->setResolution(m_resolution);
     m_drawProgram->updateTime();
 
-    // update coords buffer hardware caches if enabled
-    coordsBuffer.updateCaches();
-    bool hardwareCached = coordsBuffer.isHardwareCached();
-
     // only set texture coords arrays when needed
     if (textured) {
-        if (hardwareCached) {
-            coordsBuffer.getHardwareTextureCoordArray()->bind();
+        HardwareBuffer* hardwareCache = coordsBuffer.getTextureHardwareCache();
+        if (hardwareCache) {
+            hardwareCache->bind();
             m_drawProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, nullptr, 2);
+            HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
         } else {
             m_drawProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, coordsBuffer.getTextureCoordArray(), 2);
         }
@@ -521,19 +508,20 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
         m_drawProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, colorArray->colors(), 4);
     }
 
-    // set vertex array
-    if (hardwareCached) {
-        coordsBuffer.getHardwareVertexArray()->bind();
+    HardwareBuffer* hardwareCache = coordsBuffer.getVertexHardwareCache();
+    if (hardwareCache) {
+        hardwareCache->bind();
         m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, nullptr, 2);
         HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
-    } else
+    } else {
         m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
+    }
 
     if (drawMode == Triangles)
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     else if (drawMode == TriangleStrip)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
-    m_draws += vertexCount / 6;
+    m_draws += vertexCount;
     m_calls += 1;
 
     if (!textured)
@@ -623,31 +611,79 @@ void Painter::drawFilledRect(const Rect& dest)
     drawCoords(m_coordsBuffer);
 }
 
-void Painter::drawFilledTriangle(const Point& a, const Point& b, const Point& c)
-{
-    if (a == b || a == c || b == c)
-        return;
-
-    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
-
-    m_coordsBuffer.clear();
-    m_coordsBuffer.addTriangle(a, b, c);
-    drawCoords(m_coordsBuffer);
-}
-
-void Painter::drawBoundingRect(const Rect& dest, int innerLineWidth)
-{
-    if (dest.isEmpty() || innerLineWidth == 0)
-        return;
-
-    setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawSolidColorProgram.get());
-
-    m_coordsBuffer.clear();
-    m_coordsBuffer.addBoudingRect(dest, innerLineWidth);
-    drawCoords(m_coordsBuffer);
-}
-
 // new render
+void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const Color& color)
+{
+    setTexture(g_atlas.get(1)); // todo: remove it
+    // update shader with the current painter state
+    m_drawTextProgram->bind();
+    m_drawTextProgram->setTransformMatrix(m_transformMatrix);
+    m_drawTextProgram->setProjectionMatrix(m_projectionMatrix);
+    m_drawTextProgram->setTextureMatrix(m_textureMatrix);
+    m_drawTextProgram->setOffset(pos);
+    m_drawTextProgram->setColor(color);
+
+    HardwareBuffer* hardwareCache = coordsBuffer.getVertexHardwareCache();
+    if (hardwareCache) {
+        hardwareCache->bind();
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, nullptr, 2);
+        HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
+    } else {
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
+    }
+
+    HardwareBuffer* texHardwareCache = coordsBuffer.getTextureHardwareCache();
+    if (texHardwareCache) {
+        texHardwareCache->bind();
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, nullptr, 2);
+        HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
+    } else {
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, coordsBuffer.getTextureCoordArray(), 2);
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, coordsBuffer.getVertexCount());
+    m_draws += coordsBuffer.getVertexCount();
+    m_calls += 1;
+}
+
+void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const std::vector<std::pair<int, Color>>& colors)
+{
+    setTexture(g_atlas.get(1)); // todo: remove it
+    // update shader with the current painter state
+    m_drawTextProgram->bind();
+    m_drawTextProgram->setTransformMatrix(m_transformMatrix);
+    m_drawTextProgram->setProjectionMatrix(m_projectionMatrix);
+    m_drawTextProgram->setTextureMatrix(m_textureMatrix);
+    m_drawTextProgram->setOffset(pos);
+
+    HardwareBuffer* hardwareCache = coordsBuffer.getVertexHardwareCache();
+    if (hardwareCache) {
+        hardwareCache->bind();
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, nullptr, 2);
+        HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
+    } else {
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
+    }
+
+    HardwareBuffer* texHardwareCache = coordsBuffer.getTextureHardwareCache();
+    if (texHardwareCache) {
+        texHardwareCache->bind();
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, nullptr, 2);
+        HardwareBuffer::unbind(HardwareBuffer::VertexBuffer);
+    } else {
+        m_drawTextProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, coordsBuffer.getTextureCoordArray(), 2);
+    }
+
+    int s = 0;
+    for (auto& cp : colors) {
+        m_drawTextProgram->setColor(cp.second);
+        glDrawArrays(GL_TRIANGLES, s * 6, (cp.first - s) * 6);
+        s = cp.first;
+    }
+    m_draws += coordsBuffer.getVertexCount();
+    m_calls += colors.size();
+}
+
 void Painter::setAtlasTextures(const TexturePtr& atlas)
 {
     static uint activeTexture = 0;
@@ -661,151 +697,44 @@ void Painter::setAtlasTextures(const TexturePtr& atlas)
     glActiveTexture(GL_TEXTURE0);
 }
 
-inline void addRect(float* dest, const Rect& rect)
+void Painter::setSecondTexture(const TexturePtr& texture)
 {
-    dest[0] = rect.left();
-    dest[1] = rect.top();
-    dest[2] = rect.right() + 1;
-    dest[3] = rect.top();
-    dest[4] = rect.left();
-    dest[5] = rect.bottom() + 1;
-    dest[6] = rect.left();
-    dest[7] = rect.bottom() + 1;
-    dest[8] = rect.right() + 1;
-    dest[9] = rect.top();
-    dest[10] = rect.right() + 1;
-    dest[11] = rect.bottom() + 1;
-}
-inline void addRect(float* dest, const RectF& rect)
-{
-    dest[0] = rect.left();
-    dest[1] = rect.top();
-    dest[2] = rect.right() + 1;
-    dest[3] = rect.top();
-    dest[4] = rect.left();
-    dest[5] = rect.bottom() + 1;
-    dest[6] = rect.left();
-    dest[7] = rect.bottom() + 1;
-    dest[8] = rect.right() + 1;
-    dest[9] = rect.top();
-    dest[10] = rect.right() + 1;
-    dest[11] = rect.bottom() + 1;
-}
-
-void Painter::drawQueue(DrawQueue& drawqueue)
-{
-    static std::vector<float> destCoords(8192 * 2 * 6);
-    static std::vector<float> texCoords(8192 * 2 * 6);
-    static std::vector<float> depthBuffer(8192 * 6);
-    static std::vector<float> colorBuffer(8192 * 4 * 6);
-
-    if (!drawqueue.getAtlas())
+    static uint activeTexture = 0;
+    if (activeTexture == texture->getId())
         return;
+    if (texture)
+        texture->update();
+    activeTexture = texture ? texture->getId() : 0;
+    glActiveTexture(GL_TEXTURE1); // u_Tex1
+    glBindTexture(GL_TEXTURE_2D, activeTexture);
+    glActiveTexture(GL_TEXTURE0);
+}
 
-    setAtlasTextures(drawqueue.getAtlas());
+void Painter::setOffset(const Point& offset)
+{
+    if (!m_shaderProgram) return;
+    m_shaderProgram->setOffset(offset);
+}
 
-    size_t size = 0;
-
-    for (auto& item : drawqueue.items()) {
-        if (!item->cached)
-            continue;
-        addRect(&destCoords[size * 12], item->dest);
-        addRect(&texCoords[size * 12], item->src);
-        for (int j = 0; j < 6; ++j) {
-            depthBuffer[size * 6 + j] = item->depth;
-            colorBuffer[size * 24 + j * 4] = item->color.rF();
-            colorBuffer[size * 24 + j * 4 + 1] = item->color.gF();
-            colorBuffer[size * 24 + j * 4 + 2] = item->color.bF();
-            colorBuffer[size * 24 + j * 4 + 3] = item->color.aF();
-        }
-        if (++size >= 8192)
-            break;
-    }
-
+void Painter::drawCache(const std::vector<float>& vertex, const std::vector<float>& texture, const std::vector<float>& color, int size)
+{
+    setTexture(g_atlas.get(0)); // todo: remove it
     // update shader with the current painter state
     m_drawNewProgram->bind();
     m_drawNewProgram->setTransformMatrix(m_transformMatrix);
     m_drawNewProgram->setProjectionMatrix(m_projectionMatrix);
-    m_drawNewProgram->setTextureMatrix(m_atlasTextureMatrix);
+    m_drawNewProgram->setTextureMatrix(m_textureMatrix);
 
-    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
     PainterShaderProgram::enableAttributeArray(PainterShaderProgram::COLOR_ATTR);
 
-    m_drawNewProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, destCoords.data(), 2);
-    m_drawNewProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, texCoords.data(), 2);
-    m_drawNewProgram->setAttributeArray(PainterShaderProgram::DEPTH_ATTR, depthBuffer.data(), 1);
-    m_drawNewProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, colorBuffer.data(), 4);
+    m_drawNewProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, vertex.data(), 2);
+    m_drawNewProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, texture.data(), 2);
+    m_drawNewProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, color.data(), 4);
 
-    glDrawArrays(GL_TRIANGLES, 0, size * 6);
+    glDrawArrays(GL_TRIANGLES, 0, size);
     m_draws += size;
     m_calls += 1;
 
-    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
-    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
+    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR); 
 }
 
-void Painter::drawLights(const LightBuffer& buffer)
-{
-    if (!buffer.texture)
-        return;
-
-    setTexture(buffer.texture);
-
-    // update shader with the current painter state
-    m_drawLightProgram->bind();
-    m_drawLightProgram->setTransformMatrix(m_transformMatrix);
-    m_drawLightProgram->setProjectionMatrix(m_projectionMatrix);
-    m_drawLightProgram->setTextureMatrix(m_textureMatrix);
-
-    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
-    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::COLOR_ATTR);
-
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, buffer.destCoords, 2);
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::TEXCOORD_ATTR, buffer.texCoords, 2);
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::DEPTH_ATTR, buffer.depthBuffer, 1);
-    m_drawLightProgram->setAttributeArray(PainterShaderProgram::COLOR_ATTR, buffer.colorBuffer, 4);
-
-    glDrawArrays(GL_TRIANGLES, 0, buffer.size * 6);
-    m_draws += buffer.size;
-    m_calls += 1;
-
-    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
-    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR);
-}
-
-void Painter::drawLightDepth(const std::map<PointF, float> depth, float tileSize)
-{
-    static std::vector<float> destCoords(1024 * 2 * 6);
-    static std::vector<float> depthBuffer(1024 * 6);
-
-    size_t size = std::min<size_t>(1024, depth.size());
-
-    size_t i = 0;
-    for (auto& it : depth) {
-        addRect(&destCoords[i * 12], RectF(it.first, 1 + 31.f / tileSize, 1 + 31.f / tileSize));
-        for (int j = 0; j < 6; ++j) {
-            depthBuffer[i * 6 + j] = it.second;
-        }
-        if (++i >= size)
-            break;
-    }
-
-    // update shader with the current painter state
-    m_drawLightDepthProgram->bind();
-    m_drawLightDepthProgram->setTransformMatrix(m_transformMatrix);
-    m_drawLightDepthProgram->setProjectionMatrix(m_projectionMatrix);
-
-
-    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
-    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
-
-    m_drawLightDepthProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, destCoords.data(), 2);
-    m_drawLightDepthProgram->setAttributeArray(PainterShaderProgram::DEPTH_ATTR, depthBuffer.data(), 1);
-
-    glDrawArrays(GL_TRIANGLES, 0, size * 6);
-    m_draws += size;
-    m_calls += 1;
-
-    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::DEPTH_ATTR);
-    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
-}

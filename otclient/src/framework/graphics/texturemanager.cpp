@@ -35,29 +35,17 @@ TextureManager g_textures;
 
 void TextureManager::init()
 {
-    m_emptyTexture = TexturePtr(new Texture);
 }
 
 void TextureManager::terminate()
 {
     m_textures.clear();
     m_animatedTextures.clear();
-    m_emptyTexture = nullptr;
 }
 
 void TextureManager::poll()
 {
-    AutoStat s(STATS_MAIN, "PollTextures");
 
-    // update only every 16msec, this allows upto 60 fps for animated textures
-    static ticks_t lastUpdate = 0;
-    ticks_t now = g_clock.millis();
-    if(now - lastUpdate < 16)
-        return;
-    lastUpdate = now;
-
-    for(const AnimatedTexturePtr& animatedTexture : m_animatedTextures)
-        animatedTexture->updateAnimation();
 }
 
 void TextureManager::clearCache()
@@ -75,7 +63,7 @@ void TextureManager::reload()
         ImagePtr image = Image::load(path);
         if(!image)
             continue;
-        tex->uploadPixels(image, tex->hasMipmaps());
+        tex->replace(image);
         tex->setTime(stdext::time());
     }
 }
@@ -106,10 +94,10 @@ TexturePtr TextureManager::getTexture(const std::string& fileName)
             // load texture file data
             std::stringstream fin;
             g_resources.readFileStream(filePathEx, fin);
-            texture = loadTexture(fin);
+            texture = loadTexture(fin, filePath);
         } catch(stdext::exception& e) {
             g_logger.error(stdext::format("Unable to load texture '%s': %s", fileName, e.what()));
-            texture = g_textures.getEmptyTexture();
+            texture = nullptr;
         }
 
         if(texture) {
@@ -123,13 +111,19 @@ TexturePtr TextureManager::getTexture(const std::string& fileName)
     return texture;
 }
 
-TexturePtr TextureManager::loadTexture(std::stringstream& file)
+TexturePtr TextureManager::loadTexture(std::stringstream& file, const std::string& source)
 {
     TexturePtr texture;
 
     apng_data apng;
     if(load_apng(file, &apng) == 0) {
         Size imageSize(apng.width, apng.height);
+#ifndef NDEBUG
+        if ((apng.width > 512 || apng.height > 512) && source.find("background") == std::string::npos) {
+            // this warnining is disabled for background image
+            g_logger.warning(stdext::format("Texture %s has size %ix%i. Too keep highest performance you shouldn't use textures bigger than 512x512 (they can't be cached)", source, apng.width, apng.height));
+        }
+#endif
         if(apng.num_frames > 1) { // animated texture
             std::vector<ImagePtr> frames;
             std::vector<int> framesDelay;
@@ -145,7 +139,11 @@ TexturePtr TextureManager::loadTexture(std::stringstream& file)
             texture = animatedTexture;
         } else {
             ImagePtr image = ImagePtr(new Image(imageSize, apng.bpp, apng.pdata));
-            texture = TexturePtr(new Texture(image));
+            if (!image) {
+                g_logger.error(stdext::format("Can't load texture: %s", source));
+            } else {
+                texture = TexturePtr(new Texture(image));
+            }
         }
         free_apng(&apng);
     }

@@ -24,70 +24,86 @@
 #define COORDSBUFFER_H
 
 #include "vertexarray.h"
-#include "hardwarebuffer.h"
 
 class CoordsBuffer
 {
-    enum {
-        CACHE_MIN_VERTICES_COUNT = 48
-    };
 public:
     CoordsBuffer();
     ~CoordsBuffer();
+    CoordsBuffer(CoordsBuffer& c) = delete;
+    CoordsBuffer& operator=(CoordsBuffer& c) = delete;
+    CoordsBuffer(CoordsBuffer&& c) noexcept : m_vertexArray(c.m_vertexArray), m_textureCoordArray(c.m_textureCoordArray)
+    {
+        m_locked = c.m_locked = true;
+    };
 
     void clear() {
-        m_textureCoordArray.clear();
-        m_vertexArray.clear();
-        m_hardwareCached = false;
+        if (m_locked)
+            unlock(true);
+        m_textureCoordArray->clear();
+        m_vertexArray->clear();
     }
 
     void addTriangle(const Point& a, const Point& b, const Point& c) {
-        m_vertexArray.addTriangle(a, b, c);
-        m_hardwareCached = false;
+        if (m_locked)
+            unlock();
+        m_vertexArray->addTriangle(a, b, c);
     }
     void addRect(const Rect& dest) {
-        m_vertexArray.addRect(dest);
-        m_hardwareCached = false;
+        if (m_locked)
+            unlock();
+        m_vertexArray->addRect(dest);
     }
-    void addRect(const Rect& dest, const Rect& src) {
-        m_vertexArray.addRect(dest);
-        m_textureCoordArray.addRect(src);
-        m_hardwareCached = false;
+    void addRect(const Rect& dest, const Rect& src)
+    {
+        if (m_locked)
+            unlock();
+        m_vertexArray->addRect(dest);
+        m_textureCoordArray->addRect(src);
+    }
+    void addRect(const RectF& dest, const RectF& src)
+    {
+        if (m_locked)
+            unlock();
+        m_vertexArray->addRect(dest);
+        m_textureCoordArray->addRect(src);
     }
     void addQuad(const Rect& dest, const Rect& src) {
-        m_vertexArray.addQuad(dest);
-        m_textureCoordArray.addQuad(src);
-        m_hardwareCached = false;
+        if (m_locked)
+            unlock();
+        m_vertexArray->addQuad(dest);
+        m_textureCoordArray->addQuad(src);
     }
     void addUpsideDownQuad(const Rect& dest, const Rect& src) {
-        m_vertexArray.addUpsideDownQuad(dest);
-        m_textureCoordArray.addQuad(src);
-        m_hardwareCached = false;
+        if (m_locked)
+            unlock();
+        m_vertexArray->addUpsideDownQuad(dest);
+        m_textureCoordArray->addQuad(src);
     }
 
     void addBoudingRect(const Rect& dest, int innerLineWidth);
     void addRepeatedRects(const Rect& dest, const Rect& src);
 
-    void enableHardwareCaching(HardwareBuffer::UsagePattern usagePattern = HardwareBuffer::DynamicDraw);
-    void updateCaches();
-    bool isHardwareCached() { return m_hardwareCached; }
+    float *getVertexArray() { return m_vertexArray->vertices(); }
+    float *getTextureCoordArray() { return m_textureCoordArray->vertices(); }
+    int getVertexCount() { return m_vertexArray->vertexCount(); }
+    int getTextureCoordCount() { return m_textureCoordArray->vertexCount(); }
+    HardwareBuffer* getVertexHardwareCache() { return m_vertexArray->getHardwareCache(); }
+    HardwareBuffer* getTextureHardwareCache() { return m_textureCoordArray->getHardwareCache(); }
 
-    float *getVertexArray() { return m_vertexArray.vertices(); }
-    float *getTextureCoordArray() { return m_textureCoordArray.vertices(); }
-    int getVertexCount() { return m_vertexArray.vertexCount(); }
-    int getTextureCoordCount() { return m_textureCoordArray.vertexCount(); }
-
-    HardwareBuffer *getHardwareVertexArray() { return m_hardwareVertexArray; }
-    HardwareBuffer *getHardwareTextureCoordArray() { return m_hardwareTextureCoordArray; }
+    void unlock(bool clear = false);
+    void cache()
+    {
+        m_locked = true;
+        m_vertexArray->cache();
+        m_textureCoordArray->cache();
+    }
+    Rect getTextureRect();
 
 private:
-    HardwareBuffer *m_hardwareVertexArray;
-    HardwareBuffer *m_hardwareTextureCoordArray;
-    HardwareBuffer::UsagePattern m_hardwareCacheMode;
-    VertexArray m_vertexArray;
-    VertexArray m_textureCoordArray;
-    bool m_hardwareCached;
-    bool m_hardwareCaching;
+    bool m_locked = false;
+    std::shared_ptr<VertexArray> m_vertexArray;
+    std::shared_ptr<VertexArray> m_textureCoordArray;
 };
 
 #endif

@@ -45,7 +45,7 @@ Shader::Shader(Shader::ShaderType shaderType)
 Shader::~Shader()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
 #endif
     if(g_graphics.ok())
         glDeleteShader(m_shaderId);
@@ -53,22 +53,15 @@ Shader::~Shader()
 
 bool Shader::compileSourceCode(const std::string& sourceCode)
 {
-#ifndef OPENGL_ES
+#ifdef OPENGL_ES
     static const char *qualifierDefines =
-        "#define lowp\n"
-        "#define mediump\n"
-        "#define highp\n";
-#else
-    static const char *qualifierDefines =
-        "#ifndef GL_FRAGMENT_PRECISION_HIGH\n"
-        "#define highp mediump\n"
-        "#endif\n"
-        "precision highp float;\n";
-#endif
-
+        "precision mediump float;\n";
     std::string code = qualifierDefines;
     code.append(sourceCode);
-    const char *c_source = code.c_str();
+    const char* c_source = code.c_str();
+#else
+    const char* c_source = sourceCode.c_str();
+#endif
     glShaderSource(m_shaderId, 1, &c_source, NULL);
     glCompileShader(m_shaderId);
 

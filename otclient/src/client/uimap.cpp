@@ -58,22 +58,13 @@ void UIMap::drawSelf(Fw::DrawPane drawPane)
 {
     UIWidget::drawSelf(drawPane);
 
-    if(drawPane & Fw::ForegroundPane) {
-        // draw map border
-        g_painter->setColor(Color::black);
-        g_painter->drawBoundingRect(m_mapRect.expanded(1));
-
-        if(drawPane != Fw::BothPanes) {
-            glDisable(GL_BLEND);
-            g_painter->setColor(Color::alpha);
-            g_painter->drawFilledRect(m_mapRect);
-            glEnable(GL_BLEND);
-        }
-    }
-
-    if(drawPane & Fw::BackgroundPane) {
-        g_painter->setColor(Color::white);
-        m_mapView->draw(m_mapRect, getTile(m_mousePosition));
+    if(drawPane == Fw::ForegroundPane) {
+        g_drawQueue->addBoundingRect(m_mapRect.expanded(1), 1, Color::black);
+        g_drawQueue->markMapPosition();
+    } else if(drawPane == Fw::MapBackgroundPane) {
+        m_mapView->drawBackground(m_mapRect, getTile(m_mousePosition));
+    } else if (drawPane == Fw::MapForegroundPane) {
+        m_mapView->drawForeground(m_mapRect);
     }
 }
 

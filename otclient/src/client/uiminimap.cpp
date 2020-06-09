@@ -24,7 +24,7 @@
 #include "minimap.h"
 #include "game.h"
 #include "uimapanchorlayout.h"
-#include "luavaluecasts.h"
+#include "luavaluecasts_client.h"
 
 #include <framework/graphics/painter.h>
 #include "uimapanchorlayout.h"
@@ -42,7 +42,7 @@ void UIMinimap::drawSelf(Fw::DrawPane drawPane)
 {
     UIWidget::drawSelf(drawPane);
 
-    if((drawPane & Fw::ForegroundPane) == 0)
+    if(drawPane != Fw::ForegroundPane)
         return;
 
     g_minimap.draw(getPaddingRect(), getCameraPosition(), m_scale, m_color);
@@ -115,21 +115,21 @@ Position UIMinimap::getTilePosition(const Point& mousePos)
 void UIMinimap::anchorPosition(const UIWidgetPtr& anchoredWidget, Fw::AnchorEdge anchoredEdge, const Position& hookedPosition, Fw::AnchorEdge hookedEdge)
 {
     UIMapAnchorLayoutPtr layout = m_layout->static_self_cast<UIMapAnchorLayout>();
-    assert(layout);
+    VALIDATE(layout);
     layout->addPositionAnchor(anchoredWidget, anchoredEdge, hookedPosition, hookedEdge);
 }
 
 void UIMinimap::fillPosition(const UIWidgetPtr& anchoredWidget, const Position& hookedPosition)
 {
     UIMapAnchorLayoutPtr layout = m_layout->static_self_cast<UIMapAnchorLayout>();
-    assert(layout);
+    VALIDATE(layout);
     layout->fillPosition(anchoredWidget, hookedPosition);
 }
 
 void UIMinimap::centerInPosition(const UIWidgetPtr& anchoredWidget, const Position& hookedPosition)
 {
     UIMapAnchorLayoutPtr layout = m_layout->static_self_cast<UIMapAnchorLayout>();
-    assert(layout);
+    VALIDATE(layout);
     layout->centerInPosition(anchoredWidget, hookedPosition);
 }
 

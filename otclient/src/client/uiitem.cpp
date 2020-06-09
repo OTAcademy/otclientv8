@@ -32,9 +32,8 @@ UIItem::UIItem()
 
 void UIItem::drawSelf(Fw::DrawPane drawPane)
 {
-    if((drawPane & Fw::ForegroundPane) == 0)
+    if(drawPane != Fw::ForegroundPane)
         return;
-
     // draw style components in order
     if(m_backgroundColor.aF() > Fw::MIN_ALPHA) {
         Rect backgroundDestRect = m_rect;
@@ -46,26 +45,21 @@ void UIItem::drawSelf(Fw::DrawPane drawPane)
 
     if(m_itemVisible && m_item) {
         Rect drawRect = getPaddingRect();
-        Point dest = drawRect.bottomRight() + Point(1,1);
 
         int exactSize = std::max<int>(32, m_item->getExactSize());
         if(exactSize == 0)
             return;
 
-        float scaleFactor = std::min<float>(drawRect.width() / (float)exactSize, drawRect.height() / (float)exactSize);
-        dest += (m_item->getDisplacement() - Point(32,32)) * scaleFactor;
-
-        g_painter->setColor(m_color);
-        m_item->draw(dest, scaleFactor, true);
+        m_item->setColor(m_color);
+        m_item->draw(drawRect);
 
         if(m_font && m_showCount && (m_item->isStackable() || m_item->isChargeable()) && m_item->getCountOrSubType() > 1) {
-            std::string count = stdext::to_string(m_item->getCountOrSubType());
-            g_painter->setColor(Color(231, 231, 231));
-            m_font->drawText(count, Rect(m_rect.topLeft(), m_rect.bottomRight() - Point(3, 0)), Fw::AlignBottomRight);
+            g_drawQueue->addText(m_font, std::to_string(m_item->getCountOrSubType()), Rect(m_rect.topLeft(), m_rect.bottomRight() - Point(3, 0)), Fw::AlignBottomRight, Color(231, 231, 231));
         }
 
-        if(m_showId)
-            m_font->drawText(stdext::to_string(m_item->getServerId()), m_rect, Fw::AlignBottomRight);
+        if (m_showId) {
+            g_drawQueue->addText(m_font, std::to_string(m_item->getServerId()), m_rect, Fw::AlignBottomRight, Color(231, 231, 231));
+        }
     }
 
     drawBorder(m_rect);

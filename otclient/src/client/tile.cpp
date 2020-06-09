@@ -42,7 +42,108 @@ Tile::Tile(const Position& position) :
 {
 }
 
-void Tile::calculateTopDepth() {
+void Tile::drawBottom(const Point& dest, LightView* lightView)
+{
+    m_topDraws = 0;
+    m_drawElevation = 0;
+    if (m_fill != Color::alpha) {
+        g_drawQueue->addFilledRect(Rect(dest, Otc::TILE_PIXELS, Otc::TILE_PIXELS), m_fill);
+        return;
+    }
+
+    // bottom things
+    for (const ThingPtr& thing : m_things) {
+        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
+            break;
+        if (thing->isHidden())
+            continue;
+
+        thing->draw(dest - m_drawElevation, true, lightView);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+    }
+
+    // common items, reverse order
+    int redrawPreviousTopW = 0, redrawPreviousTopH = 0;
+    for (auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+        const ThingPtr& thing = *it;
+        if (thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
+            break;
+        if (thing->isHidden())
+            continue;
+
+        thing->draw(dest - m_drawElevation, true, lightView);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+
+        if (thing->isLyingCorpse()) {
+            redrawPreviousTopW = std::max<int>(thing->getWidth() - 1, redrawPreviousTopW);
+            redrawPreviousTopH = std::max<int>(thing->getHeight() - 1, redrawPreviousTopH);
+        }
+    }
+
+    for (int x = -redrawPreviousTopW; x <= 0; ++x) {
+        for (int y = -redrawPreviousTopH; y <= 0; ++y) {
+            if (x == 0 && y == 0)
+                continue;
+            if(const TilePtr& tile = g_map.getTile(m_position.translated(x, y)))
+               tile->drawTop(dest + Point(x * Otc::TILE_PIXELS, y * Otc::TILE_PIXELS), lightView);
+        }
+    }
+
+    if (lightView && hasTranslucentLight()) {
+        lightView->addLight(dest + Point(16, 16), 215, 1);
+    }
+}
+
+void Tile::drawTop(const Point& dest, LightView* lightView)
+{
+    if (m_fill != Color::alpha)
+        return;
+    if (m_topDraws++ < m_topCorrection)
+        return;
+
+    // walking creatures
+    for (const CreaturePtr& creature : m_walkingCreatures) {
+        if (creature->isHidden())
+            continue;
+        Point creatureDest(dest.x + ((creature->getPrewalkingPosition().x - m_position.x) * Otc::TILE_PIXELS - m_drawElevation),
+                   dest.y + ((creature->getPrewalkingPosition().y - m_position.y) * Otc::TILE_PIXELS - m_drawElevation));
+        creature->draw(creatureDest, true, lightView);
+    }
+
+    // creatures
+    std::vector<CreaturePtr> creaturesToDraw;
+    int limit = g_adaptiveRenderer.creaturesLimit();
+    for (auto& thing : m_things) {
+        if (!thing->isCreature() || thing->isHidden())
+            continue;
+        if (limit-- <= 0)
+            break;
+        CreaturePtr creature = thing->static_self_cast<Creature>();
+        if (!creature || creature->isWalking())
+            continue;
+        creature->draw(dest - m_drawElevation, true, lightView);
+    }
+
+    // effects
+    limit = std::min<int>((int)m_effects.size() - 1, g_adaptiveRenderer.effetsLimit());
+    for (int i = limit; i >= 0; --i) {
+        if (m_effects[i]->isHidden())
+            continue;
+        m_effects[i]->draw(dest - m_drawElevation, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, true, lightView);
+    }
+
+    // top
+    for (const ThingPtr& thing : m_things) {
+        if (!thing->isOnTop() || thing->isHidden())
+            continue;
+        thing->draw(dest - m_drawElevation, true, lightView);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+    }
+}
+
+
+void Tile::calculateCorpseCorrection() {
+    m_topCorrection = 0;
     int redrawPreviousTopW = 0, redrawPreviousTopH = 0;
     for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
         const ThingPtr& thing = *it;
@@ -59,107 +160,9 @@ void Tile::calculateTopDepth() {
         for (int y = -redrawPreviousTopH; y <= 0; ++y) {
             if (x == 0 && y == 0)
                 continue;
-            const TilePtr& tile = g_map.getTile(m_position.translated(x,y));
-            if (tile && tile->getTopDepth() > m_depth) {
-                tile->setTopDepth(m_depth);
-            }
+            if (const TilePtr& tile = g_map.getTile(m_position.translated(x, y)))
+                tile->m_topCorrection += 1;
         }
-    }
-}
-
-void Tile::drawItems(const Point& dest, DrawQueue& drawQueue, LightView *lightView)
-{
-    drawQueue.setDepth(m_depth);
-    m_drawElevation = 0;
-
-    if (m_fill != Color::white) {
-        drawQueue.add(Rect(dest, Otc::TILE_PIXELS, Otc::TILE_PIXELS), nullptr, Rect(), m_fill);
-        return;
-    }
-
-    // first bottom items
-    for (const ThingPtr& thing : m_things) {
-        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
-            break;
-        if (thing->isHidden())
-            continue;
-        if (g_game.getFeature(Otc::GameCenteredOutfits)) {
-            if (thing->isGround()) {
-                drawQueue.setDepth(m_floorDepth);
-            } else {
-                drawQueue.setDepth(m_depth);
-            }
-        }
-
-        thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
-        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
-    }
-
-
-    // now common items in reverse order
-    drawQueue.setDepth(m_depth);
-    for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
-        const ThingPtr& thing = *it;
-        if(thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
-            break;
-        if (thing->isHidden())
-            continue;
-
-        thing->newDraw(dest - m_drawElevation, drawQueue, lightView);
-        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
-    }
-
-    // top
-    drawQueue.setDepth(m_topDepth - 2);
-
-    int limit = g_adaptiveRenderer.effetsLimit();
-    for (auto i = (int)m_effects.size() > limit ? m_effects.size() - limit : 0; i < m_effects.size(); ++i) {
-        if (m_effects[i]->isHidden())
-            continue;
-        m_effects[i]->newDrawEffect(dest - m_drawElevation, m_position.x - g_map.getCentralPosition().x, m_position.y - g_map.getCentralPosition().y, drawQueue, lightView);
-    }
-
-    for (const ThingPtr& thing : m_things) {
-        if (thing->isHidden())
-            continue;
-        if (thing->isOnTop()) {
-            thing->newDraw(dest, drawQueue, lightView);
-        }
-    }
-
-    if(hasTranslucentLight() && lightView) {
-        Light light;
-        light.intensity = 1;
-        lightView->addLightSource(dest + Point(g_sprites.spriteSize(), g_sprites.spriteSize()), light);
-    }
-}
-
-void Tile::drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView) {
-    drawQueue.setDepth(m_topDepth - 1);
-
-    for(const CreaturePtr& creature : m_walkingCreatures) {
-        if (creature->isHidden())
-            continue;
-        creature->newDraw(Point(dest.x + ((creature->getPrewalkingPosition().x - m_position.x) * Otc::TILE_PIXELS - m_drawElevation),
-                                dest.y + ((creature->getPrewalkingPosition().y - m_position.y) * Otc::TILE_PIXELS - m_drawElevation)), drawQueue, lightView);
-    }
-
-    std::vector<CreaturePtr> toDraw;
-    for(auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
-        const ThingPtr& thing = *it;
-        if(!thing->isCreature())
-            continue;
-        if (thing->isHidden())
-            continue;
-        CreaturePtr creature = thing->static_self_cast<Creature>();
-        if (creature && !creature->isWalking())
-            toDraw.push_back(creature);
-    }
-
-    int limit = g_adaptiveRenderer.creaturesLimit();
-    for (auto i = (int)toDraw.size() > limit ? toDraw.size() - limit : 0; i < toDraw.size(); ++i) {
-        CreaturePtr& creature = toDraw[i];
-        creature->newDraw(dest - m_drawElevation, drawQueue, lightView);
     }
 }
 
@@ -250,7 +253,7 @@ void Tile::addThing(const ThingPtr& thing, int stackPos)
         int lastPriority = 0;
         for(const ThingPtr& thing : m_things) {
             int priority = thing->getStackPriority();
-            assert(lastPriority <= priority);
+            VALIDATE(lastPriority <= priority);
             lastPriority = priority;
         }
         */
@@ -790,7 +793,7 @@ std::string Tile::getText()
 void Tile::setTimer(int time, Color color)
 {
     if (time > 60000) {
-        g_logger.warning("Max tile timer value is 60000 (60s)!");
+        g_logger.warning("Max tile timer value is 300000 (300s)!");
         return;
     }
     m_timer = time + g_clock.millis();

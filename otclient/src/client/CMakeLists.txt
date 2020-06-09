@@ -17,7 +17,7 @@ set(client_SOURCES ${client_SOURCES}
     # client
     ${CMAKE_CURRENT_LIST_DIR}/const.h
     ${CMAKE_CURRENT_LIST_DIR}/global.h
-    ${CMAKE_CURRENT_LIST_DIR}/luafunctions.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/luafunctions_client.cpp
     ${CMAKE_CURRENT_LIST_DIR}/client.cpp
     ${CMAKE_CURRENT_LIST_DIR}/client.h
 
@@ -78,8 +78,8 @@ set(client_SOURCES ${client_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/creatures.h
 
     # lua
-    ${CMAKE_CURRENT_LIST_DIR}/luavaluecasts.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/luavaluecasts.h
+    ${CMAKE_CURRENT_LIST_DIR}/luavaluecasts_client.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/luavaluecasts_client.h
 
     # net
     ${CMAKE_CURRENT_LIST_DIR}/protocolcodes.cpp

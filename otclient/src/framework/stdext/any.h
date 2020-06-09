@@ -24,7 +24,6 @@
 #define STDEXT_ANY_H
 
 #include <algorithm>
-#include <cassert>
 #include <typeinfo>
 
 namespace stdext {
@@ -66,7 +65,7 @@ public:
 
 template<typename T>
 const T& any_cast(const any& operand) {
-    assert(operand.type() == typeid(T));
+    VALIDATE(operand.type() == typeid(T));
     return static_cast<any::holder<T>*>(operand.content)->held;
 }
 

@@ -30,7 +30,6 @@
 
 void UIWidget::initImage()
 {
-    m_imageCoordsBuffer.enableHardwareCaching();
 }
 
 void UIWidget::parseImageStyle(const OTMLNodePtr& styleNode)
@@ -174,11 +173,7 @@ void UIWidget::drawImage(const Rect& screenCoords)
         }
     }
 
-    // smooth is now enabled by default for all textures
-    //m_imageTexture->setSmooth(m_imageSmooth);
-
-    g_painter->setColor(m_imageColor);
-    g_painter->drawTextureCoords(m_imageCoordsBuffer, m_imageTexture);
+    g_drawQueue->addTextureCoords(m_imageCoordsBuffer, m_imageTexture, m_imageColor);
 }
 
 void UIWidget::setQRCode(const std::string& code, int border)
@@ -228,7 +223,7 @@ void UIWidget::setImageSourceBase64(const std::string& data) {
     std::stringstream stream;
     std::string decoded = g_crypt.base64Decode(data);
     stream.write(decoded.c_str(), decoded.size());
-    m_imageTexture = g_textures.loadTexture(stream);
+    m_imageTexture = g_textures.loadTexture(stream, "base64");
     if(m_imageTexture && (!m_rect.isValid() || m_imageAutoResize)) {
         Size size = getSize();
         Size imageSize = m_imageTexture->getSize();

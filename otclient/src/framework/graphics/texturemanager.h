@@ -38,14 +38,13 @@ public:
 
     void preload(const std::string& fileName) { getTexture(fileName); }
     TexturePtr getTexture(const std::string& fileName);
-    const TexturePtr& getEmptyTexture() { return m_emptyTexture; }
-    TexturePtr loadTexture(std::stringstream& file);
+    TexturePtr loadTexture(std::stringstream& file, const std::string& source);
 
 private:
     std::unordered_map<std::string, TexturePtr> m_textures;
     std::vector<AnimatedTexturePtr> m_animatedTextures;
-    TexturePtr m_emptyTexture;
     ScheduledEventPtr m_liveReloadEvent;
+    std::list<uint> m_texturesToRelease;
 };
 
 extern TextureManager g_textures;

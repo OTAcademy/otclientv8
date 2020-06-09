@@ -36,6 +36,15 @@ public:
             delete[] m_buffer;
     }
 
+    DataBuffer(const DataBuffer<T>& d)
+    {
+        m_size = d.m_size;
+        m_capacity = std::max<uint>(64, d.m_size * 2);
+        m_buffer = new T[m_capacity];
+        memcpy(m_buffer, d.m_buffer, sizeof(T) * m_size);
+    }
+    DataBuffer& operator=(const DataBuffer<T>& d) = delete;
+
     inline void reset() { m_size = 0; }
     inline void clear() {
         m_size = 0;
@@ -57,8 +66,7 @@ public:
     inline void reserve(uint n) {
         if(n > m_capacity) {
             T *buffer = new T[n];
-            for(uint i=0;i<m_size;++i)
-                buffer[i] = m_buffer[i];
+            memcpy(buffer, m_buffer, m_size * sizeof(T));
             if(m_buffer)
                 delete[] m_buffer;
             m_buffer = buffer;
@@ -75,12 +83,16 @@ public:
         m_size = n;
     }
 
-    inline void grow(uint n) {
+    inline void grow(uint n, bool precise = false) {
         if(n <= m_size)
             return;
         if(n > m_capacity) {
             uint newcapacity = m_capacity;
-            do { newcapacity *= 2; } while(newcapacity < n);
+            if (precise) {
+                newcapacity = n;
+            } else {
+                do { newcapacity *= 4; } while (newcapacity < n);
+            }
             reserve(newcapacity);
         }
         m_size = n;

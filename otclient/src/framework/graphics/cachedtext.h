@@ -32,11 +32,12 @@ class CachedText
 public:
     CachedText();
 
-    void draw(const Rect& rect);
+    void draw(const Rect& rect, const Color& color);
 
     void wrapText(int maxWidth);
     void setFont(const BitmapFontPtr& font) { m_font = font; update(); }
-    void setText(const std::string& text) { m_text = text; update(); }
+    void setText(const std::string& text) { m_textColors.clear();  m_text = text; update(); }
+    void setColoredText(const std::vector<std::string>& texts);
     void setAlign(Fw::AlignmentFlag align) { m_align = align; update(); }
 
     Size getTextSize() { return m_textSize; }
@@ -50,9 +51,9 @@ private:
     void update();
 
     std::string m_text;
+    std::vector<std::pair<int, Color>> m_textColors;
     Size m_textSize;
     stdext::boolean<true> m_textMustRecache;
-    CoordsBuffer m_textCoordsBuffer;
     Rect m_textCachedScreenCoords;
     BitmapFontPtr m_font;
     Fw::AlignmentFlag m_align;

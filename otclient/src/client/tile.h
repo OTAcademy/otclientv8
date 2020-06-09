@@ -63,10 +63,10 @@ public:
 
     Tile(const Position& position);
 
-    void calculateTopDepth();
+    void calculateCorpseCorrection();
 
-    void drawItems(const Point & dest, DrawQueue& drawQueue, LightView *lightView);
-    void drawCreatures(const Point& dest, DrawQueue& drawQueue, LightView *lightView);
+    void drawBottom(const Point& dest, LightView* lightView = nullptr);
+    void drawTop(const Point& dest, LightView* lightView = nullptr);
     void drawTexts(Point dest);
 
 public:
@@ -145,29 +145,12 @@ public:
         m_blocking = blocking;
     }
 
-    void setDepth(float depth, float floorDepth) {
-        m_depth = depth;
-        m_topDepth = depth;
-        m_floorDepth = floorDepth;
-    }
-    void setTopDepth(float depth) {
-        m_topDepth = depth;
-    }
-    float getDepth() {
-        return m_depth;
-    }
-    float getTopDepth() {
-        return m_topDepth;
-    }
-    float getFloorDepth() {
-        return m_floorDepth;
-    }
-
     void setText(const std::string& text, Color color);
     std::string getText();
     void setTimer(int time, Color color);
     int getTimer();
     void setFill(Color color);
+    void resetFill() { m_fill = Color::alpha; }
 
 private:
     void checkTranslucentLight();
@@ -181,18 +164,17 @@ private:
     uint32 m_flags, m_houseId;
     uint16 m_speed = 0;
     uint8 m_blocking = 0;
-    float m_floorDepth = 0;
-    float m_depth = 0;
-    float m_topDepth = 0;
 
     uint32_t m_lastCreature = 0;
+    int m_topCorrection = 0;
+    int m_topDraws = 0;
     
     stdext::boolean<false> m_selected;
 
     ticks_t m_timer = 0;
     StaticTextPtr m_timerText;
     StaticTextPtr m_text;
-    Color m_fill;
+    Color m_fill = Color::alpha;
 };
 
 #endif

@@ -31,7 +31,7 @@
 #include "effect.h"
 #include "missile.h"
 #include "tile.h"
-#include "luavaluecasts.h"
+#include "luavaluecasts_client.h"
 #include <framework/core/eventdispatcher.h>
 #include <framework/util/extras.h>
 #include <framework/stdext/string.h>
@@ -467,6 +467,10 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 if (g_game.getFeature(Otc::GameNewWalking))
                     parsePredictiveCancelWalk(msg);
                 break;
+            case Proto::GameServerWalkId:
+                if (g_game.getFeature(Otc::GameNewWalking))
+                    parseWalkId(msg);
+                break;
             case Proto::GameServerFloorDescription:
                 parseFloorDescription(msg);
                 break;
@@ -563,7 +567,7 @@ void ProtocolGame::parseStoreButtonIndicators(const InputMessagePtr& msg)
 
 void ProtocolGame::parseSetStoreDeepLink(const InputMessagePtr& msg)
 {
-    int currentlyFeaturedServiceType = msg->getU8();
+    /*int currentlyFeaturedServiceType = */msg->getU8();
 }
 
 void ProtocolGame::parseBlessings(const InputMessagePtr& msg)
@@ -574,13 +578,13 @@ void ProtocolGame::parseBlessings(const InputMessagePtr& msg)
 
 void ProtocolGame::parsePreset(const InputMessagePtr& msg)
 {
-    uint32 preset = msg->getU32();
+    /*uint32 preset = */msg->getU32();
 }
 
 void ProtocolGame::parseRequestPurchaseData(const InputMessagePtr& msg)
 {
-    int transactionId = msg->getU32();
-    int productType = msg->getU8();
+    /*int transactionId = */msg->getU32();
+    /*int productType = */msg->getU8();
 }
 
 void ProtocolGame::parseStore(const InputMessagePtr& msg)
@@ -695,8 +699,8 @@ void ProtocolGame::parseStoreOffers(const InputMessagePtr& msg)
         offer.price = msg->getU32();
         offer.state = msg->getU8();
         if(offer.state == 2 && g_game.getFeature(Otc::GameIngameStoreHighlights) && g_game.getClientVersion() >= 1097) {
-            int saleValidUntilTimestamp = msg->getU32();
-            int basePrice = msg->getU32();
+            /*int saleValidUntilTimestamp = */msg->getU32();
+            /*int basePrice = */msg->getU32();
         }
 
         int disabledState = msg->getU8();
@@ -1453,7 +1457,7 @@ void ProtocolGame::parsePremiumTrigger(const InputMessagePtr& msg)
     }
 
     if(g_game.getClientVersion() <= 1096) {
-        bool something = msg->getU8() == 1;
+        /*bool something = */msg->getU8()/* == 1*/;
     }
 }
 
@@ -1526,11 +1530,11 @@ void ProtocolGame::parsePlayerInfo(const InputMessagePtr& msg)
 {
     bool premium = msg->getU8(); // premium
     if(g_game.getFeature(Otc::GamePremiumExpiration))
-        int premiumEx = msg->getU32(); // premium expiration used for premium advertisement
+        /*int premiumEx = */msg->getU32(); // premium expiration used for premium advertisement
     int vocation = msg->getU8(); // vocation
 
     if (g_game.getFeature(Otc::GamePrey)) {
-        bool preyEnabled = msg->getU8() > 0;
+        /*bool preyEnabled = */msg->getU8()/* > 0*/;
     }
 
     int spellCount = msg->getU16();
@@ -1582,13 +1586,13 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
 
     if(g_game.getFeature(Otc::GameExperienceBonus)) {
         if(g_game.getClientVersion() <= 1096) {
-            double experienceBonus = msg->getDouble();
+            /*double experienceBonus = */msg->getDouble();
         } else {
-            int baseXpGain = msg->getU16();
-            int voucherAddend = msg->getU16();
-            int grindingAddend = msg->getU16();
-            int storeBoostAddend = msg->getU16();
-            int huntingBoostFactor = msg->getU16();
+            /*int baseXpGain = */msg->getU16();
+            /*int voucherAddend = */msg->getU16();
+            /*int grindingAddend = */msg->getU16();
+            /*int storeBoostAddend = */ msg->getU16();
+            /*int huntingBoostFactor = */ msg->getU16();
         }
     }
 
@@ -1638,8 +1642,8 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
     if(g_game.getFeature(Otc::GameOfflineTrainingTime)) {
         training = msg->getU16();
         if(g_game.getClientVersion() >= 1097) {
-            int remainingStoreXpBoostSeconds = msg->getU16();
-            bool canBuyMoreStoreXpBoosts = msg->getU8();
+            /*int remainingStoreXpBoostSeconds = */msg->getU16();
+            /*bool canBuyMoreStoreXpBoosts = */msg->getU8();
         }
     }
 
@@ -1902,14 +1906,14 @@ void ProtocolGame::parseTextMessage(const InputMessagePtr& msg)
 
     switch(mode) {
         case Otc::MessageChannelManagement: {
-            int channel = msg->getU16();
+            /*int channel = */msg->getU16();
             text = msg->getString();
             break;
         }
         case Otc::MessageGuild:
         case Otc::MessagePartyManagement:
         case Otc::MessageParty: {
-            int channel = msg->getU16();
+            /*int channel = */msg->getU16();
             text = msg->getString();
             break;
         }
@@ -2447,6 +2451,11 @@ void ProtocolGame::parsePredictiveCancelWalk(const InputMessagePtr& msg)
     g_game.processPredictiveWalkCancel(pos, direction);
 }
 
+void ProtocolGame::parseWalkId(const InputMessagePtr& msg)
+{
+    g_game.processWalkId(msg->getU32());
+}
+
 void ProtocolGame::parseProcessesRequest(const InputMessagePtr&)
 {
     sendProcesses();
@@ -2577,9 +2586,14 @@ Outfit ProtocolGame::getOutfit(const InputMessagePtr& msg, bool ignoreMount)
         }
     }
 
-    if(g_game.getFeature(Otc::GamePlayerMounts) && !ignoreMount) {
-        int mount = msg->getU16();
-        outfit.setMount(mount);
+    if (!ignoreMount) {
+        if (g_game.getFeature(Otc::GamePlayerMounts)) {
+            outfit.setMount(msg->getU16());
+        }
+        if (g_game.getFeature(Otc::GameWingsAndAura)) {
+            outfit.setWings(msg->getU16());
+            outfit.setAura(msg->getU16());
+        }
     }
 
     return outfit;
@@ -2615,7 +2629,7 @@ ThingPtr ProtocolGame::getMappedThing(const InputMessagePtr& msg)
         pos.z = msg->getU8();
         uint8 stackpos = msg->getU8();
 
-        assert(stackpos != 255);
+        VALIDATE(stackpos != 255);
         thing = g_map.getThing(pos, stackpos);
         if(!thing)
             g_logger.traceError(stdext::format("no thing at pos:%s, stackpos:%d", stdext::to_string(pos), stackpos));

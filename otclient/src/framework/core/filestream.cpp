@@ -24,7 +24,9 @@
 #include "binarytree.h"
 #include <framework/core/application.h>
 
+#define PHYSFS_DEPRECATED
 #include <physfs.h>
+#include <zlib.h>
 
 FileStream::FileStream(const std::string& name, PHYSFS_File *fileHandle, bool writeable) :
     m_name(name),
@@ -42,37 +44,56 @@ FileStream::FileStream(const std::string& name, const std::string& buffer) :
     m_writeable(false),
     m_caching(true)
 {
-    m_data.resize(buffer.length());
-    memcpy(&m_data[0], &buffer[0], buffer.length());
+    if (!initFromGzip(buffer)) {
+        m_data.resize(buffer.length());
+        memcpy(&m_data[0], &buffer[0], buffer.length());
+    }
 }
+
+bool FileStream::initFromGzip(const std::string& buffer)
+{
+    if (buffer.size() < 10 || (uint8_t)buffer[0] != 0x1f ||
+        (uint8_t)buffer[1] != 0x8b || (uint8_t)buffer[2] != 0x08) {
+        return false;
+    }
+    z_stream stream;
+    memset(&stream, 0, sizeof(stream));
+
+    stream.next_in = (Bytef*)buffer.c_str();
+    stream.avail_in = buffer.size();
+    if (inflateInit2(&stream, 15 + 32) != Z_OK)
+        return false;
+
+    std::vector<uint8_t> chunk(buffer.size());
+    while (true) {
+        stream.next_out = (Bytef*)(&chunk[0]);
+        stream.avail_out = chunk.size();
+
+        // Inflate another chunk.
+        int err = inflate(&stream, Z_SYNC_FLUSH);
+        int newData = chunk.size() - stream.avail_out;
+        if (newData > 0) {
+            m_data.grow(m_pos + newData, true);
+            memcpy(&m_data[m_pos], &chunk[0], newData);
+            m_pos += newData;
+        }
+        if (err != Z_OK) {
+            break;
+        }
+    }
+    inflateEnd(&stream);
+    m_pos = 0;
+    return true;
+}
+
 
 FileStream::~FileStream()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
 #endif
     if(!g_app.isTerminated())
         close();
-}
-
-void FileStream::cache()
-{
-    m_caching = true;
-
-    if(!m_writeable) {
-        if(!m_fileHandle)
-            return;
-
-        // cache entire file into data buffer
-        m_pos = PHYSFS_tell(m_fileHandle);
-        PHYSFS_seek(m_fileHandle, 0);
-        int size = PHYSFS_fileLength(m_fileHandle);
-        m_data.resize(size);
-        if(PHYSFS_readBytes(m_fileHandle, m_data.data(), size) == -1)
-            throwError("unable to read file data", true);
-        PHYSFS_close(m_fileHandle);
-        m_fileHandle = nullptr;
-    }
 }
 
 void FileStream::close()

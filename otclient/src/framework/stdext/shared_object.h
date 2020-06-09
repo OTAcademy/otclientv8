@@ -26,7 +26,6 @@
 #include "types.h"
 #include <type_traits>
 #include <functional>
-#include <cassert>
 #include <ostream>
 #include <atomic>
 
@@ -79,8 +78,8 @@ public:
 
     template<class U> shared_object_ptr& operator=(shared_object_ptr<U> const& rhs) { shared_object_ptr(rhs).swap(*this); return *this; }
 
-    T& operator*() const { assert(px != nullptr); return *px; }
-    T* operator->() const { assert(px != nullptr); return px; }
+    T& operator*() const { VALIDATE(px != nullptr); return *px; }
+    T* operator->() const { VALIDATE(px != nullptr); return px; }
 
     shared_object_ptr& operator=(shared_object_ptr const& rhs) { shared_object_ptr(rhs).swap(*this); return *this; }
     shared_object_ptr& operator=(T* rhs) { shared_object_ptr(rhs).swap(*this); return *this; }

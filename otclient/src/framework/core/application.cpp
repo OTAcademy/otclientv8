@@ -32,6 +32,7 @@
 #include <framework/platform/crashhandler.h>
 #include <framework/platform/platform.h>
 #include <framework/http/http.h>
+#include <boost/process.hpp>
 
 #include <locale>
 
@@ -63,6 +64,9 @@ Application::Application()
     m_appVersion = "none";
     m_charset = "cp1252";
     m_stopping = false;
+#ifdef ANDROID
+    m_mobile = true;
+#endif
 }
 
 void Application::init(std::vector<std::string>& args)
@@ -90,6 +94,10 @@ void Application::init(std::vector<std::string>& args)
 
     m_startupOptions = startupOptions;
 
+    // mobile testing
+    if (startupOptions.find("-mobile") != std::string::npos)
+        m_mobile = true;
+
     // initialize configs
     g_configs.init();
 
@@ -116,8 +124,6 @@ void Application::deinit()
 
     // poll remaining events
     poll();
-
-    g_asyncDispatcher.terminate();
 
     // disable dispatcher events
     g_dispatcher.shutdown();
@@ -185,9 +191,26 @@ void Application::close()
         exit();
 }
 
+void Application::restart()
+{
+#ifndef ANDROID
+    boost::process::child c(g_resources.getBinaryName());
+    std::error_code ec2;
+    if (c.wait_for(std::chrono::seconds(1), ec2)) {
+        g_logger.fatal("Updater restart error. Please restart application");
+    }
+    c.detach();
+    quick_exit();
+#else
+    exit();
+#endif
+}
+
 std::string Application::getOs()
 {
-#if defined(WIN32)
+#if defined(ANDROID)
+    return "android";
+#elif defined(WIN32)
     return "windows";
 #elif defined(__APPLE__)
     return "mac";

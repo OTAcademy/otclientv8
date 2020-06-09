@@ -36,7 +36,10 @@ Logger g_logger;
 
 void Logger::log(Fw::LogLevel level, const std::string& message)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+    std::unique_lock<std::recursive_mutex> lock(m_mutex, std::try_to_lock);
+    if (!lock.owns_lock()) {
+        return;
+    }
 
 #ifdef NDEBUG
     if(level == Fw::LogDebug)
@@ -48,14 +51,18 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
         return;
 
     const static std::string logPrefixes[] = { "", "", "WARNING: ", "ERROR: ", "FATAL ERROR: " };
-
     std::string outmsg = logPrefixes[level] + message;
+#ifdef ANDROID
+    const static int logPriorities[] = { ANDROID_LOG_INFO, ANDROID_LOG_INFO, ANDROID_LOG_WARN, ANDROID_LOG_ERROR, ANDROID_LOG_FATAL };
+    __android_log_print(logPriorities[level], "OTCLIENTV8", "%s", outmsg.c_str());
+#else
     std::cout << outmsg << std::endl;
 
     if(m_outFile.good()) {
         m_outFile << outmsg << std::endl;
         m_outFile.flush();
     }
+#endif
 
     std::size_t now = std::time(NULL);
     m_logMessages.push_back(LogMessage(level, outmsg, now));
@@ -75,9 +82,6 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
         g_window.displayFatalError(message);
 #endif
         ignoreLogs = true;
-        if (g_app.getIteration() < 5) {
-            g_resources.launchFailsafe();
-        }
 #ifdef _MSC_VER
         ::quick_exit(0);
 #else
@@ -121,8 +125,8 @@ void Logger::fireOldMessages()
 
 void Logger::setLogFile(const std::string& file)
 {
+#ifndef ANDROID
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
-
     m_outFile.open(stdext::utf8_to_latin1(file.c_str()).c_str(), std::ios::in | std::ios::binary);
     if (m_outFile.is_open()) {
         m_outFile.seekg(0, m_outFile.end);
@@ -144,4 +148,10 @@ void Logger::setLogFile(const std::string& file)
         return;
     }
     m_outFile.flush();
+#endif
+}
+
+void fatalError(const char* error, const char* file, int line)
+{
+    g_logger.fatal(stdext::format("Fatal error: %s\nIn: %s:%i", error, file, line));
 }

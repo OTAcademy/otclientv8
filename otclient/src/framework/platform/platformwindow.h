@@ -96,9 +96,10 @@ public:
     void setOnResize(const OnResizeCallback& onResize) { m_onResize = onResize; }
     void setOnInputEvent(const OnInputEventCallback& onInputEvent) { m_onInputEvent = onInputEvent; }
 
-    virtual bool hasSecondContext() { return false; }
-    virtual void bindSecondContext() {}
-    virtual void releaseSecondContext() {}
+    virtual void showTextEditor(const std::string& title, const std::string& description, const std::string& text, int flags) {}
+    virtual void handleTextInput(std::string text) {} // for android
+
+    void setScaling(float scaling) { m_scaling = scaling; }
 
 protected:
     virtual int internalLoadMouseCursor(const ImagePtr& image, const Point& hotSpot) = 0;
@@ -130,6 +131,7 @@ protected:
     stdext::boolean<false> m_fullscreen;
     stdext::boolean<false> m_maximized;
     bool m_verticalSync = false;
+    float m_scaling = 1.0;
 
     std::function<void()> m_onClose;
     OnResizeCallback m_onResize;

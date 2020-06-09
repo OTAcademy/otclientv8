@@ -22,6 +22,7 @@
 
 #ifndef WIN32
 
+#include <framework/global.h>
 #include "platform.h"
 #include <fstream>
 #include <unistd.h>

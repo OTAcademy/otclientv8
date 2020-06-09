@@ -26,7 +26,7 @@
 #include <framework/core/eventdispatcher.h>
 #include <framework/util/extras.h>
 
-void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int offsetX, int offsetY, LightView *lightView, bool lightOnly)
+void Effect::draw(const Point& dest, int offsetX, int offsetY, bool animate, LightView* lightView)
 {
     if(m_id == 0)
         return;
@@ -54,39 +54,8 @@ void Effect::drawEffect(const Point& dest, float scaleFactor, bool animate, int 
     if(yPattern < 0)
         yPattern += getNumPatternY();
 
-    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, 0, m_animationPhase, lightView, lightOnly);
+    rawGetThingType()->draw(dest, 0, xPattern, yPattern, 0, m_animationPhase, Color::white, lightView);
 }
-
-void Effect::newDrawEffect(const Point& dest, int offsetX, int offsetY, DrawQueue& drawQueue, LightView* lightView) {
-    if(m_id == 0)
-        return;
-
-    if(g_game.getFeature(Otc::GameEnhancedAnimations)) {
-        if (!rawGetThingType() || !rawGetThingType()->getAnimator()) return;
-        m_animationPhase = rawGetThingType()->getAnimator()->getPhaseAt(m_animationTimer, m_animationPhase);
-    } else {
-        int ticks = EFFECT_TICKS_PER_FRAME;
-        if (m_id == 33) {
-            ticks <<= 2;
-        }
-        m_animationPhase = std::min<int>((int)(m_animationTimer.ticksElapsed() / ticks), getAnimationPhases() - 1);
-    }
-
-    if (m_animationPhase == -1) {
-        return;
-    }
-
-    int xPattern = offsetX % getNumPatternX();
-    if(xPattern < 0)
-        xPattern += getNumPatternX();
-
-    int yPattern = offsetY % getNumPatternY();
-    if(yPattern < 0)
-        yPattern += getNumPatternY();
-
-    rawGetThingType()->newDraw(dest, 0, xPattern, yPattern, 0, m_animationPhase, drawQueue, lightView);
-}
-
 
 void Effect::onAppear()
 {

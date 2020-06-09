@@ -58,6 +58,12 @@ LocalPlayer::LocalPlayer()
     m_totalCapacity = -1;
 }
 
+void LocalPlayer::draw(const Point& dest, bool animate, LightView* lightView)
+{
+    Creature::draw(dest, animate, lightView);
+}
+
+
 void LocalPlayer::lockWalk(int millis)
 {
     m_walkLockExpiration = std::max<int>(m_walkLockExpiration, (ticks_t) g_clock.millis() + millis);
@@ -177,7 +183,7 @@ void LocalPlayer::cancelWalk(Otc::Direction direction)
 void LocalPlayer::cancelNewWalk(Otc::Direction dir)
 {
     if (g_extras.debugWalking) {
-        g_logger.info(stdext::format("[%i] cancelWalk: %i- %i", (int)g_clock.millis()));
+        g_logger.info(stdext::format("[%i] cancelWalk", (int)g_clock.millis()));
     }
 
     bool clearedPrewalk = !m_preWalking.empty();
@@ -333,22 +339,23 @@ void LocalPlayer::stopWalk() {
     m_preWalking.clear();
 }
 
-void LocalPlayer::updateWalkOffset(int totalPixelsWalked)
+void LocalPlayer::updateWalkOffset(int totalPixelsWalked, bool inNextFrame)
 {
     // pre walks offsets are calculated in the oposite direction
     if(isPreWalking()) {
-        m_walkOffset = Point(0,0);
+        Point& walkOffset = inNextFrame ? m_walkOffsetInNextFrame : m_walkOffset;
+        walkOffset = Point(0,0);
         if(m_walkDirection == Otc::North || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::NorthWest)
-            m_walkOffset.y = -totalPixelsWalked;
+            walkOffset.y = -totalPixelsWalked;
         else if(m_walkDirection == Otc::South || m_walkDirection == Otc::SouthEast || m_walkDirection == Otc::SouthWest)
-            m_walkOffset.y = totalPixelsWalked;
+            walkOffset.y = totalPixelsWalked;
 
         if(m_walkDirection == Otc::East || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::SouthEast)
-            m_walkOffset.x = totalPixelsWalked;
+            walkOffset.x = totalPixelsWalked;
         else if(m_walkDirection == Otc::West || m_walkDirection == Otc::NorthWest || m_walkDirection == Otc::SouthWest)
-            m_walkOffset.x = -totalPixelsWalked;
+            walkOffset.x = -totalPixelsWalked;
     } else
-        Creature::updateWalkOffset(totalPixelsWalked);
+        Creature::updateWalkOffset(totalPixelsWalked, inNextFrame);
 }
 
 void LocalPlayer::updateWalk()
@@ -358,13 +365,16 @@ void LocalPlayer::updateWalk()
 
     float walkTicksPerPixel = ((float)(getStepDuration(true) + 10)) / 32.0f;
     int totalPixelsWalked = std::min<int>(m_walkTimer.ticksElapsed() / walkTicksPerPixel, 32.0f);
+    int totalPixelsWalkedInNextFrame = std::min<int>((m_walkTimer.ticksElapsed() + 15) / walkTicksPerPixel, 32.0f);
 
     // needed for paralyze effect
     m_walkedPixels = std::max<int>(m_walkedPixels, totalPixelsWalked);
+    int walkedPixelsInNextFrame = std::max<int>(m_walkedPixels, totalPixelsWalkedInNextFrame);
 
     // update walk animation and offsets
     updateWalkAnimation(totalPixelsWalked);
     updateWalkOffset(m_walkedPixels);
+    updateWalkOffset(walkedPixelsInNextFrame, true);
     updateWalkingTile();
 
     int stepDuration = getStepDuration();

@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SQL
+
 #ifndef DATABASEMYSQL_H
 #define DATABASEMYSQL_H
 
@@ -87,5 +89,7 @@ protected:
     MYSQL_RES* m_result;
     MYSQL_ROW m_row;
 };
+
+#endif
 
 #endif

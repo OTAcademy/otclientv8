@@ -25,6 +25,7 @@
 #include "platform.h"
 #include <winsock2.h>
 #include <windows.h>
+#include <framework/global.h>
 #include <framework/stdext/stdext.h>
 #include <framework/core/eventdispatcher.h>
 #include <boost/algorithm/string.hpp>

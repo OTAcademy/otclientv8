@@ -36,10 +36,8 @@ class UIGridLayout;
 class UIAnchor;
 class UIAnchorGroup;
 class UIAnchorLayout;
-class UIParticles;
 
 typedef stdext::shared_object_ptr<UIWidget> UIWidgetPtr;
-typedef stdext::shared_object_ptr<UIParticles> UIParticlesPtr;
 typedef stdext::shared_object_ptr<UITextEdit> UITextEditPtr;
 typedef stdext::shared_object_ptr<UILayout> UILayoutPtr;
 typedef stdext::shared_object_ptr<UIBoxLayout> UIBoxLayoutPtr;

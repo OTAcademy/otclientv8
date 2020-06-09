@@ -25,22 +25,21 @@
 #define GRAPHICALAPPLICATION_H
 
 #include "application.h"
+#include <atomic>
 #include <framework/graphics/declarations.h>
 #include <framework/core/inputevent.h>
 #include <framework/core/adaptiverenderer.h>
+#include <framework/util/framecounter.h>
 
 class GraphicalApplication : public Application
 {
-    enum {
-        POLL_CYCLE_DELAY = 10
-    };
-
 public:
     void init(std::vector<std::string>& args);
     void deinit();
     void terminate();
     void run();
     void poll();
+    void pollGraphics();
     void close();
 
     bool willRepaint() { return m_mustRepaint; }
@@ -48,7 +47,9 @@ public:
 
     void setMaxFps(int maxFps) { m_maxFps = maxFps; }
     int getMaxFps() { return m_maxFps; }
-    int getFps() { return g_adaptiveRenderer.getFps(); }
+    int getFps() { return m_graphicsFrames.getFps(); }
+    int getGraphicsFps() { return m_graphicsFrames.getFps(); }
+    int getProcessingFps() { return m_processingFrames.getFps(); }
 
     bool isOnInputEvent() { return m_onInputEvent; }
 
@@ -57,17 +58,24 @@ public:
     }
 
     void doScreenshot(std::string file);
+    void scaleUp();
+    void scaleDown();
+    void scale(float value);
 
 protected:
     void resize(const Size& size);
-    void inputEvent(const InputEvent& event);
+    void inputEvent(InputEvent event);
 
 private:
     int m_iteration = 0;
-    int m_maxFps = 100;
+    std::atomic<float> m_scaling = 1.0;
+    std::atomic<float> m_lastScaling = 1.0;
+    std::atomic_int m_maxFps = 100;
     stdext::boolean<false> m_onInputEvent;
     stdext::boolean<false> m_mustRepaint;
-    FrameBufferPtr m_framebuffer;
+    FrameBufferPtr m_framebuffer, m_mapFramebuffer;
+    FrameCounter m_graphicsFrames;
+    FrameCounter m_processingFrames;
 };
 
 extern GraphicalApplication g_app;

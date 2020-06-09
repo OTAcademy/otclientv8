@@ -65,11 +65,7 @@ void MinimapBlock::update()
     }
 
     if(shouldDraw) {
-        if(!m_texture) {
-            m_texture = TexturePtr(new Texture(image, true));
-        } else {
-            m_texture->uploadPixels(image, true);
-        }
+        m_texture = TexturePtr(new Texture(image));
     } else
         m_texture.reset();
 
@@ -106,17 +102,13 @@ void Minimap::draw(const Rect& screenRect, const Position& mapCenter, float scal
         return;
 
     Rect mapRect = calcMapRect(screenRect, mapCenter, scale);
-    g_painter->saveState();
-    g_painter->setColor(color);
-    g_painter->drawFilledRect(screenRect);
-    g_painter->resetColor();
-    g_painter->setClipRect(screenRect);
+    g_drawQueue->addFilledRect(screenRect, color);
 
     if(MMBLOCK_SIZE*scale <= 1 || !mapCenter.isMapPosition()) {
-        g_painter->restoreSavedState();
         return;
     }
 
+    size_t drawQueueStart = g_drawQueue->size();
     Point blockOff = getBlockOffset(mapRect.topLeft());
     Point off = Point((mapRect.size() * scale).toPoint() - screenRect.size().toPoint())/2;
     Point start = screenRect.topLeft() -(mapRect.topLeft() - blockOff)*scale - off;
@@ -139,16 +131,14 @@ void Minimap::draw(const Rect& screenRect, const Position& mapCenter, float scal
             const TexturePtr& tex = block.getTexture();
             if(tex) {
                 Rect src(0, 0, MMBLOCK_SIZE, MMBLOCK_SIZE);
-                Rect dest(Point(xs,ys), src.size() * scale);
+                Rect dest(xs, ys, MMBLOCK_SIZE * scale, MMBLOCK_SIZE * scale);
 
-                tex->setSmooth(scale < 1.0f);
-                g_painter->drawTexturedRect(dest, tex, src);
+                g_drawQueue->addTexturedRect(dest, tex, src);
             }
-            //g_painter->drawBoundingRect(Rect(xs,ys, MMBLOCK_SIZE * scale, MMBLOCK_SIZE * scale));
         }
     }
 
-    g_painter->restoreSavedState();
+    g_drawQueue->setClip(drawQueueStart, screenRect);
 }
 
 Point Minimap::getTilePoint(const Position& pos, const Rect& screenRect, const Position& mapCenter, float scale)
@@ -330,8 +320,6 @@ bool Minimap::loadOtmm(const std::string& fileName)
         if(!fin)
             stdext::throw_exception("unable to open file");
 
-        fin->cache();
-
         uint32 signature = fin->getU32();
         if(signature != OTMM_SIGNATURE)
             stdext::throw_exception("invalid OTMM file");
@@ -392,7 +380,6 @@ void Minimap::saveOtmm(const std::string& fileName)
         stdext::timer saveTimer;
 
         FileStreamPtr fin = g_resources.createFile(fileName);
-        fin->cache();
 
         //TODO: compression flag with zlib
         uint32 flags = 0;
@@ -430,7 +417,7 @@ void Minimap::saveOtmm(const std::string& fileName)
 
                 ulong len = blockSize;
                 int ret = compress2(compressBuffer.data(), &len, (uchar*)&block.getTiles(), blockSize, COMPRESS_LEVEL);
-                assert(ret == Z_OK);
+                VALIDATE(ret == Z_OK);
                 fin->addU16(len);
                 fin->write(compressBuffer.data(), len);
             }

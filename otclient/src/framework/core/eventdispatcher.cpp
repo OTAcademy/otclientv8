@@ -28,6 +28,9 @@
 #include "timer.h"
 
 EventDispatcher g_dispatcher;
+EventDispatcher g_graphicsDispatcher;
+std::thread::id g_mainThreadId = std::this_thread::get_id();
+std::thread::id g_dispatcherThreadId = std::this_thread::get_id();
 
 void EventDispatcher::shutdown()
 {
@@ -44,8 +47,8 @@ void EventDispatcher::shutdown()
 
 void EventDispatcher::poll()
 {
-    AutoStat s(STATS_MAIN, "PollDispatcher");
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+    AutoStat s(this == &g_dispatcher ? STATS_MAIN : STATS_RENDER, "PollDispatcher");
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
     int loops = 0;
     for(int count = 0, max = m_scheduledEventList.size(); count < max && !m_scheduledEventList.empty(); ++count) {
@@ -56,7 +59,9 @@ void EventDispatcher::poll()
         {
             AutoStat s2(STATS_DISPATCHER, scheduledEvent->getFunction());
             m_botSafe = scheduledEvent->isBotSafe();
+            m_mutex.unlock();
             scheduledEvent->execute();
+            m_mutex.lock();
         }
 
         if(scheduledEvent->nextCycle())
@@ -71,7 +76,13 @@ void EventDispatcher::poll()
         if(loops > 50) {
             static Timer reportTimer;
             if(reportTimer.running() && reportTimer.ticksElapsed() > 100) {
-                g_logger.error("ATTENTION the event list is not getting empty, this could be caused by some bad code");
+                std::stringstream ss;
+                ss << "ATTENTION the event list is not getting empty, this could be caused by some bad code.\nLog:\n";
+                for (auto& event : m_eventList) {
+                    ss << event->getFunction() << "\n";
+                    if (ss.str().size() > 1024) break;
+                }
+                g_logger.error(ss.str());                
                 reportTimer.restart();
             }
             break;
@@ -83,7 +94,9 @@ void EventDispatcher::poll()
             {
                 AutoStat s2(STATS_DISPATCHER, event->getFunction());
                 m_botSafe = event->isBotSafe();
+                m_mutex.unlock();
                 event->execute();
+                m_mutex.lock();
             }
         }
         m_pollEventsSize = m_eventList.size();
@@ -101,7 +114,7 @@ ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, 
 
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
-    assert(delay >= 0);
+    VALIDATE(delay >= 0);
     ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 1, g_app.isOnInputEvent()));
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
@@ -114,7 +127,7 @@ ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, con
 
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
-    assert(delay > 0);
+    VALIDATE(delay > 0);
     ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 0, g_app.isOnInputEvent()));
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;

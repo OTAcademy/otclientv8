@@ -52,16 +52,21 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(TEX1_UNIFORM, "u_Tex1");
     bindUniformLocation(TEX2_UNIFORM, "u_Tex2");
     bindUniformLocation(TEX3_UNIFORM, "u_Tex3");
-    bindUniformLocation(ATLAS_TEX_UNIFORM, "u_Atlas");
+
+    bindUniformLocation(ATLAS_TEX0_UNIFORM, "u_Atlas");
+    bindUniformLocation(ATLAS_TEX1_UNIFORM, "u_Fonts");
 
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
+    bindUniformLocation(OFFSET_UNIFORM, "u_Offset");
 
     // VALUES
     setUniformValue(TRANSFORM_MATRIX_UNIFORM, m_transformMatrix);
     setUniformValue(PROJECTION_MATRIX_UNIFORM, m_projectionMatrix);
     setUniformValue(TEXTURE_MATRIX_UNIFORM, m_textureMatrix);
 
-    setUniformValue(COLOR_UNIFORM, m_color);
+    if (!m_useColorMatrix) {
+        setUniformValue(COLOR_UNIFORM, m_color);
+    }
     setUniformValue(OPACITY_UNIFORM, m_opacity);
     setUniformValue(TIME_UNIFORM, m_time);
     setUniformValue(DEPTH_UNIFORM, m_depth);
@@ -70,12 +75,15 @@ void PainterShaderProgram::setupUniforms()
     setUniformValue(TEX1_UNIFORM, 1);
     setUniformValue(TEX2_UNIFORM, 2);
     setUniformValue(TEX3_UNIFORM, 3);
-    setUniformValue(ATLAS_TEX_UNIFORM, 6);
+
+    setUniformValue(ATLAS_TEX0_UNIFORM, 6);
+    setUniformValue(ATLAS_TEX1_UNIFORM, 7);
 
     setUniformValue(RESOLUTION_UNIFORM, (float)m_resolution.width(), (float)m_resolution.height());
+    setUniformValue(OFFSET_UNIFORM, (float)m_offset.x, (float)m_offset.y);
 }
 
-bool PainterShaderProgram::link()
+void PainterShaderProgram::link()
 {
     m_startTime = g_clock.seconds();
     bindAttributeLocation(VERTEX_ATTR, "a_Vertex");
@@ -83,13 +91,11 @@ bool PainterShaderProgram::link()
     bindAttributeLocation(DEPTH_ATTR, "a_Depth");
     bindAttributeLocation(COLOR_ATTR, "a_Color");
     bindAttributeLocation(DEPTH_TEXCOORD_ATTR, "a_DepthTexCoord");
-    if (ShaderProgram::link()) {
-        bind();
-        setupUniforms();
-        release();
-        return true;
-    }
-    return false;
+    ShaderProgram::link();
+    bind();
+    setupUniforms();
+    release();
+    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
 }
 
 void PainterShaderProgram::setTransformMatrix(const Matrix3& transformMatrix)
@@ -124,7 +130,7 @@ void PainterShaderProgram::setTextureMatrix(const Matrix3& textureMatrix)
 
 void PainterShaderProgram::setColor(const Color& color)
 {
-    if (color == m_color)
+    if (color == m_color || m_useColorMatrix)
         return;
 
     bind();
@@ -136,7 +142,6 @@ void PainterShaderProgram::setMatrixColor(const Matrix4& colors)
 {
     bind();
     setUniformValue(COLOR_UNIFORM, colors);
-    m_color = Color::alpha;
 }
 
 
@@ -150,11 +155,9 @@ void PainterShaderProgram::setOpacity(float opacity)
     m_opacity = opacity;
 }
 
+#ifdef WITH_DEPTH_BUFFER
 void PainterShaderProgram::setDepth(float depth)
 {
-    if (!g_graphics.canUseDepth())
-        return;
-
     if (depth < 0.)
         depth = 0.;
 
@@ -165,6 +168,7 @@ void PainterShaderProgram::setDepth(float depth)
     setUniformValue(DEPTH_UNIFORM, depth);
     m_depth = depth;
 }
+#endif
 
 void PainterShaderProgram::setResolution(const Size& resolution)
 {
@@ -175,6 +179,17 @@ void PainterShaderProgram::setResolution(const Size& resolution)
     setUniformValue(RESOLUTION_UNIFORM, (float)resolution.width(), (float)resolution.height());
     m_resolution = resolution;
 }
+
+void PainterShaderProgram::setOffset(const Point& offset)
+{
+    if (m_offset == offset)
+        return;
+
+    bind();
+    m_offset = offset;
+    setUniformValue(OFFSET_UNIFORM, (float)m_offset.x, (float)m_offset.y);
+}
+
 
 void PainterShaderProgram::updateTime()
 {

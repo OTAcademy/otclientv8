@@ -112,7 +112,7 @@ void OutputMessage::encryptRsa()
 void OutputMessage::writeChecksum()
 {
     uint32 checksum = stdext::adler32(m_buffer + m_headerPos, m_messageSize);
-    assert(m_headerPos - 4 >= 0);
+    VALIDATE(m_headerPos >= 4);
     m_headerPos -= 4;
     stdext::writeULE32(m_buffer + m_headerPos, checksum);
     m_messageSize += 4;
@@ -120,7 +120,7 @@ void OutputMessage::writeChecksum()
 
 void OutputMessage::writeMessageSize(bool bigSize)
 {
-    assert(m_headerPos - (bigSize ? 4 : 2) >= 0);
+    VALIDATE(m_headerPos >= (bigSize ? 4 : 2));
     m_headerPos -= (bigSize ? 4 : 2);
     if (bigSize) {
         stdext::writeULE32(m_buffer + m_headerPos, m_messageSize);

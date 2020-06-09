@@ -27,6 +27,11 @@
 #include <framework/graphics/cachedtext.h>
 #include <framework/core/timer.h>
 
+struct StaticTextMessage {
+    std::vector<std::string> texts;
+    ticks_t time;
+};
+
 // @bindclass
 class StaticText : public Thing
 {
@@ -38,14 +43,14 @@ public:
     std::string getName() { return m_name; }
     std::string getText() { return m_cachedText.getText(); }
     Otc::MessageMode getMessageMode() { return m_mode; }
-    std::string getFirstMessage() { return m_messages[0].first; }
+    std::vector<std::string> getFirstMessage() { return m_messages[0].texts; }
 
     bool isYell() { return m_mode == Otc::MessageYell || m_mode == Otc::MessageMonsterYell || m_mode == Otc::MessageBarkLoud; }
 
     void setText(const std::string& text);
     void setFont(const std::string& fontName);
     bool addMessage(const std::string& name, Otc::MessageMode mode, const std::string& text);
-
+    bool addColoredMessage(const std::string& name, Otc::MessageMode mode, const std::vector<std::string>& texts);
     StaticTextPtr asStaticText() { return static_self_cast<StaticText>(); }
     bool isStaticText() { return true; }
 
@@ -61,7 +66,7 @@ private:
     void compose();
 
     stdext::boolean<false> m_yell;
-    std::deque<std::pair<std::string, ticks_t>> m_messages;
+    std::deque<StaticTextMessage> m_messages;
     std::string m_name;
     Otc::MessageMode m_mode;
     Color m_color;

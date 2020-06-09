@@ -294,7 +294,7 @@ bool luavalue_cast(int index, OTMLNodePtr& node)
                 cnodeName = g_lua.toString();
                 g_lua.pop();
             } else
-                assert(g_lua.isNumber());
+                VALIDATE(g_lua.isNumber());
             if(g_lua.isTable()) {
                 OTMLNodePtr cnode;
                 if(luavalue_cast(-1, cnode)) {

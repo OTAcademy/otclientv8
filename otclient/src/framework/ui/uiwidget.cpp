@@ -64,7 +64,7 @@ UIWidget::UIWidget()
 UIWidget::~UIWidget()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
     if(!m_destroyed)
         g_logger.warning(stdext::format("widget '%s' was not explicitly destroyed", m_id));
 #endif
@@ -74,37 +74,33 @@ UIWidget::~UIWidget()
 
 void UIWidget::draw(const Rect& visibleRect, Fw::DrawPane drawPane)
 {
-    Rect oldClipRect;
-    if(m_clipping) {
-        oldClipRect = g_painter->getClipRect();
-        g_painter->setClipRect(visibleRect);
-    }
-
-    if(m_rotation != 0.0f) {
-        g_painter->pushTransformMatrix();
-        g_painter->rotate(m_rect.center(), m_rotation * (Fw::pi / 180.0));
-    }
+    size_t drawQueueStart = g_drawQueue->size();
 
     drawSelf(drawPane);
-
-    if(m_children.size() > 0) {
-        if(m_clipping)
-            g_painter->setClipRect(visibleRect.intersection(getPaddingRect()));
-
-        drawChildren(visibleRect, drawPane);
+    if (m_clipping) {
+        g_drawQueue->setClip(drawQueueStart, visibleRect);
     }
 
-    if(m_rotation != 0.0f)
-        g_painter->popTransformMatrix();
+    if(m_children.size() > 0) {
+        size_t drawQueueChildStart = g_drawQueue->size();
+        drawChildren(visibleRect, drawPane);
+        if (m_clipping) {
+            g_drawQueue->setClip(drawQueueChildStart, visibleRect.intersection(getPaddingRect()));
+        }
+    }
 
-    if(m_clipping) {
-        g_painter->setClipRect(oldClipRect);
+    if (getOpacity() < 0.99f) {
+        g_drawQueue->setOpacity(drawQueueStart, getOpacity());
+    }
+
+    if (m_rotation < -0.1f || m_rotation > 0.1f) {
+        g_drawQueue->setRotation(drawQueueStart, m_rect.center(), m_rotation * (Fw::pi / 180.0));
     }
 }
 
 void UIWidget::drawSelf(Fw::DrawPane drawPane)
 {
-    if((drawPane & Fw::ForegroundPane) == 0)
+    if(drawPane != Fw::ForegroundPane)
         return;
 
     // draw style components in order
@@ -132,23 +128,15 @@ void UIWidget::drawChildren(const Rect& visibleRect, Fw::DrawPane drawPane)
         if(!childVisibleRect.isValid())
             continue;
 
-        // store current graphics opacity
-        float oldOpacity = g_painter->getOpacity();
-
-        // decrease to self opacity
-        if(child->getOpacity() < oldOpacity)
-            g_painter->setOpacity(child->getOpacity());
-
         child->draw(childVisibleRect, drawPane);
 
         // debug draw box
-        if(g_ui.isDrawingDebugBoxes() && drawPane & Fw::ForegroundPane) {
-            g_painter->setColor(Color::green);
-            g_painter->drawBoundingRect(child->getRect());
+        if(g_ui.isDrawingDebugBoxes() && drawPane == Fw::ForegroundPane) {
+            g_drawQueue->addBoundingRect(child->getRect(), 1, Color::green);
+            if (m_font) {
+                m_font->drawText(child->getId(), child->getPosition() + Point(2, 0), Color::red);
+            }
         }
-        //g_fonts.getDefaultFont()->renderText(child->getId(), child->getPosition() + Point(2, 0), Color::red);
-
-        g_painter->setOpacity(oldOpacity);
     }
 }
 
@@ -287,7 +275,7 @@ void UIWidget::removeChild(UIWidgetPtr child)
         }
 
         // reset child parent
-        assert(child->getParent() == static_self_cast<UIWidget>());
+        VALIDATE(child->getParent() == static_self_cast<UIWidget>());
         child->setParent(nullptr);
 
         m_layout->removeWidget(child);
@@ -565,7 +553,7 @@ void UIWidget::unlockChild(const UIWidgetPtr& child)
     UIWidgetPtr lockedChild;
     if(m_lockedChildren.size() > 0) {
         lockedChild = m_lockedChildren.front();
-        assert(hasChild(lockedChild));
+        VALIDATE(hasChild(lockedChild));
     }
 
     for(const UIWidgetPtr& otherChild : m_children) {
@@ -613,7 +601,7 @@ void UIWidget::applyStyle(const OTMLNodePtr& styleNode)
             if(node->tag()[0] == '!') {
                 std::string tag = node->tag().substr(1);
                 std::string code = stdext::format("tostring(%s)", node->value());
-                std::string origin = "@" + node->source() + ": [" + node->tag() + "]";
+                std::string origin = std::string("@") + node->source() + ": [" + node->tag() + "]";
                 g_lua.evaluateExpression(code, origin);
                 std::string value = g_lua.popString();
 
@@ -1442,6 +1430,11 @@ void UIWidget::updateState(Fw::WidgetState state)
             updateChildren = newStatus != oldStatus;
             break;
         }
+        case Fw::MobileState:
+        {
+            newStatus = g_app.isMobile();
+            break;
+        }
         default:
             return;
     }
@@ -1653,11 +1646,15 @@ bool UIWidget::onMousePress(const Point& mousePos, Fw::MouseButton button)
         m_lastClickPosition = mousePos;
     }
 
+    if (button == Fw::MouseTouch)
+        return callLuaField<bool>("onTouchPress", mousePos, button);
     return callLuaField<bool>("onMousePress", mousePos, button);
 }
 
 bool UIWidget::onMouseRelease(const Point& mousePos, Fw::MouseButton button)
 {
+    if (button == Fw::MouseTouch)
+        return callLuaField<bool>("onTouchRelease", mousePos, button);
     return callLuaField<bool>("onMouseRelease", mousePos, button);
 }
 

@@ -39,11 +39,27 @@ ShaderProgram::ShaderProgram()
 ShaderProgram::~ShaderProgram()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
 #endif
     if(g_graphics.ok())
         glDeleteProgram(m_programId);
 }
+
+PainterShaderProgramPtr ShaderProgram::create(const std::string& vertexShader, const std::string& fragmentShader, bool colorMatrix)
+{
+    PainterShaderProgramPtr program(new PainterShaderProgram);
+    if (!program)
+        g_logger.fatal(stdext::format("Cant creatre shader: \n%s", vertexShader));
+    program->addShaderFromSourceCode(Shader::Vertex, vertexShader);
+    program->addShaderFromSourceCode(Shader::Fragment, fragmentShader);
+    if (colorMatrix) {
+        program->enableColorMatrix();
+    }
+    program->link();
+    g_graphics.checkForError(__FUNCTION__, vertexShader + "\n" + fragmentShader, __LINE__);
+    return program;
+}
+
 
 bool ShaderProgram::addShader(const ShaderPtr& shader) {
     glAttachShader(m_programId, shader->getShaderId());
@@ -87,35 +103,35 @@ void ShaderProgram::removeAllShaders()
         removeShader(m_shaders.front());
 }
 
-bool ShaderProgram::link()
+void ShaderProgram::link()
 {
     if(m_linked)
-        return true;
+        return;
 
     glLinkProgram(m_programId);
 
     int value = GL_FALSE;
     glGetProgramiv(m_programId, GL_LINK_STATUS, &value);
     m_linked = (value != GL_FALSE);
-
-    if (!m_linked) {
-        GLint maxLength = 0;
-        glGetProgramiv(m_programId, GL_INFO_LOG_LENGTH, &maxLength);
-        std::vector<GLchar> infoLog(maxLength);
-        glGetProgramInfoLog(m_programId, maxLength, &maxLength, &infoLog[0]);
-        g_logger.error(stdext::format("Program %i linking error (%i): %s - %s - %s %s", m_programId, infoLog.size(),
-            std::string(infoLog.begin(), infoLog.end()).c_str(), log().c_str(),
-            glGetString(GL_RENDERER), glGetString(GL_VERSION)));
-
+    if (m_linked) {
+        return;
     }
-    return m_linked;
+
+    GLint maxLength = 0;
+    glGetProgramiv(m_programId, GL_INFO_LOG_LENGTH, &maxLength);
+    std::vector<GLchar> infoLog(maxLength);
+    glGetProgramInfoLog(m_programId, maxLength, &maxLength, &infoLog[0]);
+    g_logger.fatal(stdext::format("Program %i linking error (%i): %s - %s - %s %s\nExtensions: %s", m_programId, infoLog.size(),
+        std::string(infoLog.begin(), infoLog.end()).c_str(), log().c_str(),
+        g_graphics.getRenderer(), g_graphics.getVersion(), g_graphics.getExtensions()));
 }
 
 bool ShaderProgram::bind()
 {
     if(m_currentProgram != m_programId) {
-        if(!m_linked && !link())
-            return false;
+        if (!m_linked) {
+            link();
+        }
         glUseProgram(m_programId);
         m_currentProgram = m_programId;
     }
@@ -155,7 +171,7 @@ void ShaderProgram::bindAttributeLocation(int location, const char* name)
 
 void ShaderProgram::bindUniformLocation(int location, const char* name)
 {
-    assert(m_linked);
-    assert(location >= 0 && location < MAX_UNIFORM_LOCATIONS);
+    VALIDATE(m_linked);
+    VALIDATE(location >= 0 && location < MAX_UNIFORM_LOCATIONS);
     m_uniformLocations[location] = glGetUniformLocation(m_programId, name);
 }

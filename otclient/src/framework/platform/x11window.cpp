@@ -22,9 +22,12 @@
 
 #ifndef WIN32
 
+#include <framework/global.h>
 #include "x11window.h"
 #include <framework/core/resourcemanager.h>
+#include <framework/core/eventdispatcher.h>
 #include <framework/graphics/image.h>
+#include <framework/util/stats.h>
 #include <unistd.h>
 
 #define LSB_BIT_SET(p, n) (p[(n)/8] |= (1 <<((n)%8)))
@@ -523,6 +526,11 @@ bool X11Window::isExtensionSupported(const char *ext)
 
 void X11Window::move(const Point& pos)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::move, this, pos));
+        return;
+    }
+    
     m_position = pos;
     if(m_visible) {
         XMoveWindow(m_display, m_window, m_position.x, m_position.y);
@@ -532,6 +540,11 @@ void X11Window::move(const Point& pos)
 
 void X11Window::resize(const Size& size)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::resize, this, size));
+        return;
+    }
+    
     if(size.width() < m_minimumSize.width() || size.height() < m_minimumSize.height())
         return;
     XResizeWindow(m_display, m_window, size.width(), size.height());
@@ -540,6 +553,11 @@ void X11Window::resize(const Size& size)
 
 void X11Window::show()
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::show, this));
+        return;
+    }
+
     m_visible = true;
     XMapWindow(m_display, m_window);
     XMoveWindow(m_display, m_window, m_position.x, m_position.y);
@@ -552,6 +570,11 @@ void X11Window::show()
 
 void X11Window::hide()
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::hide, this));
+        return;
+    }
+    
     m_visible = false;
     XUnmapWindow(m_display, m_window);
     XFlush(m_display);
@@ -583,6 +606,7 @@ void X11Window::maximize()
 
 void X11Window::poll()
 {
+    AutoStat s(STATS_RENDER, "PollWindow");
     bool needsResizeUpdate = false;
 
     XEvent event, peekEvent;
@@ -629,8 +653,11 @@ void X11Window::poll()
         switch(event.type) {
             case ClientMessage: {
                 // close event
-                if((Atom)event.xclient.data.l[0] == m_wmDelete && m_onClose)
-                    m_onClose();
+                if((Atom)event.xclient.data.l[0] == m_wmDelete && m_onClose) {
+                    g_dispatcher.addEvent([this] {
+                        m_onClose();
+                    });
+                }
                 break;
             }
             case ConfigureNotify: {
@@ -750,64 +777,69 @@ void X11Window::poll()
                 std::string text = buf;
 
                 //g_logger.debug("char: ", buf[0], " code: ", (int)((uchar)buf[0]));
-
-                if(m_onInputEvent && text.length() > 0) {
-                    m_inputEvent.reset(Fw::KeyTextInputEvent);
-                    m_inputEvent.keyText = text;
-                    m_onInputEvent(m_inputEvent);
-                }
+                g_dispatcher.addEventEx("KeyPress", [&, text] {
+                    if(m_onInputEvent && text.length() > 0) {
+                        m_inputEvent.reset(Fw::KeyTextInputEvent);
+                        m_inputEvent.keyText = text;
+                        m_onInputEvent(m_inputEvent);
+                    }
+                });
                 break;
             }
             case ButtonPress:
             case ButtonRelease: {
-                m_inputEvent.reset();
-                m_inputEvent.type = (event.type == ButtonPress) ? Fw::MousePressInputEvent : Fw::MouseReleaseInputEvent;
-                switch(event.xbutton.button) {
-                    case Button1:
-                        m_inputEvent.mouseButton = Fw::MouseLeftButton;
-                        m_mouseButtonStates[Fw::MouseLeftButton] = (event.type == ButtonPress);
-                        break;
-                    case Button3:
-                        m_inputEvent.mouseButton = Fw::MouseRightButton;
-                        m_mouseButtonStates[Fw::MouseRightButton] = (event.type == ButtonPress);
-                        break;
-                    case Button2:
-                        m_inputEvent.mouseButton = Fw::MouseMidButton;
-                        m_mouseButtonStates[Fw::MouseMidButton] = (event.type == ButtonPress);
-                        break;
-                    case Button4:
-                        if(event.type == ButtonPress) {
-                            m_inputEvent.type = Fw::MouseWheelInputEvent;
+                g_dispatcher.addEventEx("ButtonRelease", [this, event] {
+                    m_inputEvent.reset();
+                    m_inputEvent.type = (event.type == ButtonPress) ? Fw::MousePressInputEvent : Fw::MouseReleaseInputEvent;
+                    switch(event.xbutton.button) {
+                        case Button1:
+                            m_inputEvent.mouseButton = Fw::MouseLeftButton;
+                            m_mouseButtonStates[Fw::MouseLeftButton] = (event.type == ButtonPress);
+                            break;
+                        case Button3:
+                            m_inputEvent.mouseButton = Fw::MouseRightButton;
+                            m_mouseButtonStates[Fw::MouseRightButton] = (event.type == ButtonPress);
+                            break;
+                        case Button2:
                             m_inputEvent.mouseButton = Fw::MouseMidButton;
-                            m_inputEvent.wheelDirection = Fw::MouseWheelUp;
-                        } else
+                            m_mouseButtonStates[Fw::MouseMidButton] = (event.type == ButtonPress);
+                            break;
+                        case Button4:
+                            if(event.type == ButtonPress) {
+                                m_inputEvent.type = Fw::MouseWheelInputEvent;
+                                m_inputEvent.mouseButton = Fw::MouseMidButton;
+                                m_inputEvent.wheelDirection = Fw::MouseWheelUp;
+                            } else
+                                m_inputEvent.type = Fw::NoInputEvent;
+                            break;
+                        case Button5:
+                            if(event.type == ButtonPress) {
+                                m_inputEvent.type = Fw::MouseWheelInputEvent;
+                                m_inputEvent.mouseButton = Fw::MouseMidButton;
+                                m_inputEvent.wheelDirection = Fw::MouseWheelDown;
+                            } else
+                                m_inputEvent.type = Fw::NoInputEvent;
+                            break;
+                        default:
                             m_inputEvent.type = Fw::NoInputEvent;
-                        break;
-                    case Button5:
-                        if(event.type == ButtonPress) {
-                            m_inputEvent.type = Fw::MouseWheelInputEvent;
-                            m_inputEvent.mouseButton = Fw::MouseMidButton;
-                            m_inputEvent.wheelDirection = Fw::MouseWheelDown;
-                        } else
-                            m_inputEvent.type = Fw::NoInputEvent;
-                        break;
-                    default:
-                        m_inputEvent.type = Fw::NoInputEvent;
-                        break;
-                }
-                if(m_inputEvent.type != Fw::NoInputEvent && m_onInputEvent)
-                    m_onInputEvent(m_inputEvent);
+                            break;
+                    }
+                    if(m_inputEvent.type != Fw::NoInputEvent && m_onInputEvent)
+                        m_onInputEvent(m_inputEvent);
+                });
                 break;
             }
 
             case MotionNotify: {
-                m_inputEvent.reset();
-                m_inputEvent.type = Fw::MouseMoveInputEvent;
-                Point newMousePos(event.xbutton.x, event.xbutton.y);
-                m_inputEvent.mouseMoved = newMousePos - m_inputEvent.mousePos;
-                m_inputEvent.mousePos = newMousePos;
-                if(m_onInputEvent)
-                    m_onInputEvent(m_inputEvent);
+                g_dispatcher.addEventEx("MotionNotify", [this, event] {
+                    m_inputEvent.reset();
+                    m_inputEvent.type = Fw::MouseMoveInputEvent;
+                    Point newMousePos(event.xbutton.x, event.xbutton.y);
+                    m_inputEvent.mouseMoved = newMousePos - m_inputEvent.mousePos;
+                    m_inputEvent.mousePos = newMousePos;
+                    if(m_onInputEvent)
+                        m_onInputEvent(m_inputEvent);
+                });
                 break;
             }
             case MapNotify:
@@ -854,6 +886,11 @@ void X11Window::showMouse()
 
 void X11Window::hideMouse()
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::hideMouse, this));
+        return;
+    }    
+    
     if(m_cursor != None)
         restoreMouseCursor();
 
@@ -873,6 +910,11 @@ void X11Window::hideMouse()
 
 void X11Window::setMouseCursor(int cursorId)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setMouseCursor, this, cursorId));
+        return;
+    }    
+
     if(cursorId >= (int)m_cursors.size() || cursorId < 0)
         return;
 
@@ -885,6 +927,11 @@ void X11Window::setMouseCursor(int cursorId)
 
 void X11Window::restoreMouseCursor()
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::restoreMouseCursor, this));
+        return;
+    }
+
     XUndefineCursor(m_display, m_window);
     m_cursor = None;
 }
@@ -929,12 +976,22 @@ int X11Window::internalLoadMouseCursor(const ImagePtr& image, const Point& hotSp
 
 void X11Window::setTitle(const std::string& title)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setTitle, this, title));
+        return;
+    }
+
     XStoreName(m_display, m_window, title.c_str());
     XSetIconName(m_display, m_window, title.c_str());
 }
 
 void X11Window::setMinimumSize(const Size& minimumSize)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setMinimumSize, this, minimumSize));
+        return;
+    }
+    
     XSizeHints sizeHints;
     memset(&sizeHints, 0, sizeof(sizeHints));
     sizeHints.flags = PMinSize;
@@ -945,6 +1002,11 @@ void X11Window::setMinimumSize(const Size& minimumSize)
 
 void X11Window::setFullscreen(bool fullscreen)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setFullscreen, this, fullscreen));
+        return;
+    }
+    
     if(m_visible) {
         Atom wmState = XInternAtom(m_display, "_NET_WM_STATE", False);
         Atom wmStateFullscreen = XInternAtom(m_display, "_NET_WM_STATE_FULLSCREEN", False);
@@ -968,6 +1030,10 @@ void X11Window::setFullscreen(bool fullscreen)
 
 void X11Window::setVerticalSync(bool enable)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setVerticalSync, this, enable));
+        return;
+    }
 #ifdef OPENGL_ES
     //TODO
 #else
@@ -986,6 +1052,11 @@ void X11Window::setVerticalSync(bool enable)
 
 void X11Window::setIcon(const std::string& file)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setIcon, this, file));
+        return;
+    }
+    
     ImagePtr image = Image::load(file);
 
     if(!image) {
@@ -1017,6 +1088,11 @@ void X11Window::setIcon(const std::string& file)
 
 void X11Window::setClipboardText(const std::string& text)
 {
+    if (std::this_thread::get_id() != g_mainThreadId) {
+        g_graphicsDispatcher.addEvent(std::bind(&X11Window::setClipboardText, this, text));
+        return;
+    }
+
     m_clipboardText = text;
     Atom clipboard = XInternAtom(m_display, "CLIPBOARD", False);
     XSetSelectionOwner(m_display, clipboard, m_window, CurrentTime);
@@ -1075,5 +1151,11 @@ std::string X11Window::getPlatformType()
     return "X11-EGL";
 #endif
 }
+
+void X11Window::displayFatalError(const std::string& message)
+{
+    
+}
+
 
 #endif

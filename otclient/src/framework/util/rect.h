@@ -49,14 +49,14 @@ public:
     bool isEmpty() const { return x1 > x2 || y1 > y2; }
     bool isValid() const { return x1 <= x2 && y1 <= y2; }
 
-    T left() const { return x1; }
-    T top() const { return y1; }
-    T right() const { return x2; }
-    T bottom() const { return y2; }
-    T horizontalCenter() const { return x1 + (x2 - x1)/2; }
-    T verticalCenter() const { return y1 + (y2 - y1)/2; }
-    T x() const { return x1; }
-    T y() const { return y1; }
+    inline T left() const { return x1; }
+    inline T top() const { return y1; }
+    inline T right() const { return x2; }
+    inline T bottom() const { return y2; }
+    inline T horizontalCenter() const { return x1 + (x2 - x1)/2; }
+    inline T verticalCenter() const { return y1 + (y2 - y1)/2; }
+    inline T x() const { return x1; }
+    inline T y() const { return y1; }
     TPoint<T> topLeft() const { return TPoint<T>(x1, y1); }
     TPoint<T> bottomRight() const { return TPoint<T>(x2, y2); }
     TPoint<T> topRight() const { return TPoint<T>(x2, y1); }
@@ -316,7 +316,7 @@ public:
     TRect<T>& operator+=(TPoint<T> other) { x1 += other.x; x2 += other.x; y1 += other.y; y2 += other.y; return *this; }
 
     TRect<T> operator*(float num) const { return TRect<T>(x1 * num, y1 * num, (x2 - x1) * num, (y2 - y1) * num); }
- 
+
 private:
     T x1, y1, x2, y2;
 };

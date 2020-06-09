@@ -69,7 +69,7 @@ int UIAnchor::getHookedPoint(const UIWidgetPtr& hookedWidget, const UIWidgetPtr&
             break;
         default:
             // must never happens
-            assert(false);
+            VALIDATE(false);
             break;
     }
 
@@ -111,7 +111,7 @@ void UIAnchorLayout::addAnchor(const UIWidgetPtr& anchoredWidget, Fw::AnchorEdge
     if(!anchoredWidget)
         return;
 
-    assert(anchoredWidget != getParentWidget());
+    VALIDATE(anchoredWidget != getParentWidget());
 
     UIAnchorPtr anchor(new UIAnchor(anchoredEdge, hookedWidgetId, hookedEdge));
     UIAnchorGroupPtr& anchorGroup = m_anchorsGroups[anchoredWidget];

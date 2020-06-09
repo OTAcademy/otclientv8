@@ -36,12 +36,15 @@ public:
     ShaderProgram();
     ~ShaderProgram();
 
+    static PainterShaderProgramPtr create(const std::string& vertexShader, const std::string& fragmentShader, bool colorMatrix = false);
+
     bool addShader(const ShaderPtr& shader);
     bool addShaderFromSourceCode(Shader::ShaderType shaderType, const std::string& sourceCode);
     bool addShaderFromSourceFile(Shader::ShaderType shaderType, const std::string& sourceFile);
     void removeShader(const ShaderPtr& shader);
     void removeAllShaders();
-    virtual bool link();
+
+    virtual void link();
     bool bind();
     static void release();
     std::string log();
@@ -73,6 +76,7 @@ public:
     void setUniformValue(int location, const Matrix2& mat) { glUniformMatrix2fv(m_uniformLocations[location], 1, GL_FALSE, mat.data()); }
     void setUniformValue(int location, const Matrix3& mat) { glUniformMatrix3fv(m_uniformLocations[location], 1, GL_FALSE, mat.data()); }
     void setUniformValue(int location, const Matrix4& mat) { glUniformMatrix4fv(m_uniformLocations[location], 1, GL_FALSE, mat.data()); }
+    void setUniformValue(int location, int count, const int* value) { glUniform1iv(m_uniformLocations[location], count, value); }
     void setUniformValue(const char* name, const Color& color) { glUniform4f(glGetUniformLocation(m_programId, name), color.rF(), color.gF(), color.bF(), color.aF()); }
     void setUniformValue(const char* name, int value) { glUniform1i(glGetUniformLocation(m_programId, name), value); }
     void setUniformValue(const char* name, float value) { glUniform1f(glGetUniformLocation(m_programId, name), value); }

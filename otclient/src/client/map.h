@@ -228,9 +228,6 @@ public:
     bool isShowingAnimations();
     void setShowAnimations(bool show);
 
-    void beginGhostMode(float opacity);
-    void endGhostMode();
-
     std::map<Position, ItemPtr> findItemsById(uint16 clientId, uint32 max);
 
     // known creature related

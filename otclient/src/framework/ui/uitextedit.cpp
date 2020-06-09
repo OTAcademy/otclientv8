@@ -21,6 +21,7 @@
  */
 
 #include "uitextedit.h"
+#include "uimanager.h"
 #include <framework/graphics/bitmapfont.h>
 #include <framework/graphics/graphics.h>
 #include <framework/platform/platformwindow.h>
@@ -36,12 +37,17 @@ UITextEdit::UITextEdit()
     m_textHidden = false;
     m_shiftNavigation = false;
     m_multiline = false;
+#ifdef ANDROID
+    m_cursorVisible = false;
+#else
     m_cursorVisible = true;
+#endif
     m_cursorInRange = true;
     m_maxLength = 0;
     m_editable = true;
     m_selectable = true;
     m_autoScroll = true;
+    m_autoSubmit = false;
     m_changeCursorImage = true;
     m_selectionReference = 0;
     m_selectionStart = 0;
@@ -49,15 +55,13 @@ UITextEdit::UITextEdit()
     m_updatesEnabled = true;
     m_selectionColor = Color::white;
     m_selectionBackgroundColor = Color::black;
-    m_glyphsTextCoordsBuffer.enableHardwareCaching();
-    m_glyphsSelectCoordsBuffer.enableHardwareCaching();
     m_glyphsMustRecache = true;
     blinkCursor();
 }
 
 void UITextEdit::drawSelf(Fw::DrawPane drawPane)
 {
-    if((drawPane & Fw::ForegroundPane) == 0)
+    if(drawPane != Fw::ForegroundPane)
         return;
 
     drawBackground(m_rect);
@@ -80,8 +84,7 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
             for(int i=0;i<textLength;++i)
                 m_glyphsTextCoordsBuffer.addRect(m_glyphsCoords[i], m_glyphsTexCoords[i]);
         }
-        g_painter->setColor(m_color);
-        g_painter->drawTextureCoords(m_glyphsTextCoordsBuffer, texture);
+        g_drawQueue->addTextureCoords(m_glyphsTextCoordsBuffer, texture, m_color);
     }
 
     if(hasSelection()) {
@@ -90,15 +93,13 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
             for(int i=m_selectionStart;i<m_selectionEnd;++i)
                 m_glyphsSelectCoordsBuffer.addRect(m_glyphsCoords[i], m_glyphsTexCoords[i]);
         }
-        g_painter->setColor(m_selectionBackgroundColor);
-        g_painter->drawFillCoords(m_glyphsSelectCoordsBuffer);
-        g_painter->setColor(m_selectionColor);
-        g_painter->drawTextureCoords(m_glyphsSelectCoordsBuffer, texture);
+        g_drawQueue->addFillCoords(m_glyphsSelectCoordsBuffer, m_selectionBackgroundColor);
+        g_drawQueue->addTextureCoords(m_glyphsSelectCoordsBuffer, texture, m_selectionColor);
     }
 
     // render cursor
     if(isExplicitlyEnabled() && m_cursorVisible && m_cursorInRange && isActive() && m_cursorPos >= 0) {
-        assert(m_cursorPos <= textLength);
+        VALIDATE(m_cursorPos <= textLength);
         // draw every 333ms
         const int delay = 333;
         int elapsed = g_clock.millis() - m_cursorTicks;
@@ -110,18 +111,14 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
             else
                 cursorRect = Rect(m_glyphsCoords[m_cursorPos-1].right(), m_glyphsCoords[m_cursorPos-1].top(), 1, m_font->getGlyphHeight());
 
-            if(hasSelection() && m_cursorPos >= m_selectionStart && m_cursorPos <= m_selectionEnd)
-                g_painter->setColor(m_selectionColor);
+            if (hasSelection() && m_cursorPos >= m_selectionStart && m_cursorPos <= m_selectionEnd)
+                g_drawQueue->addFilledRect(cursorRect, m_selectionColor);
             else
-                g_painter->setColor(m_color);
-
-            g_painter->drawFilledRect(cursorRect);
+                g_drawQueue->addFilledRect(cursorRect, m_color);
         } else if(elapsed >= 2*delay) {
             m_cursorTicks = g_clock.millis();
         }
     }
-
-    g_painter->resetColor();
 }
 
 void UITextEdit::update(bool focusCursor)
@@ -175,7 +172,7 @@ void UITextEdit::update(bool focusCursor)
     m_cursorInRange = false;
     if(focusCursor && m_autoScroll) {
         if(m_cursorPos > 0 && textLength > 0) {
-                assert(m_cursorPos <= textLength);
+                VALIDATE(m_cursorPos <= textLength);
                 Rect virtualRect(m_textVirtualOffset, m_rect.size() - Size(m_padding.left+m_padding.right, 0)); // previous rendered virtual rect
                 int pos = m_cursorPos - 1; // element before cursor
                 glyph = (uchar)text[pos]; // glyph of the element before cursor
@@ -685,8 +682,10 @@ void UITextEdit::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
             setCursorVisible(node->value<bool>());
         else if(node->tag() == "change-cursor-image")
             setChangeCursorImage(node->value<bool>());
-        else if(node->tag() == "auto-scroll")
+        else if (node->tag() == "auto-scroll")
             setAutoScroll(node->value<bool>());
+        else if (node->tag() == "text-auto-submit")
+            setAutoSubmit(node->value<bool>());
     }
 }
 
@@ -831,7 +830,20 @@ bool UITextEdit::onKeyPress(uchar keyCode, int keyboardModifiers, int autoRepeat
 bool UITextEdit::onKeyText(const std::string& keyText)
 {
     if(m_editable) {
+#ifdef ANDROID
+        setText(keyText);
+        if (m_autoSubmit) {
+            InputEvent event;
+            event.reset(Fw::KeyDownInputEvent);
+            event.keyCode = Fw::KeyEnter;
+            g_ui.inputEvent(event);
+            event.reset(Fw::KeyUpInputEvent);
+            event.keyCode = Fw::KeyEnter;
+            g_ui.inputEvent(event);
+        }
+#else
         appendText(keyText);
+#endif
         return true;
     }
     return false;
@@ -843,6 +855,12 @@ bool UITextEdit::onMousePress(const Point& mousePos, Fw::MouseButton button)
         return true;
 
     if(button == Fw::MouseLeftButton) {
+#ifdef ANDROID
+        if (m_editable) {
+            g_window.showTextEditor("Edit text", "", m_text, m_multiline ? 1 : 0);
+            return true;
+        }
+#else
         int pos = getTextPos(mousePos);
         if(pos >= 0) {
             setCursorPos(pos);
@@ -852,6 +870,7 @@ bool UITextEdit::onMousePress(const Point& mousePos, Fw::MouseButton button)
                 setSelection(pos, pos);
             }
         }
+#endif
         return true;
     }
     return false;

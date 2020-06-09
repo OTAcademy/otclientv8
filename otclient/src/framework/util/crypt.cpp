@@ -36,6 +36,7 @@
 #include <openssl/md5.h>
 #include <openssl/bn.h>
 #include <openssl/err.h>
+#include <zlib.h>
 
 static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static inline bool is_base64(unsigned char c) { return (isalnum(c) || (c == '+') || (c == '/')); }
@@ -198,7 +199,7 @@ std::string Crypt::getCryptKey(bool useMachineUUID)
 
 std::string Crypt::_encrypt(const std::string& decrypted_string, bool useMachineUUID)
 {
-    std::string tmp = "0000" + decrypted_string;
+    std::string tmp = std::string("0000") + decrypted_string;
     uint32 sum = stdext::adler32((const uint8*)decrypted_string.c_str(), decrypted_string.size());
     stdext::writeULE32((uint8*)&tmp[0], sum);
     std::string encrypted = base64Encode(xorCrypt(tmp, getCryptKey(useMachineUUID)));
@@ -300,6 +301,18 @@ std::string Crypt::sha512Encode(const std::string& decoded_string, bool upperCas
         return result;
 
     std::transform(result.begin(), result.end(), result.begin(), tolower);
+    return result;
+}
+
+std::string Crypt::crc32(const std::string& decoded_string, bool upperCase)
+{
+    uint32_t crc = ::crc32(0, Z_NULL, 0);
+    crc = ::crc32(crc, (const Bytef*)decoded_string.c_str(), decoded_string.size());
+    std::string result = stdext::dec_to_hex(crc);
+    if (upperCase)
+        std::transform(result.begin(), result.end(), result.begin(), toupper);
+    else
+        std::transform(result.begin(), result.end(), result.begin(), tolower);
     return result;
 }
 

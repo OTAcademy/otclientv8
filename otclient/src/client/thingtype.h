@@ -152,9 +152,9 @@ struct Imbuement {
 };
 
 struct Light {
-    Light() { intensity = 0; color = 215; }
-    uint8 intensity;
-    uint8 color;
+    Point pos;
+    uint8_t color = 215;
+    uint8_t intensity = 0;
 };
 
 class ThingType : public LuaObject
@@ -170,8 +170,10 @@ public:
     void exportImage(std::string fileName);
     void replaceSprites(std::map<uint32_t, ImagePtr>& replacements, std::string fileName);
 
-    void draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView = nullptr, bool lightOnly = false, Color* markColor = nullptr);
-    void newDraw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, DrawQueue& drawQueue, LightView* lightView, NewDrawType type = NewDrawNormal);
+    DrawQueueItem* draw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, Color color = Color::white, LightView* lightView = nullptr);
+    DrawQueueItem* draw(const Rect& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, Color color = Color::white);
+    void drawOutfit(const Point& dest, int xPattern, int yPattern, int zPattern, int animationPhase, int colors, Color color = Color::white, LightView* lightView = nullptr);
+    Rect getDrawSize(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase);
 
     uint16 getId() { return m_id; }
     ThingCategory getCategory() { return m_category; }

@@ -39,55 +39,34 @@ public:
     // @dontbind
     void terminate();
 
-    bool parseOption(const std::string& option);
-    
     void resize(const Size& size);
     void checkDepthSupport();
 
     int getMaxTextureSize() { return m_maxTextureSize; }
     const Size& getViewportSize() { return m_viewportSize; }
 
-    std::string getVendor() { return (const char*)glGetString(GL_VENDOR); }
-    std::string getRenderer() { return (const char*)glGetString(GL_RENDERER); }
-    std::string getVersion() { return (const char*)glGetString(GL_VERSION); }
-    std::string getExtensions() { return (const char*)glGetString(GL_EXTENSIONS); }
-
-    void setShouldUseShaders(bool enable) { m_shouldUseShaders = enable; }
+    std::string getVendor() { return m_vendor; }
+    std::string getRenderer() { return m_renderer; }
+    std::string getVersion() { return m_version; }
+    std::string getExtensions() { return m_extensions; }
 
     bool ok() { return m_ok; }
-    bool canUseDrawArrays();
-    bool canUseShaders();
-    bool canUseFBO();
-    bool canUseBilinearFiltering();
-    bool canUseHardwareBuffers();
-    bool canUseNonPowerOfTwoTextures();
-    bool canUseMipmaps();
-    bool canUseHardwareMipmaps();
-    bool canUseClampToEdge();
-    bool canUseBlendFuncSeparate();
-    bool canUseBlendEquation();
-    bool canCacheBackbuffer();
-    bool shouldUseShaders() { return m_shouldUseShaders; }
-    bool hasScissorBug();
-    bool canUseDepth();
+    void checkForError(const std::string& function, const std::string& file, int line);
 
 private:
+#ifdef WITH_DEPTH_BUFFER
+    void checkDepthSupport();
+#endif
+
     Size m_viewportSize;
+    std::string m_vendor;
+    std::string m_renderer;
+    std::string m_version;
+    std::string m_extensions;
 
     int m_maxTextureSize;
     int m_alphaBits;
     stdext::boolean<false> m_ok;
-    stdext::boolean<true> m_useDrawArrays;
-    stdext::boolean<true> m_useFBO;
-    stdext::boolean<false> m_useHardwareBuffers;
-    stdext::boolean<true> m_useBilinearFiltering;
-    stdext::boolean<true> m_useNonPowerOfTwoTextures;
-    stdext::boolean<true> m_useMipmaps;
-    stdext::boolean<true> m_useHardwareMipmaps;
-    stdext::boolean<true> m_useClampToEdge;
-    stdext::boolean<true> m_shouldUseShaders;
-    stdext::boolean<true> m_cacheBackbuffer;
-    stdext::boolean<true> m_useDepth;
 };
 
 extern Graphics g_graphics;

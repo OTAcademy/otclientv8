@@ -108,7 +108,7 @@ void Spawn::save(TiXmlElement* node)
         creatureNode->SetAttribute("direction", creature->getDirection());
 
         const Position& placePos = pair.first;
-        assert(placePos.isValid());
+        VALIDATE(placePos.isValid());
 
         creatureNode->SetAttribute("x", placePos.x - c.x);
         creatureNode->SetAttribute("y", placePos.y - c.y);
@@ -138,8 +138,8 @@ void Spawn::removeCreature(const Position& pos)
 {
     auto iterator = m_creatures.find(pos);
     if(iterator != m_creatures.end()) {
-        assert(iterator->first.isValid());
-        assert(g_map.removeThingByPos(iterator->first, 4));
+        VALIDATE(iterator->first.isValid());
+        VALIDATE(g_map.removeThingByPos(iterator->first, 4));
         m_creatures.erase(iterator);
     }
 }

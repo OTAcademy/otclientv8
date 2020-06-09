@@ -104,8 +104,6 @@ void ThingTypeManager::saveDat(std::string fileName)
         if(!fin)
             stdext::throw_exception(stdext::format("failed to open file '%s' for write", fileName));
 
-        fin->cache();
-
         fin->addU32(m_datSignature);
 
         for(int category = 0; category < ThingLastCategory; ++category)

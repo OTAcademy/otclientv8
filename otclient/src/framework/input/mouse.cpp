@@ -23,6 +23,7 @@
 #include "mouse.h"
 #include <framework/ui/uiwidget.h>
 #include <framework/platform/platformwindow.h>
+#include <framework/core/eventdispatcher.h>
 #include <framework/core/resourcemanager.h>
 
 Mouse g_mouse;
@@ -54,6 +55,11 @@ void Mouse::loadCursors(std::string filename)
 
 void Mouse::addCursor(const std::string& name, const std::string& file, const Point& hotSpot)
 {
+    if (g_mainThreadId != std::this_thread::get_id()) {
+        g_graphicsDispatcher.addEvent(std::bind(&Mouse::addCursor, this, name, file, hotSpot));
+        return;
+    }
+
     int cursorId = g_window.loadMouseCursor(file, hotSpot);
     if(cursorId >= 0) {
         m_cursors[name] = cursorId;
@@ -61,20 +67,32 @@ void Mouse::addCursor(const std::string& name, const std::string& file, const Po
         g_logger.error(stdext::format("unable to load cursor %s", name));
 }
 
-bool Mouse::pushCursor(const std::string& name)
+void Mouse::pushCursor(const std::string& name)
 {
+    if (g_mainThreadId != std::this_thread::get_id()) {
+        g_graphicsDispatcher.addEvent(std::bind(&Mouse::pushCursor, this, name));
+        return;
+    }
+
     auto it = m_cursors.find(name);
     if(it == m_cursors.end())
-        return false;
+        return;
 
     int cursorId = it->second;
     g_window.setMouseCursor(cursorId);
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_cursorStack.push_back(cursorId);
-    return true;
+    return;
 }
 
 void Mouse::popCursor(const std::string& name)
 {
+    if (g_mainThreadId != std::this_thread::get_id()) {
+        g_graphicsDispatcher.addEvent(std::bind(&Mouse::popCursor, this, name));
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(m_mutex);
     if(m_cursorStack.size() == 0)
         return;
 
@@ -101,18 +119,11 @@ void Mouse::popCursor(const std::string& name)
 
 bool Mouse::isCursorChanged()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return m_cursorStack.size() > 0;
 }
 
 bool Mouse::isPressed(Fw::MouseButton mouseButton)
 {
     return g_window.isMouseButtonPressed(mouseButton);
-}
-
-void Mouse::checkStackSize()
-{
-    if(m_cursorStack.size() > 5) {
-        g_logger.error("mouse cursor stack is too long");
-        m_cursorStack.pop_front();
-    }
 }

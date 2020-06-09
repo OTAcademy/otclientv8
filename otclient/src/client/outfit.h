@@ -28,29 +28,28 @@
 
 class Outfit
 {
-    enum {
-        HSI_SI_VALUES = 7,
-        HSI_H_STEPS = 19
-    };
-
 public:
     Outfit();
 
-    static Color getColor(int color);
+    static Color getColor(int color)
+    {
+        return Color::getOutfitColor(color);
+    }
 
-    void newDraw(Point dest, DrawQueue& drawQueue, bool isWalking, LightView* lightView);
+    void draw(Point dest, Otc::Direction direction, uint walkAnimationPhase, bool animate = true, LightView* lightView = nullptr);
+    void draw(const Rect& dest, Otc::Direction direction, uint animationPhase, bool animate = true);
 
     void setId(int id) { m_id = id; }
     void setAuxId(int id) { m_auxId = id; }
-    void setHead(int head) { m_head = head; m_headColor = getColor(head); }
-    void setBody(int body) { m_body = body; m_bodyColor = getColor(body); }
-    void setLegs(int legs) { m_legs = legs; m_legsColor = getColor(legs); }
-    void setFeet(int feet) { m_feet = feet; m_feetColor = getColor(feet); }
+    void setHead(int head) { m_head = head; }
+    void setBody(int body) { m_body = body; }
+    void setLegs(int legs) { m_legs = legs; }
+    void setFeet(int feet) { m_feet = feet; }
     void setAddons(int addons) { m_addons = addons; }
     void setMount(int mount) { m_mount = mount; }
+    void setWings(int wings) { m_wings = wings; }
+    void setAura(int aura) { m_aura = aura; }
     void setCategory(ThingCategory category) { m_category = category; }
-    void setAnimationPhase(int animationPhase) { m_animationPhase = animationPhase; }
-    void setXPattern(int xPattern) { m_xPattern = xPattern; }
 
     void resetClothes();
 
@@ -62,18 +61,13 @@ public:
     int getFeet() const { return m_feet; }
     int getAddons() const { return m_addons; }
     int getMount() const { return m_mount; }
+    int getWings() const { return m_wings; }
+    int getAura() const { return m_aura; }
     ThingCategory getCategory() const { return m_category; }
-
-    Color getHeadColor() const { return m_headColor; }
-    Color getBodyColor() const { return m_bodyColor; }
-    Color getLegsColor() const { return m_legsColor; }
-    Color getFeetColor() const { return m_feetColor; }
 
 private:
     ThingCategory m_category;
-    int m_id, m_auxId, m_head, m_body, m_legs, m_feet, m_addons, m_mount;
-    Color m_headColor, m_bodyColor, m_legsColor, m_feetColor;
-    int m_xPattern, m_animationPhase;
+    int m_id, m_auxId, m_head, m_body, m_legs, m_feet, m_addons, m_mount = 0, m_wings = 0, m_aura = 0;
 };
 
 #endif

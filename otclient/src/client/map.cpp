@@ -136,7 +136,6 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
 
             AnimatedTextPtr prevAnimatedText;
             bool merged = false;
-            /*
             for(auto other : m_animatedTexts) {
                 if(other->getPosition() == pos) {
                     prevAnimatedText = other;
@@ -145,16 +144,14 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
                         break;
                     }
                 }
-            } */
+            }
             if(!merged) {
                 if(prevAnimatedText) {
                     Point offset = prevAnimatedText->getOffset();
                     float t = prevAnimatedText->getTimer().ticksElapsed();
-                    if(t < Otc::ANIMATED_TEXT_DURATION / 4.0) { // didnt move 12 pixels
-                        int y = 12 - 48 * t / (float)Otc::ANIMATED_TEXT_DURATION;
-                        offset += Point(0, y);
-                    }
-                    offset.y = std::min<int>(offset.y, 12);
+                    int y = 48 * t / (float)Otc::ANIMATED_TEXT_DURATION;
+                    offset -= Point(0, y);
+                    offset.y = std::min<int>(std::max<int>(0, offset.y + 12), 24);
                     animatedText->setOffset(offset);
                 }
                 m_animatedTexts.push_back(animatedText);
@@ -165,7 +162,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
             bool mustAdd = true;
             for(auto other : m_staticTexts) {
                 // try to combine messages
-                if(other->getPosition() == pos && other->addMessage(staticText->getName(), staticText->getMessageMode(), staticText->getFirstMessage())) {
+                if(other->getPosition() == pos && other->addColoredMessage(staticText->getName(), staticText->getMessageMode(), staticText->getFirstMessage())) {
                     mustAdd = false;
                     break;
                 }
@@ -258,10 +255,10 @@ void Map::colorizeThing(const ThingPtr& thing, const Color& color)
         thing->static_self_cast<Item>()->setColor(color);
     else if(thing->isCreature()) {
         const TilePtr& tile = thing->getTile();
-        assert(tile);
+        VALIDATE(tile);
 
         const ThingPtr& topThing = tile->getTopThing();
-        assert(topThing);
+        VALIDATE(topThing);
 
         topThing->static_self_cast<Item>()->setColor(color);
     }
@@ -276,10 +273,10 @@ void Map::removeThingColor(const ThingPtr& thing)
         thing->static_self_cast<Item>()->setColor(Color::alpha);
     else if(thing->isCreature()) {
         const TilePtr& tile = thing->getTile();
-        assert(tile);
+        VALIDATE(tile);
 
         const ThingPtr& topThing = tile->getTopThing();
-        assert(topThing);
+        VALIDATE(topThing);
 
         topThing->static_self_cast<Item>()->setColor(Color::alpha);
     }
@@ -464,16 +461,6 @@ void Map::setShowAnimations(bool show)
             m_animationFlags |= Animation_Show;
     } else
         m_animationFlags &= ~Animation_Show;
-}
-
-void Map::beginGhostMode(float opacity)
-{
-    g_painter->setOpacity(opacity);
-}
-
-void Map::endGhostMode()
-{
-    g_painter->resetOpacity();
 }
 
 std::map<Position, ItemPtr> Map::findItemsById(uint16 clientId, uint32 max)

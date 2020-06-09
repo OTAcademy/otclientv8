@@ -27,7 +27,7 @@
 #include <framework/core/clock.h>
 #include <framework/core/eventdispatcher.h>
 
-void Missile::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView, bool lightOnly)
+void Missile::draw(const Point& dest, bool animate, LightView* lightView)
 {
     if(m_id == 0 || !animate)
         return;
@@ -63,48 +63,8 @@ void Missile::draw(const Point& dest, float scaleFactor, bool animate, LightView
     }
 
     float fraction = m_animationTimer.ticksElapsed() / m_duration;
-    rawGetThingType()->draw(dest + m_delta * fraction * scaleFactor, scaleFactor, 0, xPattern, yPattern, 0, 0, lightView, lightOnly);
+    rawGetThingType()->draw(dest + m_delta * fraction, 0, xPattern, yPattern, 0, 0, Color::white, lightView);
 }
-
-void Missile::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView) 
-{
-    if(m_id == 0)
-        return;
-
-    int xPattern = 0, yPattern = 0;
-    if(m_direction == Otc::NorthWest) {
-        xPattern = 0;
-        yPattern = 0;
-    } else if(m_direction == Otc::North) {
-        xPattern = 1;
-        yPattern = 0;
-    } else if(m_direction == Otc::NorthEast) {
-        xPattern = 2;
-        yPattern = 0;
-    } else if(m_direction == Otc::East) {
-        xPattern = 2;
-        yPattern = 1;
-    } else if(m_direction == Otc::SouthEast) {
-        xPattern = 2;
-        yPattern = 2;
-    } else if(m_direction == Otc::South) {
-        xPattern = 1;
-        yPattern = 2;
-    } else if(m_direction == Otc::SouthWest) {
-        xPattern = 0;
-        yPattern = 2;
-    } else if(m_direction == Otc::West) {
-        xPattern = 0;
-        yPattern = 1;
-    } else {
-        xPattern = 1;
-        yPattern = 1;
-    }
-
-    float fraction = m_animationTimer.ticksElapsed() / m_duration;
-    rawGetThingType()->newDraw(dest + m_delta * fraction, 0, xPattern, yPattern, 0, 0, drawQueue, lightView, NewDrawMissle);
-}
-
 
 void Missile::setPath(const Position& fromPosition, const Position& toPosition)
 {

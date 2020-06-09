@@ -44,8 +44,7 @@ void StaticText::drawText(const Point& dest, const Rect& parentRect)
 
     // draw only if the real center is not too far from the parent center, or its a yell
     //if(g_map.isAwareOfPosition(m_position) || isYell()) {
-        g_painter->setColor(m_color);
-        m_cachedText.draw(boundRect);
+        m_cachedText.draw(boundRect, m_color);
     //}
 }
 
@@ -61,33 +60,44 @@ void StaticText::setText(const std::string& text)
 
 bool StaticText::addMessage(const std::string& name, Otc::MessageMode mode, const std::string& text)
 {
+    return addColoredMessage(name, mode, { text, "" });
+}
+
+bool StaticText::addColoredMessage(const std::string& name, Otc::MessageMode mode, const std::vector<std::string>& texts)
+{
+    if (texts.empty() || texts.size() % 2 != 0)
+        return false;
     //TODO: this could be moved to lua
     // first message
-    if(m_messages.size() == 0) {
+    if (m_messages.size() == 0) {
         m_name = name;
         m_mode = mode;
     }
     // check if we can really own the message
-    else if(m_name != name || m_mode != mode) {
+    else if (m_name != name || m_mode != mode) {
         return false;
     }
     // too many messages
-    else if(m_messages.size() > 10) {
+    else if (m_messages.size() > 10) {
         m_messages.pop_front();
         m_updateEvent->cancel();
         m_updateEvent = nullptr;
     }
 
-    int delay = std::max<int>(Otc::STATIC_DURATION_PER_CHARACTER * text.length(), Otc::MIN_STATIC_TEXT_DURATION);
-    if(isYell())
+    size_t len = 0;
+    for (size_t i = 0; i < texts.size(); i += 2) {
+        len += texts[i].length();
+    }
+
+    int delay = std::max<int>(Otc::STATIC_DURATION_PER_CHARACTER * len, Otc::MIN_STATIC_TEXT_DURATION);
+    if (isYell())
         delay *= 2;
 
-    m_messages.push_back(std::make_pair(text, g_clock.millis() + delay));
+    m_messages.push_back(StaticTextMessage{ texts, g_clock.millis() + delay });
     compose();
 
-    if(!m_updateEvent)
+    if (!m_updateEvent)
         scheduleUpdate();
-
     return true;
 }
 
@@ -106,7 +116,7 @@ void StaticText::update()
 
 void StaticText::scheduleUpdate()
 {
-    int delay = std::max<int>(m_messages.front().second - g_clock.millis(), 0);
+    int delay = std::max<int>(m_messages.front().time - g_clock.millis(), 0);
 
     auto self = asStaticText();
     m_updateEvent = g_dispatcher.scheduleEvent([self]() {
@@ -118,38 +128,41 @@ void StaticText::scheduleUpdate()
 void StaticText::compose()
 {
     //TODO: this could be moved to lua
-    std::string text;
+    std::vector<std::string> texts;
 
     if(m_mode == Otc::MessageSay) {
-        text += m_name;
-        text += " says:\n";
+        texts.push_back(m_name + " says:\n");
+        texts.push_back("#EFEF00");
         m_color = Color(239, 239, 0);
     } else if(m_mode == Otc::MessageWhisper) {
-        text += m_name;
-        text += " whispers:\n";
+        texts.push_back(m_name + " whispers:\n");
+        texts.push_back("#EFEF00");
         m_color = Color(239, 239, 0);
     } else if(m_mode == Otc::MessageYell) {
-        text += m_name;
-        text += " yells:\n";
+        texts.push_back(m_name + " yells:\n");
+        texts.push_back("#EFEF00");
         m_color = Color(239, 239, 0);
     } else if(m_mode == Otc::MessageMonsterSay || m_mode == Otc::MessageMonsterYell || m_mode == Otc::MessageSpell
               || m_mode == Otc::MessageBarkLow || m_mode == Otc::MessageBarkLoud) {
         m_color = Color(254, 101, 0);
     } else if(m_mode == Otc::MessageNpcFrom || m_mode == Otc::MessageNpcFromStartBlock) {
-        text += m_name;
-        text += " says:\n";
+        texts.push_back(m_name + " says:\n");
+        texts.push_back("#5FF7F7");
         m_color = Color(95, 247, 247);
     } else {
         g_logger.warning(stdext::format("Unknown speak type: %d", m_mode));
     }
 
     for(uint i = 0; i < m_messages.size(); ++i) {
-        text += m_messages[i].first;
-
-        if(i < m_messages.size() - 1)
-            text += "\n";
+        for (size_t j = 0; j < m_messages[i].texts.size() - 1; j += 2) {
+            texts.push_back(m_messages[i].texts[j]);
+            texts.push_back(m_messages[i].texts[j + 1].empty() ? m_color.toHex() : m_messages[i].texts[j + 1]);
+        }
+        if (texts.size() >= 2 && i < m_messages.size() - 1) {
+            texts[texts.size() - 2] += "\n";
+        }
     }
 
-    m_cachedText.setText(text);
+    m_cachedText.setColoredText(texts);
     m_cachedText.wrapText(275);
 }

@@ -24,52 +24,43 @@
 #define LIGHTVIEW_H
 
 #include "declarations.h"
-#include <framework/graphics/declarations.h>
-#include <framework/graphics/painter.h>
-#include <set>
 #include "thingtype.h"
+#include <framework/graphics/declarations.h>
+#include <framework/graphics/drawqueue.h>
+#include <set>
 
-class LightView : public LuaObject
+struct TileLight {
+    size_t start;
+    uint8_t color;
+};
+
+class LightView : public DrawQueueItem
 {
 public:
-    LightView();
-
-    void reset();
-    void resetMapLight();
-    void resetCreaturesLight();
-
-    void setFloor(int floor) {
-        m_floor = stdext::clamp<int>(floor, 0, Otc::MAX_Z);
+    LightView(TexturePtr& lightTexture, const Size& mapSize, const Rect& dest, const Rect& src, uint8_t color, uint8_t intensity) :
+        DrawQueueItem(nullptr), m_lightTexture(lightTexture), m_mapSize(mapSize), m_dest(dest), m_src(src) {
+        m_globalLight = Color::from8bit(color) * ((float)intensity / 255.f);
+        m_tiles.resize(m_mapSize.area(), TileLight{ 0, 0 });
     }
 
-    void setGlobalLight(const Light& light) {
-        m_globalLight = light;
+    inline void addLight(const Point& pos, const Light& light)
+    {
+        return addLight(pos, light.color, light.intensity);
     }
+    void addLight(const Point& pos, uint8_t color, uint8_t intensity);
+    void setFieldBrightness(const Point& pos, size_t start, uint8_t color);
+    size_t size() { return m_lights.size(); }
 
-    void addLightSource(const Point& center, const Light& light, bool fromCreature = false);
-    void addGround(const Point& ground);
-
-    void resize(const Size& size);
-    void draw(const Rect& dest, const Rect& src);
+    void draw() override;
 
 private:
-    void drawGlobalLight(const Light& light);
-    TexturePtr generateLightBubble(float centerFactor);
-
-    Light m_globalLight;
     TexturePtr m_lightTexture;
-
-    FrameBufferPtr m_lightbuffer;
-
-    LightBuffer m_mapLight;
-    LightBuffer m_creaturesLight;
-
-    Point prevCenter;
-    Light prevLight;
-
-    std::map<PointF, float> m_ground; 
-    bool m_updateDepth = false;
-    int m_floor = 0;
+    Size m_mapSize;
+    Rect m_dest, m_src;
+    Color m_globalLight;
+    std::vector<Light> m_lights;
+    std::vector<TileLight> m_tiles;
 };
 
 #endif
+

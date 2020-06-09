@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#include <framework/global.h>
+
 #include "string.h"
 #include "format.h"
 #include <boost/algorithm/string.hpp>
@@ -65,11 +67,20 @@ std::string timestamp_to_date(time_t tnow)
     return std::string(date);
 }
 
+std::string dec_to_hex(uint32_t num)
+{
+    std::string str;
+    std::ostringstream o;
+    o << std::setw(8) << std::setfill('0') << std::hex << num;
+    str = o.str();
+    return str;
+}
+
 std::string dec_to_hex(uint64_t num)
 {
     std::string str;
     std::ostringstream o;
-    o << std::hex << num;
+    o << std::setw(16) << std::setfill('0') << std::hex << num;
     str = o.str();
     return str;
 }

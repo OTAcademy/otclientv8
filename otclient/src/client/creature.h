@@ -46,13 +46,10 @@ public:
     Creature();
     virtual ~Creature();
 
-    virtual void draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView = nullptr, bool lightOnly = false);
-    virtual void newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
-    virtual void drawOutfit(const Rect& destRect, float scale = 0, bool raw = false, Otc::Direction direction = Otc::InvalidDirection);
+    virtual void draw(const Point& dest, bool animate = true, LightView* lightView = nullptr);
+    virtual void drawOutfit(const Rect& destRect, Otc::Direction direction = Otc::InvalidDirection, const Color& color = Color::white);
 
-    void internalDrawOutfit(Point dest, float scaleFactor, bool animateWalk, bool animateIdle, Otc::Direction direction, LightView *lightView = nullptr, bool lightOnly = false);
-    void newDrawOutfit(const Point& dest, DrawQueue& drawQueue, LightView* lightView);
-    void drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags, DrawQueue& drawQueue);
+    void drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags);
 
     bool isInsideOffset(Point offset);
 
@@ -114,7 +111,7 @@ public:
     bool isPassable() { return m_passable; }
     Point getDrawOffset();
     int getStepDuration(bool ignoreDiagonal = false, Otc::Direction dir = Otc::InvalidDirection);
-    Point getWalkOffset() { return m_walkOffset; }
+    Point getWalkOffset(bool inNextFrame = false) { return inNextFrame ? m_walkOffsetInNextFrame : m_walkOffset; }
     Position getLastStepFromPosition() { return m_lastStepFromPosition; }
     Position getLastStepToPosition() { return m_lastStepToPosition; }
     float getStepProgress() { return m_walkTimer.ticksElapsed() / getStepDuration(); }
@@ -185,12 +182,12 @@ public:
     void clearTopWidgets();
     void clearBottomWidgets();
     void clearDirectionalWidgets();
-    void drawTopWidgets(const Point& rect, DrawQueue& drawQueue);
-    void drawBottomWidgets(const Point& rect, DrawQueue& drawQueue);
+    void drawTopWidgets(const Point& rect, const Otc::Direction direction);
+    void drawBottomWidgets(const Point& rect, const Otc::Direction direction);
 
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
-    virtual void updateWalkOffset(int totalPixelsWalked);
+    virtual void updateWalkOffset(int totalPixelsWalked, bool inNextFrame = false);
     void updateWalkingTile();
     virtual void nextWalkUpdate();
     virtual void updateWalk();
@@ -248,11 +245,11 @@ protected:
     TilePtr m_walkingTile;
     stdext::boolean<false> m_walking;
     stdext::boolean<false> m_allowAppearWalk;
-    stdext::boolean<false> m_footStepDrawn;
     ScheduledEventPtr m_walkUpdateEvent;
     ScheduledEventPtr m_walkFinishAnimEvent;
     EventPtr m_disappearEvent;
     Point m_walkOffset;
+    Point m_walkOffsetInNextFrame;
     Otc::Direction m_lastStepDirection;
     Position m_lastStepFromPosition;
     Position m_lastStepToPosition;
@@ -261,8 +258,8 @@ protected:
     uint16 m_stepDuration = 0;
 
     // jump related
-    float m_jumpHeight;
-    float m_jumpDuration;
+    float m_jumpHeight = 0;
+    float m_jumpDuration = 0;
     PointF m_jumpOffset;
     Timer m_jumpTimer;
 

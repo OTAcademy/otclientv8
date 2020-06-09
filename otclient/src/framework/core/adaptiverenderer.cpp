@@ -14,11 +14,6 @@ void AdaptiveRenderer::newFrame() {
         m_frames.pop_front();
     }
 
-    m_shortframes.push_back(now);
-    while (m_shortframes.front() + 1000 < now) {
-        m_shortframes.pop_front();
-    }
-
     if (m_forcedSpeed >= 0 && m_forcedSpeed <= 4) {
         m_speed = m_forcedSpeed;
         return;
@@ -85,7 +80,7 @@ bool AdaptiveRenderer::allowFading() {
 }
 
 int AdaptiveRenderer::foregroundUpdateInterval() {
-    static int limits[RenderSpeeds] = { 10, 30, 40, 50, 60 };
+    static int limits[RenderSpeeds] = { 0, 20, 40, 50, 60 };
     return limits[m_speed];
 }
 

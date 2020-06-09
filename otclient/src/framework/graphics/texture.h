@@ -27,53 +27,57 @@
 
 class Texture : public stdext::shared_object
 {
+    static uint uniqueId;
 public:
-    Texture();
-    Texture(const Size& size, bool depthTexture = false);
-    Texture(const ImagePtr& image, bool buildMipmaps = false, bool compress = false);
+    Texture(const Size& size, bool depthTexture = false, bool smooth = false, bool upsideDown = false);
+    Texture(const ImagePtr& image, bool buildMipmaps = false, bool compress = false, bool smooth = false);
     virtual ~Texture();
+    virtual void replace(const ImagePtr& image);
+    void resize(const Size& size);
 
-    void uploadPixels(const ImagePtr& image, bool buildMipmaps = false, bool compress = false);
-    void bind();
-    void copyFromScreen(const Rect& screenRect);
-    virtual bool buildHardwareMipmaps();
+    // update must be called always before drawing, only this function can use opengl functions
+    virtual void update();
 
+    virtual void setUpsideDown(bool upsideDown);
     virtual void setSmooth(bool smooth);
     virtual void setRepeat(bool repeat);
-    void setUpsideDown(bool upsideDown);
+    virtual bool buildHardwareMipmaps();
     void setTime(ticks_t time) { m_time = time; }
 
     uint getId() { return m_id; }
+    uint getUniqueId() { return m_uniqueId; }
     ticks_t getTime() { return m_time; }
     int getWidth() { return m_size.width(); }
     int getHeight() { return m_size.height(); }
     const Size& getSize() { return m_size; }
-    const Size& getGlSize() { return m_glSize; }
     const Matrix3& getTransformMatrix() { return m_transformMatrix; }
-    bool isEmpty() { return m_id == 0; }
-    bool isDepthTexture() { return m_depth; }
+    bool isEmpty() { return false; }
     bool hasRepeat() { return m_repeat; }
     bool hasMipmaps() { return m_hasMipmaps; }
     virtual bool isAnimatedTexture() { return false; }
 
 protected:
-    void createTexture();
-    bool setupSize(const Size& size, bool forcePowerOfTwo = false);
+
+    void uploadPixels(const ImagePtr& image, bool buildMipmaps = false, bool compress = false);
+
+    void setupSize(const Size& size);
     void setupWrap();
     void setupFilters();
     void setupTranformMatrix();
     void setupPixels(int level, const Size& size, uchar *pixels, int channels = 4, bool compress = false);
 
-    uint m_id;
-    ticks_t m_time;
+    uint m_id = 0;
+    uint m_uniqueId = 0;
+    ticks_t m_time = 0;
     Size m_size;
-    Size m_glSize;
     Matrix3 m_transformMatrix;
-    stdext::boolean<false> m_hasMipmaps;
-    stdext::boolean<false> m_smooth;
-    stdext::boolean<false> m_upsideDown;
-    stdext::boolean<false> m_repeat;
-    stdext::boolean<false> m_depth;
+    bool m_hasMipmaps = false;
+    bool m_smooth = false;
+    bool m_upsideDown = false;
+    bool m_repeat = false;
+    bool m_buildHardwareMipmaps = false;
+    bool m_needsUpdate = false;
+    ImagePtr m_image;
 };
 
 #endif

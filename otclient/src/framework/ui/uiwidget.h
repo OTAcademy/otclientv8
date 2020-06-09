@@ -414,7 +414,6 @@ public:
     float getOpacity() { return m_opacity; }
     float getRotation() { return m_rotation; }
 
-
 // image
 private:
     void initImage();
@@ -446,7 +445,6 @@ public:
     void setQRCode(const std::string& code, int border);
     void setImageSource(const std::string& source);
     void setImageSourceBase64(const std::string & data);
-    void setImageSourceHTTP(const std::string& data);
     void setImageClip(const Rect& clipRect) { m_imageClipRect = clipRect; updateImageCache(); }
     void setImageOffsetX(int x) { m_imageRect.setX(x); updateImageCache(); }
     void setImageOffsetY(int y) { m_imageRect.setY(y); updateImageCache(); }
@@ -491,7 +489,6 @@ private:
     void parseTextStyle(const OTMLNodePtr& styleNode);
 
     stdext::boolean<true> m_textMustRecache;
-    CoordsBuffer m_textCoordsBuffer;
     Rect m_textCachedScreenCoords;
 
 protected:
@@ -510,12 +507,15 @@ protected:
     stdext::boolean<false> m_textHorizontalAutoResize;
     stdext::boolean<false> m_textOnlyUpperCase;
     BitmapFontPtr m_font;
+    std::vector<std::pair<int, Color>> m_textColors;
+    std::vector<std::pair<int, Color>> m_drawTextColors;
 
 public:
     void resizeToText() { setSize(getTextSize()); }
     void clearText() { setText(""); }
 
     void setText(std::string text, bool dontFireLuaCall = false);
+    void setColoredText(const std::vector<std::string>& texts, bool dontFireLuaCall = false);
     void setTextAlign(Fw::AlignmentFlag align) { m_textAlign = align; updateText(); }
     void setTextOffset(const Point& offset) { m_textOffset = offset; updateText(); }
     void setTextWrap(bool textWrap) { m_textWrap = textWrap; updateText(); }

@@ -87,6 +87,8 @@ void buildMessageModesMap(int version) {
     } else if(version >= 900) {
         for(int i = Otc::MessageNone; i <= Otc::MessageBeyondLast; ++i)
             messageModesMap[i] = i;
+        messageModesMap[Otc::MessageNpcFromStartBlock] = 10;
+        messageModesMap[Otc::MessageNpcFrom] = 11;
     } else if(version >= 861) {
         messageModesMap[Otc::MessageNone]                    = 0;
         messageModesMap[Otc::MessageSay]                     = 1;

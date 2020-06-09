@@ -48,14 +48,11 @@ bool SpriteManager::loadSpr(std::string file)
     m_spriteSize = 32;
     m_loaded = false;
     m_sprites.clear();
-    g_atlas.reset(0);
-    g_atlas.reset(1);
 
     try {
         file = g_resources.guessFilePath(file, "spr");
 
         m_spritesFile = g_resources.openFile(file);
-        m_spritesFile->cache();
 
         m_signature = m_spritesFile->getU32();
         if (m_signature == *((uint32_t*)"OTV8")) {
@@ -96,8 +93,6 @@ void SpriteManager::saveSpr(std::string fileName)
         FileStreamPtr fin = g_resources.createFile(fileName);
         if (!fin)
             stdext::throw_exception(stdext::format("failed to open file '%s' for write", fileName));
-
-        fin->cache();
 
         fin->addU32(m_signature);
         if (g_game.getFeature(Otc::GameSpritesU32))
@@ -151,8 +146,6 @@ void SpriteManager::encryptSprites(std::string fileName)
         FileStreamPtr fin = g_resources.createFile(fileName);
         if (!fin)
             stdext::throw_exception(stdext::format("failed to open file '%s' for write", fileName));
-
-        fin->cache();
 
         const char otcv8Signature[] = "OTV8";
         fin->addU32(*((uint32_t*)otcv8Signature));

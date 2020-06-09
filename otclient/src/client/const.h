@@ -25,7 +25,7 @@
 
 namespace Otc
 {
-    enum {
+    enum : int {
         TILE_PIXELS = 32,
         MAX_ELEVATION = 24,
 
@@ -47,10 +47,7 @@ namespace Otc
     };
 
     enum DepthConst {
-        MAX_DEPTH = 16384 - 2048,
-        DIAGONAL_DEPTH = 20,
-        TILE_CREATURES_DEPTH = 10,
-        TILE_TOP_DEPTH = 20
+        MAX_DEPTH = 16384 - 2048
     };
 
     enum DrawFlags {
@@ -71,12 +68,12 @@ namespace Otc
         DrawLights = 16384,
         DrawManaBar = 32768,
         DontDrawLocalPlayer = 65536,
-        DrawBarsOnTop = 131072,
+        DrawIcons = 131072,
         DrawWalls = DrawOnBottom | DrawOnTop,
         DrawEverything = DrawGround | DrawGroundBorders | DrawWalls | DrawItems |
                          DrawCreatures | DrawEffects | DrawMissiles | DrawCreaturesInformation |
                          DrawStaticTexts | DrawAnimatedTexts | DrawAnimations | DrawBars | DrawNames |
-                         DrawLights | DrawManaBar | DrawBarsOnTop
+                         DrawLights | DrawManaBar | DrawIcons
     };
 
     enum DatOpts {
@@ -457,6 +454,7 @@ namespace Otc
         GameFasterAnimations = 101,
         GameCenteredOutfits = 102,
         GameSendIdentifiers = 103,
+        GameWingsAndAura = 104,
 
         // advanced features
         GamePacketSizeU32 = 110,

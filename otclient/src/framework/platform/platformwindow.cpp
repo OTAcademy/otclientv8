@@ -22,9 +22,11 @@
 
 #include "platformwindow.h"
 
-#ifdef WIN32
+#if defined(WIN32)
 #include "win32window.h"
 WIN32Window window;
+#elif defined(ANDROID)
+#include "androidwindow.h"
 #else
 #include "x11window.h"
 #include <framework/core/clock.h>
@@ -32,9 +34,14 @@ X11Window window;
 #endif
 
 #include <framework/core/clock.h>
+#include <framework/core/eventdispatcher.h>
 #include <framework/graphics/image.h>
 
+#ifdef ANDROID
+PlatformWindow& g_window = g_androidWindow;
+#else
 PlatformWindow& g_window = window;
+#endif
 
 int PlatformWindow::loadMouseCursor(const std::string& file, const Point& hotSpot)
 {
@@ -68,6 +75,11 @@ void PlatformWindow::updateUnmaximizedCoords()
 
 void PlatformWindow::processKeyDown(Fw::Key keyCode)
 {
+    if (std::this_thread::get_id() != g_dispatcherThreadId) {
+        g_dispatcher.addEvent(std::bind(&PlatformWindow::processKeyDown, this, keyCode));
+        return;
+    }
+    
     if(keyCode == Fw::KeyUnknown)
         return;
 
@@ -105,6 +117,11 @@ void PlatformWindow::processKeyDown(Fw::Key keyCode)
 
 void PlatformWindow::processKeyUp(Fw::Key keyCode)
 {
+    if (std::this_thread::get_id() != g_dispatcherThreadId) {
+        g_dispatcher.addEvent(std::bind(&PlatformWindow::processKeyUp, this, keyCode));
+        return;
+    }
+    
     if(keyCode == Fw::KeyUnknown)
         return;
 
@@ -138,6 +155,11 @@ void PlatformWindow::processKeyUp(Fw::Key keyCode)
 
 void PlatformWindow::releaseAllKeys()
 {
+    if (std::this_thread::get_id() != g_dispatcherThreadId) {
+        g_dispatcher.addEvent(std::bind(&PlatformWindow::releaseAllKeys, this));
+        return;
+    }
+    
     for(auto it : m_keysState) {
         Fw::Key keyCode = it.first;
         bool pressed = it.second;
@@ -156,6 +178,11 @@ void PlatformWindow::releaseAllKeys()
 
 void PlatformWindow::fireKeysPress()
 {
+    if (std::this_thread::get_id() != g_dispatcherThreadId) {
+        g_dispatcher.addEvent(std::bind(&PlatformWindow::fireKeysPress, this));
+        return;
+    }
+    
     // avoid massive checks
     if(m_keyPressTimer.ticksElapsed() < 10)
         return;

@@ -10,160 +10,291 @@
 #include <framework/graphics/deptharray.h>
 #include <framework/ui/uiwidget.h>
 
-enum DrawQueueType {
-    DRAW_QUEUE_MAP = 0,
-    DRAW_QUEUE_CREATURES = 1,
-    DRAW_QUEUE_CREATURES_INFO = 2
-}; 
+class DrawQueue;
+struct DrawQueueItem;
 
-struct DrawQueueOutfit;
+enum DrawType : uint8_t {
+    DRAW_ALL = 0,
+    DRAW_BEFORE_MAP = 1,
+    DRAW_AFTER_MAP = 2
+};
 
 struct DrawQueueItem {
-    DrawQueueItem() {}
-    DrawQueueItem(const Rect& _dest, const TexturePtr& _texture, const Rect& _src, Color _color, float _depth) :
-        dest(_dest), texture(_texture), src(_src), color(_color), depth(_depth) {
-    }
+    DrawQueueItem(const TexturePtr& texture, const Color& color = Color::white) : 
+        m_texture(texture), m_color(color) {}
     virtual ~DrawQueueItem() {};
+    virtual void draw() {}
+    virtual void draw(const Point& pos) {}
+    virtual bool cache() { return false; }
 
-    virtual DrawQueueOutfit* getOutfit() { return nullptr; }
-    virtual void draw(const Rect& location, const Rect& src, bool mark = false);
-
-    Rect dest;
-    TexturePtr texture = nullptr;
-    Rect src;
-    Color color;
-    float depth;
-    Color mark = Color::black;
-    bool cached = true;
+    TexturePtr m_texture;
+    Color m_color;
 };
 
-struct DrawQueueOutfitPattern {
-    DrawQueueItem texture;
-    DrawQueueItem layer;
-    Color colors[4];
+struct DrawQueueItemTexturedRect : public DrawQueueItem {
+    DrawQueueItemTexturedRect() : DrawQueueItem(nullptr) {}
+    DrawQueueItemTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src, const Color& color) :
+        DrawQueueItem(texture, color), m_dest(dest), m_src(src) {};
+
+    virtual void draw();
+    virtual void draw(const Point& pos);
+    virtual bool cache();
+
+    Rect m_dest;
+    Rect m_src;
 };
 
-struct DrawQueueOutfit : public DrawQueueItem {
-    DrawQueueOutfit(uint64_t _key, const Rect& _dest, Color _color, float _depth) :
-        DrawQueueItem(_dest, nullptr, Rect(), _color, _depth), key(_key) {}
-    virtual ~DrawQueueOutfit() {};
+struct DrawQueueItemTextureCoords : public DrawQueueItem {
+    DrawQueueItemTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture, const Color& color) :
+        DrawQueueItem(texture, color), m_coordsBuffer(std::move(coordsBuffer)) {};
 
-    DrawQueueOutfit* getOutfit() override { return this; }
-    void draw(const Rect& location, const Rect& src = Rect(), bool mark = false) override;
+    void draw();
+    void draw(const Point& pos);
+    bool cache();
 
-    uint64_t key;
-    DrawQueueItem mount;
-    std::vector<DrawQueueOutfitPattern> patterns;
+    CoordsBuffer m_coordsBuffer;
 };
 
-struct DrawQueueWidget {
-    Point dest;
-    UIWidgetPtr widget;
-    float depth;
+struct DrawQueueItemFilledRect : public DrawQueueItem {
+    DrawQueueItemFilledRect(const Rect& rect, const Color& color) :
+        DrawQueueItem(nullptr, color), m_dest(rect) {};
+    bool cache();
+
+    Rect m_dest;
+};
+
+struct DrawQueueItemClearRect : public DrawQueueItem {
+    DrawQueueItemClearRect(const Rect& rect, const Color& color) :
+        DrawQueueItem(nullptr, color), m_dest(rect)
+    {};
+    void draw();
+
+    Rect m_dest;
+};
+
+struct DrawQueueItemFillCoords : public DrawQueueItem {
+    DrawQueueItemFillCoords(CoordsBuffer& coordsBuffer, const Color& color) :
+        DrawQueueItem(nullptr, color), m_coordsBuffer(std::move(coordsBuffer))
+    {};
+    bool cache();
+
+    CoordsBuffer m_coordsBuffer;
+};
+
+struct DrawQueueItemText : public DrawQueueItem {
+    DrawQueueItemText(const Point& point, const TexturePtr& texture, uint64_t hash, const Color& color) :
+        DrawQueueItem(texture, color), m_point(point), m_hash(hash)
+    {};
+    void draw();
+
+    Point m_point;
+    uint64_t m_hash;
+};
+
+struct DrawQueueItemTextColored : public DrawQueueItem {
+    DrawQueueItemTextColored(const Point& point, const TexturePtr& texture, uint64_t hash, const std::vector<std::pair<int, Color>>& colors) :
+        DrawQueueItem(texture), m_point(point), m_hash(hash), m_colors(colors)
+    {};
+    void draw();
+
+    Point m_point;
+    uint64_t m_hash;
+    std::vector<std::pair<int, Color>> m_colors;
+};
+
+struct DrawQueueItemOutfit : public DrawQueueItemTexturedRect {
+    DrawQueueItemOutfit(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, int32_t colors, const Color& color) :
+        DrawQueueItemTexturedRect(rect, texture, src, color), m_offset(offset), m_colors(colors)
+    { };
+
+    void draw(const Point& pos) override;
+    bool cache() override;
+
+    Point m_offset;
+    int32_t m_colors;
+};
+
+struct DrawQueueCondition {
+    DrawQueueCondition(size_t start, size_t end) :
+        m_start(start), m_end(end) {}
+    virtual ~DrawQueueCondition() = default;
+
+    virtual void start(DrawQueue*) = 0;
+    virtual void end(DrawQueue*) = 0;
+
+    size_t m_start;
+    size_t m_end;
+};
+
+struct DrawQueueConditionClip : public DrawQueueCondition {
+    DrawQueueConditionClip(size_t start, size_t end, const Rect& rect) :
+        DrawQueueCondition(start, end), m_rect(rect) {}
+
+    void start(DrawQueue* queue) override;
+    void end(DrawQueue* queue) override;
+
+    Rect m_rect;
+    Rect m_prevClip;
+};
+
+struct DrawQueueConditionRotation : public DrawQueueCondition {
+    DrawQueueConditionRotation(size_t start, size_t end, const Point& center, float angle) :
+        DrawQueueCondition(start, end), m_center(center), m_angle(angle) {}
+
+    void start(DrawQueue* queue) override;
+    void end(DrawQueue* queue) override;
+
+    Point m_center;
+    float m_angle;
+};
+
+struct DrawQueueConditionMark : public DrawQueueCondition {
+    DrawQueueConditionMark(size_t start, size_t end, const Color& color) :
+        DrawQueueCondition(start, end), m_color(color)
+    {}
+
+    void start(DrawQueue* queue) override;
+    void end(DrawQueue* queue) override;
+
+    Color m_color;
 };
 
 class DrawQueue {
 public:
-    DrawQueue(DrawQueueType type) : m_type(type) {
-
-    }
+    DrawQueue() = default;
+    DrawQueue(const DrawQueue&) = delete;
+    DrawQueue& operator= (const DrawQueue&) = delete;
     ~DrawQueue() {
-        reset();
-    }
-    static void mergeDraw(DrawQueue& q1, DrawQueue& q2);
-
-    void draw();
-    void drawWidgets();
-
-    DrawQueueItem* add(const Rect& dest, const TexturePtr& texture, const Rect& src, Color color = Color::white, float depth = -1) {
-        if (m_blocked)
-            return nullptr;
-        DrawQueueItem* item = new DrawQueueItem(dest, texture, src, color.opacity(m_opacity), depth == -1 ? m_depth : depth);
-        m_queue.push_back(item);
-        return item;
-    }
-    DrawQueueOutfit* addOutfit(uint64_t key, const Rect& dest) {
-        if (m_blocked)
-            return nullptr;
-        DrawQueueOutfit* item = new DrawQueueOutfit(key, dest, Color::white.opacity(m_opacity), m_depth);
-        m_queue.push_back(item);
-        return item;
-    }
-    void addBoundingRect(const Rect& dest, const Color& color, int innerLineWidth = 1);
-    void addWidget(const Point& dest, const UIWidgetPtr& widget, float depth = -1)
-    {
-        m_widgets.push_back(DrawQueueWidget{ dest, widget, depth == -1 ? m_depth : depth });
-    }
-
-
-    void setLastItemAsMarked(const Color& color) {
-        if (m_queue.empty())
-            return;
-        m_queue.back()->mark = color;
-    }
-
-    DrawQueueOutfit* getLastOutfit() {
-        if (m_queue.empty())
-            return nullptr;
-        return m_queue.back()->getOutfit();
-    }
-
-    void reset() {
-        for (auto& it : m_queue)
-            delete it;
+        for (auto& item : m_queue)
+            delete item;
         m_queue.clear();
-        m_widgets.clear();
-        m_opacity = 1;
-        m_blocked = false;
-        m_depth = 0;
+        for (auto& condition : m_conditions)
+            delete condition;
+        m_conditions.clear();
     }
 
-    std::vector<DrawQueueItem*>& items() {
-        return m_queue;
+    void draw(DrawType drawType = DRAW_ALL);
+
+    void add(DrawQueueItem* item)
+    {
+        m_queue.push_back(item);
+    }
+    DrawQueueItemTexturedRect* addTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src, const Color& color = Color::white)
+    {
+        DrawQueueItemTexturedRect* item(new DrawQueueItemTexturedRect(dest, texture, src, color));
+        m_queue.push_back(item);
+        return item;
+    }
+    void addTextureCoords(CoordsBuffer& coords, const TexturePtr& texture, const Color& color = Color::white)
+    {
+        m_queue.push_back(new DrawQueueItemTextureCoords(coords, texture, color));
+    }
+    void addFilledRect(const Rect& dest, const Color& color = Color::white)
+    {
+        m_queue.push_back(new DrawQueueItemFilledRect(dest, color));
+    }
+    void addFillCoords(CoordsBuffer& coords, const Color& color = Color::white)
+    {
+        m_queue.push_back(new DrawQueueItemFillCoords(coords, color));
+    }
+    void addClearRect(const Rect& dest, const Color& color = Color::white)
+    {
+        m_queue.push_back(new DrawQueueItemClearRect(dest, color));
+    }
+    void addText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align = Fw::AlignTopLeft, const Color& color = Color::white);
+    void addColoredText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const std::vector<std::pair<int, Color>>& colors);
+    DrawQueueItemOutfit* addOutfit(const Rect& dest, const TexturePtr& texture, const Rect& src, const Point& offset, int colors, const Color& color = Color::white)
+    {
+        DrawQueueItemOutfit* outfit = new DrawQueueItemOutfit(dest, texture, src, offset, colors, color);
+        m_queue.push_back(outfit);
+        return outfit;
     }
 
-    void setAtlas(TexturePtr atlas) {
-        m_atlas = atlas;
+    void addFilledTriangle(const Point& a, const Point& b, const Point& c, const Color& color = Color::white)
+    {
+        if (a == b || a == c || b == c)
+            return;
+
+        CoordsBuffer coordsBuffer;
+        coordsBuffer.addTriangle(a, b, c);
+        addFillCoords(coordsBuffer, color);
     }
-    TexturePtr getAtlas() {
-        return m_atlas;
+    void addBoundingRect(const Rect& dest, int innerLineWidth, const Color& color = Color::white)
+    {
+        if (dest.isEmpty() || innerLineWidth == 0)
+            return;
+
+        CoordsBuffer coordsBuffer;
+        coordsBuffer.addBoudingRect(dest, innerLineWidth);
+        addFillCoords(coordsBuffer, color);
     }
 
-    void setDepth(float depth) {
-        m_depth = depth;
+    void setFrameBuffer(const Rect& dest, const Size& size, const Rect& src);
+    bool hasFrameBuffer()
+    {
+        return m_useFrameBuffer;
     }
-    float getDepth() {
-        return m_depth;
+    Rect getFrameBufferDest()
+    {
+        return m_frameBufferDest;
+    }
+    Size getFrameBufferSize()
+    {
+        return m_frameBufferSize;
+    }
+    Rect getFrameBufferSrc()
+    {
+        return m_frameBufferSrc;
     }
 
-    void setOpacity(float opacity) {
-        m_opacity = opacity;
-    }
-    float getOpacity() {
-        return m_opacity;
+    size_t size()
+    {
+        return m_queue.size();
     }
 
-    void block() {
-        m_blocked = true;
+    void setOpacity(size_t start, float opacity)
+    {
+        for (size_t i = start; i < m_queue.size(); ++i) {
+            m_queue[i]->m_color = m_queue[i]->m_color.opacity(opacity);
+        }
     }
-    void unblock() {
-        m_blocked = false;
+
+    void setClip(size_t start, const Rect& clip)
+    {
+        if (start == m_queue.size()) return;
+        m_conditions.push_back(new DrawQueueConditionClip(start, m_queue.size(), clip));
     }
-    void setBlocked(bool value) {
-        m_blocked = value;
+
+    void setRotation(size_t start, const Point& center, float angle)
+    {
+        if (start == m_queue.size() || angle == 0) return;
+        m_conditions.push_back(new DrawQueueConditionRotation(start, m_queue.size(), center, angle));
     }
-    bool isBlocked() {
-        return m_blocked;
+
+    void setMark(size_t start, const Color& color)
+    {
+        if (start == m_queue.size()) return;
+        m_conditions.push_back(new DrawQueueConditionMark(start, m_queue.size(), color));
     }
+
+    void markMapPosition()
+    {
+        mapPosition = m_queue.size();
+    }
+    void correctOutfit(const Rect& dest, int fromPos);
 
 private:
-    DrawQueueType m_type;
     std::vector<DrawQueueItem*> m_queue;
-    std::vector<DrawQueueWidget> m_widgets;
-    TexturePtr m_atlas = nullptr;
-    float m_depth = 0;
-    float m_opacity = 1;
-    bool m_blocked = false;
+    std::vector<DrawQueueCondition*> m_conditions;
+    Size m_frameBufferSize;
+    Rect m_frameBufferDest, m_frameBufferSrc;
+    size_t mapPosition = 0;
+    bool m_useFrameBuffer = false;
+    float m_scaling = 1.f;
+
+    friend struct DrawQueueConditionMark;
 };
+
+extern std::shared_ptr<DrawQueue> g_drawQueue;
 
 #endif

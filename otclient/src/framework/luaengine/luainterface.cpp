@@ -25,7 +25,7 @@
 
 #include <framework/core/resourcemanager.h>
 #include <framework/util/stats.h>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(ANDROID)
 #include <luajit/lua.hpp>
 #else
 #include <lua.hpp>
@@ -59,7 +59,7 @@ void LuaInterface::init()
     pop();
 
     // check if demangle_class is working as expected
-    assert(stdext::demangle_class<LuaObject>() == "LuaObject");
+    VALIDATE(stdext::demangle_class<LuaObject>() == "LuaObject");
 
     // register LuaObject, the base of all other objects
     registerClass<LuaObject>();
@@ -77,8 +77,8 @@ void LuaInterface::terminate()
 {
     // close lua state, it will release all objects
     closeLuaState();
-    assert(m_totalFuncRefs == 0);
-    assert(m_totalObjRefs == 0);
+    VALIDATE(m_totalFuncRefs == 0);
+    VALIDATE(m_totalObjRefs == 0);
 }
 
 void LuaInterface::registerSingletonClass(const std::string& className)
@@ -200,7 +200,7 @@ int LuaInterface::luaObjectGetEvent(LuaInterface* lua)
     // stack: obj, key
     LuaObjectPtr obj = lua->toObject(-2);
     std::string key = lua->toString(-1);
-    assert(obj);
+    VALIDATE(obj);
 
     lua->remove(-1); // removes key
 
@@ -208,7 +208,7 @@ int LuaInterface::luaObjectGetEvent(LuaInterface* lua)
     lua->getMetatable(); // pushes obj metatable
     lua->getField("fieldmethods"); // push obj fieldmethods
     lua->remove(-2); // removes obj metatable
-    lua->getField("get_" + key); // pushes get method
+    lua->getField(std::string("get_") + key); // pushes get method
     lua->remove(-2); // remove obj fieldmethods
     if(!lua->isNil()) { // is the get method not nil?
         lua->insert(-2); // moves obj to the top
@@ -243,7 +243,7 @@ int LuaInterface::luaObjectSetEvent(LuaInterface* lua)
     // stack: obj, key, value
     LuaObjectPtr obj = lua->toObject(-3);
     std::string key = lua->toString(-2);
-    assert(obj);
+    VALIDATE(obj);
 
     lua->remove(-2); // removes key
     lua->insert(-2); // moves obj to the top
@@ -252,7 +252,7 @@ int LuaInterface::luaObjectSetEvent(LuaInterface* lua)
     lua->getMetatable(); // pushes obj metatable
     lua->getField("fieldmethods"); // push obj fieldmethods
     lua->remove(-2); // removes obj metatable
-    lua->getField("set_" + key); // pushes set method
+    lua->getField(std::string("set_") + key); // pushes set method
     lua->remove(-2); // remove obj fieldmethods
     if(!lua->isNil()) { // is the set method not nil?
         lua->insert(-3); // moves func to -3
@@ -277,7 +277,7 @@ int LuaInterface::luaObjectEqualEvent(LuaInterface* lua)
     if(lua->isUserdata(-1) && lua->isUserdata(-2)) {
         LuaObjectPtr* objPtr2 = static_cast<LuaObjectPtr*>(lua->popUserdata());
         LuaObjectPtr* objPtr1 = static_cast<LuaObjectPtr*>(lua->popUserdata());
-        assert(objPtr1 && objPtr2);
+        VALIDATE(objPtr1 && objPtr2);
         if(*objPtr1 == *objPtr2)
             ret = true;
     } else
@@ -291,7 +291,7 @@ int LuaInterface::luaObjectCollectEvent(LuaInterface* lua)
 {
     // gets object pointer
     auto objPtr = static_cast<LuaObjectPtr*>(lua->popUserdata());
-    assert(objPtr);
+    VALIDATE(objPtr);
 
     // resets pointer to decrease object use count
     objPtr->reset();
@@ -336,7 +336,7 @@ void LuaInterface::loadScript(const std::string& fileName)
     filePath = g_resources.guessFilePath(filePath, "lua");
 
     std::string buffer = g_resources.readFileContents(filePath);
-    std::string source = "@" + filePath;
+    std::string source = std::string("@") + filePath;
     loadBuffer(buffer, source);
 }
 
@@ -463,7 +463,7 @@ std::string LuaInterface::getCurrentFunction(int level)
 
 int LuaInterface::safeCall(int numArgs, int numRets, const std::shared_ptr<std::string>& error)
 {
-    assert(hasIndex(-numArgs-1));
+    VALIDATE(hasIndex(-numArgs-1));
 
     // saves the current stack size for calculating the number of results later
     int previousStackSize = stackSize();
@@ -678,7 +678,7 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 {
     // retrieves function pointer from userdata
     auto funcPtr = static_cast<LuaCppFunctionPtr*>(g_lua.popUpvalueUserdata());
-    assert(funcPtr);
+    VALIDATE(funcPtr);
 
     int numRets = 0;
 
@@ -690,7 +690,7 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
         g_lua.m_cppCallbackDepth++;
         numRets = (*(funcPtr->get()))(&g_lua);
         g_lua.m_cppCallbackDepth--;
-        assert(numRets == g_lua.stackSize());
+        VALIDATE(numRets == g_lua.stackSize());
     } catch(stdext::exception& e) {
         // cleanup stack
         while(g_lua.stackSize() > 0)
@@ -709,7 +709,7 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 int LuaInterface::luaCollectCppFunction(lua_State* L)
 {
     auto funcPtr = static_cast<LuaCppFunctionPtr*>(g_lua.popUserdata());
-    assert(funcPtr);
+    VALIDATE(funcPtr);
     funcPtr->reset();
     g_lua.m_totalFuncRefs--;
     return 0;
@@ -819,27 +819,27 @@ std::string LuaInterface::generateByteCode(const std::string& buffer, std::strin
 
 int LuaInterface::pcall(int numArgs, int numRets, int errorFuncIndex)
 {
-    assert(hasIndex(-numArgs - 1));
+    VALIDATE(hasIndex(-numArgs - 1));
     return lua_pcall(L, numArgs, numRets, errorFuncIndex);
 }
 
 void LuaInterface::call(int numArgs, int numRets)
 {
-    assert(hasIndex(-numArgs - 1));
+    VALIDATE(hasIndex(-numArgs - 1));
     lua_call(L, numArgs, numRets);
 }
 
 void LuaInterface::error()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     lua_error(L);
 }
 
 int LuaInterface::ref()
 {
     int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-    assert(ref != LUA_NOREF);
-    assert(ref < 2147483647);
+    VALIDATE(ref != LUA_NOREF);
+    VALIDATE(ref < 2147483647);
     return ref;
 }
 
@@ -873,7 +873,7 @@ void LuaInterface::unref(int ref)
 
 const char* LuaInterface::typeName(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     int type = lua_type(L, index);
     return lua_typename(L, type);
 }
@@ -920,19 +920,19 @@ std::string LuaInterface::functionSource()
 
 void LuaInterface::insert(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_insert(L, index);
 }
 
 void LuaInterface::remove(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_remove(L, index);
 }
 
 bool LuaInterface::next(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_next(L, index);
 }
 
@@ -962,66 +962,65 @@ void LuaInterface::setGlobalEnvironment(int env)
 {
     pushThread();
     getRef(env);
-    assert(isTable());
+    VALIDATE(isTable());
     setEnv();
     pop();
 }
 
 void LuaInterface::setMetatable(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_setmetatable(L, index);
 }
 
 void LuaInterface::getMetatable(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_getmetatable(L, index);
 }
 
 void LuaInterface::getField(const char* key, int index)
 {
-    assert(hasIndex(index));
-    assert(isUserdata(index) || isTable(index));
+    VALIDATE(hasIndex(index));
+    VALIDATE(isUserdata(index) || isTable(index));
     lua_getfield(L, index, key);
 }
 
 void LuaInterface::setField(const char* key, int index)
 {
-    assert(hasIndex(index));
-    assert(isUserdata(index) || isTable(index));
+    VALIDATE(hasIndex(index));
+    VALIDATE(isUserdata(index) || isTable(index));
     lua_setfield(L, index, key);
 }
 
 void LuaInterface::getEnv(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_getfenv(L, index);
 }
 
 void LuaInterface::setEnv(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_setfenv(L, index);
 }
 
 void LuaInterface::getTable(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_gettable(L, index);
 }
 
 void LuaInterface::setTable(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_settable(L, index);
 }
 
 void LuaInterface::clearTable(int index)
 {
-    assert(hasIndex(index) && isTable(index));
+    VALIDATE(hasIndex(index) && isTable(index));
     pushNil(); // table, nil
-    bool stop = false;
     while(next(index-1)) { // table, key, value
         pop(); // table, key
         pushValue(); // table, key, key
@@ -1047,7 +1046,7 @@ void LuaInterface::getGlobalField(const std::string& globalKey, const std::strin
 {
     getGlobal(globalKey);
     if(!isNil()) {
-        assert(isTable() || isUserdata());
+        VALIDATE(isTable() || isUserdata());
         getField(fieldKey);
         remove(-2);
     }
@@ -1055,31 +1054,31 @@ void LuaInterface::getGlobalField(const std::string& globalKey, const std::strin
 
 void LuaInterface::setGlobal(const std::string& key)
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     lua_setglobal(L, key.c_str());
 }
 
 void LuaInterface::rawGet(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_rawget(L, index);
 }
 
 void LuaInterface::rawGeti(int n, int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_rawgeti(L, index, n);
 }
 
 void LuaInterface::rawSet(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_rawset(L, index);
 }
 
 void LuaInterface::rawSeti(int n, int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_rawseti(L, index, n);
 }
 
@@ -1101,14 +1100,14 @@ void* LuaInterface::newUserdata(int size)
 void LuaInterface::pop(int n)
 {
     if(n > 0) {
-        assert(hasIndex(-n));
+        VALIDATE(hasIndex(-n));
         lua_pop(L, n);
     }
 }
 
 long LuaInterface::popInteger()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     long v = toInteger(-1);
     pop();
     return v;
@@ -1116,7 +1115,7 @@ long LuaInterface::popInteger()
 
 double LuaInterface::popNumber()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     double v = toNumber(-1);
     pop();
     return v;
@@ -1124,7 +1123,7 @@ double LuaInterface::popNumber()
 
 bool LuaInterface::popBoolean()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     bool v = toBoolean(-1);
     pop();
     return v;
@@ -1132,7 +1131,7 @@ bool LuaInterface::popBoolean()
 
 std::string LuaInterface::popString()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     std::string v = toString(-1);
     pop();
     return v;
@@ -1140,7 +1139,7 @@ std::string LuaInterface::popString()
 
 void* LuaInterface::popUserdata()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     void* v = toUserdata(-1);
     pop();
     return v;
@@ -1148,7 +1147,7 @@ void* LuaInterface::popUserdata()
 
 LuaObjectPtr LuaInterface::popObject()
 {
-    assert(hasIndex(-1));
+    VALIDATE(hasIndex(-1));
     LuaObjectPtr v = toObject(-1);
     pop();
     return v;
@@ -1185,8 +1184,11 @@ void LuaInterface::pushBoolean(bool v)
 
 void LuaInterface::pushCString(const char* v)
 {
-    assert(v);
-    lua_pushstring(L, v);
+    if (!v) {
+        lua_pushnil(L);
+    } else {
+        lua_pushstring(L, v);
+    }
     checkStack();
 }
 
@@ -1244,86 +1246,86 @@ void LuaInterface::pushCppFunction(const LuaCppFunction& func)
 
 void LuaInterface::pushValue(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     lua_pushvalue(L, index);
     checkStack();
 }
 
 bool LuaInterface::isNil(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_isnil(L, index);
 }
 
 bool LuaInterface::isBoolean(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_isboolean(L, index);
 }
 
 bool LuaInterface::isNumber(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_isnumber(L, index);
 }
 
 bool LuaInterface::isString(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_isstring(L, index);
 }
 
 bool LuaInterface::isTable(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_istable(L, index);
 }
 
 bool LuaInterface::isFunction(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_isfunction(L, index);
 }
 
 bool LuaInterface::isCFunction(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_iscfunction(L, index);
 }
 
 bool LuaInterface::isUserdata(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_isuserdata(L, index);
 }
 
 bool LuaInterface::toBoolean(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return (bool)lua_toboolean(L, index);
 }
 
 int LuaInterface::toInteger(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_tointeger(L, index);
 }
 
 double LuaInterface::toNumber(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_tonumber(L, index);
 }
 
 const char* LuaInterface::toCString(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_tostring(L, index);
 }
 
 std::string LuaInterface::toString(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     std::string str;
     size_t len;
     const char *c_str = lua_tolstring(L, index, &len);
@@ -1334,13 +1336,13 @@ std::string LuaInterface::toString(int index)
 
 void* LuaInterface::toUserdata(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     return lua_touserdata(L, index);
 }
 
 LuaObjectPtr LuaInterface::toObject(int index)
 {
-    assert(hasIndex(index));
+    VALIDATE(hasIndex(index));
     if(isUserdata(index)) {
         LuaObjectPtr* objRef = static_cast<LuaObjectPtr*>(toUserdata(index));
         if(objRef && *objRef)

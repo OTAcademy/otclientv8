@@ -37,13 +37,6 @@ class FrameBufferManager;
 class Shader;
 class ShaderProgram;
 class PainterShaderProgram;
-class Particle;
-class ParticleType;
-class ParticleEmitter;
-class ParticleAffector;
-class ParticleSystem;
-class ParticleEffect;
-class ParticleEffectType;
 
 typedef stdext::shared_object_ptr<Image> ImagePtr;
 typedef stdext::shared_object_ptr<Texture> TexturePtr;
@@ -54,13 +47,6 @@ typedef stdext::shared_object_ptr<FrameBuffer> FrameBufferPtr;
 typedef stdext::shared_object_ptr<Shader> ShaderPtr;
 typedef stdext::shared_object_ptr<ShaderProgram> ShaderProgramPtr;
 typedef stdext::shared_object_ptr<PainterShaderProgram> PainterShaderProgramPtr;
-typedef stdext::shared_object_ptr<Particle> ParticlePtr;
-typedef stdext::shared_object_ptr<ParticleType> ParticleTypePtr;
-typedef stdext::shared_object_ptr<ParticleEmitter> ParticleEmitterPtr;
-typedef stdext::shared_object_ptr<ParticleAffector> ParticleAffectorPtr;
-typedef stdext::shared_object_ptr<ParticleSystem> ParticleSystemPtr;
-typedef stdext::shared_object_ptr<ParticleEffect> ParticleEffectPtr;
-typedef stdext::shared_object_ptr<ParticleEffectType> ParticleEffectTypePtr;
 typedef std::vector<ShaderPtr> ShaderList;
 
 #endif

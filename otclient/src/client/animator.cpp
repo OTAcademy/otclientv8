@@ -57,8 +57,8 @@ void Animator::unserialize(int animationPhases, const FileStreamPtr& fin)
 
     m_phase = getStartPhase();
 
-    assert(m_animationPhases == (int)m_phaseDurations.size());
-    assert(m_startPhase >= -1 && m_startPhase < m_animationPhases);
+    VALIDATE(m_animationPhases == (int)m_phaseDurations.size());
+    VALIDATE(m_startPhase >= -1 && m_startPhase < m_animationPhases);
 }
 
 void Animator::serialize(const FileStreamPtr& fin)
@@ -203,7 +203,7 @@ int Animator::getLoopPhase()
 
 int Animator::getPhaseDuration(int phase)
 {
-    assert(phase < (int)m_phaseDurations.size());
+    VALIDATE(phase < (int)m_phaseDurations.size());
 
     auto& data = m_phaseDurations.at(phase);
     if (data.second == 0) return data.first;

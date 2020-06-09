@@ -25,20 +25,19 @@
 
 #include <framework/core/eventdispatcher.h>
 
-AnimatedTexture::AnimatedTexture(const Size& size, std::vector<ImagePtr> frames, std::vector<int> framesDelay, bool buildMipmaps, bool compress)
+AnimatedTexture::AnimatedTexture(const Size& size, std::vector<ImagePtr> frames, std::vector<int> framesDelay, bool buildMipmaps, bool compress) :
+    Texture(size)
 {
-    if(!setupSize(size, buildMipmaps))
-        return;
-
     for(uint i=0;i<frames.size();++i) {
         m_frames.push_back(new Texture(frames[i], buildMipmaps, compress));
     }
 
     m_framesDelay = framesDelay;
     m_hasMipmaps = buildMipmaps;
-    m_id = m_frames[0]->getId();
+    m_uniqueId = 0;
     m_currentFrame = 0;
     m_animTimer.restart();
+    setupTranformMatrix();
 }
 
 AnimatedTexture::~AnimatedTexture()
@@ -48,8 +47,6 @@ AnimatedTexture::~AnimatedTexture()
 
 bool AnimatedTexture::buildHardwareMipmaps()
 {
-    if(!g_graphics.canUseHardwareMipmaps())
-        return false;
     for(const TexturePtr& frame : m_frames)
         frame->buildHardwareMipmaps();
     m_hasMipmaps = true;
@@ -70,14 +67,14 @@ void AnimatedTexture::setRepeat(bool repeat)
     m_repeat = repeat;
 }
 
-void AnimatedTexture::updateAnimation()
+void AnimatedTexture::update()
 {
-    if(m_animTimer.ticksElapsed() < m_framesDelay[m_currentFrame])
-        return;
+    if (m_animTimer.ticksElapsed() >= m_framesDelay[m_currentFrame]) {
+        m_animTimer.restart();
+        m_currentFrame = (m_currentFrame + 1) % m_frames.size();
+    }
 
-    m_animTimer.restart();
-    m_currentFrame++;
-    if(m_currentFrame >= m_frames.size())
-        m_currentFrame = 0;
+    m_frames[m_currentFrame]->update();
     m_id = m_frames[m_currentFrame]->getId();
+    m_uniqueId = m_frames[m_currentFrame]->getUniqueId();
 }

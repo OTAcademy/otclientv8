@@ -110,7 +110,7 @@ void InputMessage::fillBuffer(uint8 *buffer, uint32 size)
 
 void InputMessage::setHeaderSize(uint32 size)
 {
-    assert(MAX_HEADER_SIZE - size >= 0);
+    VALIDATE(MAX_HEADER_SIZE >= size);
     m_headerPos = MAX_HEADER_SIZE - size;
     m_readPos = m_headerPos;
 }

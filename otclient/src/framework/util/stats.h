@@ -8,7 +8,6 @@
 #include <mutex>
 #include <chrono>
 #include <unordered_map>
-#include <cassert>
 #include <set>
 
 // NOT THREAD SAFE
@@ -97,6 +96,7 @@ private:
     int destroyedThings = 0;
     int createdCreatures = 0;
     int destroyedCreatures = 0;
+    std::mutex m_mutex;
 };
 
 extern Stats g_stats;
@@ -122,27 +122,6 @@ private:
 protected:
     uint64_t m_minusTime = 0;
     std::chrono::high_resolution_clock::time_point m_timePoint;
-};
-
-class AutoStatRecursive : public AutoStat {
-public:
-    AutoStatRecursive(const std::string& description, const std::string& extraDescription = "") : AutoStat(STATS_GENERAL, description, extraDescription) {
-        parent = activeStat;
-        activeStat = this;
-    }
-
-    ~AutoStatRecursive() {
-        activeStat = parent;
-        if(activeStat) 
-            activeStat->m_minusTime += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_timePoint).count();
-    }
-
-    AutoStatRecursive(const AutoStatRecursive&) = delete;
-    AutoStatRecursive & operator=(const AutoStatRecursive&) = delete;
-
-private:
-    static AutoStatRecursive* activeStat; /* = nullptr */
-    AutoStatRecursive* parent;
 };
 
 #endif

@@ -55,7 +55,6 @@ protected:
     stdext::boolean<false> m_autoRotating;
     stdext::boolean<false> m_redraw;
     int m_outfitNumber = 0;
-    FrameBufferPtr m_framebuffer;
     Otc::Direction m_direction = Otc::South;
     float m_scale = 1.0;
     bool m_optimized = false;

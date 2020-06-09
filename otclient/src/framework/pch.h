@@ -28,7 +28,6 @@
 #include <cstdlib>
 #include <cstddef>
 #include <cstring>
-#include <cassert>
 #include <cmath>
 
 // common STL headers
@@ -57,10 +56,15 @@
 #include <mutex>
 #include <future>
 #include <chrono>
-#include <filesystem>
 #include <random>
+#ifndef ANDROID
+#include <filesystem>
+#endif
 
  // boost
+#ifdef ANDROID
+#define BOOST_UUID_RANDOM_PROVIDER_FORCE_POSIX
+#endif
 #include <boost/system/config.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
@@ -79,6 +83,5 @@
 #include <boost/beast/http/parser.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
-
 
 #endif

@@ -28,16 +28,17 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/util/crypt.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/crypt.h
     ${CMAKE_CURRENT_LIST_DIR}/util/databuffer.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/extras.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/extras.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/framecounter.h
     ${CMAKE_CURRENT_LIST_DIR}/util/matrix.h
     ${CMAKE_CURRENT_LIST_DIR}/util/point.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/qrcodegen.c
+    ${CMAKE_CURRENT_LIST_DIR}/util/qrcodegen.h
     ${CMAKE_CURRENT_LIST_DIR}/util/rect.h
     ${CMAKE_CURRENT_LIST_DIR}/util/size.h
     ${CMAKE_CURRENT_LIST_DIR}/util/stats.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/stats.h
-    ${CMAKE_CURRENT_LIST_DIR}/util/extras.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/util/extras.h
-    ${CMAKE_CURRENT_LIST_DIR}/util/qrcodegen.c
-    ${CMAKE_CURRENT_LIST_DIR}/util/qrcodegen.h
 
     # stdext
     ${CMAKE_CURRENT_LIST_DIR}/stdext/any.h
@@ -49,6 +50,7 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/stdext/dumper.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/dynamic_storage.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/exception.h
+    ${CMAKE_CURRENT_LIST_DIR}/stdext/fastrand.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/format.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/math.cpp
     ${CMAKE_CURRENT_LIST_DIR}/stdext/math.h
@@ -60,18 +62,19 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/stdext/stdext.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/string.cpp
     ${CMAKE_CURRENT_LIST_DIR}/stdext/string.h
+    ${CMAKE_CURRENT_LIST_DIR}/stdext/thread.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/time.cpp
     ${CMAKE_CURRENT_LIST_DIR}/stdext/time.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/traits.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/types.h
-    ${CMAKE_CURRENT_LIST_DIR}/stdext/uri.h
     ${CMAKE_CURRENT_LIST_DIR}/stdext/uri.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/stdext/uri.h
 
     # core
-    ${CMAKE_CURRENT_LIST_DIR}/core/application.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/core/application.h
     ${CMAKE_CURRENT_LIST_DIR}/core/adaptiverenderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/adaptiverenderer.h
+    ${CMAKE_CURRENT_LIST_DIR}/core/application.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/core/application.h
     ${CMAKE_CURRENT_LIST_DIR}/core/asyncdispatcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/asyncdispatcher.h
     ${CMAKE_CURRENT_LIST_DIR}/core/binarytree.cpp
@@ -89,6 +92,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/core/eventdispatcher.h
     ${CMAKE_CURRENT_LIST_DIR}/core/filestream.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/filestream.h
+    ${CMAKE_CURRENT_LIST_DIR}/core/graphicalapplication.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/core/graphicalapplication.h
     ${CMAKE_CURRENT_LIST_DIR}/core/inputevent.h
     ${CMAKE_CURRENT_LIST_DIR}/core/logger.cpp
     ${CMAKE_CURRENT_LIST_DIR}/core/logger.h
@@ -105,6 +110,8 @@ set(framework_SOURCES ${framework_SOURCES}
 
     # luaengine
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/declarations.h
+    ${CMAKE_CURRENT_LIST_DIR}/luaengine/lbitlib.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/luaengine/lbitlib.h
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/luabinder.h
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/luaexception.cpp
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/luaexception.h
@@ -114,18 +121,16 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/luaobject.h
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/luavaluecasts.cpp
     ${CMAKE_CURRENT_LIST_DIR}/luaengine/luavaluecasts.h
-    ${CMAKE_CURRENT_LIST_DIR}/luaengine/lbitlib.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/luaengine/lbitlib.h
 
     # otml
     ${CMAKE_CURRENT_LIST_DIR}/otml/declarations.h
+    ${CMAKE_CURRENT_LIST_DIR}/otml/otml.h
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmldocument.cpp
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmldocument.h
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlemitter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlemitter.h
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlexception.cpp
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlexception.h
-    ${CMAKE_CURRENT_LIST_DIR}/otml/otml.h
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlnode.cpp
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlnode.h
     ${CMAKE_CURRENT_LIST_DIR}/otml/otmlparser.cpp
@@ -260,7 +265,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
 else()
     message(STATUS "Debug information: OFF")
     if(NOT CMAKE_BUILD_TYPE STREQUAL "CompileSpeed")
-        set(framework_DEFINITIONS ${framework_DEFINITIONS} -DNDEBUG) # NDEBUG disable asserts
+        #set(framework_DEFINITIONS ${framework_DEFINITIONS} -DNDEBUG) # NDEBUG disable asserts
     endif()
     if(NOT APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,-s") # strip all debug information
@@ -354,17 +359,23 @@ if(FRAMEWORK_GRAPHICS)
     endif()
 
     set(framework_SOURCES ${framework_SOURCES}
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/atlas.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/atlas.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/animatedtexture.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/animatedtexture.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/apngloader.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/apngloader.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/atlas.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/atlas.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/bitmapfont.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/bitmapfont.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/cachedtext.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/cachedtext.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/colorarray.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/coordsbuffer.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/coordsbuffer.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/declarations.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/bitmapfont.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/bitmapfont.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/deptharray.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/drawcache.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/drawcache.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/drawqueue.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/drawqueue.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/fontmanager.cpp
@@ -384,60 +395,45 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/graphics/painter.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/paintershaderprogram.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/paintershaderprogram.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particleaffector.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particleaffector.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particle.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particle.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particletype.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particletype.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particleemitter.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particleemitter.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particleeffect.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particleeffect.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particlemanager.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particlemanager.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particlesystem.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/particlesystem.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shader.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shader.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shaderprogram.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shaderprogram.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/textrender.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/textrender.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/texture.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/texture.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/texturemanager.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/texturemanager.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/vertexarray.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/apngloader.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/apngloader.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/newshader.h
-        ${CMAKE_CURRENT_LIST_DIR}/graphics/ogl/shadersources.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/shaders/newshader.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/shaders/shaders.h
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/shaders/shadersources.h
 
         # ui
         ${CMAKE_CURRENT_LIST_DIR}/ui/declarations.h
+        ${CMAKE_CURRENT_LIST_DIR}/ui/ui.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uianchorlayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uianchorlayout.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiboxlayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiboxlayout.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uigridlayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uigridlayout.h
-        ${CMAKE_CURRENT_LIST_DIR}/ui/ui.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uihorizontallayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uihorizontallayout.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uilayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uilayout.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uimanager.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uimanager.h
-        ${CMAKE_CURRENT_LIST_DIR}/ui/uiparticles.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/ui/uiparticles.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uitextedit.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uitextedit.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uitranslator.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uitranslator.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiverticallayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiverticallayout.h
-        ${CMAKE_CURRENT_LIST_DIR}/ui/uiwidgetbasestyle.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiwidget.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiwidget.h
+        ${CMAKE_CURRENT_LIST_DIR}/ui/uiwidgetbasestyle.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiwidgetimage.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiwidgettext.cpp
 

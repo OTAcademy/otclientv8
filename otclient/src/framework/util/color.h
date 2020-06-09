@@ -29,6 +29,7 @@
 #include "../const.h"
 #include <iomanip>
 #include <algorithm>
+#include <sstream>
 
 class Color
 {
@@ -40,23 +41,20 @@ public:
     Color(float r, float g, float b, float a = 1.0f) : m_r(r), m_g(g), m_b(b), m_a(a) { }
     Color(const std::string& coltext);
 
-    uint8 a() const { return m_a*255.0f; }
-    uint8 b() const { return m_b*255.0f; }
-    uint8 g() const { return m_g*255.0f; }
-    uint8 r() const { return m_r*255.0f; }
+    uint8 a() const { return 255.0f * m_a; }
+    uint8 b() const { return 255.0f * m_b; }
+    uint8 g() const { return 255.0f * m_g; }
+    uint8 r() const { return 255.0f * m_r; }
 
     float aF() const { return m_a; }
     float bF() const { return m_b; }
     float gF() const { return m_g; }
     float rF() const { return m_r; }
 
-    uint32 rgba() const { return uint32(a() | b() << 8 | g() << 16 | r() << 24); }
-    uint32 argb() const { return uint32(r() | g() << 8 | b() << 16 | a() << 24); }
-
-    void setRed(int r) { m_r = uint8(r)/255.0f; }
-    void setGreen(int g) { m_g = uint8(g)/255.0f; }
-    void setBlue(int b) { m_b = uint8(b)/255.0f; }
-    void setAlpha(int a) { m_a = uint8(a)/255.0f; }
+    void setRed(int r) { m_r = 0.003921f * r; }
+    void setGreen(int g) { m_g = 0.003921f * g; }
+    void setBlue(int b) { m_b = 0.003921f * b; }
+    void setAlpha(int a) { m_a = 0.003921f * a; }
 
     void setRed(float r) { m_r = r; }
     void setGreen(float g) { m_g = g; }
@@ -77,16 +75,23 @@ public:
     Color operator/(float v) const { return Color(m_r/v, m_g/v, m_b/v, m_a/v); }
 
     Color& operator=(uint32_t rgba) { setRGBA(rgba); return *this; }
-    bool operator==(uint32_t rgba) const { return this->rgba() == rgba; }
-
+    
     Color operator+=(const Color& other) const { 
         return Color(std::min<float>(1.0f, m_r + other.m_r), std::min<float>(1.0f, m_g + other.m_g),
             std::min<float>(1.0f, m_b + other.m_b), std::min<float>(1.0f, m_a + other.m_a));
     }
 
     Color& operator=(const Color& other) { m_r = other.m_r; m_g = other.m_g; m_b = other.m_b; m_a = other.m_a; return *this; }
-    bool operator==(const Color& other) const { return other.rgba() == rgba(); }
-    bool operator!=(const Color& other) const { return other.rgba() != rgba(); }
+    bool operator==(const Color& other) const {
+        if (std::abs(other.m_r - m_r) > 0.001) return false;
+        if (std::abs(other.m_g - m_g) > 0.001) return false;
+        if (std::abs(other.m_b - m_b) > 0.001) return false;
+        if (std::abs(other.m_a - m_a) > 0.001) return false;
+        return true;
+    }
+    bool operator!=(const Color& other) const { return !(other == *this); }
+
+    std::string toHex();
 
     static uint8 to8bit(const Color& color) {
         uint8 c = 0;
@@ -106,9 +111,7 @@ public:
         return Color(r, g, b);
     }
 
-    size_t hash() const {
-        return ((m_r + 10) * (m_g + 20) * (m_b + 30) * (m_a)) * 1024;
-    }
+    static Color getOutfitColor(int color);
 
     static const Color alpha;
     static const Color white;

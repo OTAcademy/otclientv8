@@ -36,11 +36,11 @@ class MapView : public LuaObject
 public:
     MapView();
     ~MapView();
-    void draw(const Rect& rect, const TilePtr& crosshairTile = nullptr);
+    void drawBackground(const Rect& rect, const TilePtr& crosshairTile = nullptr);
+    void drawForeground(const Rect& rect);
     void drawTexts(const Rect& rect, const Rect& srcRect);
 
 private:
-    void drawTiles(bool map, bool creatures, bool isFading, const TilePtr& crosshairTile, bool draw = true);
     void drawTileTexts(const Rect& rect, const Rect& srcRect);
     void updateGeometry(const Size& visibleDimension, const Size& optimizedSize);
     void updateVisibleTilesCache();
@@ -97,7 +97,7 @@ public:
     bool isDrawingHealthBarsOnTop() { return m_drawHealthBarsOnTop; }
 
     void setDrawLights(bool enable);
-    bool isDrawingLights() { return m_lightView != nullptr; }
+    bool isDrawingLights() { return m_drawLight; }
 
     void setDrawManaBar(bool enable) { m_drawManaBar = enable; }
     bool isDrawingManaBar() { return m_drawManaBar; }
@@ -112,8 +112,8 @@ public:
     void setFloorFading(int value) { m_floorFading = value; }
     void setCrosshair(const std::string& file);
 
-    void setShader(const PainterShaderProgramPtr& shader, float fadein, float fadeout);
-    PainterShaderProgramPtr getShader() { return m_shader; }
+    //void setShader(const PainterShaderProgramPtr& shader, float fadein, float fadeout);
+    //PainterShaderProgramPtr getShader() { return m_shader; }
 
     Position getPosition(const Point& point, const Size& mapSize);
 
@@ -122,16 +122,12 @@ public:
     MapViewPtr asMapView() { return static_self_cast<MapView>(); }
 
 private:
-    Rect calcFramebufferSource(const Size& destSize);
+    Rect calcFramebufferSource(const Size& destSize, bool inNextFrame = false);
     int calcFirstVisibleFloor(bool forFading = false);
     int calcLastVisibleFloor();
     Point transformPositionTo2D(const Position& position, const Position& relativePosition);
 
     stdext::timer m_mapRenderTimer;
-
-    DrawQueue drawQueueMap{ DRAW_QUEUE_MAP };
-    DrawQueue drawQueueCreatures{ DRAW_QUEUE_CREATURES };
-    DrawQueue drawQueueCreaturesInfo{ DRAW_QUEUE_CREATURES_INFO };
 
     int m_lockedFirstVisibleFloor;
     int m_cachedFirstVisibleFloor;
@@ -161,22 +157,21 @@ private:
     stdext::boolean<true> m_smooth;
 
     stdext::timer m_fadingFloorTimers[Otc::MAX_Z + 1];
-    float m_floorDepth[Otc::MAX_Z + 1];
 
     stdext::boolean<true> m_follow;
     std::vector<std::pair<TilePtr, bool>> m_cachedVisibleTiles;
     CreaturePtr m_followingCreature;
-    FrameBufferPtr m_framebuffer;
-    FrameBufferPtr m_mapbuffer;
-    PainterShaderProgramPtr m_shader;
+    //PainterShaderProgramPtr m_shader;
     Otc::DrawFlags m_drawFlags;
-    LightViewPtr m_lightView;
+    bool m_drawLight = false;
     float m_minimumAmbientLight;
+    std::unique_ptr<LightView> m_lightView;
+    TexturePtr m_lightTexture;
     Timer m_fadeTimer;
-    PainterShaderProgramPtr m_nextShader;
+    //PainterShaderProgramPtr m_nextShader;
     float m_fadeInTime;
     float m_fadeOutTime;
-    stdext::boolean<true> m_shaderSwitchDone;
+    //stdext::boolean<true> m_shaderSwitchDone;
 };
 
 #endif

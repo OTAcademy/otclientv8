@@ -41,27 +41,23 @@ void AnimatedText::drawText(const Point& dest, const Rect& visibleRect)
     Point p = dest;
     Size textSize = m_cachedText.getTextSize();
     float t = m_animationTimer.ticksElapsed();
-    p.x += (24 - textSize.width() / 2);
+    p.x -= textSize.width() / 2;
 
     if(g_game.getFeature(Otc::GameDiagonalAnimatedText)) {
         p.x -= (4 * t / tf) + (8 * t * t / tftf);
     }
 
-    p.y += 8 + (-48 * t) / tf;
+    p.y += (-48 * t) / tf;
     p += m_offset;
     Rect rect(p, textSize);
 
     if(visibleRect.contains(rect)) {
-        //TODO: cache into a framebuffer
         float t0 = tf / 1.2;
+        Color color = m_color;
         if(t > t0) {
-            Color color = m_color;
             color.setAlpha((float)(1 - (t - t0) / (tf - t0)));
-            g_painter->setColor(color);
         }
-        else
-            g_painter->setColor(m_color);
-        m_cachedText.draw(rect);
+        m_cachedText.draw(rect, color);
     }
 }
 
@@ -98,12 +94,8 @@ bool AnimatedText::merge(const AnimatedTextPtr& other)
     try {
         int number = stdext::safe_cast<int>(m_cachedText.getText());
         int otherNumber = stdext::safe_cast<int>(other->getCachedText().getText());
-
-        std::string text = stdext::format("%d", number + otherNumber);
-        m_cachedText.setText(text);
+        m_cachedText.setText(std::to_string(number + otherNumber));
         return true;
-    }
-    catch(...) {
-        return false;
-    }
+    } catch(...) {}
+    return false;
 }

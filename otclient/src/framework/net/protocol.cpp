@@ -53,7 +53,7 @@ Protocol::Protocol()
 Protocol::~Protocol()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
 #endif
     disconnect();
     inflateEnd(&m_zstream);

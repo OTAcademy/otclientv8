@@ -117,15 +117,14 @@ int Http::download(const std::string& url, std::string path, int timeout) {
                 });
                 return;
             }
-            if (result->error.empty()) {
-                if (!path.empty() && path[0] == '/')
-                    m_downloads[path.substr(1)] = result;
-                else
-                    m_downloads[path] = result;
-            }
-
-            std::string checksum = g_crypt.md5Encode(std::string(result->response.begin(), result->response.end()), false);
-            g_dispatcher.addEventEx("Http::onDownload", [result, path, checksum]() {
+            std::string checksum = g_crypt.crc32(std::string(result->response.begin(), result->response.end()), false);
+            g_dispatcher.addEventEx("Http::onDownload", [&, result, path, checksum]() {
+                if (result->error.empty()) {
+                    if (!path.empty() && path[0] == '/')
+                        m_downloads[path.substr(1)] = result;
+                    else
+                        m_downloads[path] = result;
+                }
                 g_lua.callGlobalField("g_http", "onDownload", result->operationId, result->url, result->error, path, checksum);
             });
             m_operations.erase(operationId);

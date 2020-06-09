@@ -36,6 +36,8 @@ class LocalPlayer : public Player
 public:
     LocalPlayer();
 
+    void draw(const Point& dest, bool animate = true, LightView* lightView = nullptr) override;
+
     void unlockWalk() { m_walkLockExpiration = 0; }
     void lockWalk(int millis = 200);
     void stopAutoWalk();
@@ -44,7 +46,7 @@ public:
     bool isWalkLocked() {
         return (m_walkLockExpiration != 0 && g_clock.millis() < m_walkLockExpiration);
     }
-    void turn(Otc::Direction);
+    void turn(Otc::Direction) override;
 
     void setStates(int states);
     void setSkill(Otc::Skill skill, int level, int levelPercent);
@@ -97,15 +99,15 @@ public:
     bool hasSight(const Position& pos);
     bool isKnown() { return m_known; }
     bool isAutoWalking() { return m_autoWalkDestination.isValid(); }
-    bool isServerWalking() { return m_serverWalking; }
+    bool isServerWalking() override { return m_serverWalking; }
     bool isPremium() { return m_premium; }
     bool isPendingGame() { return m_pending; }
 
     LocalPlayerPtr asLocalPlayer() { return static_self_cast<LocalPlayer>(); }
-    bool isLocalPlayer() { return true; }
+    bool isLocalPlayer() override { return true; }
 
-    virtual void onAppear();
-    virtual void onPositionChange(const Position& newPos, const Position& oldPos);
+    void onAppear() override;
+    void onPositionChange(const Position& newPos, const Position& oldPos) override;
 
     // pre walking
     void preWalk(Otc::Direction direction);
@@ -147,9 +149,9 @@ protected:
     friend class Game;
 
 protected:
-    void updateWalkOffset(int totalPixelsWalked);
-    void updateWalk();
-    void terminateWalk();
+    void updateWalkOffset(int totalPixelsWalked, bool inNextFrame = false) override;
+    void updateWalk() override;
+    void terminateWalk() override;
 
 private:
     // walk related

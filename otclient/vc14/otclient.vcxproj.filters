@@ -97,9 +97,6 @@
     <Filter Include="Header Files\framework\otml">
       <UniqueIdentifier>{6e8f2aa5-569b-4c44-87b2-d9ff1bf2b350}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\framework\graphics\ogl">
-      <UniqueIdentifier>{8b96ee09-99f1-4c70-90c1-d99505de6264}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\framework\http">
       <UniqueIdentifier>{c3bd7dca-bac4-49e4-929b-b56b91bc51cd}</UniqueIdentifier>
     </Filter>
@@ -111,6 +108,9 @@
     </Filter>
     <Filter Include="Extras\proxy">
       <UniqueIdentifier>{f0f0ec5b-d8d1-40c3-aaa4-a28c031a4186}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\framework\graphics\shaders">
+      <UniqueIdentifier>{10c8d6a0-582a-4226-8dd3-943b203acabf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -199,27 +199,6 @@
       <Filter>Source Files\framework\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\graphics\paintershaderprogram.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particle.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particleaffector.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particleeffect.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particleemitter.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particlemanager.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particlesystem.cpp">
-      <Filter>Source Files\framework\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\graphics\particletype.cpp">
       <Filter>Source Files\framework\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\graphics\shader.cpp">
@@ -354,9 +333,6 @@
     <ClCompile Include="..\src\framework\ui\uimanager.cpp">
       <Filter>Source Files\framework\ui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\framework\ui\uiparticles.cpp">
-      <Filter>Source Files\framework\ui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\ui\uitextedit.cpp">
       <Filter>Source Files\framework\ui</Filter>
     </ClCompile>
@@ -430,12 +406,6 @@
       <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="..\src\client\localplayer.cpp">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\luafunctions.cpp">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\luavaluecasts.cpp">
       <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="..\src\client\map.cpp">
@@ -549,9 +519,6 @@
     <ClCompile Include="..\src\extras\proxy\proxy.cpp">
       <Filter>Extras\proxy</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\extras\proxy\client.cpp">
-      <Filter>Extras\proxy</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\http\websocket.cpp">
       <Filter>Source Files\framework\http</Filter>
     </ClCompile>
@@ -560,6 +527,21 @@
     </ClCompile>
     <ClCompile Include="..\src\framework\util\qrcodegen.c">
       <Filter>Source Files\framework\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\graphics\textrender.cpp">
+      <Filter>Source Files\framework\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\graphics\drawcache.cpp">
+      <Filter>Source Files\framework\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\luafunctions_client.cpp">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\luavaluecasts_client.cpp">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\extras\proxy\proxy_client.cpp">
+      <Filter>Extras\proxy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -666,27 +648,6 @@
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\paintershaderprogram.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particle.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particleaffector.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particleeffect.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particleemitter.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particlemanager.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particlesystem.h">
-      <Filter>Header Files\framework\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\particletype.h">
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\shader.h">
@@ -890,9 +851,6 @@
     <ClInclude Include="..\src\framework\ui\uimanager.h">
       <Filter>Header Files\framework\ui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\framework\ui\uiparticles.h">
-      <Filter>Header Files\framework\ui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\framework\ui\uitextedit.h">
       <Filter>Header Files\framework\ui</Filter>
     </ClInclude>
@@ -975,9 +933,6 @@
       <Filter>Header Files\client</Filter>
     </ClInclude>
     <ClInclude Include="..\src\client\localplayer.h">
-      <Filter>Header Files\client</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\client\luavaluecasts.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
     <ClInclude Include="..\src\client\map.h">
@@ -1067,9 +1022,6 @@
     <ClInclude Include="..\src\framework\core\adaptiverenderer.h">
       <Filter>Header Files\framework\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\ogl\shadersources.h">
-      <Filter>Header Files\framework\graphics\ogl</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\framework\http\http.h">
       <Filter>Header Files\framework\http</Filter>
     </ClInclude>
@@ -1088,9 +1040,6 @@
     <ClInclude Include="..\src\framework\graphics\colorarray.h">
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\framework\graphics\ogl\newshader.h">
-      <Filter>Header Files\framework\graphics\ogl</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\framework\graphics\deptharray.h">
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
@@ -1101,9 +1050,6 @@
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\src\extras\proxy\proxy.h">
-      <Filter>Extras\proxy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\extras\proxy\client.h">
       <Filter>Extras\proxy</Filter>
     </ClInclude>
     <ClInclude Include="..\src\client\walkmatrix.h">
@@ -1117,6 +1063,30 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\util\qrcodegen.h">
       <Filter>Header Files\framework\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\util\framecounter.h">
+      <Filter>Header Files\framework\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\textrender.h">
+      <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\shaders\newshader.h">
+      <Filter>Header Files\framework\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\shaders\shadersources.h">
+      <Filter>Header Files\framework\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\shaders\shaders.h">
+      <Filter>Header Files\framework\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\drawcache.h">
+      <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\client\luavaluecasts_client.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\extras\proxy\proxy_client.h">
+      <Filter>Extras\proxy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

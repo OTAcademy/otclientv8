@@ -46,7 +46,7 @@ Connection::Connection() :
 Connection::~Connection()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
 #endif
     close();
 }

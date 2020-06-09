@@ -32,14 +32,16 @@ public:
     AnimatedTexture(const Size& size, std::vector<ImagePtr> frames, std::vector<int> framesDelay, bool buildMipmaps = false, bool compress = false);
     virtual ~AnimatedTexture();
 
+    void replace(const ImagePtr& image) { }
+    void update();
+
+    virtual bool isAnimatedTexture() { return true; }
+
+protected:
     virtual bool buildHardwareMipmaps();
 
     virtual void setSmooth(bool smooth);
     virtual void setRepeat(bool repeat);
-
-    void updateAnimation();
-
-    virtual bool isAnimatedTexture() { return true; }
 
 private:
     std::vector<TexturePtr> m_frames;

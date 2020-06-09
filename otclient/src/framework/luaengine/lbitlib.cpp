@@ -33,7 +33,7 @@
 #define LUA_LIB
 
 extern "C" {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(ANDROID)
 #include <luajit/lua.h>
 #include <luajit/lualib.h>
 #include <luajit/lauxlib.h>

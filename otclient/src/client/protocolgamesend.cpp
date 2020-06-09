@@ -109,6 +109,7 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
     } else {
         msg->addString(std::string("OTCv8"));
         std::string version = g_app.getVersion();
+        version = stdext::split(version, " ")[0];
         stdext::replace_all(version, ".", "");
         if (version.length() == 2) {
             version += "0";
@@ -116,12 +117,10 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
         msg->addU16(atoi(version.c_str()));
     }
 
-    // complete the bytes for rsa encryption with zeros
-    int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);
-    assert(paddingBytes >= 0);
-
     // encrypt with RSA
     if (g_game.getFeature(Otc::GameLoginPacketEncryption)) {
+        int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);
+        VALIDATE(paddingBytes >= 0);
         msg->addPaddingBytes(paddingBytes);
         msg->encryptRsa();
     }
@@ -144,9 +143,9 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
         for (auto& mac : macs) {
             msg->addString(mac); // 18 bytes
         }
-        int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);
-        assert(paddingBytes >= 0);
         if (g_game.getFeature(Otc::GameLoginPacketEncryption)) {
+            int paddingBytes = g_crypt.rsaGetSize() - (msg->getMessageSize() - offset);
+            VALIDATE(paddingBytes >= 0);
             msg->addPaddingBytes(paddingBytes);
             msg->encryptRsa();
         }

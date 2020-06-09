@@ -24,21 +24,52 @@
 #define VERTEXARRAY_H
 
 #include "declarations.h"
+#include "hardwarebuffer.h"
 #include <framework/util/databuffer.h>
 
 class VertexArray
 {
+    enum {
+        CACHE_MIN_VERTICES_COUNT = 48
+    };
 public:
+    VertexArray() {}
+    ~VertexArray()
+    {
+        if (m_hardwareBuffer)
+            delete m_hardwareBuffer;
+    }
+    VertexArray(VertexArray& c) : m_buffer(c.m_buffer)
+    {
+        m_hardwareBuffer = nullptr;
+    }
+    VertexArray& operator=(VertexArray& c) = delete;
+
     inline void addVertex(float x, float y) { m_buffer << x << y; }
     inline void addTriangle(const Point& a, const Point& b, const Point& c) {
         addVertex(a.x, a.y);
         addVertex(b.x, b.y);
         addVertex(c.x, c.y);
     }
-    inline void addRect(const Rect& rect) {
+    inline void addRect(const Rect& rect)
+    {
         float top = rect.top();
-        float right = rect.right()+1;
-        float bottom = rect.bottom()+1;
+        float right = rect.right() + 1;
+        float bottom = rect.bottom() + 1;
+        float left = rect.left();
+
+        addVertex(left, top);
+        addVertex(right, top);
+        addVertex(left, bottom);
+        addVertex(left, bottom);
+        addVertex(right, top);
+        addVertex(right, bottom);
+    }
+    inline void addRect(const RectF& rect)
+    {
+        float top = rect.top();
+        float right = rect.right() + 1.f;
+        float bottom = rect.bottom() + 1.f;
         float left = rect.left();
 
         addVertex(left, top);
@@ -78,8 +109,21 @@ public:
     int vertexCount() const { return m_buffer.size() / 2; }
     int size() const { return m_buffer.size(); }
 
+    // cache
+    void cache()
+    {
+        if (m_buffer.size() < CACHE_MIN_VERTICES_COUNT) return;
+        if (m_hardwareBuffer) return;
+        m_hardwareBuffer = new HardwareBuffer(HardwareBuffer::VertexBuffer);
+        m_hardwareBuffer->bind();
+        m_hardwareBuffer->write((void*)m_buffer.data(), m_buffer.size() * sizeof(float), HardwareBuffer::StaticDraw);
+    }
+    bool isCached() { return m_hardwareBuffer != nullptr; }
+    HardwareBuffer* getHardwareCache() { return m_hardwareBuffer; }
+
 private:
     DataBuffer<float> m_buffer;
+    HardwareBuffer* m_hardwareBuffer = nullptr;
 };
 
 #endif

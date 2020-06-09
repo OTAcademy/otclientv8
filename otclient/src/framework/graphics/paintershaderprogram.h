@@ -49,9 +49,11 @@ protected:
         TEX1_UNIFORM = 8,
         TEX2_UNIFORM = 9,
         TEX3_UNIFORM = 10,
-        ATLAS_TEX_UNIFORM = 11,
+        ATLAS_TEX0_UNIFORM = 11,
+        ATLAS_TEX1_UNIFORM = 12,
 
-        RESOLUTION_UNIFORM = 12,
+        RESOLUTION_UNIFORM = 13,
+        OFFSET_UNIFORM = 14
     };
 
     friend class Painter;
@@ -61,7 +63,7 @@ protected:
 public:
     PainterShaderProgram();
 
-    bool link();
+    void link();
 
     void setTransformMatrix(const Matrix3& transformMatrix);
     void setProjectionMatrix(const Matrix3& projectionMatrix);
@@ -71,11 +73,17 @@ public:
     void setOpacity(float opacity);
     void setDepth(float depth);
     void setResolution(const Size& resolution);
+    void setOffset(const Point& offset);
     void updateTime();
 
     void addMultiTexture(const std::string& file);
     void bindMultiTextures();
     void clearMultiTextures();
+
+    void enableColorMatrix()
+    {
+        m_useColorMatrix = true;
+    }
 
 private:
     float m_startTime;
@@ -87,8 +95,10 @@ private:
     Matrix3 m_projectionMatrix;
     Matrix3 m_textureMatrix;
     Size m_resolution;
+    Point m_offset;
     float m_time;
     std::vector<TexturePtr> m_multiTextures;
+    bool m_useColorMatrix = false;
 };
 
 #endif

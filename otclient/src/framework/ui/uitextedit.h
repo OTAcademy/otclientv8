@@ -52,6 +52,7 @@ public:
     void setSelectionColor(const Color& color) { m_selectionColor = color; }
     void setSelectionBackgroundColor(const Color& color) { m_selectionBackgroundColor = color; }
     void setAutoScroll(bool autoScroll) { m_autoScroll = autoScroll; }
+    void setAutoSubmit(bool autoSubmit) { m_autoSubmit = autoSubmit; }
 
     void moveCursorHorizontally(bool right);
     void moveCursorVertically(bool up);
@@ -127,6 +128,7 @@ private:
     uint m_maxLength;
     bool m_updatesEnabled;
     bool m_autoScroll;
+    bool m_autoSubmit;
 
     bool m_selectable;
     int m_selectionReference;

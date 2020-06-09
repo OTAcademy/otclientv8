@@ -968,13 +968,13 @@ void save_png(std::stringstream& f, unsigned int width, unsigned int height, int
     zstream1.zalloc    = Z_NULL;
     zstream1.zfree     = Z_NULL;
     zstream1.opaque    = Z_NULL;
-    deflateInit2(&zstream1, Z_BEST_COMPRESSION, 8, 15, 8, Z_DEFAULT_STRATEGY);
+    deflateInit2(&zstream1, 3, 8, 15, 8, Z_DEFAULT_STRATEGY);
 
     zstream2.data_type = Z_BINARY;
     zstream2.zalloc    = Z_NULL;
     zstream2.zfree     = Z_NULL;
     zstream2.opaque    = Z_NULL;
-    deflateInit2(&zstream2, Z_BEST_COMPRESSION, 8, 15, 8, Z_FILTERED);
+    deflateInit2(&zstream2, 3, 8, 15, 8, Z_FILTERED);
 
     int a, b, c, pa, pb, pc, p, v;
     unsigned char* prev;

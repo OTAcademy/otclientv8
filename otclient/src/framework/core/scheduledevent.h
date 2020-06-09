@@ -23,6 +23,7 @@
 #ifndef SCHEDULEDEVENT_H
 #define SCHEDULEDEVENT_H
 
+#include <framework/global.h>
 #include "event.h"
 #include "clock.h"
 

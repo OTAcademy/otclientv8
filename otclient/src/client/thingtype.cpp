@@ -491,114 +491,135 @@ void ThingType::unload()
 }
 
 
-void ThingType::draw(const Point& dest, float scaleFactor, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, LightView *lightView, bool lightOnly, Color* markColor)
+DrawQueueItem* ThingType::draw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, Color color, LightView* lightView)
 {
-    if(m_null)
-        return;
+    if (m_null)
+        return nullptr;
 
-    if(animationPhase >= m_animationPhases)
-        return;
+    if (animationPhase < 0 || animationPhase >= m_animationPhases)
+        return nullptr;
 
     const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
-    if(!texture)
-        return;
+    if (!texture)
+        return nullptr;
 
     uint frameIndex = getTextureIndex(layer, xPattern, yPattern, zPattern);
-    if(frameIndex >= m_texturesFramesRects[animationPhase].size())
-        return;
-
-    Point textureOffset;
-    Rect textureRect;
-
-    if(scaleFactor != 1.0f) {
-        textureRect = m_texturesFramesOriginRects[animationPhase][frameIndex];
-    } else {
-        textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
-        textureRect = m_texturesFramesRects[animationPhase][frameIndex];
-    }
-
-    Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * g_sprites.spriteSize()) * scaleFactor,
-        textureRect.size() * scaleFactor);
-
-    if (markColor) {
-        Color c = g_painter->getColor();
-        auto composition = g_painter->getCompositionMode();
-        g_painter->setColor(*markColor);
-        g_painter->setCompositionMode(Painter::CompositionMode_Normal);
-        g_painter->drawColorOnTexturedRect(screenRect, texture, textureRect);
-        g_painter->setCompositionMode(composition);
-        g_painter->setColor(c);
-        return;
-    }
-
-    if (lightOnly)
-        return;
-
-    bool useOpacity = m_opacity < 1.0f;
-
-    if(useOpacity)
-        g_painter->setColor(Color(1.0f,1.0f,1.0f,m_opacity));
-
-    g_painter->drawTexturedRect(screenRect, texture, textureRect);
-    if(useOpacity)
-        g_painter->setColor(Color::white);
-}
-
-void ThingType::newDraw(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, DrawQueue& drawQueue, LightView* lightView, NewDrawType type)
-{
-    if(m_null)
-        return;
-
-    if (animationPhase >= m_animationPhases) {
-        return;
-    }
-
-    const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
-    if (!texture) {
-        return;
-    }
-
-    uint frameIndex = getTextureIndex(layer, xPattern, yPattern, zPattern);
-    if (frameIndex >= m_texturesFramesRects[animationPhase].size()) {
-        return;
-    }
+    if (frameIndex >= m_texturesFramesRects[animationPhase].size())
+        return nullptr;
 
     Point textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
     Rect textureRect = m_texturesFramesRects[animationPhase][frameIndex];
 
-    Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * g_sprites.spriteSize()), textureRect.size());
+    Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * Otc::TILE_PIXELS), textureRect.size());
 
-    if(lightView && hasLight()) {
-        Point lightDest = dest;
-        if ((type == NewDrawMount) || (type == NewDrawOutfit) || (type == NewDrawOutfitLayers)) {
-            auto outfit = drawQueue.getLastOutfit();
-            if (outfit) {
-                lightDest = lightDest + outfit->dest.topLeft() - Point(16, 16);
-            }
-        }
-        Light light = getLight();
-        if(light.intensity > 0) 
-            lightView->addLightSource(Rect(lightDest - m_displacement  - (m_size.toPoint() - Point(1, 1)) * g_sprites.spriteSize(), texture->getSize()).center(), light, type != NewDrawNormal);
+    bool useOpacity = m_opacity < 1.0f;
+    if (useOpacity)
+        color.setAlpha(m_opacity);
+
+    if (lightView && hasLight())
+        lightView->addLight(screenRect.center(), getLight());
+
+    return g_drawQueue->addTexturedRect(screenRect, texture, textureRect, color);
+}
+
+DrawQueueItem* ThingType::draw(const Rect& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, Color color)
+{
+    if (m_null)
+        return nullptr;
+
+    if (animationPhase < 0 || animationPhase >= m_animationPhases)
+        return nullptr;
+
+    const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
+    if (!texture)
+        return nullptr;
+
+    uint frameIndex = getTextureIndex(layer, xPattern, yPattern, zPattern);
+    if (frameIndex >= m_texturesFramesRects[animationPhase].size())
+        return nullptr;
+
+    Point textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
+    Rect textureRect = m_texturesFramesRects[animationPhase][frameIndex];
+
+    bool useOpacity = m_opacity < 1.0f;
+    if (useOpacity)
+        color.setAlpha(m_opacity);
+
+    Size size = m_size * Otc::TILE_PIXELS;
+    if (!size.isValid())
+        return nullptr;
+
+    // size correction for some too big items
+    if ((size.width() > 1 || size.height() > 1) && 
+        textureRect.width() <= Otc::TILE_PIXELS && textureRect.height() <= Otc::TILE_PIXELS) {
+        size = Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS);
+        textureOffset = Point((Otc::TILE_PIXELS - textureRect.width()) / 2, 
+                              (Otc::TILE_PIXELS - textureRect.height()) / 2);
     }
 
-    if (drawQueue.isBlocked())
+    float scale = std::min<float>((float)dest.width() / size.width(), (float)dest.height() / size.height());
+    return g_drawQueue->addTexturedRect(Rect(dest.topLeft() + (textureOffset * scale), textureRect.size() * scale), texture, textureRect, color);
+}
+
+void ThingType::drawOutfit(const Point& dest, int xPattern, int yPattern, int zPattern, int animationPhase, int colors, Color color, LightView* lightView)
+{
+    if (m_null)
         return;
 
-    if (type == NewDrawNormal || type == NewDrawMissle || type == NewDrawMount) {
-        drawQueue.add(screenRect, texture, textureRect);
-    } else if (type == NewDrawOutfit) {
-        auto outfit = drawQueue.getLastOutfit();
-        if(outfit) {
-            outfit->patterns.push_back(DrawQueueOutfitPattern());
-            outfit->patterns.back().texture = { screenRect, texture, textureRect, Color::white, 0 };
-        }
-    } else if (type == NewDrawOutfitLayers) {
-        auto outfit = drawQueue.getLastOutfit();
-        if (outfit && !outfit->patterns.empty()) {
-            outfit->patterns.back().layer = { screenRect, texture, textureRect, Color::white, 0 };
-        }
-    }
+    if (animationPhase < 0 || animationPhase >= m_animationPhases)
+        return;
+
+    const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
+    if (!texture)
+        return;
+
+    uint frameIndex = getTextureIndex(0, xPattern, yPattern, zPattern);
+    uint frameIndex2 = getTextureIndex(1, xPattern, yPattern, zPattern);
+    if (frameIndex >= m_texturesFramesRects[animationPhase].size() || frameIndex2 >= m_texturesFramesRects[animationPhase].size())
+        return;
+
+    Point textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
+    Point textureOffset2 = m_texturesFramesOffsets[animationPhase][frameIndex2];
+    Rect textureRect = m_texturesFramesRects[animationPhase][frameIndex];
+    Rect textureRect2 = m_texturesFramesRects[animationPhase][frameIndex2];
+    Size size = textureRect.size();
+    if (!size.isValid())
+        return;
+    Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * Otc::TILE_PIXELS), textureRect.size());
+
+    bool useOpacity = m_opacity < 1.0f;
+    if (useOpacity)
+        color.setAlpha(m_opacity);
+
+    if (lightView && hasLight())
+        lightView->addLight(screenRect.center(), getLight());
+
+    Point offset = textureOffset - textureOffset2;
+    offset += textureRect2.topLeft() - textureRect.topLeft();
+    g_drawQueue->addOutfit(screenRect, texture, textureRect, offset, colors, color);
 }
+
+Rect ThingType::getDrawSize(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase)
+{
+    if (m_null)
+        return Rect(0, 0, 1, 1);
+
+    if (animationPhase < 0 || animationPhase >= m_animationPhases)
+        return Rect(0, 0, 1, 1);
+
+    const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
+    if (!texture)
+        return Rect(0, 0, 1, 1);
+
+    uint frameIndex = getTextureIndex(layer, xPattern, yPattern, zPattern);
+    if (frameIndex >= m_texturesFramesRects[animationPhase].size())
+        return Rect(0, 0, 1, 1);
+
+    Point textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
+    Rect textureRect = m_texturesFramesRects[animationPhase][frameIndex];
+    return Rect(dest + textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * Otc::TILE_PIXELS, textureRect.size());
+}
+
 
 const TexturePtr& ThingType::getTexture(int animationPhase)
 {
@@ -677,8 +698,7 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
                 }
             }
         }
-        animationPhaseTexture = TexturePtr(new Texture(fullImage, true));
-        animationPhaseTexture->setSmooth(true);
+        animationPhaseTexture = TexturePtr(new Texture(fullImage, true, false, true));
         m_loaded = true;
     }
     return animationPhaseTexture;
@@ -699,9 +719,9 @@ Size ThingType::getBestTextureDimension(int w, int h, int count)
     h = k;
 
     int numSprites = w*h*count;
-    assert(numSprites <= MAX*MAX);
-    assert(w <= MAX);
-    assert(h <= MAX);
+    VALIDATE(numSprites <= MAX*MAX);
+    VALIDATE(w <= MAX);
+    VALIDATE(h <= MAX);
 
     Size bestDimension = Size(MAX, MAX);
     for(int i=w;i<=MAX;i<<=1) {
@@ -727,7 +747,7 @@ uint ThingType::getSpriteIndex(int w, int h, int l, int x, int y, int z, int a) 
         * m_layers + l)
         * m_size.height() + h)
         * m_size.width() + w;
-    assert(index < m_spritesIndex.size());
+    VALIDATE(index < m_spritesIndex.size());
     return index;
 }
 

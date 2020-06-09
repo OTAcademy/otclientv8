@@ -28,6 +28,15 @@
 // common C/C++ headers
 #include "pch.h"
 
+// error handling
+#if defined(NDEBUG)
+#define VALIDATE(expression) ((void)0)
+#else
+extern void fatalError(const char* error, const char* file, int line);
+#define VALIDATE(expression) { if(!(expression)) fatalError(#expression, __FILE__, __LINE__); };
+#endif
+
+
 // global constants
 #include "const.h"
 

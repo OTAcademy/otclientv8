@@ -194,7 +194,7 @@ namespace luabinder
     template<typename C, typename Ret, class FC, typename... Args>
     LuaCppFunction bind_singleton_mem_fun(Ret (FC::*f)(Args...), C *instance) {
         typedef typename std::tuple<typename stdext::remove_const_ref<Args>::type...> Tuple;
-        assert(instance);
+        VALIDATE(instance);
         auto lambda = make_mem_func_singleton<Ret,FC>(f, static_cast<FC*>(instance));
         return bind_fun_specializer<typename stdext::remove_const_ref<Ret>::type,
                                     decltype(lambda),

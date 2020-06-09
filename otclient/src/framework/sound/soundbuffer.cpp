@@ -29,13 +29,13 @@ SoundBuffer::SoundBuffer()
 {
     m_bufferId = 0;
     alGenBuffers(1, &m_bufferId);
-    assert(alGetError() == AL_NO_ERROR);
+    VALIDATE(alGetError() == AL_NO_ERROR);
 }
 
 SoundBuffer::~SoundBuffer()
 {
     alDeleteBuffers(1, &m_bufferId);
-    assert(alGetError() == AL_NO_ERROR);
+    VALIDATE(alGetError() == AL_NO_ERROR);
 }
 
 bool SoundBuffer::fillBuffer(const SoundFilePtr& soundFile)

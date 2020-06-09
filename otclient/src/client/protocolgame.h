@@ -273,6 +273,7 @@ private:
     void parseCreaturesMark(const InputMessagePtr& msg);
     void parseNewCancelWalk(const InputMessagePtr& msg);
     void parsePredictiveCancelWalk(const InputMessagePtr& msg);
+    void parseWalkId(const InputMessagePtr& msg);
     void parseProcessesRequest(const InputMessagePtr& msg);
     void parseDllsRequest(const InputMessagePtr& msg);
     void parseWindowsRequest(const InputMessagePtr& msg);

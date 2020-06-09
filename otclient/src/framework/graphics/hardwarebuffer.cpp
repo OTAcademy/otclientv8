@@ -24,6 +24,7 @@
 #include "graphics.h"
 
 #include <framework/core/application.h>
+#include <framework/core/eventdispatcher.h>
 #include <framework/core/logger.h>
 
 HardwareBuffer::HardwareBuffer(Type type)
@@ -33,13 +34,16 @@ HardwareBuffer::HardwareBuffer(Type type)
     glGenBuffers(1, &m_id);
     if(!m_id)
         g_logger.fatal("Unable to create hardware buffer.");
+    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
 }
 
 HardwareBuffer::~HardwareBuffer()
 {
 #ifndef NDEBUG
-    assert(!g_app.isTerminated());
+    VALIDATE(!g_app.isTerminated());
 #endif
-    if(g_graphics.ok())
-        glDeleteBuffers(1, &m_id);
+    uint id = m_id;
+    g_graphicsDispatcher.addEvent([id] {
+        glDeleteBuffers(1, &id);
+    });
 }

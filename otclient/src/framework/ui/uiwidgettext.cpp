@@ -24,22 +24,23 @@
 #include "uitranslator.h"
 #include <framework/graphics/fontmanager.h>
 #include <framework/graphics/painter.h>
-#include <framework/graphics/framebuffer.h>
 #include <framework/core/application.h>
 
 void UIWidget::initText()
 {
     m_font = g_fonts.getDefaultFont();
     m_textAlign = Fw::AlignCenter;
-    m_textCoordsBuffer.enableHardwareCaching();
 }
 
 void UIWidget::updateText()
 {
-    if(m_textWrap && m_rect.isValid())
-        m_drawText = m_font->wrapText(m_text, getWidth() - m_textOffset.x);
-    else
+    if (m_textWrap && m_rect.isValid()) {
+        m_drawTextColors = m_textColors;
+        m_drawText = m_font->wrapText(m_text, getWidth() - m_textOffset.x, &m_drawTextColors);
+    } else {
         m_drawText = m_text;
+        m_drawTextColors = m_textColors;
+    }
 
     // update rect size
     if(!m_rect.isValid() || m_textHorizontalAutoResize || m_textVerticalAutoResize) {
@@ -89,16 +90,13 @@ void UIWidget::drawText(const Rect& screenCoords)
         Rect coords = Rect(screenCoords.topLeft() + m_textOffset, screenCoords.bottomRight());
         m_textMustRecache = false;
         m_textCachedScreenCoords = coords;
-
-        m_textCoordsBuffer.clear();
-
-        m_font->calculateDrawTextCoords(m_textCoordsBuffer, m_drawText, coords, m_textAlign);
     }
 
-    g_painter->setColor(m_color);
-
-    if(m_font->getTexture())
-        g_painter->drawTextureCoords(m_textCoordsBuffer, m_font->getTexture());
+    if (!m_drawTextColors.empty()) {
+        m_font->drawColoredText(m_drawText, m_textCachedScreenCoords, m_textAlign, m_drawTextColors);
+    } else {
+        m_font->drawText(m_drawText, m_textCachedScreenCoords, m_textAlign, m_color);
+    }
 }
 
 void UIWidget::onTextChange(const std::string& text, const std::string& oldText)
@@ -116,6 +114,9 @@ void UIWidget::setText(std::string text, bool dontFireLuaCall)
     if(m_textOnlyUpperCase)
         stdext::toupper(text);
 
+    m_textColors.clear();
+    m_drawTextColors.clear();
+
     if(m_text == text)
         return;
 
@@ -123,9 +124,36 @@ void UIWidget::setText(std::string text, bool dontFireLuaCall)
     m_text = text;
     updateText();
 
-    text = m_text;
-
     if(!dontFireLuaCall) {
+        onTextChange(text, oldText);
+    }
+}
+
+void UIWidget::setColoredText(const std::vector<std::string>& texts, bool dontFireLuaCall)
+{
+    m_textColors.clear();
+    m_drawTextColors.clear();
+
+    std::string text = "";
+    for(size_t i = 0, p = 0; i < texts.size() - 1; i += 2) {
+        Color c(Color::white);
+        stdext::cast<Color>(texts[i + 1], c);
+        text += texts[i];
+        for (auto& c : texts[i]) {
+            if ((uint8)c >= 32)
+                p += 1;
+        }
+        m_textColors.push_back(std::make_pair(p, c));
+    }
+
+    if (m_textOnlyUpperCase)
+        stdext::toupper(text);
+
+    std::string oldText = m_text;
+    m_text = text;
+    updateText();
+
+    if (!dontFireLuaCall) {
         onTextChange(text, oldText);
     }
 }

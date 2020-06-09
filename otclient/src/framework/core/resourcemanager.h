@@ -25,24 +25,21 @@
 
 #include "declarations.h"
 
-namespace fs = std::filesystem;
-
 // @bindsingleton g_resources
 class ResourceManager
 {
 public:
     // @dontbind
-    void init(const char *argv0, bool failsafe);
+    void init(const char *argv0);
     // @dontbind
     void terminate();
 
-    int launchCorrect(const std::string& product, const std::string& app);
-    bool launchFailsafe();
+    bool launchCorrect(const std::string& product, const std::string& app);
     bool setupWriteDir(const std::string& product, const std::string& app);
-    bool setup(const std::string& existentFile);
+    bool setup();
 
-    std::string getCompactName(const std::string& existentFile);
-    bool loadDataFromSelf(const std::string & existentFile);
+    std::string getCompactName();
+    bool loadDataFromSelf(bool unmountIfMounted = false);
 
     bool fileExists(const std::string& fileName);
     bool directoryExists(const std::string& directoryName);
@@ -66,9 +63,14 @@ public:
     std::list<std::string> listDirectoryFiles(const std::string & directoryPath = "", bool fullPath = false, bool raw = false);
 
     std::string resolvePath(std::string path);
-    std::string getWriteDir() { return m_writeDir.string(); }
     std::string getWorkDir() { return "/"; }
+#ifdef ANDROID
+    std::string getWriteDir() { return "/"; }
+    std::string getBinaryName() { return "otclientv8.apk"; }
+#else
+    std::string getWriteDir() { return m_writeDir.string(); }
     std::string getBinaryName() { return m_binaryPath.filename().string(); }
+#endif
 
     std::string guessFilePath(const std::string& filename, const std::string& type);
     bool isFileType(const std::string& filename, const std::string& type);
@@ -76,22 +78,25 @@ public:
     bool isLoadedFromArchive() { return m_loadedFromArchive; }
     bool isLoadedFromMemory() { return m_loadedFromMemory; }
 
-    std::list<std::string> listUpdateableFiles();
     std::string fileChecksum(const std::string& path);
-
+    
+    std::map<std::string, std::string> filesChecksums();
     std::string selfChecksum();
 
     std::string readCrashLog(bool txt);
     void deleteCrashLog();
 
-    void updateClient(const std::vector<std::string>& files, std::string binaryName);
+    void updateData(const std::set<std::string>& files, bool reMount);
+    void updateExecutable(std::string fileName);
+
 #ifdef WITH_ENCRYPTION
     void encrypt(const std::string& seed = "");
     bool encryptBuffer(std::string & buffer, uint32_t seed = 0);
 #endif
     bool decryptBuffer(std::string & buffer);
-
+#ifdef WIN32
     void installDlls(std::filesystem::path dest);
+#endif
 
     void setLayout(std::string layout);
     std::string getLayout()
@@ -99,16 +104,17 @@ public:
         return m_layout;
     }
 
-
 private:
+    bool mountMemoryData(const std::shared_ptr<std::vector<uint8_t>>& data);
+    void unmountMemoryData();
+
+#ifndef ANDROID
     std::filesystem::path m_binaryPath, m_writeDir;
+#endif
     bool m_loadedFromMemory = false;
     bool m_loadedFromArchive = false;
-    bool m_failsafe = false;
-    char* m_memoryDataBuffer = nullptr;
-    size_t m_memoryDataBufferSize = 0;
-    uint32_t customEncryption = 0;
-    std::string m_dataDir;
+    std::shared_ptr<std::vector<uint8_t>> m_memoryData;
+    uint32_t m_customEncryption = 0;
     std::string m_layout;
 };
 

@@ -38,7 +38,6 @@ distribution.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <framework/const.h>
 #include <framework/stdext/cast.h>
@@ -333,11 +332,11 @@ protected:
     // The length can be from 0 to 4 bytes.
     inline static const char* GetChar( const char* p, char* _value, int* length, TiXmlEncoding encoding )
     {
-        assert( p );
+        VALIDATE( p );
         if ( encoding == TIXML_ENCODING_UTF8 )
         {
             *length = utf8ByteTable[ *((const unsigned char*)p) ];
-            assert( *length >= 0 && *length < 5 );
+            VALIDATE( *length >= 0 && *length < 5 );
         }
         else
         {

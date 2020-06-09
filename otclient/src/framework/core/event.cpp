@@ -34,7 +34,7 @@ Event::Event(const std::string& function, const std::function<void()>& callback,
 Event::~Event()
 {
     // assure that we lost callback refs
-    //assert(m_callback == nullptr);
+    //VALIDATE(m_callback == nullptr);
 }
 
 void Event::execute()

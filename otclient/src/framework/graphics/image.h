@@ -36,7 +36,6 @@ public:
 
     void savePNG(const std::string& fileName);
 
-    void overwriteMask(const Color& maskedColor, const Color& insideColor = Color::white, const Color& outsideColor = Color::alpha);
     void blit(const Point& dest, const ImagePtr& other);
     void paste(const ImagePtr& other);
     ImagePtr upscale();
@@ -45,7 +44,12 @@ public:
 
     void setPixel(int x, int y, uint8 *pixel) { memcpy(&m_pixels[(y * m_size.width() + x) * m_bpp], pixel, m_bpp);}
     void setPixel(int x, int y, uint32_t argb) { setPixel(x, y, (uint8*)&argb); }
-    void setPixel(int x, int y, const Color& color) { uint32 tmp = color.argb(); setPixel(x,y,(uint8*)&tmp); }
+    void setPixel(int x, int y, const Color& color) {
+        m_pixels[(y * m_size.width() + x) * m_bpp] = color.r();
+        m_pixels[(y * m_size.width() + x) * m_bpp + 1] = color.g();
+        m_pixels[(y * m_size.width() + x) * m_bpp + 2] = color.b();
+        m_pixels[(y * m_size.width() + x) * m_bpp + 3] = color.a();
+    }
 
     std::vector<uint8>& getPixels() { return m_pixels; }
     uint8* getPixelData() { return &m_pixels[0]; }

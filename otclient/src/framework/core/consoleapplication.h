@@ -31,10 +31,8 @@ class ConsoleApplication : public Application
 public:
     void run();
 
-    int getFps() { return m_frameCounter.getLastFps(); }
-
 protected:
-    AdaptativeFrameCounter m_frameCounter;
+
 };
 
 extern ConsoleApplication g_app;

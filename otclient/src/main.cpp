@@ -22,32 +22,29 @@
 
 #include <framework/core/application.h>
 #include <framework/core/resourcemanager.h>
+#include <framework/core/eventdispatcher.h>
 #include <framework/luaengine/luainterface.h>
 #include <framework/http/http.h>
 #include <framework/platform/crashhandler.h>
+#include <framework/platform/platformwindow.h>
 #include <client/client.h>
-
-int stopControl = false;
-std::thread* control_thread = nullptr;
 
 int main(int argc, const char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
-    bool failSafe = std::find(args.begin(), args.end(), "--failsafe") != args.end();
 
 #ifdef CRASH_HANDLER
     installCrashHandler();
 #endif
 
     // initialize resources
-    g_resources.init(argv[0], failSafe);
-
-    std::string compactName = g_resources.getCompactName("init.lua");
+    g_resources.init(argv[0]);
+    std::string compactName = g_resources.getCompactName();
     g_logger.setLogFile(compactName + ".log");
 
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName(compactName);
-    g_app.setVersion("2.3.1");
+    g_app.setVersion("2.4");
 
 #ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
@@ -61,29 +58,8 @@ int main(int argc, const char* argv[]) {
     }
 #endif
 
-    int launchCorrect = failSafe ? 0 : g_resources.launchCorrect(g_app.getName(), g_app.getCompactName());
-    if (launchCorrect == 1) {
-        return 0;
-    }
-
-    if (!failSafe) {
-        control_thread = new std::thread([&] {
-            for (int i = 0; i < 100; ++i) {
-                stdext::millisleep(100);
-                if (stopControl)
-                    return;
-            }
-            if (g_app.getIteration() < 5) {
-                if (g_resources.launchFailsafe()) {
-#ifdef _MSC_VER
-                    quick_exit(0);
-#else
-                    exit(0);
-#endif
-                }
-                return;
-            }
-        });
+    if (g_resources.launchCorrect(g_app.getName(), g_app.getCompactName())) {
+        return 0; // started other executable
     }
 
     // initialize application framework and otclient
@@ -93,16 +69,20 @@ int main(int argc, const char* argv[]) {
 
     // find script init.lua and run it
     g_resources.setupWriteDir(g_app.getName(), g_app.getCompactName());
+    g_resources.setup();
 
-    if (launchCorrect == -1 || failSafe) {
-        if(!g_resources.loadDataFromSelf("init.lua"))
-            g_resources.setup("init.lua");
-    } else {
-        g_resources.setup("init.lua");
+    if (!g_lua.safeRunScript("init.lua")) {
+        if (g_resources.isLoadedFromArchive() && !g_resources.isLoadedFromMemory() &&
+            g_resources.loadDataFromSelf(true)) {
+            g_logger.error("Unable to run script init.lua! Trying to run version from memory.");
+            if (!g_lua.safeRunScript("init.lua")) {
+                g_resources.deleteFile("data.zip"); // remove incorrect data.zip
+                g_logger.fatal("Unable to run script init.lua from binary file!\nTry to run client again.");
+            }
+        } else {
+            g_logger.fatal("Unable to run script init.lua!");
+        }
     }
-
-    if(!g_lua.safeRunScript("init.lua"))
-        g_logger.fatal("Unable to run script init.lua!");
 
 #ifdef WIN32
     // support for progdn proxy system, if you don't have this dll nothing will happen
@@ -120,15 +100,49 @@ int main(int argc, const char* argv[]) {
     // unload modules
     g_app.deinit();
 
-    stopControl = true;
-    if (control_thread) {
-        control_thread->join();
-        delete control_thread;
-    }
-
     // terminate everything and free memory
     g_http.terminate();
     g_client.terminate();
     g_app.terminate();
     return 0;
 }
+
+#ifdef ANDROID
+#include <framework/platform/androidwindow.h>
+
+android_app* g_androidState = nullptr;
+void android_main(struct android_app* state)
+{
+    g_mainThreadId = g_dispatcherThreadId = std::this_thread::get_id();
+    g_androidState = state;
+
+    state->userData = nullptr;
+    state->onAppCmd = +[](android_app* app, int32_t cmd) -> void {
+       return g_androidWindow.handleCmd(cmd);
+    };
+    state->onInputEvent = +[](android_app* app, AInputEvent* event) -> int32_t {
+        return g_androidWindow.handleInput(event);
+    };
+    state->activity->callbacks->onNativeWindowResized = +[](ANativeActivity* activity, ANativeWindow* window) -> void {
+        g_graphicsDispatcher.scheduleEventEx("updateWindowSize", [] {
+            g_androidWindow.updateSize();
+        }, 500);
+    };
+    state->activity->callbacks->onContentRectChanged = +[](ANativeActivity* activity, const ARect* rect) -> void {
+        g_graphicsDispatcher.scheduleEventEx("updateWindowSize", [] {
+            g_androidWindow.updateSize();
+        }, 500);
+    };
+
+    bool terminated = false;
+    g_window.setOnClose([&] {
+        terminated = true;
+    });
+    while(!g_window.isVisible() && !terminated)
+        g_window.poll(); // init window
+    // run app
+    const char* args[] = { "otclientv8.apk" };
+    main(1, args);
+    std::exit(0); // required!
+}
+#endif

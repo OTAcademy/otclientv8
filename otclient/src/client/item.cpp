@@ -70,9 +70,9 @@ std::string Item::getName()
     return g_things.findItemTypeByClientId(m_clientId)->getName();
 }
 
-void Item::draw(const Point& dest, float scaleFactor, bool animate, LightView *lightView, bool lightOnly)
+void Item::draw(const Point& dest, bool animate, LightView* lightView)
 {
-    if(m_clientId == 0)
+    if (m_clientId == 0)
         return;
 
     // determine animation phase
@@ -82,32 +82,34 @@ void Item::draw(const Point& dest, float scaleFactor, bool animate, LightView *l
     int xPattern = 0, yPattern = 0, zPattern = 0;
     calculatePatterns(xPattern, yPattern, zPattern);
 
-    if(m_color != Color::alpha)
-        g_painter->setColor(m_color);
-    rawGetThingType()->draw(dest, scaleFactor, 0, xPattern, yPattern, zPattern, animationPhase, lightView, lightOnly);
-    /// Sanity check
-    /// This is just to ensure that we don't overwrite some color and
-    /// screw up the whole rendering.
-    if(m_color != Color::alpha)
-        g_painter->resetColor();
+    Color color(Color::white);
+    if (m_color != Color::alpha)
+        color = m_color;
+    size_t drawQueueSize = g_drawQueue->size();
+    rawGetThingType()->draw(dest, 0, xPattern, yPattern, zPattern, animationPhase, color, lightView);
+    if (m_marked) {
+        g_drawQueue->setMark(drawQueueSize, updatedMarkedColor());
+    }
 }
 
-void Item::newDraw(const Point& dest, DrawQueue& drawQueue, LightView* lightView) {
-    if(m_clientId == 0)
+void Item::draw(const Rect& dest, bool animate)
+{
+    if (m_clientId == 0)
         return;
 
     // determine animation phase
-    int animationPhase = calculateAnimationPhase(true);
+    int animationPhase = calculateAnimationPhase(animate);
 
     // determine x,y,z patterns
     int xPattern = 0, yPattern = 0, zPattern = 0;
     calculatePatterns(xPattern, yPattern, zPattern);
 
-    rawGetThingType()->newDraw(dest,  0, xPattern, yPattern, zPattern, animationPhase, drawQueue, lightView);
-    if (m_marked)
-        drawQueue.setLastItemAsMarked(updatedMarkedColor());
-}
+    Color color(Color::white);
+    if (m_color != Color::alpha)
+        color = m_color;
 
+    rawGetThingType()->draw(dest, 0, xPattern, yPattern, zPattern, animationPhase, color);
+}
 
 void Item::setId(uint32 id)
 {

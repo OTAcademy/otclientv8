@@ -28,9 +28,10 @@
 
 class FrameBuffer : public stdext::shared_object
 {
-protected:
+public:
     FrameBuffer(bool withDepth = false);
 
+protected:
     friend class FrameBufferManager;
 
 public:
@@ -43,16 +44,16 @@ public:
     void draw(const Rect& dest);
     void draw(const Rect& dest, const Rect& src);
 
-    void setBackuping(bool enabled) { m_backuping = enabled; }
     void setSmooth(bool enabled) { m_smooth = enabled; }
 
     TexturePtr getTexture() { return m_texture; }
     Size getSize();
-    bool isBackuping() { return m_backuping; }
     bool isSmooth() { return m_smooth; }
 
+#ifdef WITH_DEPTH_BUFFER
     uint getDepthRenderBuffer() { return m_depthRbo; }
     bool hasDepth() { return m_depth; }
+#endif
 
     std::vector<uint32_t> readPixels();
 
@@ -65,11 +66,13 @@ private:
     TexturePtr m_screenBackup;
     Size m_oldViewportSize;
     uint m_fbo;
-    uint m_depthRbo = 0;
     uint m_prevBoundFbo;
-    stdext::boolean<true> m_backuping;
-    stdext::boolean<false> m_smooth;
-    stdext::boolean<false> m_depth;
+    bool m_smooth = true;
+
+#ifdef WITH_DEPTH_BUFFER
+    uint m_depthRbo = 0;
+    bool m_depth = false;
+#endif
 
     static uint boundFbo;
 };

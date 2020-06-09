@@ -26,6 +26,7 @@
 #include <framework/graphics/image.h>
 #include <framework/core/application.h>
 #include <framework/core/resourcemanager.h>
+#include <framework/core/eventdispatcher.h>
 #include <framework/util/stats.h>
 #include <framework/util/extras.h>
 
@@ -320,42 +321,55 @@ void WIN32Window::internalCreateWindow()
 void WIN32Window::internalCreateGLContext()
 {
 #ifdef OPENGL_ES
-
-#ifdef WIN32
-    /*
-    const EGLint displayAttributes[] =
-    {
-        EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE,
-        EGL_PLATFORM_ANGLE_MAX_VERSION_MAJOR_ANGLE, 0,
-        EGL_PLATFORM_ANGLE_MAX_VERSION_MINOR_ANGLE, 0,
-        EGL_NONE,
-    };
-
     PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT = reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(eglGetProcAddress("eglGetPlatformDisplayEXT"));
 
-    if (eglGetPlatformDisplayEXT)
-        m_eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, displayAttributes);
-    */
-    if (!m_eglDisplay)
-        m_eglDisplay = eglGetDisplay(m_deviceContext);
+    EGLint displayAttributes[3][5] =
+    { 
+        {
+            EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+            EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE,
+            EGL_NONE,
+        },
+        {
+            EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE,
+            EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE,
+            EGL_NONE,
+        },
+        {
+            EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+            EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_D3D_WARP_ANGLE,
+            EGL_NONE,
+        },
+    };
 
-    if (m_eglDisplay == EGL_NO_DISPLAY)
-    {
-        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll/d3dcompiler_47.dll.\r\n(m_eglDisplay == EGL_NO_DISPLAY)");
+    auto setupDisplay = [&](EGLDisplay display) -> bool {
+        if (!display) return false;
+        if (eglInitialize(display, NULL, NULL)) {
+            m_eglDisplay = display;
+            return true;
+        }
+        return false;
+    };
+
+    if (eglGetPlatformDisplayEXT) {
+        std::string args(GetCommandLineA());
+        if (args.find("-dx11") != std::string::npos) {
+            setupDisplay(eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, displayAttributes[0]));
+        } else if (args.find("-dx9") != std::string::npos) {
+            setupDisplay(eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, displayAttributes[1]));
+        } else if (args.find("-warp") != std::string::npos) {
+            setupDisplay(eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, displayAttributes[2]));
+        } else {
+            for (EGLint* attributes : displayAttributes) {
+                if (setupDisplay(eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, attributes)))
+                    break;
+            }
+        }
+    }        
+    
+    if (!m_eglDisplay && !setupDisplay(eglGetDisplay(m_deviceContext))) {
+        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install latest directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_47.dll.");
     }
-
-    if(!eglInitialize(m_eglDisplay, NULL, NULL))
-        g_logger.fatal("DirectX is not supported, try to use OpenGL version or install directx drivers. Also, make sure that your folder contains libEGL.dll, libGLESv2.dll and d3dcompiler_46.dll/d3dcompiler_47.dll.\r\n(eglInitialize)");
-#else
-    m_eglDisplay = eglGetDisplay(m_deviceContext);
-
-    if (m_eglDisplay == EGL_NO_DISPLAY) {
-        g_logger.fatal("EGL is not supported, try to use OpenGL version.");
-    }
-
-    if (!eglInitialize(m_eglDisplay, NULL, NULL))
-        g_logger.fatal("EGL is not supported, try to use OpenGL version.");
-#endif
 
     static int configList[] = {
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -363,39 +377,16 @@ void WIN32Window::internalCreateGLContext()
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
 
     EGLint numConfig;
 
-    if(!eglGetConfigs(m_eglDisplay, NULL, 0, &numConfig))
+    if(!eglGetConfigs(m_eglDisplay, NULL, 0xFFFF, &numConfig)) // it must have 0xFFFF to work
         g_logger.fatal("No valid GL configurations");
 
     if(!eglChooseConfig(m_eglDisplay, configList, &m_eglConfig, 1, &numConfig))
         g_logger.fatal("Failed to choose EGL config");
-
-    if (numConfig != 1) {
-        g_logger.warning("Didn't got the exact EGL config");
-        static int configList2[] = {
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL_RED_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_BLUE_SIZE, 8,
-            EGL_ALPHA_SIZE, 8,
-            EGL_NONE
-        };
-
-        if (!eglGetConfigs(m_eglDisplay, NULL, 0, &numConfig))
-            g_logger.fatal("No valid GL configurations");
-
-        if (!eglChooseConfig(m_eglDisplay, configList2, &m_eglConfig, 1, &numConfig))
-            g_logger.fatal("Failed to choose EGL config");
-
-        if (numConfig != 1) {
-            g_logger.warning("Didn't got the exact EGL config (2)");
-        }
-    }
 
     EGLint contextAtrrList[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -404,11 +395,11 @@ void WIN32Window::internalCreateGLContext()
 
     m_eglSurface = eglCreateWindowSurface(m_eglDisplay, m_eglConfig, m_window, NULL);
     if(m_eglSurface == EGL_NO_SURFACE)
-        g_logger.fatal(stdext::format("Unable to create EGL surface: %s", eglGetError()));
+        g_logger.fatal(stdext::format("Unable to create EGL surface: %i", eglGetError()));
 
     m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT, contextAtrrList);
     if(m_eglContext == EGL_NO_CONTEXT )
-        g_logger.fatal(stdext::format("Unable to create EGL context: %s", eglGetError()));
+        g_logger.fatal(stdext::format("Unable to create EGL context: %i", eglGetError()));
 
 #else
     uint pixelFormat;
@@ -422,7 +413,7 @@ void WIN32Window::internalCreateGLContext()
                                          0,                          // Shift Bit Ignored
                                          0,                          // No Accumulation Buffer
                                          0, 0, 0, 0,                 // Accumulation Bits Ignored
-                                         16,                          // Z-Buffer (Depth Buffer)
+                                         0,                          // Z-Buffer (Depth Buffer)
                                          0,                          // No Stencil Buffer
                                          0,                          // No Auxiliary Buffer
                                          PFD_MAIN_PLANE,             // Main Drawing Layer
@@ -431,13 +422,13 @@ void WIN32Window::internalCreateGLContext()
 
     pixelFormat = ChoosePixelFormat(m_deviceContext, &pfd);
     if(!pixelFormat)
-        g_logger.fatal("Could not find a suitable pixel format");
+        g_logger.fatal("Could not find a suitable pixel format\nTry to update your graphics drivers or use DirectX version if available.");
 
     if(!SetPixelFormat(m_deviceContext, pixelFormat, &pfd))
-        g_logger.fatal("Could not set the pixel format");
+        g_logger.fatal("Could not set the pixel format\nTry to update your graphics drivers or use DirectX version if available.");
 
     if(!(m_wglContext = wglCreateContext(m_deviceContext)))
-        g_logger.fatal("Unable to create GL context");
+        g_logger.fatal("Unable to create GL context.\nTry to update your graphics drivers or use DirectX version if available.");
 #endif
 }
 
@@ -509,65 +500,71 @@ void *WIN32Window::getExtensionProcAddress(const char *ext)
 
 void WIN32Window::move(const Point& pos)
 {
-    Rect clientRect(pos, getClientRect().size());
-    Rect windowRect = adjustWindowRect(clientRect);
-    MoveWindow(m_window, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), TRUE);
-    if(m_hidden)
-        ShowWindow(m_window, SW_HIDE);
+    g_graphicsDispatcher.addEvent([&, pos] {
+        Rect clientRect(pos, getClientRect().size());
+        Rect windowRect = adjustWindowRect(clientRect);
+        MoveWindow(m_window, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), TRUE);
+        if (m_hidden)
+            ShowWindow(m_window, SW_HIDE);
+    });
 }
 
 void WIN32Window::resize(const Size& size)
 {
-    if(size.width() < m_minimumSize.width() || size.height() < m_minimumSize.height())
-        return;
-    Rect clientRect(getClientRect().topLeft(), size);
-    Rect windowRect = adjustWindowRect(clientRect);
-    MoveWindow(m_window, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), TRUE);
-    if(m_hidden)
-        ShowWindow(m_window, SW_HIDE);
+    g_graphicsDispatcher.addEvent([&, size] {
+        if(size.width() < m_minimumSize.width() || size.height() < m_minimumSize.height())
+            return;
+        Rect clientRect(getClientRect().topLeft(), size);
+        Rect windowRect = adjustWindowRect(clientRect);
+        MoveWindow(m_window, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), TRUE);
+        if (m_hidden)
+            ShowWindow(m_window, SW_HIDE);
+    });
 }
 
 void WIN32Window::show()
 {
-    m_hidden = false;
-    if(m_maximized)
-        ShowWindow(m_window, SW_MAXIMIZE);
-    else
-        ShowWindow(m_window, SW_SHOW);
+    g_graphicsDispatcher.addEvent([&] {
+        m_hidden = false;
+        if (m_maximized)
+            ShowWindow(m_window, SW_MAXIMIZE);
+        else
+            ShowWindow(m_window, SW_SHOW);
+    });
 }
 
 void WIN32Window::hide()
 {
-    m_hidden = true;
-    ShowWindow(m_window, SW_HIDE);
+    g_graphicsDispatcher.addEvent([&] {
+        m_hidden = true;
+        ShowWindow(m_window, SW_HIDE);
+    });
 }
 
 void WIN32Window::maximize()
 {
-    if(!m_hidden)
-        ShowWindow(m_window, SW_MAXIMIZE);
-    else
-        m_maximized = true;
+    g_graphicsDispatcher.addEvent([&] {
+        if (!m_hidden)
+            ShowWindow(m_window, SW_MAXIMIZE);
+        else
+            m_maximized = true;
+    });
 }
 
 void WIN32Window::poll()
 {
-    AutoStat s(STATS_MAIN, "PollWindow");
-
-    fireKeysPress();
-
-    auto now = stdext::micros();
+    AutoStat s(STATS_RENDER, "PollWindow");
 
     MSG msg;
     while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        if (g_extras.limitedPolling && stdext::micros() > now + 5) {
-            break;
-        }
     }
 
-    updateUnmaximizedCoords();
+    g_dispatcher.addEvent([&] {
+        fireKeysPress();
+        updateUnmaximizedCoords();
+    });
 }
 
 Fw::Key WIN32Window::retranslateVirtualKey(WPARAM wParam, LPARAM lParam)
@@ -619,13 +616,7 @@ Fw::Key WIN32Window::retranslateVirtualKey(WPARAM wParam, LPARAM lParam)
 
 LRESULT WIN32Window::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    m_inputEvent.keyboardModifiers = 0;
-    if(IsKeyDown(VK_CONTROL))
-        m_inputEvent.keyboardModifiers |= Fw::KeyboardCtrlModifier;
-    if(IsKeyDown(VK_SHIFT))
-        m_inputEvent.keyboardModifiers |= Fw::KeyboardShiftModifier;
-    if(IsKeyDown(VK_MENU))
-        m_inputEvent.keyboardModifiers |= Fw::KeyboardAltModifier;
+    g_dispatcher.addEvent(std::bind(&WIN32Window::dispatcherWindowProc, this, hWnd, uMsg, wParam, lParam));
 
     switch(uMsg)
     {
@@ -636,136 +627,49 @@ LRESULT WIN32Window::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return DefWindowProc(hWnd, uMsg, wParam, lParam);
             break;
         }
-        case WM_ACTIVATE: {
-            m_focused = !(wParam == WA_INACTIVE);
-            releaseAllKeys();
-            break;
-        }
+        case WM_ACTIVATE:
         case WM_SETFOCUS:
-        case WM_KILLFOCUS: {
-            releaseAllKeys();
+        case WM_KILLFOCUS:
+        case WM_CHAR:
+        case WM_CLOSE:
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
             break;
-        }
-        case WM_CHAR: {
-            if(wParam >= 32 && wParam <= 255) {
-                m_inputEvent.reset(Fw::KeyTextInputEvent);
-                m_inputEvent.keyText = wParam;
-                if(m_onInputEvent)
-                    m_onInputEvent(m_inputEvent);
+        case WM_SYSKEYDOWN:
+            {
+                if (wParam == VK_F4 && m_inputEvent.keyboardModifiers & Fw::KeyboardAltModifier)
+                    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+                break;
             }
-            break;
-        }
-        case WM_CLOSE: {
-            m_onClose();
-            break;
-        }
-        case WM_KEYDOWN: {
-            processKeyDown(retranslateVirtualKey(wParam, lParam));
-            break;
-        }
-        case WM_KEYUP: {
-            processKeyUp(retranslateVirtualKey(wParam, lParam));
-            break;
-        }
-        case WM_SYSKEYUP: {
-            processKeyUp(retranslateVirtualKey(wParam, lParam));
-            break;
-        }
-        case WM_SYSKEYDOWN: {
-            if(wParam == VK_F4 && m_inputEvent.keyboardModifiers & Fw::KeyboardAltModifier)
-                return DefWindowProc(hWnd, uMsg, wParam, lParam);
-
-            processKeyDown(retranslateVirtualKey(wParam, lParam));
-            break;
-        }
         case WM_LBUTTONDOWN: {
             SetCapture(m_window);
-            m_inputEvent.reset(Fw::MousePressInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseLeftButton;
-            m_mouseButtonStates[Fw::MouseLeftButton] = true;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
             break;
         }
         case WM_LBUTTONUP: {
             SetCapture(NULL);
-            m_inputEvent.reset(Fw::MouseReleaseInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseLeftButton;
-            m_mouseButtonStates[Fw::MouseLeftButton] = false;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
             break;
         }
         case WM_MBUTTONDOWN: {
             SetCapture(m_window);
-            m_inputEvent.reset(Fw::MousePressInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseMidButton;
-            m_mouseButtonStates[Fw::MouseMidButton] = true;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
             break;
         }
         case WM_MBUTTONUP: {
             SetCapture(NULL);
-            m_inputEvent.reset(Fw::MouseReleaseInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseMidButton;
-            m_mouseButtonStates[Fw::MouseMidButton] = false;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
             break;
         }
         case WM_RBUTTONDOWN: {
             SetCapture(m_window);
-            m_inputEvent.reset(Fw::MousePressInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseRightButton;
-            m_mouseButtonStates[Fw::MouseRightButton] = true;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
             break;
         }
         case WM_RBUTTONUP: {
             SetCapture(NULL);
-            m_inputEvent.reset(Fw::MouseReleaseInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseRightButton;
-            m_mouseButtonStates[Fw::MouseRightButton] = false;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
             break;
         }
-        case WM_MOUSEMOVE: {
-            m_inputEvent.reset(Fw::MouseMoveInputEvent);
-
-            Point newMousePos(LOWORD(lParam), HIWORD(lParam));
-            if(newMousePos.x >= 32767)
-                newMousePos.x = 0;
-            else
-                newMousePos.x = std::min<int32>(newMousePos.x, m_size.width());
-
-            if(newMousePos.y >= 32767)
-                newMousePos.y = 0;
-            else
-                newMousePos.y = std::min<int32>(newMousePos.y, m_size.height());
-
-            m_inputEvent.mouseMoved = newMousePos - m_inputEvent.mousePos;
-            m_inputEvent.mousePos = newMousePos;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
+        case WM_MOUSEMOVE:
+        case WM_MOUSEWHEEL:
+        case WM_MOVE:
             break;
-        }
-        case WM_MOUSEWHEEL: {
-            m_inputEvent.reset(Fw::MouseWheelInputEvent);
-            m_inputEvent.mouseButton = Fw::MouseMidButton;
-            m_inputEvent.wheelDirection = ((short)HIWORD(wParam)) > 0 ? Fw::MouseWheelUp : Fw::MouseWheelDown;
-            if(m_onInputEvent)
-                m_onInputEvent(m_inputEvent);
-            break;
-        }
-        case WM_MOVE: {
-            m_position.x = (short)LOWORD(lParam);
-            m_position.y = (short)HIWORD(lParam);
-            releaseAllKeys();
-            break;
-        }
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO pMMI = (LPMINMAXINFO)lParam;
             Rect adjustedRect = adjustWindowRect(Rect(0, 0, m_minimumSize));
@@ -802,12 +706,171 @@ LRESULT WIN32Window::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 m_size = size;
                 m_onResize(m_size);
             }
-
-            releaseAllKeys();
             break;
         }
         default:
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    return 0;
+}
+
+LRESULT WIN32Window::dispatcherWindowProc(HWND, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    // called from dispatcher
+    m_inputEvent.keyboardModifiers = 0;
+    if (IsKeyDown(VK_CONTROL))
+        m_inputEvent.keyboardModifiers |= Fw::KeyboardCtrlModifier;
+    if (IsKeyDown(VK_SHIFT))
+        m_inputEvent.keyboardModifiers |= Fw::KeyboardShiftModifier;
+    if (IsKeyDown(VK_MENU))
+        m_inputEvent.keyboardModifiers |= Fw::KeyboardAltModifier;
+
+    switch (uMsg) {
+    case WM_ACTIVATE:
+    {
+        m_focused = !(wParam == WA_INACTIVE);
+        releaseAllKeys();
+        break;
+    }
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+    {
+        releaseAllKeys();
+        break;
+    }
+    case WM_CHAR:
+    {
+        if (wParam >= 32 && wParam <= 255) {
+            m_inputEvent.reset(Fw::KeyTextInputEvent);
+            m_inputEvent.keyText = wParam;
+            if (m_onInputEvent)
+                m_onInputEvent(m_inputEvent);
+        }
+        break;
+    }
+    case WM_CLOSE:
+    {
+        m_onClose();
+        break;
+    }
+    case WM_KEYDOWN:
+    {
+        processKeyDown(retranslateVirtualKey(wParam, lParam));
+        break;
+    }
+    case WM_KEYUP:
+    {
+        processKeyUp(retranslateVirtualKey(wParam, lParam));
+        break;
+    }
+    case WM_SYSKEYUP:
+    {
+        processKeyUp(retranslateVirtualKey(wParam, lParam));
+        break;
+    }
+    case WM_SYSKEYDOWN:
+    {
+        processKeyDown(retranslateVirtualKey(wParam, lParam));
+        break;
+    }
+    case WM_LBUTTONDOWN:
+    {
+        m_inputEvent.reset(Fw::MousePressInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseLeftButton;
+        m_mouseButtonStates[Fw::MouseLeftButton] = true;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_LBUTTONUP:
+    {
+        m_inputEvent.reset(Fw::MouseReleaseInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseLeftButton;
+        m_mouseButtonStates[Fw::MouseLeftButton] = false;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_MBUTTONDOWN:
+    {
+        m_inputEvent.reset(Fw::MousePressInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseMidButton;
+        m_mouseButtonStates[Fw::MouseMidButton] = true;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_MBUTTONUP:
+    {
+        m_inputEvent.reset(Fw::MouseReleaseInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseMidButton;
+        m_mouseButtonStates[Fw::MouseMidButton] = false;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_RBUTTONDOWN:
+    {
+        m_inputEvent.reset(Fw::MousePressInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseRightButton;
+        m_mouseButtonStates[Fw::MouseRightButton] = true;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_RBUTTONUP:
+    {
+        m_inputEvent.reset(Fw::MouseReleaseInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseRightButton;
+        m_mouseButtonStates[Fw::MouseRightButton] = false;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_MOUSEMOVE:
+    {
+        m_inputEvent.reset(Fw::MouseMoveInputEvent);
+
+        Point newMousePos(LOWORD(lParam), HIWORD(lParam));
+        if (newMousePos.x >= 32767)
+            newMousePos.x = 0;
+        else
+            newMousePos.x = std::min<int32>(newMousePos.x, m_size.width());
+
+        if (newMousePos.y >= 32767)
+            newMousePos.y = 0;
+        else
+            newMousePos.y = std::min<int32>(newMousePos.y, m_size.height());
+
+        newMousePos = Point(newMousePos.x / m_scaling, newMousePos.y / m_scaling);
+        m_inputEvent.mouseMoved = newMousePos - m_inputEvent.mousePos;
+        m_inputEvent.mousePos = newMousePos;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_MOUSEWHEEL:
+    {
+        m_inputEvent.reset(Fw::MouseWheelInputEvent);
+        m_inputEvent.mouseButton = Fw::MouseMidButton;
+        m_inputEvent.wheelDirection = ((short)HIWORD(wParam)) > 0 ? Fw::MouseWheelUp : Fw::MouseWheelDown;
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_MOVE:
+    {
+        m_position.x = (short)LOWORD(lParam);
+        m_position.y = (short)HIWORD(lParam);
+        releaseAllKeys();
+        break;
+    }
+    case WM_SIZE:
+    {
+        releaseAllKeys();
+        break;
+    }
     }
 
     return 0;
@@ -863,124 +926,140 @@ int WIN32Window::internalLoadMouseCursor(const ImagePtr& image, const Point& hot
 
 void WIN32Window::setMouseCursor(int cursorId)
 {
-    if(cursorId >= (int)m_cursors.size() || cursorId < 0)
-        return;
+    g_graphicsDispatcher.addEvent([&, cursorId] {
+        if (cursorId >= (int)m_cursors.size() || cursorId < 0)
+            return;
 
-    m_cursor = m_cursors[cursorId];
-    SetCursor(m_cursor);
-    ShowCursor(true);
+        m_cursor = m_cursors[cursorId];
+        SetCursor(m_cursor);
+        ShowCursor(true);
+    });
 }
 
 void WIN32Window::restoreMouseCursor()
 {
-    if(m_cursor) {
-        m_cursor = NULL;
-        SetCursor(m_defaultCursor);
-        ShowCursor(true);
-    }
+    g_graphicsDispatcher.addEvent([&] {
+        if (m_cursor) {
+            m_cursor = NULL;
+            SetCursor(m_defaultCursor);
+            ShowCursor(true);
+        }
+    });
 }
 
 void WIN32Window::setTitle(const std::string& title)
 {
-    SetWindowTextW(m_window, stdext::latin1_to_utf16(title).c_str());
+    g_graphicsDispatcher.addEvent([&, title] {
+        SetWindowTextW(m_window, stdext::latin1_to_utf16(title).c_str());
+    });
 }
 
 void WIN32Window::setMinimumSize(const Size& minimumSize)
 {
-    m_minimumSize = minimumSize;
+    g_graphicsDispatcher.addEvent([&, minimumSize] {
+        m_minimumSize = minimumSize;
+    });
 }
 
 void WIN32Window::setFullscreen(bool fullscreen)
 {
-    if(m_fullscreen == fullscreen)
-        return;
+    g_graphicsDispatcher.addEvent([&, fullscreen] {
+        if (m_fullscreen == fullscreen)
+            return;
 
-    m_fullscreen = fullscreen;
+        m_fullscreen = fullscreen;
 
-    DWORD dwStyle = GetWindowLong(m_window, GWL_STYLE);
-    static WINDOWPLACEMENT wpPrev;
-    wpPrev.length = sizeof(wpPrev);
+        DWORD dwStyle = GetWindowLong(m_window, GWL_STYLE);
+        static WINDOWPLACEMENT wpPrev;
+        wpPrev.length = sizeof(wpPrev);
 
-    if(fullscreen) {
-        Size size = getDisplaySize();
-        GetWindowPlacement(m_window, &wpPrev);
-        SetWindowLong(m_window, GWL_STYLE, (dwStyle & ~WS_OVERLAPPEDWINDOW) | WS_POPUP | WS_EX_TOPMOST);
-        SetWindowPos(m_window, HWND_TOPMOST, 0, 0, size.width(), size.height(), SWP_FRAMECHANGED);
-    } else {
-        SetWindowLong(m_window, GWL_STYLE, (dwStyle & ~(WS_POPUP | WS_EX_TOPMOST)) | WS_OVERLAPPEDWINDOW);
-        SetWindowPlacement(m_window, &wpPrev);
-        SetWindowPos(m_window, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-    }
+        if (fullscreen) {
+            Size size = getDisplaySize();
+            GetWindowPlacement(m_window, &wpPrev);
+            SetWindowLong(m_window, GWL_STYLE, (dwStyle & ~WS_OVERLAPPEDWINDOW) | WS_POPUP | WS_EX_TOPMOST);
+            SetWindowPos(m_window, HWND_TOPMOST, 0, 0, size.width(), size.height(), SWP_FRAMECHANGED);
+        } else {
+            SetWindowLong(m_window, GWL_STYLE, (dwStyle & ~(WS_POPUP | WS_EX_TOPMOST)) | WS_OVERLAPPEDWINDOW);
+            SetWindowPlacement(m_window, &wpPrev);
+            SetWindowPos(m_window, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+        }
+    });
 }
 
 void WIN32Window::setVerticalSync(bool enable)
 {
     m_verticalSync = enable;
 #ifdef OPENGL_ES
-    if (eglSwapInterval(m_eglDisplay, enable ? 1 : 0) != EGL_TRUE) {
-        g_logger.error("Error while setting vsync");
-    }
-#else
-    typedef BOOL (WINAPI * wglSwapIntervalProc)(int);
-    if (isExtensionSupported("WGL_EXT_swap_control") && isExtensionSupported("EXT_swap_control_tear")) {
-        wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
-        if (wglSwapInterval) {
-            wglSwapInterval(enable ? -1 : 0);
-            return;
+    g_graphicsDispatcher.addEvent([&, enable] {
+        if (eglSwapInterval(m_eglDisplay, enable ? 1 : 0) != EGL_TRUE) {
+            g_logger.error("Error while setting vsync");
         }
-    }
+    });
+#else
+    g_graphicsDispatcher.addEvent([&, enable] {
+        typedef BOOL(WINAPI* wglSwapIntervalProc)(int);
+        if (isExtensionSupported("WGL_EXT_swap_control") && isExtensionSupported("EXT_swap_control_tear")) {
+            wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
+            if (wglSwapInterval) {
+                wglSwapInterval(enable ? -1 : 0);
+                return;
+            }
+        }
 
-    if(!isExtensionSupported("WGL_EXT_swap_control"))
-        return;
+        if (!isExtensionSupported("WGL_EXT_swap_control"))
+            return;
 
-    wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
-    if(!wglSwapInterval)
-        return;
+        wglSwapIntervalProc wglSwapInterval = (wglSwapIntervalProc)getExtensionProcAddress("wglSwapIntervalEXT");
+        if (!wglSwapInterval)
+            return;
 
-    wglSwapInterval(enable ? 1 : 0);
+        wglSwapInterval(enable ? 1 : 0);
+    });
 #endif
 }
 
 void WIN32Window::setIcon(const std::string& file)
 {
-    ImagePtr image = Image::load(file);
+    g_graphicsDispatcher.addEvent([&, file] {
+        ImagePtr image = Image::load(file);
 
-    if(!image) {
-        g_logger.traceError(stdext::format("unable to load icon file %s", file));
-        return;
-    }
+        if (!image) {
+            g_logger.traceError(stdext::format("unable to load icon file %s", file));
+            return;
+        }
 
-    if(image->getBpp() != 4) {
-        g_logger.error("the app icon must have 4 channels");
-        return;
-    }
+        if (image->getBpp() != 4) {
+            g_logger.error("the app icon must have 4 channels");
+            return;
+        }
 
-    int n = image->getWidth() * image->getHeight();
-    std::vector<uint32> iconData(n);
-    for(int i=0; i < n;++i) {
-        uint8 *pixel = (uint8*)&iconData[i];
-        pixel[2] = *(image->getPixelData() + (i * 4) + 0);
-        pixel[1] = *(image->getPixelData() + (i * 4) + 1);
-        pixel[0] = *(image->getPixelData() + (i * 4) + 2);
-        pixel[3] = *(image->getPixelData() + (i * 4) + 3);
-    }
+        int n = image->getWidth() * image->getHeight();
+        std::vector<uint32> iconData(n);
+        for (int i = 0; i < n; ++i) {
+            uint8* pixel = (uint8*)&iconData[i];
+            pixel[2] = *(image->getPixelData() + (i * 4) + 0);
+            pixel[1] = *(image->getPixelData() + (i * 4) + 1);
+            pixel[0] = *(image->getPixelData() + (i * 4) + 2);
+            pixel[3] = *(image->getPixelData() + (i * 4) + 3);
+        }
 
-    HBITMAP hbmColor = CreateBitmap(image->getWidth(), image->getHeight(), 1, 32, &iconData[0]);
-    HBITMAP hbmMask = CreateCompatibleBitmap(GetDC(NULL), image->getWidth(), image->getHeight());
+        HBITMAP hbmColor = CreateBitmap(image->getWidth(), image->getHeight(), 1, 32, &iconData[0]);
+        HBITMAP hbmMask = CreateCompatibleBitmap(GetDC(NULL), image->getWidth(), image->getHeight());
 
-    ICONINFO ii;
-    ii.fIcon = TRUE;
-    ii.hbmColor = hbmColor;
-    ii.hbmMask = hbmMask;
-    ii.xHotspot = 0;
-    ii.yHotspot = 0;
+        ICONINFO ii;
+        ii.fIcon = TRUE;
+        ii.hbmColor = hbmColor;
+        ii.hbmMask = hbmMask;
+        ii.xHotspot = 0;
+        ii.yHotspot = 0;
 
-    HICON icon = CreateIconIndirect(&ii);
-    DeleteObject(hbmMask);
-    DeleteObject(hbmColor);
+        HICON icon = CreateIconIndirect(&ii);
+        DeleteObject(hbmMask);
+        DeleteObject(hbmColor);
 
-    SendMessage(m_window, WM_SETICON, ICON_SMALL, (LPARAM)icon);
-    SendMessage(m_window, WM_SETICON, ICON_BIG, (LPARAM)icon);
+        SendMessage(m_window, WM_SETICON, ICON_SMALL, (LPARAM)icon);
+        SendMessage(m_window, WM_SETICON, ICON_BIG, (LPARAM)icon);
+    });
 }
 
 void WIN32Window::setClipboardText(const std::string& text)
@@ -1039,11 +1118,7 @@ std::string WIN32Window::getPlatformType()
 #endif
 #else
 #ifndef OPENGL_ES
-#ifdef OLD_DIRECTX
-    return "WIN32-WGL-OLD";
-#else
     return "WIN32-WGL";
-#endif
 #else
     return "WIN32-EGL";
 #endif
@@ -1055,7 +1130,7 @@ Rect WIN32Window::getClientRect()
     if(m_window) {
         RECT clientRect = {0,0,0,0};
         int ret = GetClientRect(m_window, &clientRect);
-        assert(ret != 0);
+        VALIDATE(ret != 0);
         return Rect(Point(clientRect.left, clientRect.top), Point(clientRect.right, clientRect.bottom));
     } else {
         return Rect(m_position, m_size);
@@ -1067,7 +1142,7 @@ Rect WIN32Window::getWindowRect()
     if(m_window) {
         RECT windowRect = {0,0,0,0};
         int ret = GetWindowRect(m_window, &windowRect);
-        assert(ret != 0);
+        VALIDATE(ret != 0);
         return Rect(Point(windowRect.left, windowRect.top), Point(windowRect.right, windowRect.bottom));
     } else {
         return adjustWindowRect(getClientRect());
@@ -1088,6 +1163,10 @@ Rect WIN32Window::adjustWindowRect(const Rect& clientRect)
         dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
     }
     if(AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle) != 0) {
+        if (windowRect.top < 0) {
+            windowRect.bottom -= windowRect.top;
+            windowRect.top = 0;
+        }
         rect = Rect(Point(windowRect.left, windowRect.top), Point(windowRect.right, windowRect.bottom));
     } else {
         g_logger.traceError("AdjustWindowRectEx failed");

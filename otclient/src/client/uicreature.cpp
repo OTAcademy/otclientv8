@@ -22,14 +22,11 @@
 
 #include "uicreature.h"
 #include <framework/otml/otml.h>
-#include <framework/graphics/graphics.h>
-#include <framework/graphics/framebuffermanager.h>
+#include <framework/graphics/drawqueue.h>
 
 void UICreature::drawSelf(Fw::DrawPane drawPane)
 {
-    if((drawPane & Fw::ForegroundPane) == 0)
-        return;
-    if (!m_framebuffer)
+    if(drawPane != Fw::ForegroundPane)
         return;
 
     UIWidget::drawSelf(drawPane);
@@ -65,17 +62,7 @@ void UICreature::drawSelf(Fw::DrawPane drawPane)
             m_redraw = true;
         }
 
-        Rect drawRect = getPaddingRect();
-        if (m_redraw) {
-            m_redraw = false;
-            m_framebuffer->bind();
-            g_painter->setAlphaWriting(true);
-            g_painter->clear(Color::alpha);
-            m_creature->drawOutfit(Rect(0, 0, m_framebuffer->getSize()), m_scale, !m_optimized, m_direction);
-            m_framebuffer->release();
-        }
-        g_painter->setColor(m_imageColor);
-        m_framebuffer->draw(drawRect);
+        m_creature->drawOutfit(getPaddingRect(), m_direction, m_imageColor);
     }
 }
 
@@ -132,10 +119,5 @@ void UICreature::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
 void UICreature::onGeometryChange(const Rect& oldRect, const Rect& newRect)
 {
     UIWidget::onGeometryChange(oldRect, newRect);
-    if (!m_framebuffer) {
-        m_framebuffer = g_framebuffers.createFrameBuffer(false);
-        m_framebuffer->setSmooth(true);
-    }
-    m_framebuffer->resize(newRect.size());
     m_redraw = true;
 }

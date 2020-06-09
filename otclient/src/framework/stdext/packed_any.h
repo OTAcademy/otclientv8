@@ -23,8 +23,8 @@
 #ifndef STDEXT_PACKEDANY_H
 #define STDEXT_PACKEDANY_H
 
+#include <framework/global.h>
 #include <algorithm>
-#include <cassert>
 #include <type_traits>
 #include <typeinfo>
 
@@ -91,7 +91,7 @@ public:
 template<typename T>
 typename std::enable_if<can_pack_in_any<T>::value, T>::type
 packed_any_cast(const packed_any& operand) {
-    assert(operand.scalar);
+    VALIDATE(operand.scalar);
     union {
         T v;
         packed_any::placeholder* content;
@@ -103,7 +103,7 @@ packed_any_cast(const packed_any& operand) {
 template<typename T>
 typename std::enable_if<!can_pack_in_any<T>::value, T>::type
 packed_any_cast(const packed_any& operand) {
-    assert(operand.type() == typeid(T));
+    VALIDATE(operand.type() == typeid(T));
     return static_cast<packed_any::holder<T>*>(operand.content)->held;
 }
 

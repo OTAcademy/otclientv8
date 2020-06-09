@@ -174,9 +174,6 @@ LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS e)
     if(!g_app.isStopping() && !quiet_crash) {
         MessageBoxA(NULL, msg.c_str(), "Application crashed", 0);
     }
-    if (g_app.getIteration() < 5) {
-        g_resources.launchFailsafe();
-    }
 
     // this seems to silently close the application
     //return EXCEPTION_EXECUTE_HANDLER;

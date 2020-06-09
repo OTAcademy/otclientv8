@@ -30,47 +30,6 @@
 #include <framework/graphics/colorarray.h>
 #include <framework/graphics/drawqueue.h>
 
-struct LightSource { // todo move it somewhere else
-    PointF pos;
-    Color color;
-    float radius;
-    float depth;
-};
-
-struct LightBuffer {
-    void setLightTexture(const TexturePtr& lightTexture)
-    {
-        texture = lightTexture;
-        RectF lightTextureRect(0, 0, texture->getSize().width(), texture->getSize().height());
-        for (int i = 0; i < 1024; ++i) {
-            addRect(&texCoords[i * 12], lightTextureRect);
-        }
-    }
-
-    float destCoords[1024 * 2 * 6];
-    float texCoords[1024 * 2 * 6];
-    float depthBuffer[1024 * 6];
-    float colorBuffer[1024 * 4 * 6];
-    TexturePtr texture;
-    size_t size = 0;
-
-    inline void addRect(float* dest, const RectF& rect)
-    {
-        dest[0] = rect.left();
-        dest[1] = rect.top();
-        dest[2] = rect.right() + 1;
-        dest[3] = rect.top();
-        dest[4] = rect.left();
-        dest[5] = rect.bottom() + 1;
-        dest[6] = rect.left();
-        dest[7] = rect.bottom() + 1;
-        dest[8] = rect.right() + 1;
-        dest[9] = rect.top();
-        dest[10] = rect.right() + 1;
-        dest[11] = rect.bottom() + 1;
-    }
-};
-
 class Painter {
 public:
     enum BlendEquation {
@@ -112,14 +71,16 @@ public:
         Matrix3 textureMatrix;
         Color color;
         float opacity;
-        float depth;
         Painter::CompositionMode compositionMode;
         Painter::BlendEquation blendEquation;
-        Painter::DepthFunc depthFunc;
         Rect clipRect;
-        Texture* texture;
+        TexturePtr texture;
         PainterShaderProgram* shaderProgram;
         bool alphaWriting;
+#ifdef WITH_DEPTH_BUFFER
+        Painter::DepthFunc depthFunc;
+        float depth;
+#endif
     };
 
     Painter();
@@ -142,13 +103,14 @@ public:
     void setTextureMatrix(const Matrix3& textureMatrix) { m_textureMatrix = textureMatrix; }
     void setCompositionMode(CompositionMode compositionMode);
     void setBlendEquation(BlendEquation blendEquation);
+#ifdef WITH_DEPTH_BUFFER
     void setDepthFunc(DepthFunc func);
+#endif
     void setClipRect(const Rect& clipRect);
     void setShaderProgram(PainterShaderProgram* shaderProgram) { m_shaderProgram = shaderProgram; }
-    void setTexture(Texture* texture);
+    void setTexture(const TexturePtr& texture);
     void setAlphaWriting(bool enable);
 
-    void setTexture(const TexturePtr& texture) { setTexture(texture.get()); }
     void setResolution(const Size& resolution);
 
     void scale(float x, float y);
@@ -168,7 +130,7 @@ public:
 
     void resetBlendEquation() { setBlendEquation(BlendEquation_Add); }
     void resetTexture() { setTexture(nullptr); }
-    void resetAlphaWriting() { setAlphaWriting(false); }
+    void resetAlphaWriting() { setAlphaWriting(true); }
     void resetTransformMatrix() { setTransformMatrix(Matrix3()); }
 
     /* org */
@@ -176,25 +138,23 @@ public:
     void drawFillCoords(CoordsBuffer& coordsBuffer);
     void drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture);
     void drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
+    inline void drawTexturedRect(const Rect& dest, const TexturePtr& texture) { drawTexturedRect(dest, texture, Rect(Point(0, 0), texture->getSize())); }
     void drawColorOnTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
     void drawUpsideDownTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
     void drawRepeatedTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
     void drawFilledRect(const Rect& dest);
-    void drawFilledTriangle(const Point& a, const Point& b, const Point& c);
-    void drawBoundingRect(const Rect& dest, int innerLineWidth = 1);
 
     void setDrawProgram(PainterShaderProgram* drawProgram) { m_drawProgram = drawProgram; }
     bool hasShaders() { return true; }
 
+    void drawText(const Point& pos, CoordsBuffer& coordsBuffer, const Color& color);
+    void drawText(const Point& pos, CoordsBuffer& coordsBuffer, const std::vector<std::pair<int, Color>>& colors);
+
+    void setSecondTexture(const TexturePtr& texture);
+    void setOffset(const Point& offset);
+
     void setAtlasTextures(const TexturePtr& atlas);
-    void drawQueue(DrawQueue& drawqueue);
-
-    void drawLights(const LightBuffer& buffer);
-    void drawLightDepth(const std::map<PointF, float> depth, float tileSize);
-
-
-    //
-    void drawTexturedRect(const Rect& dest, const TexturePtr& texture) { drawTexturedRect(dest, texture, Rect(Point(0, 0), texture->getSize())); }
+    void drawCache(const std::vector<float>& vertex, const std::vector<float>& texture, const std::vector<float>& color, int size);
 
     void setColor(const Color& color) { m_color = color; }
     void setShaderProgram(const PainterShaderProgramPtr& shaderProgram) { setShaderProgram(shaderProgram.get()); }
@@ -205,8 +165,13 @@ public:
 
     void setOpacity(float opacity) { m_opacity = opacity; }
 
+#ifdef WITH_DEPTH_BUFFER
     void setDepth(float depth) { m_depth = depth; }
     float getDepth() { return m_depth; }
+    DepthFunc getDepthFunc() { return m_depthFunc; }
+    void resetDepth() { return setDepth(0.0f); }
+    void resetDepthFunc() { setDepthFunc(DepthFunc_None); }
+#endif
 
     Size getResolution() { return m_resolution; }
     Color getColor() { return m_color; }
@@ -214,15 +179,11 @@ public:
     Rect getClipRect() { return m_clipRect; }
     CompositionMode getCompositionMode() { return m_compositionMode; }
 
-    DepthFunc getDepthFunc() { return m_depthFunc; }
-
     void resetClipRect() { setClipRect(Rect()); }
     void resetOpacity() { setOpacity(1.0f); }
-    void resetDepth() { return setDepth(0.0f); }
     void resetCompositionMode() { setCompositionMode(CompositionMode_Normal); }
     void resetColor() { setColor(Color::white); }
     void resetShaderProgram() { setShaderProgram(nullptr); }
-    void resetDepthFunc() { setDepthFunc(DepthFunc_None); }
 
     int draws() { return m_draws; }
     int calls() { return m_calls; }
@@ -249,10 +210,11 @@ protected:
     void updateGlClipRect();
     void updateGlAlphaWriting();
     void updateGlViewport();
+#ifdef WITH_DEPTH_BUFFER
     void updateDepthFunc();
+#endif
 
     CoordsBuffer m_coordsBuffer;
-    CoordsBuffer m_coordsDepthBuffer;
 
     std::vector<Matrix3> m_transformMatrixStack;
     Matrix3 m_transformMatrix;
@@ -261,7 +223,7 @@ protected:
     Matrix3 m_atlasTextureMatrix;
 
     BlendEquation m_blendEquation;
-    Texture* m_texture;
+    TexturePtr m_texture;
     bool m_alphaWriting;
 
     PainterState m_olderStates[10];
@@ -271,13 +233,15 @@ protected:
 
     PainterShaderProgram* m_shaderProgram;
     CompositionMode m_compositionMode;
-    DepthFunc m_depthFunc;
     Color m_color;
     Matrix4 m_matrixColor;
     Size m_resolution;
     float m_opacity;
-    float m_depth;
     Rect m_clipRect;
+#ifdef WITH_DEPTH_BUFFER
+    DepthFunc m_depthFunc;
+    float m_depth;
+#endif
     int m_draws = 0;
     int m_calls = 0;
 
@@ -290,10 +254,9 @@ private:
 
     PainterShaderProgramPtr m_drawNewProgram;
 
-    PainterShaderProgramPtr m_drawLightProgram;
-    PainterShaderProgramPtr m_drawLightDepthProgram;
+    PainterShaderProgramPtr m_drawTextProgram;
 };
 
-extern Painter* g_painter;
+extern Painter* g_painterNew;
 
 #endif

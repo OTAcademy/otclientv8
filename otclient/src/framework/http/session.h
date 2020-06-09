@@ -17,8 +17,8 @@ public:
     HttpSession(boost::asio::io_service& service, const std::string& url, int timeout, HttpResult_ptr result, HttpResult_cb callback) :
         m_service(service), m_url(url), m_socket(service), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
     {
-        BOOST_ASSERT(m_callback);
-        BOOST_ASSERT(m_result);
+        VALIDATE(m_callback);
+        VALIDATE(m_result);
     };
 
     void start();

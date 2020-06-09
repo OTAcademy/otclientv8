@@ -91,7 +91,9 @@ public:
     template<class C, typename F>
     void bindSingletonFunction(const std::string& functionName, F C::*function, C *instance);
     template<class C, typename F>
-    void bindSingletonFunction(const std::string& className, const std::string& functionName, F C::*function, C *instance);
+    void bindSingletonFunction(const std::string& className, const std::string& functionName, F C::* function, C* instance);
+    template<typename F>
+    void bindSingletonFunction(const std::string& className, const std::string& functionName, const F& function);
 
     template<class C, typename F>
     void bindClassStaticFunction(const std::string& functionName, const F& function);
@@ -248,7 +250,7 @@ public:
     void remove(int index);
     bool next(int index = -2);
 
-    void checkStack() { assert(getTop() <= 20); }
+    void checkStack() { VALIDATE(getTop() <= 20); }
     void getStackFunction(int level = 0);
 
     void getRef(int ref);
@@ -383,6 +385,12 @@ void LuaInterface::bindSingletonFunction(const std::string& className, const std
     registerClassStaticFunction(className, functionName, luabinder::bind_singleton_mem_fun(function, instance));
 }
 
+template<typename F>
+void LuaInterface::bindSingletonFunction(const std::string& className, const std::string& functionName, const F& function)
+{
+    registerClassStaticFunction(className, functionName, luabinder::bind_fun(function));
+}
+
 template<class C, typename F>
 void LuaInterface::bindClassStaticFunction(const std::string& functionName, const F& function) {
     registerClassStaticFunction<C>(functionName, luabinder::bind_fun(function));
@@ -468,7 +476,7 @@ R LuaInterface::callGlobalField(const std::string& global, const std::string& fi
     R result;
     int rets = luaCallGlobalField(global, field, args...);
     if(rets > 0) {
-        assert(rets == 1);
+        VALIDATE(rets == 1);
         result = g_lua.polymorphicPop<R>();
     } else
         result = R();

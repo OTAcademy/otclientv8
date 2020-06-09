@@ -179,7 +179,7 @@ R LuaObject::callLuaField(const std::string& field, const T&... args) {
     R result;
     int rets = luaCallLuaField(field, args...);
     if(rets > 0) {
-        assert(rets == 1);
+        VALIDATE(rets == 1);
         result = g_lua.polymorphicPop<R>();
     } else
         result = R();

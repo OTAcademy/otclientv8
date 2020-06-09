@@ -38,9 +38,6 @@ SoundFilePtr SoundFile::loadSoundFile(const std::string& filename)
     if(!file)
         stdext::throw_exception(stdext::format("unable to open %s", filename));
 
-    // cache file buffer to avoid lags from hard drive
-    file->cache();
-
     char magic[4];
     file->read(magic, 4);
     file->seek(0);

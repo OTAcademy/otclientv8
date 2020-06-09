@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SQL
+
 #ifndef FRAMEWORK_SQL_DECLARATIONS_H
 #define FRAMEWORK_SQL_DECLARATIONS_H
 
@@ -37,5 +39,7 @@ class MySQLResult;
 
 typedef stdext::shared_object_ptr<DatabaseMySQL> DatabaseMySQLPtr;
 typedef stdext::shared_object_ptr<MySQLResult> MySQLResultPtr;
+
+#endif
 
 #endif

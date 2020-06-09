@@ -51,6 +51,9 @@ private:
 };
 
 extern EventDispatcher g_dispatcher;
+extern EventDispatcher g_graphicsDispatcher;
+extern std::thread::id g_mainThreadId;
+extern std::thread::id g_dispatcherThreadId;
 
 #define addEvent(...) addEventEx(__FUNCTION__, __VA_ARGS__)
 #define scheduleEvent(...) scheduleEventEx(__FUNCTION__, __VA_ARGS__)

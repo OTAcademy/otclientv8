@@ -247,7 +247,8 @@ namespace Fw
         MouseNoButton = 0,
         MouseLeftButton,
         MouseRightButton,
-        MouseMidButton
+        MouseMidButton,
+        MouseTouch
     };
 
     enum MouseWheelDirection {
@@ -279,13 +280,14 @@ namespace Fw
         AlternateState = 1024,
         DraggingState = 2048,
         HiddenState = 4096,
-        LastWidgetState = 8192
+        MobileState = 8192,
+        LastWidgetState = 16384
     };
 
     enum DrawPane {
         ForegroundPane = 1,
-        BackgroundPane = 2,
-        BothPanes = 3
+        MapBackgroundPane = 2,
+        MapForegroundPane = 3,
     };
 
 #ifdef FW_SQL

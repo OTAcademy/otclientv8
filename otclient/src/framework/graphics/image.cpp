@@ -70,7 +70,6 @@ void Image::savePNG(const std::string& fileName)
     if(!fin)
         stdext::throw_exception(stdext::format("failed to open file '%s' for write", fileName));
 
-    fin->cache();
     std::stringstream data;
     save_png(data, m_size.width(), m_size.height(), 4, (unsigned char*)getPixelData());
     fin->write(data.str().c_str(), data.str().length());
@@ -78,29 +77,9 @@ void Image::savePNG(const std::string& fileName)
     fin->close();
 }
 
-void Image::overwriteMask(const Color& maskedColor, const Color& insideColor, const Color& outsideColor)
-{
-    assert(m_bpp == 4);
-
-    uint32_t maskedColorU32 = maskedColor.argb();
-    uint32_t insideColorU32 = insideColor.argb();
-    uint32_t outsideColorU32 = outsideColor.argb();
-    int pixels = getPixelCount();
-
-    for (int p = 0; p < pixels; p++) {
-        uint32* rgba = (uint32_t*)(&m_pixels[p * 4]);
-
-        if (*rgba == maskedColorU32) {
-            *rgba = insideColorU32;
-            continue;
-        }
-        *rgba = outsideColorU32;
-    }
-}
-
 void Image::blit(const Point& dest, const ImagePtr& other)
 {
-    assert(m_bpp == 4);
+    VALIDATE(m_bpp == 4);
 
     if (!other)
         return;
@@ -121,7 +100,7 @@ void Image::blit(const Point& dest, const ImagePtr& other)
 
 void Image::paste(const ImagePtr& other)
 {
-    assert(m_bpp == 4);
+    VALIDATE(m_bpp == 4);
 
     if (!other)
         return;
@@ -141,7 +120,7 @@ void Image::paste(const ImagePtr& other)
 
 ImagePtr Image::upscale()
 {
-    assert(m_bpp == 4);
+    VALIDATE(m_bpp == 4);
 
     ImagePtr newImage(new Image(m_size * 2));
 
@@ -166,8 +145,8 @@ ImagePtr Image::upscale()
 
 bool Image::nextMipmap()
 {
-    assert(m_bpp == 4);
-    assert(stdext::is_power_of_two(m_size.width()) && stdext::is_power_of_two(m_size.height()));
+    VALIDATE(m_bpp == 4);
+    VALIDATE(stdext::is_power_of_two(m_size.width()) && stdext::is_power_of_two(m_size.height()));
 
     int iw = m_size.width();
     int ih = m_size.height();
@@ -230,7 +209,7 @@ void Texture::generateSoftwareMipmaps(std::vector<uint8> inPixels)
 {
     bind();
 
-    assert(stdext::is_power_of_two(m_glSize.width()) && stdext::is_power_of_two(m_glSize.height()));
+    VALIDATE(stdext::is_power_of_two(m_glSize.width()) && stdext::is_power_of_two(m_glSize.height()));
 
     Size inSize = m_glSize;
     Size outSize = inSize / 2;
@@ -301,6 +280,8 @@ ImagePtr Image::fromQRCode(const std::string& code, int border)
     uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
     uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
     bool ok = qrcodegen_encodeText(code.c_str(), tempBuffer, qrcode, errCorLvl, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
+    if (!ok)
+        return nullptr;
     int size = qrcodegen_getSize(qrcode);
     ImagePtr image(new Image(Size(size + border * 2, size + border * 2)));
     for (int x = 0; x < size + border * 2; ++x) {

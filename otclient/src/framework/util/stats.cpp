@@ -9,11 +9,10 @@
 
 Stats g_stats;
 
-AutoStatRecursive* AutoStatRecursive::activeStat = nullptr;
-
 void Stats::add(int type, Stat* stat) {
     if (type < 0 || type > STATS_LAST)
         return;
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     auto it = stats[type].data.emplace(stat->description, StatsData(0, 0, stat->extraDescription)).first;
     it->second.calls += 1;
@@ -33,6 +32,7 @@ std::string Stats::get(int type, int limit, bool pretty) {
     if (type < 0 || type > STATS_LAST)
         return "";
 
+    std::lock_guard<std::mutex> lock(m_mutex);
     std::multimap<uint64_t, StatsMap::const_iterator> sorted_stats;
     
     uint64_t total_time = 0;
@@ -72,11 +72,13 @@ std::string Stats::get(int type, int limit, bool pretty) {
 void Stats::clear(int type) {
     if (type < 0 || type > STATS_LAST)
         return;
+    std::lock_guard<std::mutex> lock(m_mutex);
     stats[type].start = stdext::micros();
     stats[type].data.clear();
 }
 
 void Stats::clearAll() {
+    std::lock_guard<std::mutex> lock(m_mutex);
     for (int i = 0; i <= STATS_LAST; ++i) {
         stats[i].data.clear();
         stats[i].slow.clear();
@@ -87,6 +89,7 @@ void Stats::clearAll() {
 std::string Stats::getSlow(int type, int limit, unsigned int minTime, bool pretty) {
     if (type < 0 || type > STATS_LAST)
         return "";
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     std::stringstream ret;
 
@@ -117,6 +120,7 @@ std::string Stats::getSlow(int type, int limit, unsigned int minTime, bool prett
 void Stats::clearSlow(int type) {
     if (type < 0 || type > STATS_LAST)
         return;
+    std::lock_guard<std::mutex> lock(m_mutex);
     for (auto& stat : stats[type].slow)
         delete stat;
     stats[type].slow.clear();

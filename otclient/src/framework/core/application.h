@@ -40,6 +40,7 @@ public:
     virtual void exit();
     virtual void quick_exit();
     virtual void close();
+    void restart();
 
     void setName(const std::string& name) { m_appName = name; }
     void setCompactName(const std::string& compactName) { m_appCompactName = compactName; }
@@ -63,6 +64,11 @@ public:
     std::string getOs();
     std::string getStartupOptions() { return m_startupOptions; }
 
+    bool isMobile()
+    {
+        return m_mobile;
+    }
+
 protected:
     void registerLuaFunctions();
 
@@ -74,6 +80,7 @@ protected:
     stdext::boolean<false> m_running;
     stdext::boolean<false> m_stopping;
     stdext::boolean<false> m_terminated;
+    stdext::boolean<false> m_mobile;
 };
 
 #ifdef FW_GRAPHICS

@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef FW_SQL
+
 #include "database.h"
 
 boost::recursive_mutex DBQuery::databaseLock;
@@ -76,3 +78,5 @@ bool DBInsert::execute()
     m_buf = "";
     return ret;
 }
+
+#endif

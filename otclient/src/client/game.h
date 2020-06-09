@@ -96,6 +96,7 @@ protected:
 
     void processNewWalkCancel(Otc::Direction dir);
     void processPredictiveWalkCancel(const Position& pos, Otc::Direction dir);
+    void processWalkId(uint32_t walkId);
 
     void processPlayerHelpers(int helpers);
     void processPlayerModes(Otc::FightModes fightMode, Otc::ChaseModes chaseMode, bool safeMode, Otc::PVPModes pvpMode);

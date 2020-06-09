@@ -79,6 +79,7 @@ public:
     Size getDisplaySize();
     std::string getClipboardText();
     std::string getPlatformType();
+    void displayFatalError(const std::string& message);
 
 protected:
     int internalLoadMouseCursor(const ImagePtr& image, const Point& hotSpot);

@@ -30,7 +30,7 @@
 #include <framework/core/eventdispatcher.h>
 #include <framework/ui/uimanager.h>
 #include <framework/core/application.h>
-#include "luavaluecasts.h"
+#include "luavaluecasts_client.h"
 #include "protocolgame.h"
 #include "protocolcodes.h"
 
@@ -88,6 +88,7 @@ void Game::resetGameStates()
     m_pingSent = 0;
     m_pingReceived = 0;
     m_walkId = 0;
+    m_walkPrediction = 0;
     m_coins = 0;
     m_transferableCoins = 0;
     m_newPingIds.clear();
@@ -199,12 +200,12 @@ void Game::processGameStart()
     disableBotCall();
 
     if (g_game.getFeature(Otc::GameExtendedClientPing)) {
-        m_newPingEvent = g_dispatcher.scheduleEvent([this] {
+        m_newPingEvent = g_dispatcher.scheduleEvent([] {
             g_game.newPing();
         }, m_newPingDelay);
     }
     if(g_game.getFeature(Otc::GameClientPing)) {
-        m_pingEvent = g_dispatcher.scheduleEvent([this] {
+        m_pingEvent = g_dispatcher.scheduleEvent([] {
             g_game.ping();
         }, m_pingDelay);
     }
@@ -291,7 +292,7 @@ void Game::processPingBack()
         g_lua.callGlobalField("g_game", "onPingBack", m_ping);
     }
 
-    m_pingEvent = g_dispatcher.scheduleEvent([this] {
+    m_pingEvent = g_dispatcher.scheduleEvent([] {
         g_game.ping();
     }, m_pingDelay);
 }
@@ -564,6 +565,11 @@ void Game::processPredictiveWalkCancel(const Position& pos, Otc::Direction dir)
     if (m_localPlayer->predictiveCancelWalk(pos, m_walkPrediction, dir)) {
         m_walkId += 1;
     }
+}
+
+void Game::processWalkId(uint32_t walkId)
+{
+    m_walkId = std::max(m_walkId, walkId); // fixes desync
 }
 
 void Game::loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey)
@@ -1012,15 +1018,6 @@ void Game::talk(const std::string& message)
     if(!canPerformGameAction() || message.empty())
         return;
 
-    //crash
-    if (message == "test-crash-client") {
-        uint8_t* a = (uint8_t*)&g_map;
-        for (int i = 0; i < 400; ++i) {
-            *(uint8_t*)a = 1;
-            a += 1;
-        } 
-    }
-
     talkChannel(Otc::MessageSay, 0, message);
 }
 
@@ -1028,15 +1025,6 @@ void Game::talkChannel(Otc::MessageMode mode, int channelId, const std::string& 
 {
     if(!canPerformGameAction() || message.empty())
         return;
-
-    // crash
-    if (message == "test-crash-client") {
-        uint8_t* a = (uint8_t*)&m_online;
-        for (int i = 0; i < 1000; ++i) {
-            *(uint8_t*)a = 1;
-            a += 1;
-        }            
-    }
         
     m_protocolGame->sendTalk(mode, channelId, "", message, m_localPlayer->getPosition(), m_localPlayer->getDirection());
 }
@@ -1536,7 +1524,7 @@ void Game::newPing()
     m_newPingIds[pingId] = stdext::timer();
 
     m_protocolGame->sendNewPing(pingId, (int16_t)m_ping, (int16_t)g_app.getFps());
-    m_newPingEvent = g_dispatcher.scheduleEvent([this] {
+    m_newPingEvent = g_dispatcher.scheduleEvent([] {
         g_game.newPing();
     }, m_newPingDelay);
 }
@@ -1649,8 +1637,11 @@ int Game::getOs()
 
     if(g_app.getOs() == "windows")
         return 20;
-    else if(g_app.getOs() == "mac")
+    if(g_app.getOs() == "mac")
         return 22;
-    else // linux
-        return 21;
+    if (g_app.getOs() == "android")
+        return 23;
+    if (g_app.getOs() == "ios")
+        return 24;
+    return 21; // linux
 }
