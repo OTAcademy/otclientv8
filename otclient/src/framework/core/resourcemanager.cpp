@@ -732,8 +732,9 @@ void ResourceManager::updateExecutable(std::string fileName)
     if (!dFile)
         g_logger.fatal(stdext::format("Cannot find executable: %s in downloads", fileName));
 
-    std::filesystem::path path(fileName);
+    std::filesystem::path path(m_binaryPath);
     auto newBinary = path.stem().string() + "-" + std::to_string(time(nullptr)) + path.extension().string();
+    g_logger.info(stdext::format("Updating binary file: %s", newBinary));
     PHYSFS_file* file = PHYSFS_openWrite(newBinary.c_str());
     if (!file)
         return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));

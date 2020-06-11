@@ -55,7 +55,7 @@ bool Shader::compileSourceCode(const std::string& sourceCode)
 {
 #ifdef OPENGL_ES
     static const char *qualifierDefines =
-        "precision mediump float;\n";
+        "precision highp float;\n";
     std::string code = qualifierDefines;
     code.append(sourceCode);
     const char* c_source = code.c_str();

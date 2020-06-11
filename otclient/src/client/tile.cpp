@@ -136,8 +136,7 @@ void Tile::drawTop(const Point& dest, LightView* lightView)
     for (const ThingPtr& thing : m_things) {
         if (!thing->isOnTop() || thing->isHidden())
             continue;
-        thing->draw(dest - m_drawElevation, true, lightView);
-        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+        thing->draw(dest, true, lightView);
     }
 }
 

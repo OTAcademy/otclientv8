@@ -35,38 +35,6 @@ Outfit::Outfit()
     resetClothes();
 }
 
-/*
-int Creature::getAnimationPhase()
-{
-    if (m_outfit.getCategory() == ThingCategoryCreature) {
-        ThingType* type = g_things.rawGetThingType(m_outfit.getId(), m_outfit.getCategory());
-        auto idleAnimator = type->getIdleAnimator();
-        int animationPhase = m_walkAnimationPhase;
-
-        if (idleAnimator) {
-            if (m_walking) {
-                animationPhase += idleAnimator->getAnimationPhases() - 1;;
-            } else {
-                animationPhase = idleAnimator->getPhase();
-            }
-        } else if (isAnimateAlways()) {
-            int phases = getAnimator() ? getAnimator()->getAnimationPhases() : getAnimationPhases();
-            int ticksPerFrame = 1000 / phases;
-            animationPhase = (g_clock.millis() % (ticksPerFrame * phases)) / ticksPerFrame;
-        }
-
-        return animationPhase;
-    }
-
-    ThingType* type = g_things.rawGetThingType(m_outfit.getAuxId(), m_outfit.getCategory());
-
-    int animationPhase = 0;
-
-
-    return animationPhase;
-}
-*/
-
 void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase, bool animate, LightView* lightView)
 {
     // direction correction

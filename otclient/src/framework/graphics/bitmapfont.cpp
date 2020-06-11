@@ -270,15 +270,17 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth, std::vec
     std::string outText;
     outText.reserve(text.size() * 2); // string append optimization
 
-    int lastSeparator = 0, lineLength = 0, wordLength = 0;
-    for (size_t i = 0; i < text.size(); ++i) {
+    int lastSeparator = 0, lastColorSeparator = 0, lineLength = 0, wordLength = 0;
+    for (size_t i = 0, c = 0; i < text.size(); ++i) {
         uchar glyph = (uchar)text[i];
         if (text[i] == '\n' || text[i] == ' ') {
             lineLength += wordLength;
             if (lineLength > maxWidth) { // too long line with this word
                 if (text[lastSeparator] == ' ') {
+                    c -= 1;
+                    updateColors(colors, lastColorSeparator, -1);
                     lastSeparator += 1;
-                    updateColors(colors, outText.size(), -1);
+                    lastColorSeparator += 1;
                 }
                 outText += '\n';
                 lineLength = wordLength;
@@ -291,9 +293,12 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth, std::vec
                 wordLength = 0;
                 lineLength = 0;
                 lastSeparator = i + 1;
+                lastColorSeparator = c;
             } else { // space
                 wordLength = m_glyphsSize[glyph].width() + m_glyphSpacing.width(); // space
                 lastSeparator = i;
+                lastColorSeparator = c;
+                c += 1;
             }
             continue;
         }
@@ -306,24 +311,29 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth, std::vec
             if (lineLength != 0) { // add new line if current one is not empty
                 outText += '\n';
             }
-            if (text[lastSeparator] == ' ') // ignore space if it's first character in new line
+            if (text[lastSeparator] == ' ') { // ignore space if it's first character in new line
+                c -= 1;
                 lastSeparator += 1;
+                lastColorSeparator += 1;
+            }
             for (size_t j = lastSeparator; j < i; ++j) { // copy word
                 outText += text[j];
             }
-            updateColors(colors, outText.size(), 1);
+            updateColors(colors, lastColorSeparator, 1);
             outText += '-'; // word continuation
             outText += '\n'; // new line
 
             wordLength = m_glyphsSize[glyph].width() + m_glyphSpacing.width();
             lineLength = 0;
             lastSeparator = i;
+            lastColorSeparator = c;
         }
+        c += 1;
     }
 
     lineLength += wordLength;
     if (lineLength > maxWidth) { // too long line with this word
-        updateColors(colors, outText.size(), 1);
+        updateColors(colors, lastColorSeparator, 1);
         outText += '\n';
         lineLength = wordLength;
     }
