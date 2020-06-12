@@ -408,57 +408,82 @@ int AndroidWindow::handleInput(AInputEvent* event)
     int32_t eventType = AInputEvent_getType(event);
     int32_t action = AKeyEvent_getAction(event);
     int32_t key_val = eventType == AINPUT_EVENT_TYPE_KEY ? AKeyEvent_getKeyCode(event) : 0;
+    int pointerId = 0;
     Point mousePos;
-    if(eventType == AINPUT_EVENT_TYPE_MOTION)
-        mousePos = Point(AMotionEvent_getX(event, 0) / m_scaling, AMotionEvent_getY(event, 0) / m_scaling);
-    g_dispatcher.addEventEx("AndroidWindow::handleInput", [&, eventType, action, key_val, mousePos] {
+    if (eventType == AINPUT_EVENT_TYPE_MOTION) {
+        pointerId = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        mousePos = Point(AMotionEvent_getX(event, pointerId) / m_scaling, AMotionEvent_getY(event, pointerId) / m_scaling);
+    }
+    g_dispatcher.addEventEx("AndroidWindow::handleInput", [&, eventType, action, key_val, pointerId, mousePos] {
         if (!m_onInputEvent) return;
         static ticks_t lastPress = 0;
         static bool pressed = false;
         static Point touchStartPos(0, 0);
         if (eventType == AINPUT_EVENT_TYPE_MOTION) {
+            int actionType = action & AMOTION_EVENT_ACTION_MASK;
+            if (pointerId == 1 || pointerId == 2) { // multitouch
+                if (actionType == AMOTION_EVENT_ACTION_POINTER_DOWN) {
+                    m_multiInputEvent[pointerId].reset(Fw::MousePressInputEvent);
+                    m_multiInputEvent[pointerId].mousePos = mousePos;
+                    m_multiInputEvent[pointerId].mouseButton = pointerId == 1 ? Fw::MouseTouch2 : Fw::MouseTouch3;
+                    m_mouseButtonStates[m_multiInputEvent[pointerId].mouseButton] = true;
+                    m_onInputEvent(m_multiInputEvent[pointerId]);
+                } else if (actionType == AMOTION_EVENT_ACTION_POINTER_UP) {
+                    m_multiInputEvent[pointerId].reset(Fw::MouseReleaseInputEvent);
+                    m_multiInputEvent[pointerId].mousePos = mousePos;
+                    m_multiInputEvent[pointerId].mouseButton = pointerId == 1 ? Fw::MouseTouch2 : Fw::MouseTouch3;
+                    m_mouseButtonStates[m_multiInputEvent[pointerId].mouseButton] = false;
+                    m_onInputEvent(m_multiInputEvent[pointerId]);
+                }
+                return;
+            }
+
             m_inputEvent.reset(Fw::MouseMoveInputEvent);
             m_inputEvent.mouseMoved = mousePos - m_inputEvent.mousePos;
             m_inputEvent.mousePos = mousePos;
             m_onInputEvent(m_inputEvent);
 
-            if (action == AKEY_EVENT_ACTION_DOWN) {
+            if (actionType == AMOTION_EVENT_ACTION_DOWN) {
                 lastPress = g_clock.millis();
                 m_inputEvent.reset(Fw::MousePressInputEvent);
                 m_inputEvent.mouseButton = Fw::MouseTouch;
+                m_mouseButtonStates[Fw::MouseTouch] = true;
                 m_onInputEvent(m_inputEvent);
                 touchStartPos = mousePos;
-            } else if (action == AKEY_EVENT_ACTION_UP) {
+            } else if (actionType == AMOTION_EVENT_ACTION_UP || actionType == AMOTION_EVENT_ACTION_POINTER_UP) {
                 m_inputEvent.reset(Fw::MouseReleaseInputEvent);
                 m_inputEvent.mouseButton = Fw::MouseTouch;
+                m_mouseButtonStates[Fw::MouseTouch] = false;
                 m_onInputEvent(m_inputEvent);
+                if (pointerId == 0) {
+                    if (!pressed) {
+                        if (lastPress + 500 < stdext::millis()) {
+                            m_inputEvent.reset(Fw::MousePressInputEvent);
+                            m_inputEvent.mouseButton = Fw::MouseRightButton;
+                            m_onInputEvent(m_inputEvent);
 
-                if (!pressed) {
-                    if (lastPress + 500 < stdext::millis()) {
-                        m_inputEvent.reset(Fw::MousePressInputEvent);
-                        m_inputEvent.mouseButton = Fw::MouseRightButton;
-                        m_onInputEvent(m_inputEvent);
+                            m_inputEvent.reset(Fw::MouseReleaseInputEvent);
+                            m_inputEvent.mouseButton = Fw::MouseRightButton;
+                            m_onInputEvent(m_inputEvent);
+                        } else {
+                            lastPress = stdext::millis();
+                            m_inputEvent.reset(Fw::MousePressInputEvent);
+                            m_inputEvent.mouseButton = Fw::MouseLeftButton;
+                            m_onInputEvent(m_inputEvent);
 
-                        m_inputEvent.reset(Fw::MouseReleaseInputEvent);
-                        m_inputEvent.mouseButton = Fw::MouseRightButton;
-                        m_onInputEvent(m_inputEvent);
+                            m_inputEvent.reset(Fw::MouseReleaseInputEvent);
+                            m_inputEvent.mouseButton = Fw::MouseLeftButton;
+                            m_onInputEvent(m_inputEvent);
+                        }
                     } else {
-                        lastPress = stdext::millis();
-                        m_inputEvent.reset(Fw::MousePressInputEvent);
-                        m_inputEvent.mouseButton = Fw::MouseLeftButton;
-                        m_onInputEvent(m_inputEvent);
-
+                        pressed = false;
                         m_inputEvent.reset(Fw::MouseReleaseInputEvent);
                         m_inputEvent.mouseButton = Fw::MouseLeftButton;
+                        m_mouseButtonStates[Fw::MouseLeftButton] = false;
                         m_onInputEvent(m_inputEvent);
                     }
-                } else {
-                    pressed = false;
-                    m_inputEvent.reset(Fw::MouseReleaseInputEvent);
-                    m_inputEvent.mouseButton = Fw::MouseLeftButton;
-                    m_onInputEvent(m_inputEvent);
                 }
-            } else if (action == AKEY_EVENT_ACTION_MULTIPLE) {
+            } else if (actionType == AMOTION_EVENT_ACTION_MOVE) {
                 int dist = std::max(std::abs(touchStartPos.x - mousePos.x), std::abs(touchStartPos.y - mousePos.y));
                 if (!pressed && dist > 8) {
                     pressed = true;
@@ -469,6 +494,7 @@ int AndroidWindow::handleInput(AInputEvent* event)
 
                     m_inputEvent.reset(Fw::MousePressInputEvent);
                     m_inputEvent.mouseButton = Fw::MouseLeftButton;
+                    m_mouseButtonStates[Fw::MouseLeftButton] = true;
                     m_onInputEvent(m_inputEvent);
                 }
             }

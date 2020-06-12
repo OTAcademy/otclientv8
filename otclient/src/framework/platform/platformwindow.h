@@ -123,7 +123,7 @@ protected:
     Size m_unmaximizedSize;
     Point m_unmaximizedPos;
     InputEvent m_inputEvent;
-    stdext::boolean<false> m_mouseButtonStates[4];
+    stdext::boolean<false> m_mouseButtonStates[Fw::MouseButtonLast];
 
     stdext::boolean<false> m_created;
     stdext::boolean<false> m_visible;

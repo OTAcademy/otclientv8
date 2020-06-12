@@ -91,6 +91,7 @@ private:
     EGLContext m_eglContext;
     EGLDisplay m_eglDisplay;
     EGLSurface m_eglSurface;
+    InputEvent m_multiInputEvent[3];
 };
 
 extern AndroidWindow g_androidWindow;;

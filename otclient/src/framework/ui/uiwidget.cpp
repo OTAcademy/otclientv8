@@ -1646,14 +1646,14 @@ bool UIWidget::onMousePress(const Point& mousePos, Fw::MouseButton button)
         m_lastClickPosition = mousePos;
     }
 
-    if (button == Fw::MouseTouch)
+    if (button == Fw::MouseTouch || button == Fw::MouseTouch2 || button == Fw::MouseTouch3)
         return callLuaField<bool>("onTouchPress", mousePos, button);
     return callLuaField<bool>("onMousePress", mousePos, button);
 }
 
 bool UIWidget::onMouseRelease(const Point& mousePos, Fw::MouseButton button)
 {
-    if (button == Fw::MouseTouch)
+    if (button == Fw::MouseTouch || button == Fw::MouseTouch2 || button == Fw::MouseTouch3)
         return callLuaField<bool>("onTouchRelease", mousePos, button);
     return callLuaField<bool>("onMouseRelease", mousePos, button);
 }

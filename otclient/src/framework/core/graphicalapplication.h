@@ -76,6 +76,7 @@ private:
     FrameBufferPtr m_framebuffer, m_mapFramebuffer;
     FrameCounter m_graphicsFrames;
     FrameCounter m_processingFrames;
+    stdext::timer m_windowPollTimer;
 };
 
 extern GraphicalApplication g_app;

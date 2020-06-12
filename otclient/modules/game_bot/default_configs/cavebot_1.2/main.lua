@@ -14,7 +14,7 @@ UI.Button("Discord", function()
 end)
 
 UI.Button("Forum", function()
-  g_platform.openUrl("https://otland.net/forums/otclient.494/")
+  g_platform.openUrl("http://otclient.net/")
 end)
 
 UI.Button("Help & Tutorials", function()

@@ -51,7 +51,8 @@ void UIManager::terminate()
     m_rootWidget = nullptr;
     m_draggingWidget = nullptr;
     m_hoveredWidget = nullptr;
-    m_pressedWidget = nullptr;
+    for(auto& widget : m_pressedWidget)
+        widget = nullptr;
     m_styles.clear();
     m_destroyedWidgets.clear();
     m_checkEvent = nullptr;
@@ -65,10 +66,18 @@ void UIManager::render(Fw::DrawPane drawPane)
 void UIManager::resize(const Size& size)
 {
     m_rootWidget->setSize(size);
+    m_moveTimer.restart();
 }
 
 void UIManager::inputEvent(const InputEvent& event)
 {
+    if (event.type == Fw::MouseMoveInputEvent) {
+        if (m_moveTimer.elapsed_millis() < 20) {
+            return;
+        }
+        m_moveTimer.restart();
+    }
+
     UIWidgetList widgetList;
     switch(event.type) {
         case Fw::KeyTextInputEvent:
@@ -84,11 +93,11 @@ void UIManager::inputEvent(const InputEvent& event)
             m_keyboardReceiver->propagateOnKeyUp(event.keyCode, event.keyboardModifiers);
             break;
         case Fw::MousePressInputEvent:
-            if(event.mouseButton == Fw::MouseLeftButton && m_mouseReceiver->isVisible()) {
+            if(m_mouseReceiver->isVisible() && (event.mouseButton == Fw::MouseLeftButton || event.mouseButton == Fw::MouseTouch2 || event.mouseButton == Fw::MouseTouch3)) {
                 UIWidgetPtr pressedWidget = m_mouseReceiver->recursiveGetChildByPos(event.mousePos, false);
                 if(pressedWidget && !pressedWidget->isEnabled())
                     pressedWidget = nullptr;
-                updatePressedWidget(pressedWidget, event.mousePos);
+                updatePressedWidget(event.mouseButton, pressedWidget, event.mousePos);
             }
 
             m_mouseReceiver->propagateOnMouseEvent(event.mousePos, widgetList);
@@ -109,11 +118,11 @@ void UIManager::inputEvent(const InputEvent& event)
                 m_mouseReceiver->propagateOnMouseEvent(event.mousePos, widgetList);
 
                 // mouse release is always fired first on the pressed widget
-                if(m_pressedWidget) {
-                    auto it = std::find(widgetList.begin(), widgetList.end(), m_pressedWidget);
+                if(m_pressedWidget[event.mouseButton]) {
+                    auto it = std::find(widgetList.begin(), widgetList.end(), m_pressedWidget[event.mouseButton]);
                     if(it != widgetList.end())
                         widgetList.erase(it);
-                    widgetList.push_front(m_pressedWidget);
+                    widgetList.push_front(m_pressedWidget[event.mouseButton]);
                 }
 
                 for(const UIWidgetPtr& widget : widgetList) {
@@ -122,16 +131,19 @@ void UIManager::inputEvent(const InputEvent& event)
                 }
             }
 
-            if(m_pressedWidget && event.mouseButton == Fw::MouseLeftButton)
-                updatePressedWidget(nullptr, event.mousePos, !accepted);
+            if (event.mouseButton == Fw::MouseLeftButton || event.mouseButton == Fw::MouseTouch2 || event.mouseButton == Fw::MouseTouch3) {
+                if(m_pressedWidget[event.mouseButton]) {
+                    updatePressedWidget(event.mouseButton, nullptr, event.mousePos, !accepted);
+                }
+            }
             break;
         }
         case Fw::MouseMoveInputEvent: {
             // start dragging when moving a pressed widget
-            if(m_pressedWidget && m_pressedWidget->isDraggable() && m_draggingWidget != m_pressedWidget) {
+            if(m_pressedWidget[Fw::MouseLeftButton] && m_pressedWidget[Fw::MouseLeftButton]->isDraggable() && m_draggingWidget != m_pressedWidget[Fw::MouseLeftButton]) {
                 // only drags when moving more than 4 pixels
-                if((event.mousePos - m_pressedWidget->getLastClickPosition()).length() >= 4)
-                    updateDraggingWidget(m_pressedWidget, event.mousePos - event.mouseMoved);
+                if((event.mousePos - m_pressedWidget[Fw::MouseLeftButton]->getLastClickPosition()).length() >= 4)
+                    updateDraggingWidget(m_pressedWidget[Fw::MouseLeftButton], event.mousePos - event.mouseMoved);
             }
 
             // mouse move can change hovered widgets
@@ -143,8 +155,8 @@ void UIManager::inputEvent(const InputEvent& event)
                     break;
             }
 
-            if (m_pressedWidget) {
-                if (m_pressedWidget->onMouseMove(event.mousePos, event.mouseMoved)) {
+            if (m_pressedWidget[Fw::MouseLeftButton]) {
+                if (m_pressedWidget[Fw::MouseLeftButton]->onMouseMove(event.mousePos, event.mouseMoved)) {
                     break;
                 }
             }
@@ -169,13 +181,13 @@ void UIManager::inputEvent(const InputEvent& event)
     };
 }
 
-void UIManager::updatePressedWidget(const UIWidgetPtr& newPressedWidget, const Point& clickedPos, bool fireClicks)
+void UIManager::updatePressedWidget(Fw::MouseButton button, const UIWidgetPtr& newPressedWidget, const Point& clickedPos, bool fireClicks)
 {
-    UIWidgetPtr oldPressedWidget = m_pressedWidget;
-    m_pressedWidget = newPressedWidget;
+    UIWidgetPtr oldPressedWidget = m_pressedWidget[button];
+    m_pressedWidget[button] = newPressedWidget;
 
     // when releasing mouse inside pressed widget area send onClick event
-    if(fireClicks && oldPressedWidget && oldPressedWidget->isEnabled() && oldPressedWidget->containsPoint(clickedPos))
+    if (fireClicks && oldPressedWidget && oldPressedWidget->isEnabled() && oldPressedWidget->containsPoint(clickedPos))
         oldPressedWidget->onClick(clickedPos);
 
     if(newPressedWidget)
@@ -283,8 +295,11 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
     if(m_hoveredWidget == widget)
         updateHoveredWidget();
 
-    if(m_pressedWidget == widget)
-        updatePressedWidget(nullptr);
+    for (int i = 0; i <= Fw::MouseButtonLast; ++i) {
+        if (m_pressedWidget[i] == widget) {
+            updatePressedWidget((Fw::MouseButton)i, nullptr);
+        }
+    }
 
     if(m_draggingWidget == widget)
         updateDraggingWidget(nullptr);

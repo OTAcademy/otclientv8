@@ -43,11 +43,6 @@ void TextureManager::terminate()
     m_animatedTextures.clear();
 }
 
-void TextureManager::poll()
-{
-
-}
-
 void TextureManager::clearCache()
 {
     m_animatedTextures.clear();

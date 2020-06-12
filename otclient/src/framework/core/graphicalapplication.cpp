@@ -109,12 +109,14 @@ void GraphicalApplication::terminate()
 void GraphicalApplication::run()
 {
     m_running = true;
+    m_windowPollTimer.restart();
 
     // first clock update
     g_clock.update();
 
     // run the first poll
     poll();
+    pollGraphics();
     g_clock.update();
 
     // show window
@@ -122,6 +124,7 @@ void GraphicalApplication::run()
 
     // run the second poll
     poll();
+    pollGraphics();
     g_clock.update();
 
     g_lua.callGlobalField("g_app", "onRun");
@@ -217,6 +220,7 @@ void GraphicalApplication::run()
 
         mutex.lock();
         if ((!drawQueue && !toDrawQueue) || !drawMapQueue || !drawMapForegroundQueue || (m_mustRepaint && !drawQueue)) {
+            stdext::millisleep(1);
             mutex.unlock();
             continue;
         }
@@ -311,9 +315,11 @@ void GraphicalApplication::poll() {
 void GraphicalApplication::pollGraphics()
 {
     g_graphicsDispatcher.poll();
-    g_textures.poll();
     g_text.poll();
-    g_window.poll();
+    if (m_windowPollTimer.elapsed_millis() > 10) {
+        g_window.poll();
+        m_windowPollTimer.restart();
+    }
 }
 
 void GraphicalApplication::close()

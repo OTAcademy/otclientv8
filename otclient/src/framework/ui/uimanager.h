@@ -39,7 +39,7 @@ public:
     void resize(const Size& size);
     void inputEvent(const InputEvent& event);
 
-    void updatePressedWidget(const UIWidgetPtr& newPressedWidget, const Point& clickedPos = Point(), bool fireClicks = true);
+    void updatePressedWidget(const Fw::MouseButton button, const UIWidgetPtr& newPressedWidget, const Point& clickedPos = Point(), bool fireClicks = true);
     bool updateDraggingWidget(const UIWidgetPtr& draggingWidget, const Point& clickedPos = Point());
     void updateHoveredWidget(bool now = false);
 
@@ -65,7 +65,7 @@ public:
     UIWidgetPtr getKeyboardReceiver() { return m_keyboardReceiver; }
     UIWidgetPtr getDraggingWidget() { return m_draggingWidget; }
     UIWidgetPtr getHoveredWidget() { return m_hoveredWidget; }
-    UIWidgetPtr getPressedWidget() { return m_pressedWidget; }
+    UIWidgetPtr getPressedWidget() { return m_pressedWidget[Fw::MouseLeftButton]; }
     UIWidgetPtr getRootWidget() { return m_rootWidget; }
     bool isMouseGrabbed() { return m_mouseReceiver != m_rootWidget; }
     bool isKeyboardGrabbed() { return m_keyboardReceiver != m_rootWidget; }
@@ -85,13 +85,13 @@ private:
     UIWidgetPtr m_keyboardReceiver;
     UIWidgetPtr m_draggingWidget;
     UIWidgetPtr m_hoveredWidget;
-    UIWidgetPtr m_pressedWidget;
+    UIWidgetPtr m_pressedWidget[Fw::MouseButtonLast] = { nullptr };
     stdext::boolean<false> m_hoverUpdateScheduled;
     stdext::boolean<false> m_drawDebugBoxes;
     std::unordered_map<std::string, OTMLNodePtr> m_styles;
     UIWidgetList m_destroyedWidgets;
     ScheduledEventPtr m_checkEvent;
-
+    stdext::timer m_moveTimer;
 };
 
 extern UIManager g_ui;

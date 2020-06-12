@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <JavaCompile Include="res\values\dimens.xml" />
+    <JavaCompile Include="res\values\styles.xml" />
     <JavaCompile Include="src\com\otclientv8\OTClientV8.java" />
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />

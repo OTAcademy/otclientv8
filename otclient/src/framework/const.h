@@ -248,7 +248,10 @@ namespace Fw
         MouseLeftButton,
         MouseRightButton,
         MouseMidButton,
-        MouseTouch
+        MouseTouch,
+        MouseTouch2,
+        MouseTouch3,
+        MouseButtonLast = MouseTouch3
     };
 
     enum MouseWheelDirection {
