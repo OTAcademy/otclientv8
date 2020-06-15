@@ -18,7 +18,11 @@ void Atlas::init()
             m_atlas[i]->resize(Size(m_size, m_size));
         } else { // text atlas
             m_atlas[i]->setSmooth(false);
+#ifdef BIG_FONTS
+            m_atlas[i]->resize(Size(m_size, m_size));
+#else
             m_atlas[i]->resize(Size(2048, 2048));
+#endif
         }
 
         glActiveTexture(GL_TEXTURE6 + i);
@@ -45,15 +49,15 @@ void Atlas::reload()
 void Atlas::resetAtlas(int location) {
     if (!m_atlas[location])
         return;
-    for (int j = 0; j < 5; ++j)
-        m_locations[location][j].clear();
+    for (auto& location : m_locations[location])
+        location.clear();
 
     size_t size = m_atlas[location]->getSize().width();
-    for (size_t i = 0; i < size; i += 512) {
-        m_locations[location][4].push_back(Point(i, i));
-        for (size_t x = 0; x < i; x += 512) {
-            m_locations[location][4].push_back(Point(i, x));
-            m_locations[location][4].push_back(Point(x, i));
+    for (size_t i = 0; i < size; i += 2048) {
+        m_locations[location][6].push_back(Point(i, i));
+        for (size_t x = 0; x < i; x += 2048) {
+            m_locations[location][6].push_back(Point(i, x));
+            m_locations[location][6].push_back(Point(x, i));
         }
     }
 
@@ -79,7 +83,7 @@ Point Atlas::cache(uint64_t hash, const Size& size, bool& draw)
     }
 
     int index = calculateIndex(size);
-    if (index < 0 || (index == 4 && m_size == 2048)) { // too big to be cached
+    if (index < 0 || index > 4 || (index == 4 && m_size == 2048)) { // too big to be cached, max 512x512
         draw = false;
         return Point(-1, -1);
     }
@@ -113,10 +117,10 @@ Point Atlas::cacheFont(const TexturePtr& fontTexture)
     fontTexture->update();
     int index = calculateIndex(fontTexture->getSize());
     if (index < 0) {
-        g_logger.fatal("[Atlas] Too big font texture. Max is 512x512");
+        g_logger.fatal("[Atlas] Too big font texture. Max is 2048x2048");
     }
     if (m_locations[1][index].empty() && !findSpace(1, index)) {
-        g_logger.fatal("[Atlas] Out of space for new fonts");
+        g_logger.fatal("[Atlas] Out of space for new fonts, compile with BIG_FONTS definition");
     }
     Point location = m_locations[1][index].front();
     m_locations[1][index].pop_front();
@@ -134,12 +138,14 @@ int Atlas::calculateIndex(const Size& size)
         return s <= 32 ? 0 : 1;
     if (s <= 256)
         return s <= 128 ? 2 : 3;
-    return s <= 512 ? 4 : -1;
+    if (s <= 1024)
+        return s <= 512 ? 4 : 5;
+    return s <= 2048 ? 6 : -1;
 }
 
 bool Atlas::findSpace(int location, int index) {
-    static const size_t sizes[5] = { 32, 64, 128, 256, 512 };
-    if (location >= 2 || index >= 4) {
+    static const size_t sizes[7] = { 32, 64, 128, 256, 512, 1024, 2048 };
+    if (location >= 2 || index >= 6) {
         return false;
     }
     if (m_locations[location][index + 1].size() == 0 && !findSpace(location, index + 1)) {

@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.view.WindowManager.LayoutParams;
 import android.view.WindowManager;
+import android.os.Bundle;
 
 public class OTClientV8 extends android.app.NativeActivity
 {
@@ -26,11 +27,16 @@ public class OTClientV8 extends android.app.NativeActivity
     }
 
     @Override
+    protected void onCreate (Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    	getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
             hideSystemUI();
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
     }
 

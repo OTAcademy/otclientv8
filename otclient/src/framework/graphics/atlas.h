@@ -29,7 +29,7 @@ private:
 
     FrameBufferPtr m_atlas[2];
     std::map<uint64_t, Point> m_cache;
-    std::list<Point> m_locations[2][5];
+    std::list<Point> m_locations[2][7];
     size_t m_size;
     bool m_doReset = false;
 };

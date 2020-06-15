@@ -1698,7 +1698,9 @@ void ProtocolGame::parsePlayerSkills(const InputMessagePtr& msg)
 void ProtocolGame::parsePlayerState(const InputMessagePtr& msg)
 {
     int states;
-    if(g_game.getFeature(Otc::GamePlayerStateU16))
+    if (g_game.getFeature(Otc::GamePlayerStateU32))
+        states = msg->getU32();
+    else if(g_game.getFeature(Otc::GamePlayerStateU16))
         states = msg->getU16();
     else
         states = msg->getU8();

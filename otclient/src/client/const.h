@@ -455,6 +455,7 @@ namespace Otc
         GameCenteredOutfits = 102,
         GameSendIdentifiers = 103,
         GameWingsAndAura = 104,
+        GamePlayerStateU32 = 105,
 
         // advanced features
         GamePacketSizeU32 = 110,
