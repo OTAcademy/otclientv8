@@ -37,6 +37,16 @@ static const std::string textVertexShader = "\n\
         v_TexCoord = (u_TextureMatrix * vec3(a_TexCoord,1.0)).xy;\n\
     }\n";
 
+// LINE
+static const std::string lineVertexShader = "\n\
+    attribute vec2 a_Vertex;\n\
+    uniform mat3 u_TransformMatrix;\n\
+    uniform mat3 u_ProjectionMatrix;\n\
+    void main()\n\
+    {\n\
+        gl_Position = vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy, 1.0)).xy, 1.0, 1.0);\n\
+    }\n";
+
 // FRAGMENT
 static const std::string newFragmentShader = "\n\
     varying vec2 v_TexCoord;\n\
@@ -56,6 +66,14 @@ static const std::string textFragmentShader = "\n\
     void main()\n\
     {\n\
         gl_FragColor = texture2D(u_Fonts, v_TexCoord) * u_Color;\n\
+    }\n";
+
+// LINE
+static const std::string lineFragmentShader = "\n\
+    uniform vec4 u_Color;\n\
+    void main()\n\
+    {\n\
+        gl_FragColor = u_Color;\n\
     }\n";
 
 #endif

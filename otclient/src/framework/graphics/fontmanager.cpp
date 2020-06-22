@@ -49,7 +49,7 @@ void FontManager::clearFonts()
 
 void FontManager::importFont(std::string file)
 {
-    if (g_mainThreadId != std::this_thread::get_id()) {
+    if (g_graphicsThreadId != std::this_thread::get_id()) {
         g_graphicsDispatcher.addEvent(std::bind(&FontManager::importFont, this, file));
         return;
     }

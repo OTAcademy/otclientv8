@@ -107,6 +107,7 @@ struct DrawQueueItemOutfit : public DrawQueueItemTexturedRect {
         DrawQueueItemTexturedRect(rect, texture, src, color), m_offset(offset), m_colors(colors)
     { };
 
+    void draw() override;
     void draw(const Point& pos) override;
     bool cache() override;
 

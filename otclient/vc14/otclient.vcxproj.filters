@@ -543,6 +543,9 @@
     <ClCompile Include="..\src\extras\proxy\proxy_client.cpp">
       <Filter>Extras\proxy</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\framework\graphics\graph.cpp">
+      <Filter>Source Files\framework\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework\const.h">
@@ -1087,6 +1090,9 @@
     </ClInclude>
     <ClInclude Include="..\src\extras\proxy\proxy_client.h">
       <Filter>Extras\proxy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\graph.h">
+      <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -35,6 +35,7 @@
 #include "protocolcodes.h"
 
 #include <framework/util/extras.h>
+#include <framework/graphics/graph.h>
 
 Game g_game;
 
@@ -286,8 +287,10 @@ void Game::processPingBack()
     m_pingReceived++;
 
     if (!g_game.getFeature(Otc::GameExtendedClientPing)) {
-        if (m_pingReceived == m_pingSent)
+        if (m_pingReceived == m_pingSent) {
             m_ping = m_pingTimer.elapsed_millis();
+            g_graphs[GRAPH_LATENCY].addValue(m_ping);
+        }
 
         g_lua.callGlobalField("g_game", "onPingBack", m_ping);
     }
@@ -305,6 +308,7 @@ void Game::processNewPing(uint32_t pingId)
         return;
 
     m_ping = it->second.elapsed_millis();
+    g_graphs[GRAPH_LATENCY].addValue(m_ping);
     g_lua.callGlobalField("g_game", "onPingBack", m_ping);
 }
 

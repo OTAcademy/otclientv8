@@ -38,9 +38,7 @@ ShaderProgram::ShaderProgram()
 
 ShaderProgram::~ShaderProgram()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     if(g_graphics.ok())
         glDeleteProgram(m_programId);
 }

@@ -44,9 +44,7 @@ Shader::Shader(Shader::ShaderType shaderType)
 
 Shader::~Shader()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     if(g_graphics.ok())
         glDeleteShader(m_shaderId);
 }

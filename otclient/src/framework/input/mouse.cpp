@@ -55,7 +55,7 @@ void Mouse::loadCursors(std::string filename)
 
 void Mouse::addCursor(const std::string& name, const std::string& file, const Point& hotSpot)
 {
-    if (g_mainThreadId != std::this_thread::get_id()) {
+    if (g_graphicsThreadId != std::this_thread::get_id()) {
         g_graphicsDispatcher.addEvent(std::bind(&Mouse::addCursor, this, name, file, hotSpot));
         return;
     }
@@ -69,7 +69,7 @@ void Mouse::addCursor(const std::string& name, const std::string& file, const Po
 
 void Mouse::pushCursor(const std::string& name)
 {
-    if (g_mainThreadId != std::this_thread::get_id()) {
+    if (g_graphicsThreadId != std::this_thread::get_id()) {
         g_graphicsDispatcher.addEvent(std::bind(&Mouse::pushCursor, this, name));
         return;
     }
@@ -87,7 +87,7 @@ void Mouse::pushCursor(const std::string& name)
 
 void Mouse::popCursor(const std::string& name)
 {
-    if (g_mainThreadId != std::this_thread::get_id()) {
+    if (g_graphicsThreadId != std::this_thread::get_id()) {
         g_graphicsDispatcher.addEvent(std::bind(&Mouse::popCursor, this, name));
         return;
     }

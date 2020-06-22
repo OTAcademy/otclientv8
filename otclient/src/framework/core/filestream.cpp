@@ -89,9 +89,7 @@ bool FileStream::initFromGzip(const std::string& buffer)
 
 FileStream::~FileStream()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     if(!g_app.isTerminated())
         close();
 }

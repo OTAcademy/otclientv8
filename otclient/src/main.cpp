@@ -44,7 +44,7 @@ int main(int argc, const char* argv[]) {
     // setup application name and version
     g_app.setName("OTClientV8");
     g_app.setCompactName(compactName);
-    g_app.setVersion("2.4");
+    g_app.setVersion("2.4.1");
 
 #ifdef WITH_ENCRYPTION
     if (std::find(args.begin(), args.end(), "--encrypt") != args.end()) {
@@ -113,7 +113,7 @@ int main(int argc, const char* argv[]) {
 android_app* g_androidState = nullptr;
 void android_main(struct android_app* state)
 {
-    g_mainThreadId = g_dispatcherThreadId = std::this_thread::get_id();
+    g_mainThreadId = g_dispatcherThreadId = g_graphicsThreadId = std::this_thread::get_id();
     g_androidState = state;
 
     state->userData = nullptr;

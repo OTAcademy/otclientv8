@@ -550,11 +550,11 @@ DrawQueueItem* ThingType::draw(const Rect& dest, int layer, int xPattern, int yP
         return nullptr;
 
     // size correction for some too big items
-    if ((size.width() > 1 || size.height() > 1) && 
+    if ((m_size.width() > 1 || m_size.height() > 1) &&
         textureRect.width() <= Otc::TILE_PIXELS && textureRect.height() <= Otc::TILE_PIXELS) {
         size = Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS);
-        textureOffset = Point((Otc::TILE_PIXELS - textureRect.width()) / 2, 
-                              (Otc::TILE_PIXELS - textureRect.height()) / 2);
+        textureOffset = Point((Otc::TILE_PIXELS - textureRect.width()) / m_size.width(), 
+                              (Otc::TILE_PIXELS - textureRect.height()) / m_size.height());
     }
 
     float scale = std::min<float>((float)dest.width() / size.width(), (float)dest.height() / size.height());

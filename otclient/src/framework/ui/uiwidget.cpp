@@ -63,11 +63,9 @@ UIWidget::UIWidget()
 
 UIWidget::~UIWidget()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
     if(!m_destroyed)
         g_logger.warning(stdext::format("widget '%s' was not explicitly destroyed", m_id));
-#endif
 
     g_stats.removeWidget(this);
 }

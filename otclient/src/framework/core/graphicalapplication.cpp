@@ -28,6 +28,7 @@
 #include <framework/core/asyncdispatcher.h>
 #include <framework/platform/platformwindow.h>
 #include <framework/ui/uimanager.h>
+#include <framework/graphics/graph.h>
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/texturemanager.h>
 #include <framework/graphics/painter.h>
@@ -139,6 +140,7 @@ void GraphicalApplication::run()
     std::shared_ptr<DrawQueue> drawQueue;
     std::shared_ptr<DrawQueue> drawMapQueue;
     std::shared_ptr<DrawQueue> drawMapForegroundQueue;
+    bool isOnline = false;
 
     std::mutex mutex;
     std::thread worker([&] {
@@ -160,6 +162,7 @@ void GraphicalApplication::run()
             }
             mutex.unlock();
 
+            ticks_t renderStart = stdext::millis();
             {
                 AutoStat s(STATS_MAIN, "DrawMapBackground");
                 g_drawQueue = std::make_shared<DrawQueue>();
@@ -188,6 +191,8 @@ void GraphicalApplication::run()
             g_drawQueue = nullptr;
             mutex.unlock();
 
+            g_graphs[GRAPH_CPU_FRAME_TIME].addValue(stdext::millis() - renderStart);
+
             if (m_maxFps > 0 || g_window.hasVerticalSync()) {
                 AutoStat s(STATS_MAIN, "Sleep");
                 stdext::millisleep(1);
@@ -198,10 +203,11 @@ void GraphicalApplication::run()
     });
 
     std::shared_ptr<DrawQueue> toDrawQueue, toDrawMapQueue, toDrawMapForegroundQueue;
-    int draws = 0, calls = 0;
+    ticks_t lastFrame = stdext::millis();
     while (!m_stopping) {
         m_iteration += 1;
 
+        g_clock.update();
         pollGraphics();
 
         if (!g_window.isVisible()) {
@@ -219,9 +225,12 @@ void GraphicalApplication::run()
         }
 
         mutex.lock();
-        if ((!drawQueue && !toDrawQueue) || !drawMapQueue || !drawMapForegroundQueue || (m_mustRepaint && !drawQueue)) {
-            stdext::millisleep(1);
+        if ((!drawQueue && !toDrawQueue) || 
+            ((!drawMapQueue || !drawMapForegroundQueue) && isOnline) || 
+            (m_mustRepaint && !drawQueue)) {
             mutex.unlock();
+            AutoStat s(STATS_RENDER, "Wait");
+            stdext::millisleep(1);
             continue;
         }
         toDrawQueue = drawQueue ? drawQueue : toDrawQueue;
@@ -237,12 +246,13 @@ void GraphicalApplication::run()
 
         g_painterNew->resetDraws();
         if (m_scaling > 1.0f) {
+            AutoStat s(STATS_RENDER, "SetupScaling");
             g_painterNew->setResolution(g_graphics.getViewportSize() / m_scaling);
             m_framebuffer->resize(g_painterNew->getResolution());
             m_framebuffer->bind();
         }
 
-        if (toDrawMapQueue->hasFrameBuffer()) {
+        if (toDrawMapQueue && toDrawMapQueue->hasFrameBuffer()) {
             AutoStat s(STATS_RENDER, "UpdateMap");
             m_mapFramebuffer->resize(toDrawMapQueue->getFrameBufferSize());
             m_mapFramebuffer->bind();
@@ -262,21 +272,35 @@ void GraphicalApplication::run()
                 toDrawQueue->draw(DRAW_BEFORE_MAP);
         }
 
-        if(toDrawMapQueue->hasFrameBuffer()) {
-            AutoStat s(STATS_RENDER, "DrawMapBackground");
-            m_mapFramebuffer->draw(toDrawMapQueue->getFrameBufferDest(), toDrawMapQueue->getFrameBufferSrc());
-        }
-
-        {
-            AutoStat s(STATS_RENDER, "DrawMapForeground");
-            toDrawMapForegroundQueue->draw();
+        if(toDrawMapQueue) {
+            isOnline = toDrawMapQueue->hasFrameBuffer();
+            if(isOnline) {
+                AutoStat s(STATS_RENDER, "DrawMapBackground");
+                m_mapFramebuffer->draw(toDrawMapQueue->getFrameBufferDest(), toDrawMapQueue->getFrameBufferSrc());
+            }
+            if(toDrawMapForegroundQueue) {
+                AutoStat s(STATS_RENDER, "DrawMapForeground");
+                toDrawMapForegroundQueue->draw();
+            }
         }
 
         {
             AutoStat s(STATS_RENDER, "DrawSecondForeground");
-            if(g_extras.debugRender)
-                toDrawQueue->addText(g_fonts.getDefaultFont(), stdext::format("Calls: %i Draws %i", calls, draws), Rect(0, 0, 200, 200), Fw::AlignTopLeft, Color::yellow);
             toDrawQueue->draw(DRAW_AFTER_MAP);
+        }
+
+        {
+            if (g_extras.debugRender) {
+                AutoStat s(STATS_RENDER, "DrawGraphs");
+                for (int i = 0, x = 60, y = 30; i <= GRAPH_LAST; ++i) {
+                    g_graphs[i].draw(Rect(x, y, Size(200, 60)));
+                    y += 70;
+                    if (y + 70 > g_painterNew->getResolution().height()) {
+                        x += 220;
+                        y = 30;
+                    }
+                }
+            }
         }
 
         if (m_scaling > 1.0f) {
@@ -287,12 +311,14 @@ void GraphicalApplication::run()
             m_framebuffer->draw(Rect(0, 0, g_painterNew->getResolution()));
         }
 
-        draws = g_painterNew->draws();
-        calls = g_painterNew->calls();
+        g_graphs[GRAPH_GPU_CALLS].addValue(g_painterNew->calls());
+        g_graphs[GRAPH_GPU_DRAWS].addValue(g_painterNew->draws());
 
         AutoStat s(STATS_RENDER, "SwapBuffers");
         g_window.swapBuffers();
         g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
+        g_graphs[GRAPH_TOTAL_FRAME_TIME].addValue(stdext::millis() - lastFrame);
+        lastFrame = stdext::millis();
     }
 
     worker.join();
@@ -306,20 +332,24 @@ void GraphicalApplication::run()
 }
 
 void GraphicalApplication::poll() {
+    ticks_t start = stdext::millis();
 #ifdef FW_SOUND
     g_sounds.poll();
 #endif
     Application::poll();
+    g_graphs[GRAPH_PROCESSING_POLL].addValue(stdext::millis() - start, true);
 }
 
 void GraphicalApplication::pollGraphics()
 {
+    ticks_t start = stdext::millis();
     g_graphicsDispatcher.poll();
     g_text.poll();
     if (m_windowPollTimer.elapsed_millis() > 10) {
         g_window.poll();
         m_windowPollTimer.restart();
     }
+    g_graphs[GRAPH_GRAPHICS_POLL].addValue(stdext::millis() - start, true);
 }
 
 void GraphicalApplication::close()

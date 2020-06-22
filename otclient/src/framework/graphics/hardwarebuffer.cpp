@@ -39,9 +39,7 @@ HardwareBuffer::HardwareBuffer(Type type)
 
 HardwareBuffer::~HardwareBuffer()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     uint id = m_id;
     g_graphicsDispatcher.addEvent([id] {
         glDeleteBuffers(1, &id);

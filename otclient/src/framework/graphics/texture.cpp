@@ -58,9 +58,7 @@ Texture::Texture(const ImagePtr& image, bool buildMipmaps, bool compress, bool s
 
 Texture::~Texture()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     if (m_id != 0) { // free texture from gl memory
         GLuint textureId = m_id;
         g_graphicsDispatcher.addEvent([textureId] {

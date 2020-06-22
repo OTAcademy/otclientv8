@@ -54,9 +54,13 @@ extern EventDispatcher g_dispatcher;
 extern EventDispatcher g_graphicsDispatcher;
 extern std::thread::id g_mainThreadId;
 extern std::thread::id g_dispatcherThreadId;
+extern std::thread::id g_graphicsThreadId;
 
 #define addEvent(...) addEventEx(__FUNCTION__, __VA_ARGS__)
 #define scheduleEvent(...) scheduleEventEx(__FUNCTION__, __VA_ARGS__)
 #define cycleEvent(...) cycleEventEx(__FUNCTION__, __VA_ARGS__)
+
+#define VALIDATE_GRAPHICS_THREAD() VALIDATE(std::this_thread::get_id() == g_graphicsThreadId)
+#define VALIDATE_DISPATCHER_THREAD() VALIDATE(std::this_thread::get_id() == g_dispatcherThreadId)
 
 #endif

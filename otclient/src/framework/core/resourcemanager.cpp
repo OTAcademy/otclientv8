@@ -309,23 +309,24 @@ bool ResourceManager::loadDataFromSelf(bool unmountIfMounted) {
     std::ifstream file(m_binaryPath.string(), std::ios::binary);
     if (!file.is_open())
         return false;
-
-    std::string buffer(std::istreambuf_iterator<char>(file), {});
+    file.seekg(0, std::ios_base::end);
+    std::size_t size = file.tellg();
+    file.seekg(0, std::ios_base::beg);
+    if (size < 1024 * 1024 || size > 1024 * 1024 * 128) {
+        file.close();
+        return false;
+    }
+    std::vector<uint32_t> v(1 + size / sizeof(uint32_t));
+    file.read((char*)&v[0], size);
     file.close();
 
-    if (buffer.size() < 1024 * 1024) // less then 1 MB
-        return false;
+    for (size_t i = 0, end = (size / sizeof(uint32_t)) - 128; i < end; ++i) {
+        if (v[i] == 0x04034b50 && (v[i + 1] & 0xFF00FFFF) < 0x20 && (v[i + 1] & 0xFF00FFFF) > 0x01 && (v[i + 2] & 0xFFFF) < 0xFF) {
+            data = std::make_shared<std::vector<uint8_t>>((uint8_t*)&v[i], (uint8_t*)&v[v.size() - 1]);
+            break;
+        }
+    }
 
-    std::string toFind = { 0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x01 }; // zip header
-    toFind[toFind.size() - 1] = 0; // otherwhise toFind would find toFind in buffer
-    size_t pos = buffer.find(toFind);
-    if (pos == std::string::npos)
-        return false;
-
-    if (buffer.size() > pos + 512 * 1024 * 1024) // max 512MB
-        return false;
-
-    data = std::make_shared<std::vector<uint8_t>>(buffer.begin() + pos, buffer.end());
 #endif
 
     if (unmountIfMounted)

@@ -62,6 +62,7 @@ Painter::Painter()
     m_drawOutfitLayersProgram = PainterShaderProgram::create(glslOutfitVertexShader, glslOutfitFragmentShader, true);
     m_drawNewProgram = PainterShaderProgram::create(newVertexShader, newFragmentShader);
     m_drawTextProgram = PainterShaderProgram::create(textVertexShader, textFragmentShader);
+    m_drawLineProgram = PainterShaderProgram::create(lineVertexShader, lineFragmentShader);
 
     PainterShaderProgram::release();
     g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
@@ -684,6 +685,26 @@ void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const std::
     m_calls += colors.size();
 }
 
+void Painter::drawLine(const std::vector<float>& vertex, int size, int width)
+{
+    m_drawLineProgram->bind();
+    m_drawLineProgram->setTransformMatrix(m_transformMatrix);
+    m_drawLineProgram->setProjectionMatrix(m_projectionMatrix);
+    m_drawLineProgram->setTextureMatrix(m_textureMatrix);
+    m_drawLineProgram->setColor(m_color);
+    glLineWidth(width);
+
+    PainterShaderProgram::disableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+    m_drawTextProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, vertex.data(), 2);
+
+    glDrawArrays(GL_LINE_STRIP, 0, size);
+
+    PainterShaderProgram::enableAttributeArray(PainterShaderProgram::TEXCOORD_ATTR);
+
+    m_draws += size;
+    m_calls += 1;
+}
+
 void Painter::setAtlasTextures(const TexturePtr& atlas)
 {
     static uint activeTexture = 0;
@@ -700,10 +721,10 @@ void Painter::setAtlasTextures(const TexturePtr& atlas)
 void Painter::setSecondTexture(const TexturePtr& texture)
 {
     static uint activeTexture = 0;
-    if (activeTexture == texture->getId())
-        return;
     if (texture)
         texture->update();
+    if (activeTexture == texture->getId())
+        return;
     activeTexture = texture ? texture->getId() : 0;
     glActiveTexture(GL_TEXTURE1); // u_Tex1
     glBindTexture(GL_TEXTURE_2D, activeTexture);

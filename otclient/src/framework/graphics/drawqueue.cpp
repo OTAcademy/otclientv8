@@ -47,7 +47,7 @@ void DrawQueueItemTexturedRect::draw()
 
 bool DrawQueueItemTexturedRect::cache()
 {
-    if (m_dest.size() > m_src.size()) // upscaling may render artifacts
+    if (m_dest.size() > m_src.size()) // upscaling may create artifacts
         return false;
 
     m_texture->update();
@@ -122,6 +122,24 @@ bool DrawQueueItemOutfit::cache()
     
     g_drawCache.addTexturedRect(m_dest, Rect(atlasPos, m_src.size()), m_color);
     return true;
+}
+
+void DrawQueueItemOutfit::draw()
+{
+    if (!m_texture) return;
+    Matrix4 mat4;
+    for (int x = 0; x < 4; ++x) {
+        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
+        mat4(x + 1, 1) = color.rF();
+        mat4(x + 1, 2) = color.gF();
+        mat4(x + 1, 3) = color.bF();
+        mat4(x + 1, 4) = color.aF();
+    }
+    g_painterNew->setDrawOutfitLayersProgram();
+    g_painterNew->setMatrixColor(mat4);
+    g_painterNew->setOffset(m_offset);
+    g_painterNew->drawTexturedRect(m_dest, m_texture, m_src);
+    g_painterNew->resetShaderProgram();
 }
 
 void DrawQueueItemOutfit::draw(const Point& pos)

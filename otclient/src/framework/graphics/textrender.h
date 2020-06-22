@@ -25,6 +25,7 @@ public:
     void terminate();
     void poll();
     uint64_t addText(BitmapFontPtr font, const std::string& text, const Size& size, Fw::AlignmentFlag align = Fw::AlignTopLeft);
+    void drawText(const Rect& rect, const std::string& text, BitmapFontPtr font, const Color& color = Color::white, Fw::AlignmentFlag align = Fw::AlignTopLeft);
     void drawText(const Point& pos, uint64_t hash, const Color& color);
     void drawColoredText(const Point& pos, uint64_t hash, const std::vector<std::pair<int, Color>>& colors);
 

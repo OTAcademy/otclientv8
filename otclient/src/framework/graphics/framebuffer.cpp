@@ -59,9 +59,7 @@ void FrameBuffer::internalCreate()
 
 FrameBuffer::~FrameBuffer()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     if (g_graphics.ok() && m_fbo != 0) {
         if (m_fbo != 0)
             glDeleteFramebuffers(1, &m_fbo);

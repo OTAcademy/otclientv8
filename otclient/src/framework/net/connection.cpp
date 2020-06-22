@@ -45,9 +45,7 @@ Connection::Connection() :
 
 Connection::~Connection()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
     close();
 }
 

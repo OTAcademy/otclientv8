@@ -522,7 +522,7 @@ int AndroidWindow::handleInput(AInputEvent* event)
 
 void AndroidWindow::updateSize()
 {
-    if (std::this_thread::get_id() != g_mainThreadId) {
+    if (std::this_thread::get_id() != g_graphicsThreadId) {
         g_graphicsDispatcher.addEvent(std::bind(&AndroidWindow::updateSize, this));
         return;
     }

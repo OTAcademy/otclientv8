@@ -24,12 +24,14 @@
 
 #include <framework/core/clock.h>
 #include <framework/core/graphicalapplication.h>
+#include <framework/graphics/graph.h>
 #include <framework/util/stats.h>
 #include "timer.h"
 
 EventDispatcher g_dispatcher;
 EventDispatcher g_graphicsDispatcher;
 std::thread::id g_mainThreadId = std::this_thread::get_id();
+std::thread::id g_graphicsThreadId = std::this_thread::get_id();
 std::thread::id g_dispatcherThreadId = std::this_thread::get_id();
 
 void EventDispatcher::shutdown()
@@ -50,6 +52,7 @@ void EventDispatcher::poll()
     AutoStat s(this == &g_dispatcher ? STATS_MAIN : STATS_RENDER, "PollDispatcher");
     std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
+    int events = 0;
     int loops = 0;
     for(int count = 0, max = m_scheduledEventList.size(); count < max && !m_scheduledEventList.empty(); ++count) {
         ScheduledEventPtr scheduledEvent = m_scheduledEventList.top();
@@ -59,9 +62,10 @@ void EventDispatcher::poll()
         {
             AutoStat s2(STATS_DISPATCHER, scheduledEvent->getFunction());
             m_botSafe = scheduledEvent->isBotSafe();
-            m_mutex.unlock();
+            lock.unlock();
             scheduledEvent->execute();
-            m_mutex.lock();
+            events += 1;
+            lock.lock();
         }
 
         if(scheduledEvent->nextCycle())
@@ -73,14 +77,14 @@ void EventDispatcher::poll()
     m_pollEventsSize = m_eventList.size();
     loops = 0;
     while(m_pollEventsSize > 0) {
-        if(loops > 50) {
+        if(loops > 100) {
             static Timer reportTimer;
-            if(reportTimer.running() && reportTimer.ticksElapsed() > 100) {
+            if(reportTimer.running() && reportTimer.ticksElapsed() > 500) {
                 std::stringstream ss;
                 ss << "ATTENTION the event list is not getting empty, this could be caused by some bad code.\nLog:\n";
                 for (auto& event : m_eventList) {
                     ss << event->getFunction() << "\n";
-                    if (ss.str().size() > 1024) break;
+                    if (ss.str().size() > 512) break;
                 }
                 g_logger.error(ss.str());                
                 reportTimer.restart();
@@ -94,15 +98,18 @@ void EventDispatcher::poll()
             {
                 AutoStat s2(STATS_DISPATCHER, event->getFunction());
                 m_botSafe = event->isBotSafe();
-                m_mutex.unlock();
+                lock.unlock();
                 event->execute();
-                m_mutex.lock();
+                events += 1;
+                lock.lock();
             }
         }
         m_pollEventsSize = m_eventList.size();
         
         loops++;
     }
+
+    g_graphs[this == &g_dispatcher ? GRAPH_DISPATCHER_EVENTS : GRAPH_GRAPHICS_EVENTS].addValue(events, true);
 
     m_botSafe = false;
 }

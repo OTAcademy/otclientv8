@@ -71,13 +71,6 @@ void UIManager::resize(const Size& size)
 
 void UIManager::inputEvent(const InputEvent& event)
 {
-    if (event.type == Fw::MouseMoveInputEvent) {
-        if (m_moveTimer.elapsed_millis() < 20) {
-            return;
-        }
-        m_moveTimer.restart();
-    }
-
     UIWidgetList widgetList;
     switch(event.type) {
         case Fw::KeyTextInputEvent:

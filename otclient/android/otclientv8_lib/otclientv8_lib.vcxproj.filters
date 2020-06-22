@@ -437,6 +437,9 @@
     <ClCompile Include="..\..\src\framework\graphics\texturemanager.cpp">
       <Filter>framework\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\framework\graphics\graph.cpp">
+      <Filter>framework\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\animatedtext.h">
@@ -996,6 +999,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\framework\graphics\shaders\shadersources.h">
       <Filter>framework\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framework\graphics\graph.h">
+      <Filter>framework\graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

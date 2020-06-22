@@ -150,6 +150,8 @@ public:
     void drawText(const Point& pos, CoordsBuffer& coordsBuffer, const Color& color);
     void drawText(const Point& pos, CoordsBuffer& coordsBuffer, const std::vector<std::pair<int, Color>>& colors);
 
+    void drawLine(const std::vector<float>& vertex, int size, int width = 1);
+
     void setSecondTexture(const TexturePtr& texture);
     void setOffset(const Point& offset);
 
@@ -255,6 +257,7 @@ private:
     PainterShaderProgramPtr m_drawNewProgram;
 
     PainterShaderProgramPtr m_drawTextProgram;
+    PainterShaderProgramPtr m_drawLineProgram;
 };
 
 extern Painter* g_painterNew;

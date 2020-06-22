@@ -61,9 +61,7 @@ MapView::MapView()
 
 MapView::~MapView()
 {
-#ifndef NDEBUG
     VALIDATE(!g_app.isTerminated());
-#endif
 }
 
 void MapView::drawTileTexts(const Rect& rect, const Rect& srcRect)

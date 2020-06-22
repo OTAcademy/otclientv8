@@ -1,6 +1,7 @@
 #include "painter.h"
 #include "textrender.h"
 #include <framework/core/logger.h>
+#include <framework/core/eventdispatcher.h>
 
 TextRender g_text;
 
@@ -44,6 +45,8 @@ void TextRender::poll()
 
 uint64_t TextRender::addText(BitmapFontPtr font, const std::string& text, const Size& size, Fw::AlignmentFlag align)
 {
+    if (!font || text.empty() || !size.isValid()) 
+        return 0;
     uint64_t hash = 1125899906842597ULL;
     for (size_t i = 0; i < text.length(); ++i) {
         hash = hash * 31 + text[i];
@@ -63,8 +66,16 @@ uint64_t TextRender::addText(BitmapFontPtr font, const std::string& text, const 
     return hash;
 }
 
+void TextRender::drawText(const Rect& rect, const std::string& text, BitmapFontPtr font, const Color& color, Fw::AlignmentFlag align)
+{
+    VALIDATE_GRAPHICS_THREAD();
+    uint64_t hash = addText(font, text, rect.size(), align);
+    drawText(rect.topLeft(), hash, color);
+}
+
 void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
 {
+    VALIDATE_GRAPHICS_THREAD();
     int index = hash % INDEXES;
     m_mutex[index].lock();
     auto _it = m_cache[index].find(hash);
@@ -86,6 +97,7 @@ void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
 
 void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vector<std::pair<int, Color>>& colors)
 {
+    VALIDATE_GRAPHICS_THREAD();
     if (colors.empty())
         return drawText(pos, hash, Color::white);
     int index = hash % INDEXES;
