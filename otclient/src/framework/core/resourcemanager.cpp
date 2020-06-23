@@ -312,20 +312,25 @@ bool ResourceManager::loadDataFromSelf(bool unmountIfMounted) {
     file.seekg(0, std::ios_base::end);
     std::size_t size = file.tellg();
     file.seekg(0, std::ios_base::beg);
-    if (size < 1024 * 1024 || size > 1024 * 1024 * 128) {
+    if (size < 1024 || size > 1024 * 1024 * 128) {
         file.close();
         return false;
     }
-    std::vector<uint32_t> v(1 + size / sizeof(uint32_t));
+
+    std::vector<uint8_t> v(1 + size);
     file.read((char*)&v[0], size);
     file.close();
-
-    for (size_t i = 0, end = (size / sizeof(uint32_t)) - 128; i < end; ++i) {
-        if (v[i] == 0x04034b50 && (v[i + 1] & 0xFF00FFFF) < 0x20 && (v[i + 1] & 0xFF00FFFF) > 0x01 && (v[i + 2] & 0xFFFF) < 0xFF) {
-            data = std::make_shared<std::vector<uint8_t>>((uint8_t*)&v[i], (uint8_t*)&v[v.size() - 1]);
-            break;
+    for (size_t i = 0, end = size - 128; i < end; ++i) {
+        if (v[i] == 0x50 && v[i + 1] == 0x4b && v[i + 2] == 0x03 && v[i + 3] == 0x04 && v[i + 4] == 0x14) {
+            uint32_t compSize = *(uint32_t*)&v[i + 18];
+            uint32_t decompSize = *(uint32_t*)&v[i + 22];
+            if (compSize < 1024 * 1024 * 512 && decompSize < 1024 * 1024 * 512) {
+                data = std::make_shared<std::vector<uint8_t>>(&v[i], &v[v.size() - 1]);
+                break;
+            }
         }
     }
+    v.clear();
 
 #endif
 
