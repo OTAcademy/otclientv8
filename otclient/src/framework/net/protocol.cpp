@@ -31,9 +31,11 @@ Protocol::Protocol()
 {
     m_xteaEncryptionEnabled = false;
     m_checksumEnabled = false;
+    m_sequencedPackets = false;
     m_bigPackets = false;
     m_compression = false;
     m_inputMessage = InputMessagePtr(new InputMessage);
+    m_packedNumber = 0;
 
     // compression
     m_zstreamBuffer.resize(InputMessage::BUFFER_MAXSIZE);
@@ -110,18 +112,22 @@ bool Protocol::isConnecting()
     return false;
 }
 
-void Protocol::send(const OutputMessagePtr& outputMessage)
+void Protocol::send(const OutputMessagePtr& outputMessage, bool rawPacket)
 {
-    // encrypt
-    if(m_xteaEncryptionEnabled)
-        xteaEncrypt(outputMessage);
+    if (!rawPacket) {
+        // encrypt
+        if (m_xteaEncryptionEnabled)
+            xteaEncrypt(outputMessage);
 
-    // write checksum
-    if(m_checksumEnabled)
-        outputMessage->writeChecksum();
+        // write checksum
+        if (m_sequencedPackets)
+            outputMessage->writeSequence(m_packedNumber++);
+        else if (m_checksumEnabled)
+            outputMessage->writeChecksum();
 
-    // write message size
-    outputMessage->writeMessageSize(m_bigPackets);
+        // write message size
+        outputMessage->writeMessageSize(m_bigPackets);
+    }
 
 #ifdef FW_PROXY
     if (m_proxy) {
@@ -184,7 +190,11 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
     m_inputMessage->fillBuffer(buffer, size);
     
     bool decompress = false;
-    if(m_checksumEnabled) {
+    if (m_sequencedPackets) {
+        if (m_inputMessage->getU32() >= 0xC0000000) {
+            decompress = true;
+        }
+    } else if(m_checksumEnabled) {
         if (m_inputMessage->peekU32() == 0) { // compressed data
             m_inputMessage->getU32();
             decompress = true;

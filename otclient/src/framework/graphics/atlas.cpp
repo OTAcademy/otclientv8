@@ -63,7 +63,7 @@ void Atlas::resetAtlas(int location) {
     }
 
     m_atlas[location]->bind();
-    g_painterNew->clear(Color::alpha);
+    g_painter->clear(Color::alpha);
     m_atlas[location]->release();
 }
 
@@ -105,7 +105,7 @@ Point Atlas::cache(uint64_t hash, const Size& size, bool& draw)
 void Atlas::bind()
 {
     m_atlas[0]->bind();
-    g_painterNew->setCompositionMode(Painter::CompositionMode_Replace);
+    g_painter->setCompositionMode(Painter::CompositionMode_Replace);
 }
 
 void Atlas::release()
@@ -126,8 +126,8 @@ Point Atlas::cacheFont(const TexturePtr& fontTexture)
     Point location = m_locations[1][index].front();
     m_locations[1][index].pop_front();
     m_atlas[1]->bind();
-    g_painterNew->setCompositionMode(Painter::CompositionMode_Replace);
-    g_painterNew->drawTexturedRect(Rect(location, fontTexture->getSize()), fontTexture);
+    g_painter->setCompositionMode(Painter::CompositionMode_Replace);
+    g_painter->drawTexturedRect(Rect(location, fontTexture->getSize()), fontTexture);
     m_atlas[1]->release();
     return location;
 }

@@ -44,7 +44,7 @@ int Http::get(const std::string& url, int timeout) {
         result->url = url;
         result->operationId = operationId;
         m_operations[operationId] = result;
-        auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&](HttpResult_ptr result) {
+        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, result, [&](HttpResult_ptr result) {
             bool finished = result->finished;
             g_dispatcher.addEventEx("Http::onGet", [result, finished]() {
                 if (!finished) {
@@ -78,7 +78,7 @@ int Http::post(const std::string& url, const std::string& data, int timeout) {
         result->operationId = operationId;
         result->postData = data;
         m_operations[operationId] = result;
-        auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&](HttpResult_ptr result) {
+        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, result, [&](HttpResult_ptr result) {
             bool finished = result->finished;
             g_dispatcher.addEventEx("Http::onPost", [result, finished]() {
                 if (!finished) {
@@ -106,7 +106,7 @@ int Http::download(const std::string& url, std::string path, int timeout) {
         result->url = url;
         result->operationId = operationId;
         m_operations[operationId] = result;
-        auto session = std::make_shared<HttpSession>(m_ios, url, timeout, result, [&, path](HttpResult_ptr result) {
+        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, result, [&, path](HttpResult_ptr result) {
             m_speed = ((result->size) * 10) / (1 + stdext::micros() - m_lastSpeedUpdate);
             m_lastSpeedUpdate = stdext::micros();
 
@@ -145,7 +145,7 @@ int Http::ws(const std::string& url, int timeout)
         result->url = url;
         result->operationId = operationId;
         m_operations[operationId] = result;
-        auto session = std::make_shared<WebsocketSession>(m_ios, url, timeout, result, [&, result](WebsocketCallbackType type, std::string message) {
+        auto session = std::make_shared<WebsocketSession>(m_ios, url, m_userAgent, timeout, result, [&, result](WebsocketCallbackType type, std::string message) {
             g_dispatcher.addEventEx("Http::ws", [result, type, message]() {
                 if (type == WEBSOCKET_OPEN) {
                     g_lua.callGlobalField("g_http", "onWsOpen", result->operationId, message);

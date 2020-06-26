@@ -14,8 +14,8 @@ class HttpSession : public std::enable_shared_from_this<HttpSession>
 {
 public:
 
-    HttpSession(boost::asio::io_service& service, const std::string& url, int timeout, HttpResult_ptr result, HttpResult_cb callback) :
-        m_service(service), m_url(url), m_socket(service), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
+    HttpSession(boost::asio::io_service& service, const std::string& url, const std::string& agent, int timeout, HttpResult_ptr result, HttpResult_cb callback) :
+        m_service(service), m_url(url), m_agent(agent), m_socket(service), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
     {
         VALIDATE(m_callback);
         VALIDATE(m_result);
@@ -26,6 +26,7 @@ public:
 private:
     boost::asio::io_service& m_service;
     std::string m_url;
+    std::string m_agent;
     int m_port;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::ip::tcp::resolver m_resolver;

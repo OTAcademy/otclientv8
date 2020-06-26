@@ -23,9 +23,15 @@
 #include "outfit.h"
 #include "game.h"
 #include "spritemanager.h"
+#include "shadermanager.h"
 
 #include <framework/graphics/painter.h>
+#include <framework/graphics/drawcache.h>
 #include <framework/graphics/drawqueue.h>
+#include <framework/graphics/atlas.h>
+#include <framework/graphics/texturemanager.h>
+#include <framework/graphics/image.h>
+#include <framework/graphics/framebuffermanager.h>
 
 Outfit::Outfit()
 {
@@ -115,7 +121,16 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         }
 
         uint32_t colors = m_head + (m_body << 8) + (m_legs << 16) + (m_feet << 24);
-        type->drawOutfit(dest, direction, yPattern, zPattern, animationPhase, colors, Color::white, lightView);
+        std::shared_ptr<DrawOutfitParams> outfitParams = type->drawOutfit(dest, direction, yPattern, zPattern, animationPhase, Color::white, lightView);
+        if (!outfitParams)
+            continue;
+
+        DrawQueueItemTexturedRect* outfit = nullptr;
+        if(m_shader.empty())
+            outfit = new DrawQueueItemOutfit(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, colors, outfitParams->color);
+        else
+            outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, colors, m_shader);
+        g_drawQueue->add(outfit);
     }
 
     if (m_wings && (direction == Otc::North || direction == Otc::East)) {
@@ -138,4 +153,105 @@ void Outfit::resetClothes()
     setLegs(0);
     setFeet(0);
     setMount(0);
+    setWings(0);
+    setAura(0);
+    resetShader();
+}
+
+// drawing
+
+bool DrawQueueItemOutfit::cache()
+{
+    m_texture->update();
+    uint64_t hash = (((uint64_t)m_texture->getUniqueId()) << 48) +
+        (((uint64_t)m_src.x()) << 36) +
+        (((uint64_t)m_src.y()) << 24) +
+        (((uint64_t)m_src.width()) << 12) +
+        (((uint64_t)m_src.height())) +
+        (((uint64_t)m_colors) * 1125899906842597ULL);
+    bool drawNow = false;
+    Point atlasPos = g_atlas.cache(hash, m_src.size(), drawNow);
+    if (atlasPos.x < 0) { return false; } // can't be cached
+    if (drawNow) { g_drawCache.bind(); draw(atlasPos); }
+
+    if (!g_drawCache.hasSpace(6))
+        return false;
+
+    g_drawCache.addTexturedRect(m_dest, Rect(atlasPos, m_src.size()), m_color);
+    return true;
+}
+
+void DrawQueueItemOutfit::draw()
+{
+    if (!m_texture) return;
+    Matrix4 mat4;
+    for (int x = 0; x < 4; ++x) {
+        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
+        mat4(x + 1, 1) = color.rF();
+        mat4(x + 1, 2) = color.gF();
+        mat4(x + 1, 3) = color.bF();
+        mat4(x + 1, 4) = color.aF();
+    }
+    g_painter->setDrawOutfitLayersProgram();
+    g_painter->setMatrixColor(mat4);
+    g_painter->setOffset(m_offset);
+    g_painter->drawTexturedRect(m_dest, m_texture, m_src);
+    g_painter->resetShaderProgram();
+}
+
+void DrawQueueItemOutfit::draw(const Point& pos)
+{
+    if (!m_texture) return;
+    Matrix4 mat4;
+    for (int x = 0; x < 4; ++x) {
+        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
+        mat4(x + 1, 1) = color.rF();
+        mat4(x + 1, 2) = color.gF();
+        mat4(x + 1, 3) = color.bF();
+        mat4(x + 1, 4) = color.aF();
+    }
+    g_painter->setDrawOutfitLayersProgram();
+    g_painter->setMatrixColor(mat4);
+    g_painter->setOffset(m_offset);
+    g_painter->drawTexturedRect(Rect(pos, m_src.size()), m_texture, m_src);
+    g_painter->resetShaderProgram();
+}
+
+void DrawQueueItemOutfitWithShader::draw()
+{
+    if (!m_texture) return;
+    PainterShaderProgramPtr shader = g_shaders.getShader(m_shader);
+    if (!shader) return DrawQueueItemTexturedRect::draw();
+    bool useFramebuffer = m_dest.size() != m_src.size();
+
+    if (useFramebuffer) {
+        g_framebuffers.getTemporaryFrameBuffer()->resize(m_src.size());
+        g_framebuffers.getTemporaryFrameBuffer()->bind();
+    }
+
+    Matrix4 mat4;
+    for (int x = 0; x < 4; ++x) {
+        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
+        mat4(x + 1, 1) = color.rF();
+        mat4(x + 1, 2) = color.gF();
+        mat4(x + 1, 3) = color.bF();
+        mat4(x + 1, 4) = color.aF();
+    }
+    g_painter->setShaderProgram(shader);
+    g_painter->setOffset(m_offset);
+    shader->setMatrixColor(mat4);
+    shader->setCenter(m_dest.center());
+    shader->bindMultiTextures();
+    if (useFramebuffer) {
+        g_painter->drawTexturedRect(Rect(0, 0, m_src.size()), m_texture, m_src);
+    } else {
+        g_painter->drawTexturedRect(m_dest, m_texture, m_src);
+    }
+    g_painter->resetShaderProgram();
+
+    if (useFramebuffer) {
+        g_framebuffers.getTemporaryFrameBuffer()->release();
+        g_painter->resetColor();
+        g_framebuffers.getTemporaryFrameBuffer()->draw(m_dest);
+    }
 }

@@ -382,6 +382,7 @@
     <ClInclude Include="..\src\framework\graphics\shader.h" />
     <ClInclude Include="..\src\framework\graphics\shaderprogram.h" />
     <ClInclude Include="..\src\framework\graphics\shaders\newshader.h" />
+    <ClInclude Include="..\src\framework\graphics\shaders\outfits.h" />
     <ClInclude Include="..\src\framework\graphics\shaders\shaders.h" />
     <ClInclude Include="..\src\framework\graphics\shaders\shadersources.h" />
     <ClInclude Include="..\src\framework\graphics\textrender.h" />

@@ -89,6 +89,15 @@ public:
     int getZoom() { return m_zoom; }
     float getMinimumAmbientLight() { return m_mapView->getMinimumAmbientLight(); }
 
+    void setShader(const std::string& shader)
+    {
+        m_shader = shader;
+    }
+    std::string getShader()
+    {
+        return m_shader;
+    }
+
 protected:
     virtual void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
     virtual void onGeometryChange(const Rect& oldRect, const Rect& newRect);
@@ -106,6 +115,7 @@ private:
     bool m_limitVisibleRange;
     int m_maxZoomIn;
     int m_maxZoomOut;
+    std::string m_shader;
 };
 
 #endif

@@ -50,13 +50,11 @@ static std::string glslPositionOnlyVertexShader = "\n\
     }\n";
 
 static const std::string glslMainFragmentShader = "\n\
-    uniform float u_Opacity;\n\
     uniform float u_Depth;\n\
     vec4 calculatePixel();\n\
     void main()\n\
     {\n\
         gl_FragColor = calculatePixel();\n\
-        gl_FragColor.a *= u_Opacity;\n\
         if(gl_FragColor.a < 0.01 && u_Depth > 0.0)\n\
 	        discard;\n\
     }\n";
@@ -105,13 +103,10 @@ static const std::string glslOutfitVertexShader = "\n\
     }\n";
 
 static const std::string glslOutfitFragmentShader = "\n\
-    uniform float u_Opacity;\n\
-    uniform float u_Depth;\n\
     uniform mat4 u_Color;\n\
     varying vec2 v_TexCoord;\n\
     varying vec2 v_TexCoord2;\n\
     uniform sampler2D u_Tex0;\n\
-    uniform sampler2D u_Tex1;\n\
     void main()\n\
     {\n\
         gl_FragColor = texture2D(u_Tex0, v_TexCoord);\n\

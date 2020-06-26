@@ -264,7 +264,6 @@ function onColorCheckChange(colorBox)
     elseif currentClotheButtonBox:getId() == 'detail' then
       outfit.feet = currentColorBox.colorId
     end
-
     outfitCreature:setOutfit(outfit)
   end
 end

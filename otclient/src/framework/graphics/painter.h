@@ -70,7 +70,6 @@ public:
         Matrix3 projectionMatrix;
         Matrix3 textureMatrix;
         Color color;
-        float opacity;
         Painter::CompositionMode compositionMode;
         Painter::BlendEquation blendEquation;
         Rect clipRect;
@@ -165,8 +164,6 @@ public:
     void translate(const Point& p) { translate(p.x, p.y); }
     void rotate(const Point& p, float angle) { rotate(p.x, p.y, angle); }
 
-    void setOpacity(float opacity) { m_opacity = opacity; }
-
 #ifdef WITH_DEPTH_BUFFER
     void setDepth(float depth) { m_depth = depth; }
     float getDepth() { return m_depth; }
@@ -177,12 +174,10 @@ public:
 
     Size getResolution() { return m_resolution; }
     Color getColor() { return m_color; }
-    float getOpacity() { return m_opacity; }
     Rect getClipRect() { return m_clipRect; }
     CompositionMode getCompositionMode() { return m_compositionMode; }
 
     void resetClipRect() { setClipRect(Rect()); }
-    void resetOpacity() { setOpacity(1.0f); }
     void resetCompositionMode() { setCompositionMode(CompositionMode_Normal); }
     void resetColor() { setColor(Color::white); }
     void resetShaderProgram() { setShaderProgram(nullptr); }
@@ -238,7 +233,6 @@ protected:
     Color m_color;
     Matrix4 m_matrixColor;
     Size m_resolution;
-    float m_opacity;
     Rect m_clipRect;
 #ifdef WITH_DEPTH_BUFFER
     DepthFunc m_depthFunc;
@@ -260,6 +254,6 @@ private:
     PainterShaderProgramPtr m_drawLineProgram;
 };
 
-extern Painter* g_painterNew;
+extern Painter* g_painter;
 
 #endif

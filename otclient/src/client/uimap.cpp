@@ -28,6 +28,7 @@
 #include <framework/graphics/graphics.h>
 #include <framework/util/extras.h>
 #include "localplayer.h"
+#include "shadermanager.h"
 
 UIMap::UIMap()
 {
@@ -56,6 +57,7 @@ bool UIMap::onMouseMove(const Point& mousePos, const Point& mouseMoved)
 
 void UIMap::drawSelf(Fw::DrawPane drawPane)
 {
+    VALIDATE_GRAPHICS_THREAD();
     UIWidget::drawSelf(drawPane);
 
     if(drawPane == Fw::ForegroundPane) {
@@ -63,6 +65,9 @@ void UIMap::drawSelf(Fw::DrawPane drawPane)
         g_drawQueue->markMapPosition();
     } else if(drawPane == Fw::MapBackgroundPane) {
         m_mapView->drawBackground(m_mapRect, getTile(m_mousePosition));
+        if (!m_shader.empty()) {
+            g_drawQueue->setShader(g_shaders.getShader(m_shader));
+        }
     } else if (drawPane == Fw::MapForegroundPane) {
         m_mapView->drawForeground(m_mapRect);
     }

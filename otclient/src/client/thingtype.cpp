@@ -561,22 +561,22 @@ DrawQueueItem* ThingType::draw(const Rect& dest, int layer, int xPattern, int yP
     return g_drawQueue->addTexturedRect(Rect(dest.topLeft() + (textureOffset * scale), textureRect.size() * scale), texture, textureRect, color);
 }
 
-void ThingType::drawOutfit(const Point& dest, int xPattern, int yPattern, int zPattern, int animationPhase, int colors, Color color, LightView* lightView)
+std::shared_ptr<DrawOutfitParams> ThingType::drawOutfit(const Point& dest, int xPattern, int yPattern, int zPattern, int animationPhase, Color color, LightView* lightView)
 {
     if (m_null)
-        return;
+        return nullptr;
 
     if (animationPhase < 0 || animationPhase >= m_animationPhases)
-        return;
+        return nullptr;
 
     const TexturePtr& texture = getTexture(animationPhase); // texture might not exists, neither its rects.
     if (!texture)
-        return;
+        return nullptr;
 
     uint frameIndex = getTextureIndex(0, xPattern, yPattern, zPattern);
     uint frameIndex2 = getTextureIndex(1, xPattern, yPattern, zPattern);
     if (frameIndex >= m_texturesFramesRects[animationPhase].size() || frameIndex2 >= m_texturesFramesRects[animationPhase].size())
-        return;
+        return nullptr;
 
     Point textureOffset = m_texturesFramesOffsets[animationPhase][frameIndex];
     Point textureOffset2 = m_texturesFramesOffsets[animationPhase][frameIndex2];
@@ -584,7 +584,7 @@ void ThingType::drawOutfit(const Point& dest, int xPattern, int yPattern, int zP
     Rect textureRect2 = m_texturesFramesRects[animationPhase][frameIndex2];
     Size size = textureRect.size();
     if (!size.isValid())
-        return;
+        return nullptr;
     Rect screenRect(dest + (textureOffset - m_displacement - (m_size.toPoint() - Point(1, 1)) * Otc::TILE_PIXELS), textureRect.size());
 
     bool useOpacity = m_opacity < 1.0f;
@@ -596,7 +596,9 @@ void ThingType::drawOutfit(const Point& dest, int xPattern, int yPattern, int zP
 
     Point offset = textureOffset - textureOffset2;
     offset += textureRect2.topLeft() - textureRect.topLeft();
-    g_drawQueue->addOutfit(screenRect, texture, textureRect, offset, colors, color);
+
+    return std::shared_ptr< DrawOutfitParams>(new DrawOutfitParams
+                           { screenRect, texture, textureRect, offset, color});
 }
 
 Rect ThingType::getDrawSize(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase)

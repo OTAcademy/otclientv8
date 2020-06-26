@@ -22,7 +22,7 @@ enum DrawType : uint8_t {
 struct DrawQueueItem {
     DrawQueueItem(const TexturePtr& texture, const Color& color = Color::white) : 
         m_texture(texture), m_color(color) {}
-    virtual ~DrawQueueItem() {};
+    virtual ~DrawQueueItem() = default;
     virtual void draw() {}
     virtual void draw(const Point& pos) {}
     virtual bool cache() { return false; }
@@ -35,6 +35,7 @@ struct DrawQueueItemTexturedRect : public DrawQueueItem {
     DrawQueueItemTexturedRect() : DrawQueueItem(nullptr) {}
     DrawQueueItemTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src, const Color& color) :
         DrawQueueItem(texture, color), m_dest(dest), m_src(src) {};
+    virtual ~DrawQueueItemTexturedRect() = default;
 
     virtual void draw();
     virtual void draw(const Point& pos);
@@ -102,19 +103,6 @@ struct DrawQueueItemTextColored : public DrawQueueItem {
     std::vector<std::pair<int, Color>> m_colors;
 };
 
-struct DrawQueueItemOutfit : public DrawQueueItemTexturedRect {
-    DrawQueueItemOutfit(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, int32_t colors, const Color& color) :
-        DrawQueueItemTexturedRect(rect, texture, src, color), m_offset(offset), m_colors(colors)
-    { };
-
-    void draw() override;
-    void draw(const Point& pos) override;
-    bool cache() override;
-
-    Point m_offset;
-    int32_t m_colors;
-};
-
 struct DrawQueueCondition {
     DrawQueueCondition(size_t start, size_t end) :
         m_start(start), m_end(end) {}
@@ -178,6 +166,7 @@ public:
 
     void add(DrawQueueItem* item)
     {
+        if (!item) return;
         m_queue.push_back(item);
     }
     DrawQueueItemTexturedRect* addTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src, const Color& color = Color::white)
@@ -204,12 +193,6 @@ public:
     }
     void addText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align = Fw::AlignTopLeft, const Color& color = Color::white);
     void addColoredText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const std::vector<std::pair<int, Color>>& colors);
-    DrawQueueItemOutfit* addOutfit(const Rect& dest, const TexturePtr& texture, const Rect& src, const Point& offset, int colors, const Color& color = Color::white)
-    {
-        DrawQueueItemOutfit* outfit = new DrawQueueItemOutfit(dest, texture, src, offset, colors, color);
-        m_queue.push_back(outfit);
-        return outfit;
-    }
 
     void addFilledTriangle(const Point& a, const Point& b, const Point& c, const Color& color = Color::white)
     {
@@ -284,6 +267,16 @@ public:
     }
     void correctOutfit(const Rect& dest, int fromPos);
 
+    void setShader(const PainterShaderProgramPtr& shader)
+    {
+        m_shader = shader;
+    }
+
+    PainterShaderProgramPtr getShader()
+    {
+        return m_shader;
+    }
+
 private:
     std::vector<DrawQueueItem*> m_queue;
     std::vector<DrawQueueCondition*> m_conditions;
@@ -292,6 +285,7 @@ private:
     size_t mapPosition = 0;
     bool m_useFrameBuffer = false;
     float m_scaling = 1.f;
+    PainterShaderProgramPtr m_shader;
 
     friend struct DrawQueueConditionMark;
 };

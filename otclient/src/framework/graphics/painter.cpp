@@ -31,14 +31,13 @@
 #include <framework/platform/platformwindow.h>
 #include <framework/util/extras.h>
 
-Painter* g_painterNew = nullptr;
+Painter* g_painter = nullptr;
 
 Painter::Painter()
 {
     m_glTextureId = 0;
     m_oldStateIndex = 0;
     m_color = Color::white;
-    m_opacity = 1.0f;
     m_compositionMode = CompositionMode_Normal;
     m_blendEquation = BlendEquation_Add;
     m_shaderProgram = nullptr;
@@ -88,7 +87,6 @@ void Painter::unbind()
 void Painter::resetState()
 {
     resetColor();
-    resetOpacity();
     resetCompositionMode();
     resetBlendEquation();
     resetClipRect();
@@ -123,7 +121,6 @@ void Painter::saveState()
     m_olderStates[m_oldStateIndex].projectionMatrix = m_projectionMatrix;
     m_olderStates[m_oldStateIndex].textureMatrix = m_textureMatrix;
     m_olderStates[m_oldStateIndex].color = m_color;
-    m_olderStates[m_oldStateIndex].opacity = m_opacity;
     m_olderStates[m_oldStateIndex].compositionMode = m_compositionMode;
     m_olderStates[m_oldStateIndex].blendEquation = m_blendEquation;
     m_olderStates[m_oldStateIndex].clipRect = m_clipRect;
@@ -151,7 +148,6 @@ void Painter::restoreSavedState()
     setProjectionMatrix(m_olderStates[m_oldStateIndex].projectionMatrix);
     setTextureMatrix(m_olderStates[m_oldStateIndex].textureMatrix);
     setColor(m_olderStates[m_oldStateIndex].color);
-    setOpacity(m_olderStates[m_oldStateIndex].opacity);
     setCompositionMode(m_olderStates[m_oldStateIndex].compositionMode);
     setBlendEquation(m_olderStates[m_oldStateIndex].blendEquation);
     setClipRect(m_olderStates[m_oldStateIndex].clipRect);
@@ -173,9 +169,9 @@ void Painter::clear(const Color& color)
 #else
     glClearDepth(0.99f);
 #endif
-    glClear(GL_COLOR_BUFFER_BIT);
-#else
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#else
+    glClear(GL_COLOR_BUFFER_BIT);
 #endif
 }
 
@@ -284,7 +280,7 @@ void Painter::setResolution(const Size& resolution)
     m_resolution = resolution;
 
     setProjectionMatrix(projectionMatrix);
-    if (g_painterNew == this)
+    if (g_painter == this)
         updateGlViewport();
 }
 
@@ -479,7 +475,6 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
         m_drawProgram->bindMultiTextures();
     }
 
-    m_drawProgram->setOpacity(m_opacity);
 #ifdef WITH_DEPTH_BUFFER
     m_drawProgram->setDepth(m_depth);
 #endif

@@ -42,7 +42,7 @@ void Graph::draw(const Rect& dest)
     vertices[8] = dest.left();
     vertices[9] = offsetY;
 
-    g_painterNew->drawLine(vertices, 5);
+    g_painter->drawLine(vertices, 5);
     g_text.drawText(dest, m_name, g_fonts.getDefaultFont());
 
     m_mutex.lock();
@@ -70,8 +70,8 @@ void Graph::draw(const Rect& dest)
         g_text.drawText(Rect(dest.left() + 1, offsetY, 50, 15), std::to_string(maxVal), g_fonts.getDefaultFont());
         g_text.drawText(Rect(dest.left() + 1, dest.bottom() - 14, 50, 15), std::to_string(minVal), g_fonts.getDefaultFont());
     }
-    g_painterNew->setColor(Color::white);
-    g_painterNew->drawLine(vertices, elements);
+    g_painter->setColor(Color::white);
+    g_painter->drawLine(vertices, elements);
 }
 
 void Graph::clear()

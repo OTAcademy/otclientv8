@@ -83,7 +83,7 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
 
 void BitmapFont::drawText(const std::string& text, const Point& startPos, const Color& color)
 {
-    Size boxSize = g_painterNew->getResolution() - startPos.toSize();
+    Size boxSize = g_painter->getResolution() - startPos.toSize();
     Rect screenCoords(startPos, boxSize);
     drawText(text, screenCoords, Fw::AlignTopLeft);
 }

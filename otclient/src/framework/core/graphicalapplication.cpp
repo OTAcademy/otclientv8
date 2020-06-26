@@ -131,9 +131,9 @@ void GraphicalApplication::run()
     g_lua.callGlobalField("g_app", "onRun");
 
     m_framebuffer = g_framebuffers.createFrameBuffer();
-    m_framebuffer->resize(g_painterNew->getResolution());
+    m_framebuffer->resize(g_painter->getResolution());
     m_mapFramebuffer = g_framebuffers.createFrameBuffer();
-    m_mapFramebuffer->resize(g_painterNew->getResolution());
+    m_mapFramebuffer->resize(g_painter->getResolution());
 
     ticks_t lastRender = stdext::micros();
 
@@ -244,11 +244,11 @@ void GraphicalApplication::run()
         m_mustRepaint = false;
         lastRender = stdext::micros() > lastRender + frameDelay * 2 ? stdext::micros() : lastRender + frameDelay;
 
-        g_painterNew->resetDraws();
+        g_painter->resetDraws();
         if (m_scaling > 1.0f) {
             AutoStat s(STATS_RENDER, "SetupScaling");
-            g_painterNew->setResolution(g_graphics.getViewportSize() / m_scaling);
-            m_framebuffer->resize(g_painterNew->getResolution());
+            g_painter->setResolution(g_graphics.getViewportSize() / m_scaling);
+            m_framebuffer->resize(g_painter->getResolution());
             m_framebuffer->bind();
         }
 
@@ -256,14 +256,14 @@ void GraphicalApplication::run()
             AutoStat s(STATS_RENDER, "UpdateMap");
             m_mapFramebuffer->resize(toDrawMapQueue->getFrameBufferSize());
             m_mapFramebuffer->bind();
-            g_painterNew->clear(Color::black);
+            g_painter->clear(Color::black);
             toDrawMapQueue->draw(DRAW_ALL);
             m_mapFramebuffer->release();
         }
 
         {
             AutoStat s(STATS_RENDER, "Clear");
-            g_painterNew->clear(Color::alpha);
+            g_painter->clear(Color::alpha);
         }
 
         {
@@ -276,7 +276,15 @@ void GraphicalApplication::run()
             isOnline = toDrawMapQueue->hasFrameBuffer();
             if(isOnline) {
                 AutoStat s(STATS_RENDER, "DrawMapBackground");
+                PainterShaderProgramPtr shader = toDrawMapQueue->getShader();
+                if (shader) {
+                    g_painter->setShaderProgram(shader);
+                    shader->bindMultiTextures();
+                }
                 m_mapFramebuffer->draw(toDrawMapQueue->getFrameBufferDest(), toDrawMapQueue->getFrameBufferSrc());
+                if (shader) {
+                    g_painter->resetShaderProgram();
+                }
             }
             if(toDrawMapForegroundQueue) {
                 AutoStat s(STATS_RENDER, "DrawMapForeground");
@@ -295,7 +303,7 @@ void GraphicalApplication::run()
                 for (int i = 0, x = 60, y = 30; i <= GRAPH_LAST; ++i) {
                     g_graphs[i].draw(Rect(x, y, Size(200, 60)));
                     y += 70;
-                    if (y + 70 > g_painterNew->getResolution().height()) {
+                    if (y + 70 > g_painter->getResolution().height()) {
                         x += 220;
                         y = 30;
                     }
@@ -306,13 +314,13 @@ void GraphicalApplication::run()
         if (m_scaling > 1.0f) {
             AutoStat s(STATS_RENDER, "DrawScaled");
             m_framebuffer->release();
-            g_painterNew->setResolution(g_graphics.getViewportSize());
-            g_painterNew->clear(Color::alpha);
-            m_framebuffer->draw(Rect(0, 0, g_painterNew->getResolution()));
+            g_painter->setResolution(g_graphics.getViewportSize());
+            g_painter->clear(Color::alpha);
+            m_framebuffer->draw(Rect(0, 0, g_painter->getResolution()));
         }
 
-        g_graphs[GRAPH_GPU_CALLS].addValue(g_painterNew->calls());
-        g_graphs[GRAPH_GPU_DRAWS].addValue(g_painterNew->draws());
+        g_graphs[GRAPH_GPU_CALLS].addValue(g_painter->calls());
+        g_graphs[GRAPH_GPU_DRAWS].addValue(g_painter->draws());
 
         AutoStat s(STATS_RENDER, "SwapBuffers");
         g_window.swapBuffers();

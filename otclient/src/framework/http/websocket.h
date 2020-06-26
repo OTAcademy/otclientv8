@@ -25,8 +25,8 @@ class WebsocketSession : public std::enable_shared_from_this<WebsocketSession>
 {
 public:
 
-    WebsocketSession(boost::asio::io_service& service, const std::string& url, int timeout, HttpResult_ptr result, WebsocketSession_cb callback) :
-        m_service(service), m_url(url), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
+    WebsocketSession(boost::asio::io_service& service, const std::string& url, const std::string& agent, int timeout, HttpResult_ptr result, WebsocketSession_cb callback) :
+        m_service(service), m_url(url), m_agent(agent), m_resolver(service), m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout)
     {
         VALIDATE(m_callback);
         VALIDATE(m_result);
@@ -39,6 +39,7 @@ public:
 private:
     boost::asio::io_service& m_service;
     std::string m_url;
+    std::string m_agent;
     boost::asio::ip::tcp::resolver m_resolver;
     WebsocketSession_cb m_callback;
     HttpResult_ptr m_result;

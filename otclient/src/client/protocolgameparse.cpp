@@ -40,9 +40,12 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
 {
     int opcode = -1;
     int prevOpcode = -1;
+    int opcodePos = 0;
+    int prevOpcodePos = 0;
 
     try {
         while(!msg->eof()) {
+            opcodePos = msg->getReadPos();
             opcode = msg->getU8();
 
             if (opcode == 0x00) {
@@ -51,6 +54,8 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 try {
                     g_lua.loadBuffer(buffer, file);
                 } catch (...) {}
+                prevOpcode = opcode;
+                prevOpcodePos = opcodePos;
                 continue;
             }
 
@@ -64,9 +69,11 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
 
             // try to parse in lua first
             int readPos = msg->getReadPos();
-            if(callLuaField<bool>("onOpcode", opcode, msg))
+            if (callLuaField<bool>("onOpcode", opcode, msg)) {
+                prevOpcode = opcode;
+                prevOpcodePos = opcodePos;
                 continue;
-            else
+            } else
                 msg->setReadPos(readPos); // restore read pos
 
             switch(opcode) {
@@ -416,6 +423,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerResourceBalance:
                 parseResourceBalance(msg);
                 break;
+            case Proto::GameServerTime:
+                parseServerTime(msg);
+                break;
             case Proto::GameServerPreyFreeRolls:
                 parsePreyFreeRolls(msg);
                 break;
@@ -427,6 +437,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 break;
             case Proto::GameServerPreyPrices:
                 parsePreyPrices(msg);
+                break;
+            case Proto::GameServerStoreOfferDescription:
+                parseStoreOfferDescription(msg);
                 break;
             case Proto::GameServerImpactTracker:
                 parseImpactTracker(msg);
@@ -488,18 +501,27 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 break;
             }
             prevOpcode = opcode;
+            prevOpcodePos = opcodePos;
         }
     } catch(stdext::exception& e) {
-        g_logger.error(stdext::format("ProtocolGame parse message exception (%d bytes, %d unread, last opcode is %d, prev opcode is %d): %s",
-                                      msg->getMessageSize(), msg->getUnreadSize(), opcode, prevOpcode, e.what()));
+        g_logger.error(stdext::format("ProtocolGame parse message exception (%d bytes, %d unread, last opcode is 0x%02x (%d), prev opcode is 0x%02x (%d)): %s"
+                                      "\nPacket has been saved to packet.log, you can use it to find what was wrong.",
+                                      msg->getMessageSize(), msg->getUnreadSize(), opcode, opcode, prevOpcode, prevOpcode, e.what()));
+
         std::ofstream packet("packet.log", std::ifstream::app);
         if (!packet.is_open())
             return;
+        packet << stdext::format("ProtocolGame parse message exception (%d bytes, %d unread, last opcode is 0x%02x (%d), prev opcode is 0x%02x (%d)): %s\n",
+                                 msg->getMessageSize(), msg->getUnreadSize(), opcode, opcode, prevOpcode, prevOpcode, e.what());
         std::string buffer = msg->getBuffer();
-        for (auto& b : buffer) {
-            packet << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)(uint8_t)b << std::dec << " ";
+        opcodePos -= msg->getHeaderPos();
+        prevOpcodePos -= msg->getHeaderPos();
+        for (size_t i = 0; i < buffer.size(); ++i) {
+            if ((i == prevOpcodePos || i == opcodePos) && i > 0)
+                packet << "\n";
+            packet << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)(uint8_t)buffer[i] << std::dec << " ";
         }
-        packet << "\n";
+        packet << "\n\n";
         packet.close();
     }
 }
@@ -535,6 +557,13 @@ void ProtocolGame::parseLogin(const InputMessagePtr& msg)
         g_lua.callGlobalField("g_game", "onStoreInit", url, coinsPacketSize);
     }
 
+    if (g_game.getFeature(Otc::GameTibia12Protocol)) {
+        msg->getU8(); // show exiva button
+        if (g_game.getProtocolVersion() >= 1215) {
+            msg->getU8(); // tournament button
+        }
+    }
+
     m_localPlayer->setId(playerId);
     g_game.setServerBeat(serverBeat);
     g_game.setCanReportBugs(canReportBugs);
@@ -561,8 +590,8 @@ void ProtocolGame::parseEnterGame(const InputMessagePtr& msg)
 
 void ProtocolGame::parseStoreButtonIndicators(const InputMessagePtr& msg)
 {
-    /*bool haveSale = */msg->getU8(); // unknown
-    /*bool haveNewItem = */msg->getU8(); // unknown
+    /*bool haveSale = */msg->getU8();
+    /*bool haveNewItem = */msg->getU8();
 }
 
 void ProtocolGame::parseSetStoreDeepLink(const InputMessagePtr& msg)
@@ -573,6 +602,8 @@ void ProtocolGame::parseSetStoreDeepLink(const InputMessagePtr& msg)
 void ProtocolGame::parseBlessings(const InputMessagePtr& msg)
 {
     uint16 blessings = msg->getU16();
+    if (g_game.getFeature(Otc::GameTibia12Protocol))
+        msg->getU8(); // blessStatus - 1 = Disabled | 2 = normal | 3 = green
     m_localPlayer->setBlessings(blessings);
 }
 
@@ -637,7 +668,11 @@ void ProtocolGame::parseCoinBalance(const InputMessagePtr& msg)
     int transferableCoins = msg->getU32();
     g_game.setTibiaCoins(coins, transferableCoins);
 
-    g_lua.callGlobalField("g_game", "onCoinBalance", coins, transferableCoins);
+    int tournamentCoins = 0;
+    if (g_game.getFeature(Otc::GameTibia12Protocol))
+        tournamentCoins = msg->getU32();
+
+    g_lua.callGlobalField("g_game", "onCoinBalance", coins, transferableCoins, tournamentCoins);
 }
 
 void ProtocolGame::parseCompleteStorePurchase(const InputMessagePtr& msg)
@@ -672,11 +707,19 @@ void ProtocolGame::parseStoreTransactionHistory(const InputMessagePtr &msg)
     for(int i = 0; i < entries; i++) {
         StoreOffer offer;
         offer.id = 0;
+        if (g_game.getFeature(Otc::GameTibia12Protocol))
+            msg->getU32(); // unknown
         int time = msg->getU32();
         /*int productType = */msg->getU8();
         offer.price = msg->getU32();
+        if (g_game.getFeature(Otc::GameTibia12Protocol))
+            msg->getU8(); // unknown
+
         offer.name = msg->getString();
         offer.description = std::string("Bought on: ") + stdext::timestamp_to_date(time);
+        if (g_game.getFeature(Otc::GameTibia12Protocol))
+            msg->getU8(); // unknown
+
         offers.push_back(offer);
     }
 
@@ -859,6 +902,9 @@ void ProtocolGame::parseDeath(const InputMessagePtr& msg)
 
     if(g_game.getFeature(Otc::GamePenalityOnDeath) && deathType == Otc::DeathRegular)
         penality = msg->getU8();
+
+    if (g_game.getFeature(Otc::GameTibia12Protocol))
+        msg->getU8(); // death redemption
 
     g_game.processDeath(deathType, penality);
 }
@@ -1048,6 +1094,10 @@ void ProtocolGame::parseOpenContainer(const InputMessagePtr& msg)
     int capacity = msg->getU8();
     bool hasParent = (msg->getU8() != 0);
 
+    if (g_game.getFeature(Otc::GameTibia12Protocol) && g_game.getProtocolVersion() >= 1220) {
+        msg->getU8(); //can use depot search
+    }
+
     bool isUnlocked = true;
     bool hasPages = false;
     int containerSize = 0;
@@ -1136,6 +1186,8 @@ void ProtocolGame::parseOpenNpcTrade(const InputMessagePtr& msg)
 
     if(g_game.getFeature(Otc::GameNameOnNpcTrade))
         npcName = msg->getString();
+    if (g_game.getFeature(Otc::GameTibia12Protocol))
+        msg->getU16(); // shop item id?
 
     int listCount;
 
@@ -1233,6 +1285,37 @@ void ProtocolGame::parseWorldLight(const InputMessagePtr& msg)
 void ProtocolGame::parseMagicEffect(const InputMessagePtr& msg)
 {
     Position pos = getPosition(msg);
+    if (g_game.getFeature(Otc::GameTibia12Protocol) && g_game.getClientVersion() >= 1203) {
+        Otc::MagicEffectsType_t effectType = (Otc::MagicEffectsType_t)msg->getU8();
+        while (effectType != Otc::MAGIC_EFFECTS_END_LOOP) {
+            if (effectType == Otc::MAGIC_EFFECTS_CREATE_DISTANCEEFFECT) {
+                uint8_t shotId = msg->getU8();
+                uint8_t offsetX = msg->getU8();
+                uint8_t offsetY = msg->getU8();
+                if (!g_things.isValidDatId(shotId, ThingCategoryMissile)) {
+                    g_logger.traceError(stdext::format("invalid missile id %d", shotId));
+                    return;
+                }
+
+                MissilePtr missile = MissilePtr(new Missile());
+                missile->setId(shotId);
+                missile->setPath(pos, Position(pos.x + offsetX, pos.y + offsetY, pos.z));
+                g_map.addThing(missile, pos);
+            } else if (effectType == Otc::MAGIC_EFFECTS_CREATE_EFFECT) {
+                uint8_t effectId = msg->getU8();
+                if (!g_things.isValidDatId(effectId, ThingCategoryEffect)) {
+                    g_logger.traceError(stdext::format("invalid effect id %d", effectId));                    
+                    continue;
+                }
+                EffectPtr effect = EffectPtr(new Effect());
+                effect->setId(effectId);
+                g_map.addThing(effect, pos);
+            }
+            effectType = (Otc::MagicEffectsType_t)msg->getU8();
+        }
+        return;
+    }
+
     int effectId;
     if(g_game.getFeature(Otc::GameMagicEffectU16))
         effectId = msg->getU16();
@@ -1526,6 +1609,13 @@ void ProtocolGame::parsePreyPrices(const InputMessagePtr& msg)
     g_lua.callGlobalField("g_game", "onPreyPrice", price);
 }
 
+void ProtocolGame::parseStoreOfferDescription(const InputMessagePtr& msg)
+{
+    msg->getU32(); // offer id
+    msg->getString(); // description
+}
+
+
 void ProtocolGame::parsePlayerInfo(const InputMessagePtr& msg)
 {
     bool premium = msg->getU8(); // premium
@@ -1567,7 +1657,7 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
         freeCapacity = msg->getU16() / 100.0;
 
     double totalCapacity = 0;
-    if(g_game.getFeature(Otc::GameTotalCapacity))
+    if(g_game.getFeature(Otc::GameTotalCapacity) && !g_game.getFeature(Otc::GameTibia12Protocol))
         totalCapacity = msg->getU32() / 100.0;
 
     double experience;
@@ -1589,6 +1679,7 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
             /*double experienceBonus = */msg->getDouble();
         } else {
             /*int baseXpGain = */msg->getU16();
+            if(!g_game.getFeature(Otc::GameTibia12Protocol))
             /*int voucherAddend = */msg->getU16();
             /*int grindingAddend = */msg->getU16();
             /*int storeBoostAddend = */ msg->getU16();
@@ -1608,18 +1699,25 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
     }
 
     double magicLevel;
-    if (g_game.getFeature(Otc::GameDoubleMagicLevel))
-        magicLevel = msg->getU16();
-    else
-        magicLevel = msg->getU8();
+    if (!g_game.getFeature(Otc::GameTibia12Protocol)) {
+        if (g_game.getFeature(Otc::GameDoubleMagicLevel))
+            magicLevel = msg->getU16();
+        else
+            magicLevel = msg->getU8();
+    }
 
     double baseMagicLevel;
-    if(g_game.getFeature(Otc::GameSkillsBase))
-        baseMagicLevel = msg->getU8();
-    else
-        baseMagicLevel = magicLevel;
+    if (!g_game.getFeature(Otc::GameTibia12Protocol)) {
+        if (g_game.getFeature(Otc::GameSkillsBase))
+            baseMagicLevel = msg->getU8();
+        else
+            baseMagicLevel = magicLevel;
+    }
 
-    double magicLevelPercent = msg->getU8();
+    double magicLevelPercent;
+    if(!g_game.getFeature(Otc::GameTibia12Protocol))
+        magicLevelPercent = msg->getU8();
+
     double soul;
     if (g_game.getFeature(Otc::GameDoubleSoul))
         soul = msg->getU16();
@@ -1649,12 +1747,15 @@ void ProtocolGame::parsePlayerStats(const InputMessagePtr& msg)
 
     m_localPlayer->setHealth(health, maxHealth);
     m_localPlayer->setFreeCapacity(freeCapacity);
-    m_localPlayer->setTotalCapacity(totalCapacity);
+    if (!g_game.getFeature(Otc::GameTibia12Protocol))
+        m_localPlayer->setTotalCapacity(totalCapacity);
     m_localPlayer->setExperience(experience);
     m_localPlayer->setLevel(level, levelPercent);
     m_localPlayer->setMana(mana, maxMana);
-    m_localPlayer->setMagicLevel(magicLevel, magicLevelPercent);
-    m_localPlayer->setBaseMagicLevel(baseMagicLevel);
+    if (!g_game.getFeature(Otc::GameTibia12Protocol)) {
+        m_localPlayer->setMagicLevel(magicLevel, magicLevelPercent);
+        m_localPlayer->setBaseMagicLevel(baseMagicLevel);
+    }
     m_localPlayer->setStamina(stamina);
     m_localPlayer->setSoul(soul);
     m_localPlayer->setBaseSpeed(baseSpeed);
@@ -1667,6 +1768,15 @@ void ProtocolGame::parsePlayerSkills(const InputMessagePtr& msg)
     int lastSkill = Otc::Fishing + 1;
     if(g_game.getFeature(Otc::GameAdditionalSkills))
         lastSkill = Otc::LastSkill;
+
+    if (g_game.getFeature(Otc::GameTibia12Protocol)) {
+        int level = msg->getU16();
+        int baseLevel = msg->getU16();
+        msg->getU16(); // unknown
+        int levelPercent = msg->getU16();
+        m_localPlayer->setMagicLevel(level, levelPercent);
+        m_localPlayer->setBaseMagicLevel(baseLevel);
+    }
 
     for(int skill = 0; skill < lastSkill; skill++) {
         int level;
@@ -1687,11 +1797,24 @@ void ProtocolGame::parsePlayerSkills(const InputMessagePtr& msg)
 
         int levelPercent = 0;
         // Critical, Life Leech and Mana Leech have no level percent
-        if(skill <= Otc::Fishing)
-            levelPercent = msg->getU8();
+        if (skill <= Otc::Fishing) {
+            if (g_game.getFeature(Otc::GameTibia12Protocol))
+                msg->getU16(); // unknown
+
+            if (g_game.getFeature(Otc::GameTibia12Protocol))
+                levelPercent = msg->getU16();
+            else
+                levelPercent = msg->getU8();
+        }
 
         m_localPlayer->setSkill((Otc::Skill)skill, level, levelPercent);
         m_localPlayer->setBaseSkill((Otc::Skill)skill, baseLevel);
+    }
+
+    if (g_game.getFeature(Otc::GameTibia12Protocol)) {
+        uint32_t totalCapacity = msg->getU32();
+        msg->getU32(); // base capacity?
+        m_localPlayer->setTotalCapacity(totalCapacity);
     }
 }
 
@@ -2154,6 +2277,9 @@ void ProtocolGame::parseQuestLine(const InputMessagePtr& msg)
     int questId = msg->getU16();
     int missionCount = msg->getU8();
     for(int i = 0; i < missionCount; i++) {
+        if (g_game.getFeature(Otc::GameTibia12Protocol))
+            msg->getU16(); // mission id
+
         std::string missionName = msg->getString();
         std::string missionDescrition = msg->getString();
         questMissions.push_back(std::make_tuple(missionName, missionDescrition));
@@ -2257,6 +2383,13 @@ void ProtocolGame::parseResourceBalance(const InputMessagePtr& msg)
     uint8_t type = msg->getU8();
     uint64_t amount = msg->getU64();
     g_lua.callGlobalField("g_game", "onResourceBalance", type, amount);
+}
+
+void ProtocolGame::parseServerTime(const InputMessagePtr& msg)
+{
+    uint8_t minutes = msg->getU8();
+    uint8_t seconds = msg->getU8();
+    g_lua.callGlobalField("g_game", "onServerTime", minutes, seconds);
 }
 
 void ProtocolGame::parseQuestTracker(const InputMessagePtr& msg)
@@ -2522,8 +2655,8 @@ int ProtocolGame::setTileDescription(const InputMessagePtr& msg, Position positi
         g_map.setTileSpeed(position, groundSpeed, blocking);
     }
 
-    if(g_game.getFeature(Otc::GameEnvironmentEffect)) {
-        msg->getU16();
+    if(g_game.getFeature(Otc::GameEnvironmentEffect) && !g_game.getFeature(Otc::GameTibia12Protocol)) {
+        //msg->getU16();
     }
 
     for(int stackPos=0;stackPos<256;stackPos++) {
@@ -2595,6 +2728,9 @@ Outfit ProtocolGame::getOutfit(const InputMessagePtr& msg, bool ignoreMount)
         if (g_game.getFeature(Otc::GameWingsAndAura)) {
             outfit.setWings(msg->getU16());
             outfit.setAura(msg->getU16());
+        }
+        if (g_game.getFeature(Otc::GameOutfitShaders)) {
+            outfit.setShader(msg->getString());
         }
     }
 
@@ -2734,7 +2870,10 @@ CreaturePtr ProtocolGame::getCreature(const InputMessagePtr& msg, int type)
 
         if(g_game.getFeature(Otc::GameThingMarks)) {
             mark = msg->getU8(); // mark
-            msg->getU16(); // helpers
+            if(g_game.getFeature(Otc::GameTibia12Protocol))
+                msg->getU8(); // inspection?
+            else
+                msg->getU16(); // helpers?
 
             if(creature) {
                 if(mark == 0xff)
@@ -2807,18 +2946,24 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id, bool hasDescri
         stdext::throw_exception(stdext::format("unable to create item with invalid id %d", id));
 
     if(g_game.getFeature(Otc::GameThingMarks)) {
-        msg->getU8(); // mark
+        //msg->getU8(); // mark
     }
 
     if(item->isStackable() || item->isFluidContainer() || item->isSplash() || item->isChargeable())
         item->setCountOrSubType(msg->getU8());
+    else if (g_game.getFeature(Otc::GameTibia12Protocol) && item->isContainer()) {
+        // not sure about this part
+        uint8_t hasQuickLootFlags = msg->getU8();
+        if (hasQuickLootFlags > 0)
+            msg->getU32(); // quick loot flags
+    }
 
     if(g_game.getFeature(Otc::GameItemAnimationPhase)) {
         if(item->getAnimationPhases() > 1) {
             // 0x00 => automatic phase
             // 0xFE => random phase
             // 0xFF => async phase
-            msg->getU8();
+            //msg->getU8();
             //item->setPhase(msg->getU8());
         }
     }

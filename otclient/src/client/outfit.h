@@ -25,6 +25,7 @@
 
 #include <framework/util/color.h>
 #include "thingtypemanager.h"
+#include <framework/graphics/drawqueue.h>
 
 class Outfit
 {
@@ -50,8 +51,10 @@ public:
     void setWings(int wings) { m_wings = wings; }
     void setAura(int aura) { m_aura = aura; }
     void setCategory(ThingCategory category) { m_category = category; }
+    void setShader(const std::string& shader) { m_shader = shader; }
 
     void resetClothes();
+    void resetShader() { m_shader = ""; }
 
     int getId() const { return m_id; }
     int getAuxId() const { return m_auxId; }
@@ -64,10 +67,43 @@ public:
     int getWings() const { return m_wings; }
     int getAura() const { return m_aura; }
     ThingCategory getCategory() const { return m_category; }
+    std::string getShader() const { return m_shader; }
 
 private:
     ThingCategory m_category;
     int m_id, m_auxId, m_head, m_body, m_legs, m_feet, m_addons, m_mount = 0, m_wings = 0, m_aura = 0;
+    std::string m_shader;
+};
+
+struct DrawQueueItemOutfit : public DrawQueueItemTexturedRect {
+    DrawQueueItemOutfit(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, int32_t colors, const Color& color) :
+        DrawQueueItemTexturedRect(rect, texture, src, color), m_offset(offset), m_colors(colors)
+    {};
+
+    void draw() override;
+    void draw(const Point& pos) override;
+    bool cache() override;
+
+    Point m_offset;
+    int32_t m_colors;
+};
+
+struct DrawQueueItemOutfitWithShader : public DrawQueueItemTexturedRect {
+    DrawQueueItemOutfitWithShader(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, int32_t colors, const std::string& shader) :
+        DrawQueueItemTexturedRect(rect, texture, src, Color::white), m_offset(offset), m_colors(colors), m_shader(shader)
+    {};
+
+    void draw() override;
+    void draw(const Point& pos) override
+    {}
+    bool cache() override
+    {
+        return false;
+    }
+
+    Point m_offset;
+    int32_t m_colors;
+    std::string m_shader;
 };
 
 #endif

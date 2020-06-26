@@ -12,8 +12,8 @@ std::shared_ptr<DrawQueue> g_drawQueue;
 
 void DrawQueueItemTextureCoords::draw()
 {
-    g_painterNew->setColor(m_color);
-    g_painterNew->drawTextureCoords(m_coordsBuffer, m_texture);
+    g_painter->setColor(m_color);
+    g_painter->drawTextureCoords(m_coordsBuffer, m_texture);
 }
 
 bool DrawQueueItemTextureCoords::cache()
@@ -35,14 +35,14 @@ bool DrawQueueItemTextureCoords::cache()
 
 void DrawQueueItemTextureCoords::draw(const Point& pos)
 {
-    g_painterNew->resetColor();
-    g_painterNew->drawTexturedRect(Rect(pos, m_texture->getSize()), m_texture);
+    g_painter->resetColor();
+    g_painter->drawTexturedRect(Rect(pos, m_texture->getSize()), m_texture);
 }
 
 void DrawQueueItemTexturedRect::draw()
 {
-    g_painterNew->setColor(m_color);
-    g_painterNew->drawTexturedRect(m_dest, m_texture, m_src);
+    g_painter->setColor(m_color);
+    g_painter->drawTexturedRect(m_dest, m_texture, m_src);
 }
 
 bool DrawQueueItemTexturedRect::cache()
@@ -66,8 +66,8 @@ bool DrawQueueItemTexturedRect::cache()
 
 void DrawQueueItemTexturedRect::draw(const Point& pos)
 {
-    g_painterNew->resetColor();
-    g_painterNew->drawTexturedRect(Rect(pos, m_texture->getSize()), m_texture);
+    g_painter->resetColor();
+    g_painter->drawTexturedRect(Rect(pos, m_texture->getSize()), m_texture);
 }
 
 
@@ -80,7 +80,7 @@ bool DrawQueueItemFilledRect::cache()
 
 void DrawQueueItemClearRect::draw()
 {
-    g_painterNew->clearRect(m_color, m_dest);
+    g_painter->clearRect(m_color, m_dest);
 }
 
 bool DrawQueueItemFillCoords::cache()
@@ -103,83 +103,26 @@ void DrawQueueItemTextColored::draw()
     g_text.drawColoredText(m_point, m_hash, m_colors);
 }
 
-bool DrawQueueItemOutfit::cache()
-{
-    m_texture->update();
-    uint64_t hash = (((uint64_t)m_texture->getUniqueId()) << 48) +
-        (((uint64_t)m_src.x()) << 36) +
-        (((uint64_t)m_src.y()) << 24) +
-        (((uint64_t)m_src.width()) << 12) +
-        (((uint64_t)m_src.height())) +
-        (((uint64_t)m_colors) * 1125899906842597ULL);
-    bool drawNow = false;
-    Point atlasPos = g_atlas.cache(hash, m_src.size(), drawNow);
-    if (atlasPos.x < 0) { return false; } // can't be cached
-    if (drawNow) { g_drawCache.bind(); draw(atlasPos); }
-
-    if (!g_drawCache.hasSpace(6))
-        return false;
-    
-    g_drawCache.addTexturedRect(m_dest, Rect(atlasPos, m_src.size()), m_color);
-    return true;
-}
-
-void DrawQueueItemOutfit::draw()
-{
-    if (!m_texture) return;
-    Matrix4 mat4;
-    for (int x = 0; x < 4; ++x) {
-        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
-        mat4(x + 1, 1) = color.rF();
-        mat4(x + 1, 2) = color.gF();
-        mat4(x + 1, 3) = color.bF();
-        mat4(x + 1, 4) = color.aF();
-    }
-    g_painterNew->setDrawOutfitLayersProgram();
-    g_painterNew->setMatrixColor(mat4);
-    g_painterNew->setOffset(m_offset);
-    g_painterNew->drawTexturedRect(m_dest, m_texture, m_src);
-    g_painterNew->resetShaderProgram();
-}
-
-void DrawQueueItemOutfit::draw(const Point& pos)
-{
-    if (!m_texture) return;
-    Matrix4 mat4;
-    for (int x = 0; x < 4; ++x) {
-        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
-        mat4(x + 1, 1) = color.rF();
-        mat4(x + 1, 2) = color.gF();
-        mat4(x + 1, 3) = color.bF();
-        mat4(x + 1, 4) = color.aF();
-    }
-    g_painterNew->setDrawOutfitLayersProgram();
-    g_painterNew->setMatrixColor(mat4);
-    g_painterNew->setOffset(m_offset);
-    g_painterNew->drawTexturedRect(Rect(pos, m_src.size()), m_texture, m_src);
-    g_painterNew->resetShaderProgram();
-}
-
 void DrawQueueConditionClip::start(DrawQueue*)
 {
-    m_prevClip = g_painterNew->getClipRect();
-    g_painterNew->setClipRect(m_rect);
+    m_prevClip = g_painter->getClipRect();
+    g_painter->setClipRect(m_rect);
 }
 
 void DrawQueueConditionClip::end(DrawQueue*)
 {
-    g_painterNew->setClipRect(m_prevClip);
+    g_painter->setClipRect(m_prevClip);
 }
 
 void DrawQueueConditionRotation::start(DrawQueue*)
 {
-    g_painterNew->pushTransformMatrix();
-    g_painterNew->rotate(m_center, m_angle);
+    g_painter->pushTransformMatrix();
+    g_painter->rotate(m_center, m_angle);
 }
 
 void DrawQueueConditionRotation::end(DrawQueue*)
 {
-    g_painterNew->popTransformMatrix();
+    g_painter->popTransformMatrix();
 }
 
 void DrawQueueConditionMark::start(DrawQueue*)
@@ -189,14 +132,14 @@ void DrawQueueConditionMark::start(DrawQueue*)
 
 void DrawQueueConditionMark::end(DrawQueue* queue)
 {
-    g_painterNew->setDrawColorOnTextureShaderProgram();
-    g_painterNew->setColor(m_color);
+    g_painter->setDrawColorOnTextureShaderProgram();
+    g_painter->setColor(m_color);
     for (size_t i = m_start; i < m_end; ++i) {
         DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(queue->m_queue[i]);
         if (texture)
-            g_painterNew->drawTexturedRect(texture->m_dest, texture->m_texture, texture->m_src);
+            g_painter->drawTexturedRect(texture->m_dest, texture->m_texture, texture->m_src);
     }
-    g_painterNew->resetShaderProgram();
+    g_painter->resetShaderProgram();
 }
 
 void DrawQueue::setFrameBuffer(const Rect& dest, const Size& size, const Rect& src)
@@ -267,7 +210,7 @@ void DrawQueue::draw(DrawType drawType)
         return a->m_start == b->m_start ? a->m_end < b->m_end : a->m_start < b->m_start;
     });
 
-    Size originalResolution = g_painterNew->getResolution();
+    Size originalResolution = g_painter->getResolution();
     if (m_scaling > 0.f && m_scaling < 0.99f) {
         Size resolution = originalResolution * (1.f / m_scaling);
         Matrix3 projectionMatrix = { 
@@ -275,7 +218,7 @@ void DrawQueue::draw(DrawType drawType)
             0.0f,                    -2.0f / resolution.height(),  0.0f,
             -1.0f,                     1.0f,                      1.0f 
         };
-        g_painterNew->setProjectionMatrix(projectionMatrix);
+        g_painter->setProjectionMatrix(projectionMatrix);
     }
 
     auto condition = m_conditions.begin();
@@ -314,7 +257,7 @@ void DrawQueue::draw(DrawType drawType)
         activeConditions.pop();
     }
 
-    g_painterNew->setResolution(originalResolution);
-    g_painterNew->resetState();
+    g_painter->setResolution(originalResolution);
+    g_painter->resetState();
     g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
 }

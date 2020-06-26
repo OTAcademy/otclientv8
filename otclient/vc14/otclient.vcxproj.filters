@@ -31,9 +31,6 @@
     <Filter Include="Source Files\framework\graphics">
       <UniqueIdentifier>{18bfca39-a00b-49f3-b749-94db8eee6b2f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\framework\input">
-      <UniqueIdentifier>{1f73f301-1d35-408a-b566-0d52b6820292}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\framework\luaengine">
       <UniqueIdentifier>{8b0e61e9-ff3c-4aeb-ae21-a2c4fc01f3ee}</UniqueIdentifier>
     </Filter>
@@ -111,6 +108,9 @@
     </Filter>
     <Filter Include="Header Files\framework\graphics\shaders">
       <UniqueIdentifier>{10c8d6a0-582a-4226-8dd3-943b203acabf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\framework\http\input">
+      <UniqueIdentifier>{1f73f301-1d35-408a-b566-0d52b6820292}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -214,7 +214,7 @@
       <Filter>Source Files\framework\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\input\mouse.cpp">
-      <Filter>Source Files\framework\input</Filter>
+      <Filter>Source Files\framework\http\input</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\luaengine\lbitlib.cpp">
       <Filter>Source Files\framework\luaengine</Filter>
@@ -1093,6 +1093,9 @@
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\graph.h">
       <Filter>Header Files\framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\graphics\shaders\outfits.h">
+      <Filter>Header Files\framework\graphics\shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -59,10 +59,11 @@ public:
     void enableXteaEncryption() { m_xteaEncryptionEnabled = true; }
 
     void enableChecksum() { m_checksumEnabled = true; }
+    void enabledSequencedPackets() { m_sequencedPackets = true; }
     void enableBigPackets() { m_bigPackets = true; }
     void enableCompression() { m_compression = true; }
 
-    virtual void send(const OutputMessagePtr& outputMessage);
+    virtual void send(const OutputMessagePtr& outputMessage, bool rawPacket = false);
     virtual void recv();
 
     ProtocolPtr asProtocol() { return static_self_cast<Protocol>(); }
@@ -80,6 +81,7 @@ protected:
 #endif
 
     uint32 m_xteaKey[4];
+    uint32 m_packedNumber;
 
 private:
     void internalRecvHeader(uint8* buffer, uint32 size);
@@ -89,6 +91,7 @@ private:
     void xteaEncrypt(const OutputMessagePtr& outputMessage);
 
     bool m_checksumEnabled;
+    bool m_sequencedPackets;
     bool m_xteaEncryptionEnabled;
     bool m_bigPackets;
     bool m_compression;

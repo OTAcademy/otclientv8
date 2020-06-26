@@ -94,8 +94,8 @@ void Graphics::init()
 
     m_ok = true;
 
-    g_painterNew = new Painter();
-    g_painterNew->bind();
+    g_painter = new Painter();
+    g_painter->bind();
 
     g_textures.init();
     g_framebuffers.init();
@@ -112,10 +112,10 @@ void Graphics::terminate()
     g_atlas.terminate();
     g_text.terminate();
 
-    if (g_painterNew) {
-        g_painterNew->unbind();
-        delete g_painterNew;
-        g_painterNew = nullptr;
+    if (g_painter) {
+        g_painter->unbind();
+        delete g_painter;
+        g_painter = nullptr;
     }
 
     m_ok = false;
@@ -124,8 +124,8 @@ void Graphics::terminate()
 void Graphics::resize(const Size& size)
 {
     m_viewportSize = size;
-    if(g_painterNew)
-        g_painterNew->setResolution(size);
+    if(g_painter)
+        g_painter->setResolution(size);
 }
 
 #ifdef WITH_DEPTH_BUFFER

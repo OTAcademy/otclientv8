@@ -431,12 +431,15 @@ namespace Otc
 
         GameExtendedOpcode = 80,
         GameMinimapLimitedToSingleFloor = 81,
+        GameSendWorldName = 82,
 
         GameDoubleLevel = 83,
         GameDoubleSoul = 84,
         GameDoublePlayerGoodsMoney = 85,
         GameCreatureWalkthrough = 86,
         GameDoubleTradeMoney = 87,
+        GameSequencedPackets = 88,
+        GameTibia12Protocol = 89,
 
         // 90-99 otclientv8 features
         GameNewWalking = 90,
@@ -456,6 +459,7 @@ namespace Otc
         GameSendIdentifiers = 103,
         GameWingsAndAura = 104,
         GamePlayerStateU32 = 105,
+        GameOutfitShaders = 106,
 
         // advanced features
         GamePacketSizeU32 = 110,
@@ -609,6 +613,15 @@ namespace Otc
         PREY_UNLOCK_STORE_AND_PREMIUM = 0,
         PREY_UNLOCK_STORE = 1,
         PREY_UNLOCK_NONE = 2,
+    };
+
+    enum MagicEffectsType_t : uint8_t {
+        MAGIC_EFFECTS_END_LOOP = 0,
+        MAGIC_EFFECTS_DELTA = 1,
+        MAGIC_EFFECTS_DELAY = 2,
+        MAGIC_EFFECTS_CREATE_EFFECT = 3,
+        MAGIC_EFFECTS_CREATE_DISTANCEEFFECT = 4,
+        MAGIC_EFFECTS_CREATE_DISTANCEEFFECT_REVERSED = 5,
     };
 }
 

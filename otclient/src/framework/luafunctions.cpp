@@ -226,6 +226,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_http", "wsSend", &Http::wsSend, &g_http);
     g_lua.bindSingletonFunction("g_http", "wsClose", &Http::wsClose, &g_http);
     g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
+    g_lua.bindSingletonFunction("g_http", "setUserAgent", &Http::setUserAgent, &g_http);
 
     g_lua.registerSingletonClass("g_atlas");
     g_lua.bindSingletonFunction("g_atlas", "getStats", &Atlas::getStats, &g_atlas);

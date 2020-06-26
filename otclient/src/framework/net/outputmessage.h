@@ -48,6 +48,7 @@ public:
     void addU32(uint32 value);
     void addU64(uint64 value);
     void addString(const std::string& buffer);
+    void addRawString(const std::string& buffer);
     void addPaddingBytes(int bytes, uint8 byte = 0);
 
     void encryptRsa();
@@ -64,6 +65,7 @@ protected:
     uint8* getDataBuffer() { return m_buffer + MAX_HEADER_SIZE; }
 
     void writeChecksum();
+    void writeSequence(uint32_t sequence);
     void writeMessageSize(bool bigSize);
 
     friend class Protocol;

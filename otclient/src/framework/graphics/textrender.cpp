@@ -92,7 +92,7 @@ void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
         it->font.reset();
     }
     it->lastUse = g_clock.millis();
-    g_painterNew->drawText(pos, it->coords, color);
+    g_painter->drawText(pos, it->coords, color);
 }
 
 void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vector<std::pair<int, Color>>& colors)
@@ -116,6 +116,6 @@ void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vec
         it->font.reset();
     }
     it->lastUse = g_clock.millis();
-    g_painterNew->drawText(pos, it->coords, colors);
+    g_painter->drawText(pos, it->coords, colors);
 }
 

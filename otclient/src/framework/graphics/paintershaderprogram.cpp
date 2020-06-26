@@ -31,7 +31,6 @@
 PainterShaderProgram::PainterShaderProgram()
 {
     m_startTime = g_clock.seconds();
-    m_opacity = 1;
     m_depth = 0;
     m_color = Color::white;
     m_time = 0;
@@ -44,7 +43,6 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(TEXTURE_MATRIX_UNIFORM, "u_TextureMatrix");
 
     bindUniformLocation(COLOR_UNIFORM, "u_Color");
-    bindUniformLocation(OPACITY_UNIFORM, "u_Opacity");
     bindUniformLocation(DEPTH_UNIFORM, "u_Depth");
     bindUniformLocation(TIME_UNIFORM, "u_Time");
 
@@ -58,6 +56,7 @@ void PainterShaderProgram::setupUniforms()
 
     bindUniformLocation(RESOLUTION_UNIFORM, "u_Resolution");
     bindUniformLocation(OFFSET_UNIFORM, "u_Offset");
+    bindUniformLocation(CENTER_UNIFORM, "u_Center");
 
     // VALUES
     setUniformValue(TRANSFORM_MATRIX_UNIFORM, m_transformMatrix);
@@ -67,7 +66,6 @@ void PainterShaderProgram::setupUniforms()
     if (!m_useColorMatrix) {
         setUniformValue(COLOR_UNIFORM, m_color);
     }
-    setUniformValue(OPACITY_UNIFORM, m_opacity);
     setUniformValue(TIME_UNIFORM, m_time);
     setUniformValue(DEPTH_UNIFORM, m_depth);
 
@@ -81,6 +79,7 @@ void PainterShaderProgram::setupUniforms()
 
     setUniformValue(RESOLUTION_UNIFORM, (float)m_resolution.width(), (float)m_resolution.height());
     setUniformValue(OFFSET_UNIFORM, (float)m_offset.x, (float)m_offset.y);
+    setUniformValue(CENTER_UNIFORM, (float)m_center.x, (float)m_center.y);
 }
 
 void PainterShaderProgram::link()
@@ -144,17 +143,6 @@ void PainterShaderProgram::setMatrixColor(const Matrix4& colors)
     setUniformValue(COLOR_UNIFORM, colors);
 }
 
-
-void PainterShaderProgram::setOpacity(float opacity)
-{
-    if (m_opacity == opacity)
-        return;
-
-    bind();
-    setUniformValue(OPACITY_UNIFORM, opacity);
-    m_opacity = opacity;
-}
-
 #ifdef WITH_DEPTH_BUFFER
 void PainterShaderProgram::setDepth(float depth)
 {
@@ -188,6 +176,16 @@ void PainterShaderProgram::setOffset(const Point& offset)
     bind();
     m_offset = offset;
     setUniformValue(OFFSET_UNIFORM, (float)m_offset.x, (float)m_offset.y);
+}
+
+void PainterShaderProgram::setCenter(const Point& center)
+{
+    if (m_center == center)
+        return;
+
+    bind();
+    m_center = center;
+    setUniformValue(CENTER_UNIFORM, (float)m_center.x, (float)m_center.y);
 }
 
 
@@ -224,6 +222,7 @@ void PainterShaderProgram::bindMultiTextures()
 
     int i = 1;
     for (const TexturePtr& tex : m_multiTextures) {
+        tex->update();
         glActiveTexture(GL_TEXTURE0 + i++);
         glBindTexture(GL_TEXTURE_2D, tex->getId());
     }

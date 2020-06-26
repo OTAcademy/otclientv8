@@ -41,7 +41,6 @@ protected:
         TRANSFORM_MATRIX_UNIFORM = 2,
 
         COLOR_UNIFORM = 3,
-        OPACITY_UNIFORM = 4,
         TIME_UNIFORM = 5,
         DEPTH_UNIFORM = 6,
 
@@ -53,7 +52,8 @@ protected:
         ATLAS_TEX1_UNIFORM = 12,
 
         RESOLUTION_UNIFORM = 13,
-        OFFSET_UNIFORM = 14
+        OFFSET_UNIFORM = 14,
+        CENTER_UNIFORM = 15
     };
 
     friend class Painter;
@@ -70,10 +70,10 @@ public:
     void setTextureMatrix(const Matrix3& textureMatrix);
     void setColor(const Color& color);
     void setMatrixColor(const Matrix4& colors);
-    void setOpacity(float opacity);
     void setDepth(float depth);
     void setResolution(const Size& resolution);
     void setOffset(const Point& offset);
+    void setCenter(const Point& center);
     void updateTime();
 
     void addMultiTexture(const std::string& file);
@@ -89,13 +89,13 @@ private:
     float m_startTime;
 
     Color m_color;
-    float m_opacity;
     float m_depth;
     Matrix3 m_transformMatrix;
     Matrix3 m_projectionMatrix;
     Matrix3 m_textureMatrix;
     Size m_resolution;
     Point m_offset;
+    Point m_center;
     float m_time;
     std::vector<TexturePtr> m_multiTextures;
     bool m_useColorMatrix = false;

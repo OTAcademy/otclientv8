@@ -161,17 +161,11 @@ private:
     stdext::boolean<true> m_follow;
     std::vector<std::pair<TilePtr, bool>> m_cachedVisibleTiles;
     CreaturePtr m_followingCreature;
-    //PainterShaderProgramPtr m_shader;
     Otc::DrawFlags m_drawFlags;
     bool m_drawLight = false;
     float m_minimumAmbientLight;
     std::unique_ptr<LightView> m_lightView;
     TexturePtr m_lightTexture;
-    Timer m_fadeTimer;
-    //PainterShaderProgramPtr m_nextShader;
-    float m_fadeInTime;
-    float m_fadeOutTime;
-    //stdext::boolean<true> m_shaderSwitchDone;
 };
 
 #endif

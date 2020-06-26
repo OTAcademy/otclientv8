@@ -56,6 +56,8 @@ public:
 
     bool decryptRsa(int size);
 
+    uint32 getHeaderPos() { return m_headerPos; }
+    uint32 getHeaderSize() { return (MAX_HEADER_SIZE - m_headerPos); }
     int getReadSize() { return m_readPos - m_headerPos; }
     int getReadPos() { return m_readPos; }
     int getUnreadSize() { return m_messageSize - (m_readPos - m_headerPos); }
@@ -73,7 +75,6 @@ protected:
     uint8* getReadBuffer() { return m_buffer + m_readPos; }
     uint8* getHeaderBuffer() { return m_buffer + m_headerPos; }
     uint8* getDataBuffer() { return m_buffer + MAX_HEADER_SIZE; }
-    uint32 getHeaderSize() { return (MAX_HEADER_SIZE - m_headerPos); }
 
     uint32 readSize(bool bigSize) { return bigSize ? getU32() : getU16(); }
     bool readChecksum();

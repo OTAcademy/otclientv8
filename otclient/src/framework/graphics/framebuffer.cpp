@@ -107,9 +107,9 @@ void FrameBuffer::resize(const Size& size)
 
 void FrameBuffer::bind(const FrameBufferPtr& depthFramebuffer)
 {
-    g_painterNew->saveAndResetState();
+    g_painter->saveAndResetState();
     internalBind();
-    g_painterNew->setResolution(m_texture->getSize());
+    g_painter->setResolution(m_texture->getSize());
 #ifdef WITH_DEPTH_BUFFER
     if (!m_depth && depthFramebuffer && depthFramebuffer->hasDepth()) {
         m_depthRbo = depthFramebuffer->getDepthRenderBuffer();
@@ -128,24 +128,24 @@ void FrameBuffer::release()
     }
 #endif
     internalRelease();
-    g_painterNew->restoreSavedState();
+    g_painter->restoreSavedState();
     g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
 }
 
 void FrameBuffer::draw()
 {
     Rect rect(0, 0, getSize());
-    g_painterNew->drawTexturedRect(rect, m_texture, rect);
+    g_painter->drawTexturedRect(rect, m_texture, rect);
 }
 
 void FrameBuffer::draw(const Rect& dest, const Rect& src)
 {
-    g_painterNew->drawTexturedRect(dest, m_texture, src);
+    g_painter->drawTexturedRect(dest, m_texture, src);
 }
 
 void FrameBuffer::draw(const Rect& dest)
 {
-    g_painterNew->drawTexturedRect(dest, m_texture, Rect(0, 0, getSize()));
+    g_painter->drawTexturedRect(dest, m_texture, Rect(0, 0, getSize()));
 }
 
 std::vector<uint32_t> FrameBuffer::readPixels()

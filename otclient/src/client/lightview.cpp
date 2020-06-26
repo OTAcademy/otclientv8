@@ -45,6 +45,7 @@ void LightView::setFieldBrightness(const Point& pos, size_t start, uint8_t color
 
 void LightView::draw() // render thread
 {
+    // TODO: optimize in the future for big areas
     static std::vector<uint8_t> buffer;
     if(buffer.size() < 4u * m_mapSize.area())
         buffer.resize(m_mapSize.area() * 4);
@@ -63,7 +64,7 @@ void LightView::draw() // render thread
                 float distance = std::sqrt((pos.x - light.pos.x) * (pos.x - light.pos.x) +
                                             (pos.y - light.pos.y) * (pos.y - light.pos.y));
                 distance /= Otc::TILE_PIXELS;
-                float intensity = (-distance + light.intensity) / 5.f;
+                float intensity = (-distance + light.intensity) * 0.2f;
                 if (intensity < 0.01f) continue;
                 if (intensity > 1.0f) intensity = 1.0f;
                 Color lightColor = Color::from8bit(light.color) * intensity;
@@ -85,8 +86,8 @@ void LightView::draw() // render thread
                    RectF((float)offset.x / Otc::TILE_PIXELS, (float)offset.y / Otc::TILE_PIXELS,
                          (float)size.width() / Otc::TILE_PIXELS, (float)size.height() / Otc::TILE_PIXELS));
 
-    g_painterNew->resetColor();
-    g_painterNew->setCompositionMode(Painter::CompositionMode_Multiply);
-    g_painterNew->drawTextureCoords(coords, m_lightTexture);
-    g_painterNew->resetCompositionMode();
+    g_painter->resetColor();
+    g_painter->setCompositionMode(Painter::CompositionMode_Multiply);
+    g_painter->drawTextureCoords(coords, m_lightTexture);
+    g_painter->resetCompositionMode();
 }

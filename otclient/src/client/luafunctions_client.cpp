@@ -343,15 +343,10 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "getRecivedPacketsCount", &Game::getRecivedPacketsCount, &g_game);
     g_lua.bindSingletonFunction("g_game", "getRecivedPacketsSize", &Game::getRecivedPacketsSize, &g_game);
 
-    /* g_lua.registerSingletonClass("g_shaders");
+    g_lua.registerSingletonClass("g_shaders");
     g_lua.bindSingletonFunction("g_shaders", "createShader", &ShaderManager::createShader, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "createFragmentShader", &ShaderManager::createFragmentShader, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "createFragmentShaderFromCode", &ShaderManager::createFragmentShaderFromCode, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "createItemShader", &ShaderManager::createItemShader, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "createMapShader", &ShaderManager::createMapShader, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "getDefaultItemShader", &ShaderManager::getDefaultItemShader, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "getDefaultMapShader", &ShaderManager::getDefaultMapShader, &g_shaders);
-    g_lua.bindSingletonFunction("g_shaders", "getShader", &ShaderManager::getShader, &g_shaders); */
+    g_lua.bindSingletonFunction("g_shaders", "createOutfitShader", &ShaderManager::createOutfitShader, &g_shaders);
+    g_lua.bindSingletonFunction("g_shaders", "addTexture", &ShaderManager::addTexture, &g_shaders);
 
     g_lua.bindGlobalFunction("getOutfitColor", Outfit::getColor);
     g_lua.bindGlobalFunction("getAngleFromPos", Position::getAngleFromPositions);
@@ -868,6 +863,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIMap>("setLimitVisibleRange", &UIMap::setLimitVisibleRange);
     g_lua.bindClassMemberFunction<UIMap>("setFloorFading", &UIMap::setFloorFading);
     g_lua.bindClassMemberFunction<UIMap>("setCrosshair", &UIMap::setCrosshair);
+    g_lua.bindClassMemberFunction<UIMap>("setShader", &UIMap::setShader);
     g_lua.bindClassMemberFunction<UIMap>("isMultifloor", &UIMap::isMultifloor);
     g_lua.bindClassMemberFunction<UIMap>("isDrawingTexts", &UIMap::isDrawingTexts);
     g_lua.bindClassMemberFunction<UIMap>("isDrawingNames", &UIMap::isDrawingNames);
@@ -889,6 +885,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIMap>("getMaxZoomOut", &UIMap::getMaxZoomOut);
     g_lua.bindClassMemberFunction<UIMap>("getZoom", &UIMap::getZoom);
     g_lua.bindClassMemberFunction<UIMap>("getMinimumAmbientLight", &UIMap::getMinimumAmbientLight);
+    g_lua.bindClassMemberFunction<UIMap>("getShader", &UIMap::getShader);
 
     g_lua.registerClass<UIMinimap, UIWidget>();
     g_lua.bindClassStaticFunction<UIMinimap>("create", []{ return UIMinimapPtr(new UIMinimap); });

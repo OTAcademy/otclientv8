@@ -58,7 +58,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <ConfigurationType>Application</ConfigurationType>
-    <AndroidAPILevel>android-29</AndroidAPILevel>
+    <AndroidAPILevel>android-25</AndroidAPILevel>
     <TargetName>..\..\..\..\otclientv8</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

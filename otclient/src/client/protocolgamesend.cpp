@@ -28,12 +28,12 @@
 #include <framework/util/crypt.h>
 #include <framework/util/extras.h>
 
-void ProtocolGame::send(const OutputMessagePtr& outputMessage)
+void ProtocolGame::send(const OutputMessagePtr& outputMessage, bool rawPacket)
 {
     // avoid usage of automated sends (bot modules)
     if(!g_game.checkBotProtection())
         return;
-    Protocol::send(outputMessage);
+    Protocol::send(outputMessage, rawPacket);
 }
 
 void ProtocolGame::sendExtendedOpcode(uint8 opcode, const std::string& buffer)
@@ -49,6 +49,13 @@ void ProtocolGame::sendExtendedOpcode(uint8 opcode, const std::string& buffer)
         g_logger.error(stdext::format("Unable to send extended opcode %d, extended opcodes are not enabled on this server.", opcode));
     }
     g_game.disableBotCall();
+}
+
+void ProtocolGame::sendWorldName()
+{
+    OutputMessagePtr msg(new OutputMessage);
+    msg->addRawString(m_worldName + "\n");
+    send(msg, true);
 }
 
 void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRandom)
@@ -161,6 +168,9 @@ void ProtocolGame::sendLoginPacket(uint challengeTimestamp, uint8 challengeRando
 
     if (g_game.getFeature(Otc::GamePacketCompression))
         enableCompression();
+
+    if (g_game.getFeature(Otc::GameSequencedPackets))
+        enabledSequencedPackets();
 }
 
 void ProtocolGame::sendEnterGame()

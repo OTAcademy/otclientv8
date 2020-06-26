@@ -3,5 +3,6 @@
 
 #include "newshader.h"
 #include "shadersources.h"
+#include "outfits.h"
 
 #endif

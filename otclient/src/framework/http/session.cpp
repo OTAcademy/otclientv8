@@ -37,7 +37,7 @@ void HttpSession::start() {
     m_request.keep_alive(false);
     m_request.target(parsedUrl.query);
     m_request.set(boost::beast::http::field::host, parsedUrl.domain);
-    m_request.set(boost::beast::http::field::user_agent, "OTClient");
+    m_request.set(boost::beast::http::field::user_agent, m_agent);
     if (!m_result->postData.empty()) {
         m_request.method(boost::beast::http::verb::post);
         m_request.body().assign(m_result->postData);
@@ -66,7 +66,7 @@ void HttpSession::on_connect(const boost::system::error_code& ec) {
         m_ssl->set_verify_mode(boost::asio::ssl::verify_peer);
         m_ssl->set_verify_callback([](bool, boost::asio::ssl::verify_context&) { return true; });         
 
-        if(! SSL_set_tlsext_host_name(m_ssl->native_handle(), m_domain.c_str()))
+        if(!SSL_set_tlsext_host_name(m_ssl->native_handle(), m_domain.c_str()))
         {
             boost::beast::error_code ec2(static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category());
             return onError("HTTPS error", ec2.message());
@@ -120,7 +120,7 @@ void HttpSession::on_read_header(const boost::system::error_code& ec, size_t byt
     auto location = msg["Location"];
 
     if (!location.empty()) {        
-        auto session = std::make_shared<HttpSession>(m_service, location.to_string(), m_timeout, m_result, m_callback);
+        auto session = std::make_shared<HttpSession>(m_service, location.to_string(), m_agent, m_timeout, m_result, m_callback);
         session->start();
         return close();
     }

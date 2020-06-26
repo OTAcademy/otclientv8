@@ -591,7 +591,7 @@ void Game::loginWorld(const std::string& account, const std::string& password, c
     m_localPlayer->setName(characterName);
 
     m_protocolGame = ProtocolGamePtr(new ProtocolGame);
-    m_protocolGame->login(account, password, worldHost, (uint16)worldPort, characterName, authenticatorToken, sessionKey);
+    m_protocolGame->login(account, password, worldHost, (uint16)worldPort, characterName, authenticatorToken, sessionKey, worldName);
     m_characterName = characterName;
     m_worldName = worldName;
 }

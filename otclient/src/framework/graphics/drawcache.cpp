@@ -6,7 +6,7 @@ void DrawCache::draw()
 {
     release();
     if (m_size == 0) return;
-    g_painterNew->drawCache(m_destCoord, m_srcCoord, m_color, m_size);
+    g_painter->drawCache(m_destCoord, m_srcCoord, m_color, m_size);
     m_size = 0;
 }
 

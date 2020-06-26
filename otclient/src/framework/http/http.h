@@ -37,6 +37,11 @@ public:
         return it->second;
     }
 
+    void setUserAgent(const std::string& userAgent)
+    {
+        m_userAgent = userAgent;
+    }
+
 private:
     bool m_working = false;
     int m_operationId = 1;
@@ -48,6 +53,7 @@ private:
     std::map<int, HttpResult_ptr> m_operations;
     std::map<int, std::shared_ptr<WebsocketSession>> m_websockets;
     std::map<std::string, HttpResult_ptr> m_downloads;
+    std::string m_userAgent = "Mozilla/5.0";
 };
 
 extern Http g_http;

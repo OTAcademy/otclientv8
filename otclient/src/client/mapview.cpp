@@ -51,8 +51,6 @@ MapView::MapView()
     m_lockedFirstVisibleFloor = -1;
     m_cachedFirstVisibleFloor = 7;
     m_cachedLastVisibleFloor = 7;
-    m_fadeOutTime = 0;
-    m_fadeInTime = 0;
     m_minimumAmbientLight = 0;
     m_optimizedSize = Size(g_map.getAwareRange().horizontal(), g_map.getAwareRange().vertical()) * g_sprites.spriteSize();
 

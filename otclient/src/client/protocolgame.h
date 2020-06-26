@@ -31,11 +31,12 @@
 class ProtocolGame : public Protocol
 {
 public:
-    void login(const std::string& accountName, const std::string& accountPassword, const std::string& host, uint16 port, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey);
-    void send(const OutputMessagePtr& outputMessage);
+    void login(const std::string& accountName, const std::string& accountPassword, const std::string& host, uint16 port, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey, const std::string& worldName);
+    void send(const OutputMessagePtr& outputMessage, bool rawPacket = false);
 
     void sendExtendedOpcode(uint8 opcode, const std::string& buffer);
     void sendLoginPacket(uint challengeTimestamp, uint8 challengeRandom);
+    void sendWorldName();
     void sendEnterGame();
     void sendLogout();
     void sendPing();
@@ -217,6 +218,7 @@ private:
     void parsePreyTimeLeft(const InputMessagePtr& msg);
     void parsePreyData(const InputMessagePtr& msg);
     void parsePreyPrices(const InputMessagePtr& msg);
+    void parseStoreOfferDescription(const InputMessagePtr& msg);
     void parsePlayerInfo(const InputMessagePtr& msg);
     void parsePlayerStats(const InputMessagePtr& msg);
     void parsePlayerSkills(const InputMessagePtr& msg);
@@ -260,6 +262,7 @@ private:
     void parseGameNews(const InputMessagePtr& msg);
     void parseMessageDialog(const InputMessagePtr& msg);
     void parseResourceBalance(const InputMessagePtr& msg);
+    void parseServerTime(const InputMessagePtr& msg);
     void parseQuestTracker(const InputMessagePtr& msg);
     void parseImbuementWindow(const InputMessagePtr& msg);
     void parseCloseImbuementWindow(const InputMessagePtr& msg);
@@ -305,6 +308,7 @@ private:
     std::string m_authenticatorToken;
     std::string m_sessionKey;
     std::string m_characterName;
+    std::string m_worldName;
     LocalPlayerPtr m_localPlayer;
     int m_recivedPackeds = 0;
     int m_recivedPackedsSize = 0;
