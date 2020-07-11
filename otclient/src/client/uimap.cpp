@@ -57,7 +57,7 @@ bool UIMap::onMouseMove(const Point& mousePos, const Point& mouseMoved)
 
 void UIMap::drawSelf(Fw::DrawPane drawPane)
 {
-    VALIDATE_GRAPHICS_THREAD();
+    VALIDATE_DISPATCHER_THREAD();
     UIWidget::drawSelf(drawPane);
 
     if(drawPane == Fw::ForegroundPane) {

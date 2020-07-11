@@ -638,6 +638,58 @@ std::vector<CreaturePtr> Map::getSpectatorsInRangeEx(const Position& centerPos, 
     return creatures;
 }
 
+std::vector<CreaturePtr> Map::getSpectatorsByPattern(const Position& centerPos, const std::string& pattern)
+{
+    std::vector<bool> finalPattern(pattern.size(), false);
+    std::vector<CreaturePtr> creatures;
+    int width = 0, height = 0, lineLength = 0, p = 0;
+    for (auto& c : pattern) {
+        if (c == '0' || c == '-') {
+            lineLength += 1;
+            p += 1;
+        } else if (c == '1' || c == '+') {
+            lineLength += 1;
+            finalPattern[p++] = true;
+        } else if (lineLength > 0) {
+            if (width == 0)
+                width = lineLength;
+            if (width != lineLength) {
+                g_logger.error(stdext::format("Invalid pattern for getSpectatorsByPattern: %s", pattern));
+                return creatures;
+            }
+            height += 1;
+            lineLength = 0;
+        }
+    }
+    if (lineLength > 0) {
+        if (width == 0)
+            width = lineLength;
+        if (width != lineLength) {
+            g_logger.error(stdext::format("Invalid pattern for getSpectatorsByPattern: %s", pattern));
+            return creatures;
+        }
+        height += 1;
+    }
+    if (width % 2 != 1 || height % 2 != 1) {
+        g_logger.error(stdext::format("Invalid pattern for getSpectatorsByPattern, width and height should be odd (height: %i width: %i)", height, width));
+        return creatures;
+    }
+
+    p = 0;
+    for (int y = centerPos.y - height / 2, endy = centerPos.y + height / 2; y <= endy; ++y) {
+        for (int x = centerPos.x - width / 2, endx = centerPos.x + width / 2; x <= endx; ++x) {
+            if (!finalPattern[p++])
+                continue;
+            TilePtr tile = getTile(Position(x, y, centerPos.z));
+            if (!tile)
+                continue;
+            auto tileCreatures = tile->getCreatures();
+            creatures.insert(creatures.end(), tileCreatures.rbegin(), tileCreatures.rend());
+        }
+    }
+    return creatures;
+}
+
 bool Map::isLookPossible(const Position& pos)
 {
     TilePtr tile = getTile(pos);

@@ -52,7 +52,7 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         direction = Otc::West;
 
     auto type = g_things.rawGetThingType(m_category == ThingCategoryCreature ? m_id : m_auxId, m_category);
-
+    if (!type) return;
     int animationPhase = walkAnimationPhase;
     if (animate && m_category == ThingCategoryCreature) {
         auto idleAnimator = type->getIdleAnimator();
@@ -116,12 +116,20 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         }
 
         if (type->getLayers() <= 1) {
+            if (!m_shader.empty()) {
+                std::shared_ptr<DrawOutfitParams> outfitParams = type->drawOutfit(dest, 0, direction, yPattern, zPattern, animationPhase, Color::white, lightView);
+                if (!outfitParams)
+                    continue;
+                DrawQueueItemTexturedRect* outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, 0, m_shader);
+                g_drawQueue->add(outfit);
+                continue;
+            }
             type->draw(dest, 0, direction, yPattern, zPattern, animationPhase, Color::white, lightView);
             continue;
         }
 
         uint32_t colors = m_head + (m_body << 8) + (m_legs << 16) + (m_feet << 24);
-        std::shared_ptr<DrawOutfitParams> outfitParams = type->drawOutfit(dest, direction, yPattern, zPattern, animationPhase, Color::white, lightView);
+        std::shared_ptr<DrawOutfitParams> outfitParams = type->drawOutfit(dest, 1, direction, yPattern, zPattern, animationPhase, Color::white, lightView);
         if (!outfitParams)
             continue;
 

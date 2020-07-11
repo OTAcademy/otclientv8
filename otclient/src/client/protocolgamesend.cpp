@@ -814,6 +814,12 @@ void ProtocolGame::sendChangeOutfit(const Outfit& outfit)
         msg->addU8(outfit.getAddons());
     if(g_game.getFeature(Otc::GamePlayerMounts))
         msg->addU16(outfit.getMount());
+    if (g_game.getFeature(Otc::GameWingsAndAura)) {
+        msg->addU16(outfit.getWings());
+        msg->addU16(outfit.getAura());
+    }
+    if(g_game.getFeature(Otc::GameOutfitShaders))
+        msg->addString(outfit.getShader());
     send(msg);
 }
 

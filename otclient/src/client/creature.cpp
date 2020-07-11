@@ -610,9 +610,6 @@ void Creature::setDirection(Otc::Direction direction)
 
 void Creature::setOutfit(const Outfit& outfit)
 {
-    // optimization for UICreature
-    m_outfitNumber = g_clock.micros();
-
     Outfit oldOutfit = m_outfit;
     if (outfit.getCategory() != ThingCategoryCreature) {
         if (!g_things.isValidDatId(outfit.getAuxId(), outfit.getCategory()))
@@ -631,9 +628,6 @@ void Creature::setOutfit(const Outfit& outfit)
 
 void Creature::setOutfitColor(const Color& color, int duration)
 {
-    // optimization for UICreature
-    m_outfitNumber = g_clock.micros();
-
     if (m_outfitColorUpdateEvent) {
         m_outfitColorUpdateEvent->cancel();
         m_outfitColorUpdateEvent = nullptr;

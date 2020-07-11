@@ -182,7 +182,7 @@
       <CLanguageStandard>c11</CLanguageStandard>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\src;C:\android\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;FW_PROXY;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;FW_PROXY;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-Wno-inconsistent-missing-override</AdditionalOptions>
       <FloatABI>soft</FloatABI>
       <FunctionLevelLinking>true</FunctionLevelLinking>

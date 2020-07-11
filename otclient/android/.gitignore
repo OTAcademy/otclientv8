@@ -3,3 +3,5 @@ ARM/*
 */ARM/*
 .workspace
 .vs
+!.xml
+!*/*.xml

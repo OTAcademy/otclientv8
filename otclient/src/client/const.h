@@ -567,9 +567,9 @@ namespace Otc
         PREY_STATE_INACTIVE = 1,
         PREY_STATE_ACTIVE = 2,
         PREY_STATE_SELECTION = 3,
-        PREY_STATE_SELECTION_CHANGE_MONSTER = 4, // unused; hmm
+        PREY_STATE_SELECTION_CHANGE_MONSTER = 4,
         PREY_STATE_SELECTION_FROMALL = 5,
-        PREY_STATE_CHANGE_FROMALL = 6, // unused :(
+        PREY_STATE_CHANGE_FROMALL = 6,
     };
     enum PreyMessageDialog_t : uint8_t {
         //PREY_MESSAGEDIALOG_IMBUEMENT_SUCCESS = 0,

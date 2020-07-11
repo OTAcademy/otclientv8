@@ -461,34 +461,12 @@ void Game::processRemoveAutomapFlag(const Position& pos, int icon, const std::st
 }
 
 void Game::processOpenOutfitWindow(const Outfit& currentOutfit, const std::vector<std::tuple<int, std::string, int> >& outfitList,
-                                   const std::vector<std::tuple<int, std::string> >& mountList)
+                                   const std::vector<std::tuple<int, std::string> >& mountList,
+                                   const std::vector<std::tuple<int, std::string> >& wingList,
+                                   const std::vector<std::tuple<int, std::string> >& auraList,
+                                   const std::vector<std::tuple<int, std::string> >& shaderList)
 {
-    // create virtual creature outfit
-    CreaturePtr virtualOutfitCreature = CreaturePtr(new Creature);
-    virtualOutfitCreature->setDirection(Otc::South);
-
-    Outfit outfit = currentOutfit;
-    outfit.setMount(0);
-    virtualOutfitCreature->setOutfit(outfit);
-
-    // creature virtual mount outfit
-    CreaturePtr virtualMountCreature = nullptr;
-    if(getFeature(Otc::GamePlayerMounts))
-    {
-        virtualMountCreature = CreaturePtr(new Creature);
-        virtualMountCreature->setDirection(Otc::South);
-
-        Outfit mountOutfit;
-        mountOutfit.setId(0);
-
-        int mount = currentOutfit.getMount();
-        if(mount > 0)
-            mountOutfit.setId(mount);
-
-        virtualMountCreature->setOutfit(mountOutfit);
-    }
-
-    g_lua.callGlobalField("g_game", "onOpenOutfitWindow", virtualOutfitCreature, outfitList, virtualMountCreature, mountList);
+    g_lua.callGlobalField("g_game", "onOpenOutfitWindow", currentOutfit, outfitList, mountList, wingList, auraList, shaderList);
 }
 
 void Game::processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string, int, int64_t, int64_t> >& items)

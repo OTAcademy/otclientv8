@@ -32,20 +32,19 @@ class UICreature : public UIWidget
 public:
     void drawSelf(Fw::DrawPane drawPane);
 
-    void setCreature(const CreaturePtr& creature) { m_creature = creature; m_redraw = true; }
-    void setFixedCreatureSize(bool fixed) { m_scale = fixed ? 1.0 : 0; m_redraw = true; }
+    void setCreature(const CreaturePtr& creature) { m_creature = creature; }
+    void setFixedCreatureSize(bool fixed) { m_scale = fixed ? 1.0 : 0; }
     void setOutfit(const Outfit& outfit);
 
     CreaturePtr getCreature() { return m_creature; }
+    Outfit getOutfit() { return m_creature ? m_creature->getOutfit() : Outfit(); }
     bool isFixedCreatureSize() { return m_scale > 0; }
 
     void setAutoRotating(bool value) { m_autoRotating = value; }
-    void setDirection(Otc::Direction direction) { m_direction = direction; m_redraw = true; }
+    void setDirection(Otc::Direction direction) { m_direction = direction; }
 
-    void setScale(float scale) { m_scale = scale; m_redraw = true; }
+    void setScale(float scale) { m_scale = scale; }
     float getScale() { return m_scale; }
-
-    void setOptimized(bool value) { m_optimized = value; m_redraw = true; }
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
@@ -53,11 +52,8 @@ protected:
 
     CreaturePtr m_creature;
     stdext::boolean<false> m_autoRotating;
-    stdext::boolean<false> m_redraw;
-    int m_outfitNumber = 0;
     Otc::Direction m_direction = Otc::South;
-    float m_scale = 1.0;
-    bool m_optimized = false;
+    float m_scale = 0;
 };
 
 #endif

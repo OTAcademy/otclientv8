@@ -561,7 +561,7 @@ DrawQueueItem* ThingType::draw(const Rect& dest, int layer, int xPattern, int yP
     return g_drawQueue->addTexturedRect(Rect(dest.topLeft() + (textureOffset * scale), textureRect.size() * scale), texture, textureRect, color);
 }
 
-std::shared_ptr<DrawOutfitParams> ThingType::drawOutfit(const Point& dest, int xPattern, int yPattern, int zPattern, int animationPhase, Color color, LightView* lightView)
+std::shared_ptr<DrawOutfitParams> ThingType::drawOutfit(const Point& dest, int maskLayer, int xPattern, int yPattern, int zPattern, int animationPhase, Color color, LightView* lightView)
 {
     if (m_null)
         return nullptr;
@@ -574,7 +574,7 @@ std::shared_ptr<DrawOutfitParams> ThingType::drawOutfit(const Point& dest, int x
         return nullptr;
 
     uint frameIndex = getTextureIndex(0, xPattern, yPattern, zPattern);
-    uint frameIndex2 = getTextureIndex(1, xPattern, yPattern, zPattern);
+    uint frameIndex2 = getTextureIndex(maskLayer, xPattern, yPattern, zPattern);
     if (frameIndex >= m_texturesFramesRects[animationPhase].size() || frameIndex2 >= m_texturesFramesRects[animationPhase].size())
         return nullptr;
 

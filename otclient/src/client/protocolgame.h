@@ -148,6 +148,7 @@ public:
 private:
     void parseStoreButtonIndicators(const InputMessagePtr& msg);
     void parseSetStoreDeepLink(const InputMessagePtr& msg);
+    void parseRestingAreaState(const InputMessagePtr& msg);
     void parseStore(const InputMessagePtr& msg);
     void parseStoreError(const InputMessagePtr& msg);
     void parseStoreTransactionHistory(const InputMessagePtr& msg);
@@ -261,14 +262,21 @@ private:
     void parseClientCheck(const InputMessagePtr& msg);
     void parseGameNews(const InputMessagePtr& msg);
     void parseMessageDialog(const InputMessagePtr& msg);
+    void parseBlessDialog(const InputMessagePtr& msg);
     void parseResourceBalance(const InputMessagePtr& msg);
     void parseServerTime(const InputMessagePtr& msg);
     void parseQuestTracker(const InputMessagePtr& msg);
     void parseImbuementWindow(const InputMessagePtr& msg);
     void parseCloseImbuementWindow(const InputMessagePtr& msg);
+    void parseCyclopediaNewDetails(const InputMessagePtr& msg);
+    void parseDailyRewardState(const InputMessagePtr& msg);
+    void parseOpenRewardWall(const InputMessagePtr& msg);
+    void parseDailyReward(const InputMessagePtr& msg);
+    void parseDailyRewardHistory(const InputMessagePtr& msg);
     void parseKillTracker(const InputMessagePtr& msg);
     void parseSupplyTracker(const InputMessagePtr& msg);
     void parseImpactTracker(const InputMessagePtr& msg);
+    void parseItemsPrices(const InputMessagePtr& msg);
     void parseLootTracker(const InputMessagePtr& msg);
     void parseExtendedOpcode(const InputMessagePtr& msg);
     void parseChangeMapAwareRange(const InputMessagePtr& msg);
