@@ -110,6 +110,7 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         wingsType->draw(dest, 0, direction, 0, 0, animationPhase, Color::white, lightView);
     }
 
+    Point center;
     for (int yPattern = 0; yPattern < type->getNumPatternY(); yPattern++) {
         if (yPattern > 0 && !(getAddons() & (1 << (yPattern - 1)))) {
             continue;
@@ -120,7 +121,9 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
                 std::shared_ptr<DrawOutfitParams> outfitParams = type->drawOutfit(dest, 0, direction, yPattern, zPattern, animationPhase, Color::white, lightView);
                 if (!outfitParams)
                     continue;
-                DrawQueueItemTexturedRect* outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, 0, m_shader);
+                if (yPattern == 0)
+                    center = outfitParams->dest.center();
+                DrawQueueItemTexturedRect* outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, center, 0, m_shader);
                 g_drawQueue->add(outfit);
                 continue;
             }
@@ -136,8 +139,11 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         DrawQueueItemTexturedRect* outfit = nullptr;
         if(m_shader.empty())
             outfit = new DrawQueueItemOutfit(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, colors, outfitParams->color);
-        else
-            outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, colors, m_shader);
+        else {
+            if (yPattern == 0)
+                center = outfitParams->dest.center();
+            outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, center, colors, m_shader);
+        }
         g_drawQueue->add(outfit);
     }
 
@@ -248,7 +254,7 @@ void DrawQueueItemOutfitWithShader::draw()
     g_painter->setShaderProgram(shader);
     g_painter->setOffset(m_offset);
     shader->setMatrixColor(mat4);
-    shader->setCenter(m_dest.center());
+    shader->setCenter(m_center);
     shader->bindMultiTextures();
     if (useFramebuffer) {
         g_painter->drawTexturedRect(Rect(0, 0, m_src.size()), m_texture, m_src);

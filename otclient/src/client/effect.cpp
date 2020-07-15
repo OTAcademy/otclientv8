@@ -46,11 +46,11 @@ void Effect::draw(const Point& dest, int offsetX, int offsetY, bool animate, Lig
         }
     }
 
-    int xPattern = offsetX % getNumPatternX();
+    int xPattern = m_position.x % getNumPatternX();
     if(xPattern < 0)
         xPattern += getNumPatternX();
 
-    int yPattern = offsetY % getNumPatternY();
+    int yPattern = m_position.y % getNumPatternY();
     if(yPattern < 0)
         yPattern += getNumPatternY();
 

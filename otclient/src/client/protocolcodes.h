@@ -125,7 +125,7 @@ namespace Proto {
         GameServerEditText                  = 150,
         GameServerEditList                  = 151,
         GameServerNews                      = 152,
-        GameServerSendBlessDialog           = 155,
+        GameServerBlessDialog               = 155,
         GameServerBlessings                 = 156,
         GameServerPreset                    = 157,
         GameServerPremiumTrigger            = 158, // 1038
@@ -183,7 +183,7 @@ namespace Proto {
         GameServerPreyPrices                = 233,
         GameServerStoreOfferDescription     = 234,
         GameServerImbuementWindow           = 235,
-        GaneServerCloseImbuementWindow      = 236,
+        GameServerCloseImbuementWindow      = 236,
         GameServerMessageDialog             = 237,
         GameServerResourceBalance           = 238,
         GameServerTime                      = 239,

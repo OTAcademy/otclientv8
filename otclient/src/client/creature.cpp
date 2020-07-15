@@ -110,7 +110,7 @@ void Creature::draw(const Point& dest, bool animate, LightView* lightView)
 
     // local player always have a minimum light in complete darkness
     if (isLocalPlayer()) {
-        light.intensity = std::max<uint8>(light.intensity, 3);
+        light.intensity = std::max<uint8>(light.intensity, 1);
         if (light.color == 0 || light.color > 215)
             light.color = 215;
     }
