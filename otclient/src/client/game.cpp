@@ -126,10 +126,7 @@ void Game::processConnectionError(const boost::system::error_code& ec)
 {
     // connection errors only have meaning if we still have a protocol
     if(m_protocolGame) {
-        // eof = end of file, a clean disconnect
-        if(ec != asio::error::eof)
-            g_lua.callGlobalField("g_game", "onConnectionError", ec.message(), ec.value());
-
+        g_lua.callGlobalField("g_game", "onConnectionError", ec.message(), ec.value());
         processDisconnect();
     }
 }

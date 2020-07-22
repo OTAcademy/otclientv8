@@ -89,6 +89,9 @@ public:
     void updateData(const std::set<std::string>& files, bool reMount);
     void updateExecutable(std::string fileName);
 
+    std::string createArchive(const std::map<std::string, std::string>& files);
+    std::map<std::string, std::string> decompressArchive(std::string dataOrPath);
+
 #ifdef WITH_ENCRYPTION
     void encrypt(const std::string& seed = "");
     bool encryptBuffer(std::string & buffer, uint32_t seed = 0);

@@ -110,7 +110,7 @@ void Creature::draw(const Point& dest, bool animate, LightView* lightView)
 
     // local player always have a minimum light in complete darkness
     if (isLocalPlayer()) {
-        light.intensity = std::max<uint8>(light.intensity, 1);
+        light.intensity = std::max<uint8>(light.intensity, 2);
         if (light.color == 0 || light.color > 215)
             light.color = 215;
     }
@@ -242,6 +242,11 @@ bool Creature::isInsideOffset(Point offset)
 {
     Rect rect(getDrawOffset() - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS));
     return rect.contains(offset);
+}
+
+bool Creature::canShoot(int distance)
+{
+    return getTile() ? getTile()->canShoot(distance) : false;
 }
 
 void Creature::turn(Otc::Direction direction)

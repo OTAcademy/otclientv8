@@ -110,6 +110,7 @@ public:
     bool isFullyOpaque();
     bool isSingleDimension();
     bool isLookPossible();
+    bool isBlockingProjectile();
     bool isClickable();
     bool isEmpty();
     bool isDrawable();
@@ -151,6 +152,8 @@ public:
     int getTimer();
     void setFill(Color color);
     void resetFill() { m_fill = Color::alpha; }
+
+    bool canShoot(int distance);
 
 private:
     void checkTranslucentLight();

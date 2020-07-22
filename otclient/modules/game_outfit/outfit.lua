@@ -227,6 +227,7 @@ function accept()
       end
     end
   end
+  print(json.encode(outfit))
   g_game.changeOutfit(outfit)
   destroy()
 end

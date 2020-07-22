@@ -238,7 +238,7 @@ public:
     std::vector<CreaturePtr> getSpectators(const Position& centerPos, bool multiFloor);
     std::vector<CreaturePtr> getSpectatorsInRange(const Position& centerPos, bool multiFloor, int xRange, int yRange);
     std::vector<CreaturePtr> getSpectatorsInRangeEx(const Position& centerPos, bool multiFloor, int minXRange, int maxXRange, int minYRange, int maxYRange);
-    std::vector<CreaturePtr> getSpectatorsByPattern(const Position& centerPos, const std::string& pattern);
+    std::vector<CreaturePtr> getSpectatorsByPattern(const Position& centerPos, const std::string& pattern, Otc::Direction direction);
 
     void setLight(const Light& light) { m_light = light; }
     void setCentralPosition(const Position& centralPosition);
@@ -273,6 +273,8 @@ public:
     int getMinimapColor(const Position& pos);
     bool isPatchable(const Position& pos);
     bool isWalkable(const Position& pos, bool ignoreCreatures);
+    bool isSightClear(const Position& fromPos, const Position& toPos);
+    bool checkSightLine(const Position& fromPos, const Position& toPos);
 
 private:
     void removeUnawareThings();

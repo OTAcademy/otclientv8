@@ -125,11 +125,13 @@ end
 
 function onGameConnectionError(message, code)
   CharacterList.destroyLoadBox()
-  local text = translateNetworkError(code, g_game.getProtocolGame() and g_game.getProtocolGame():isConnecting(), message)
-  errorBox = displayErrorBox(tr("Connection Error"), text)
-  errorBox.onOk = function()
-    errorBox = nil
-    CharacterList.showAgain()
+  if not g_game.isOnline() or code ~= 2 then -- code 2 is normal disconnect, end of file
+    local text = translateNetworkError(code, g_game.getProtocolGame() and g_game.getProtocolGame():isConnecting(), message)
+    errorBox = displayErrorBox(tr("Connection Error"), text)
+    errorBox.onOk = function()
+      errorBox = nil
+      CharacterList.showAgain()
+    end
   end
   scheduleAutoReconnect()
 end
@@ -144,8 +146,8 @@ function onGameUpdateNeeded(signature)
 end
 
 function onGameEnd()
-  CharacterList.showAgain()
   scheduleAutoReconnect()
+  CharacterList.showAgain()
 end
 
 function onLogout()
@@ -303,9 +305,9 @@ function CharacterList.create(characters, account, otui)
     status = tr(' (Suspended)')
   end
 
-  if account.subStatus == SubscriptionStatus.Free then
+  if account.subStatus == SubscriptionStatus.Free and account.premDays < 1 then
     accountStatusLabel:setText(('%s%s'):format(tr('Free Account'), status))
-  elseif account.subStatus == SubscriptionStatus.Premium then
+  else
     if account.premDays == 0 or account.premDays == 65535 then
       accountStatusLabel:setText(('%s%s'):format(tr('Gratis Premium Account'), status))
     else

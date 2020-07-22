@@ -142,6 +142,7 @@ public:
     bool canBeSeen() { return !isInvisible() || isPlayer(); }
 
     bool isCreature() { return true; }
+    bool canShoot(int distance);
 
     const ThingTypePtr& getThingType();
     ThingType *rawGetThingType();
