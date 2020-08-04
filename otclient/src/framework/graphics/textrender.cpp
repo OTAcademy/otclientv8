@@ -84,6 +84,7 @@ void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
         return;
     }
     auto it = _it->second;
+    it->lastUse = g_clock.millis();
     m_mutex[index].unlock();
     if (it->font) { // calculate text coords
         it->font->calculateDrawTextCoords(it->coords, it->text, Rect(0, 0, it->size), it->align);
@@ -91,7 +92,6 @@ void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
         it->text.clear();
         it->font.reset();
     }
-    it->lastUse = g_clock.millis();
     g_painter->drawText(pos, it->coords, color, it->texture);
 }
 
@@ -108,6 +108,7 @@ void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vec
         return;
     }
     auto it = _it->second;
+    it->lastUse = g_clock.millis();
     m_mutex[index].unlock();
     if (it->font) { // calculate text coords
         it->font->calculateDrawTextCoords(it->coords, it->text, Rect(0, 0, it->size), it->align);
@@ -115,7 +116,6 @@ void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vec
         it->text.clear();
         it->font.reset();
     }
-    it->lastUse = g_clock.millis();
     g_painter->drawText(pos, it->coords, colors, it->texture);
 }
 

@@ -184,8 +184,8 @@ const std::vector<Point>& BitmapFont::calculateGlyphsPositions(const std::string
                                                          Size *textBoxSize)
 {
     // for performance reasons we use statics vectors that are allocated on demand
-    static std::vector<Point> glyphsPositions(1);
-    static std::vector<int> lineWidths(1);
+    static thread_local std::vector<Point> glyphsPositions(1);
+    static thread_local std::vector<int> lineWidths(1);
 
     int textLength = text.length();
     int maxLineWidth = 0;
