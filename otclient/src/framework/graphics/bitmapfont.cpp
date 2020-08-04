@@ -69,6 +69,7 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     m_texture = g_textures.getTexture(textureFile);
     if (!m_texture)
         return;
+    m_texture->update();
 
     int numHorizontalGlyphs = m_texture->getSize().width() / glyphSize.width();
 #ifdef DONT_CACHE_FONTS

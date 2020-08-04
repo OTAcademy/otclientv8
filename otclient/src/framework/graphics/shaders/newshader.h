@@ -33,7 +33,7 @@ static const std::string textVertexShader = "\n\
     uniform vec2 u_Offset;\n\
     void main()\n\
     {\n\
-        gl_Position = vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy + u_Offset, 1.0)).xy, u_Depth / 16384.0, 1.0);\n\
+        gl_Position = vec4((u_ProjectionMatrix * u_TransformMatrix * vec3(a_Vertex.xy + u_Offset, 1.0)).xy, 1.0, 1.0);\n\
         v_TexCoord = (u_TextureMatrix * vec3(a_TexCoord,1.0)).xy;\n\
     }\n";
 
@@ -62,10 +62,10 @@ static const std::string newFragmentShader = "\n\
 static const std::string textFragmentShader = "\n\
     varying vec2 v_TexCoord;\n\
     uniform vec4 u_Color;\n\
-    uniform sampler2D u_Fonts;\n\
+    uniform sampler2D u_Tex0;\n\
     void main()\n\
     {\n\
-        gl_FragColor = texture2D(u_Fonts, v_TexCoord) * u_Color;\n\
+        gl_FragColor = texture2D(u_Tex0, v_TexCoord) * u_Color;\n\
     }\n";
 
 // LINE
