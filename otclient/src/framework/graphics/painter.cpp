@@ -608,9 +608,9 @@ void Painter::drawFilledRect(const Rect& dest)
 }
 
 // new render
-void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const Color& color)
+void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const Color& color, const TexturePtr& texture)
 {
-    setTexture(g_atlas.get(1)); // todo: remove it
+    setTexture(texture);
     // update shader with the current painter state
     m_drawTextProgram->bind();
     m_drawTextProgram->setTransformMatrix(m_transformMatrix);
@@ -642,9 +642,9 @@ void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const Color
     m_calls += 1;
 }
 
-void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const std::vector<std::pair<int, Color>>& colors)
+void Painter::drawText(const Point& pos, CoordsBuffer& coordsBuffer, const std::vector<std::pair<int, Color>>& colors, const TexturePtr& texture)
 {
-    setTexture(g_atlas.get(1)); // todo: remove it
+    setTexture(texture);
     // update shader with the current painter state
     m_drawTextProgram->bind();
     m_drawTextProgram->setTransformMatrix(m_transformMatrix);

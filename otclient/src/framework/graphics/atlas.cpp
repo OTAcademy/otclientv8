@@ -121,7 +121,7 @@ Point Atlas::cacheFont(const TexturePtr& fontTexture)
         g_logger.fatal("[Atlas] Too big font texture. Max is 2048x2048");
     }
     if (m_locations[1][index].empty() && !findSpace(1, index)) {
-        g_logger.fatal("[Atlas] Out of space for new fonts, compile with BIG_FONTS definition");
+        g_logger.fatal("[Atlas] Out of space for new fonts, compile with BIG_FONTS or DONT_CACHE_FONTS definition");
     }
     Point location = m_locations[1][index].front();
     m_locations[1][index].pop_front();

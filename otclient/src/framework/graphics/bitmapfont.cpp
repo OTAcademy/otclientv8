@@ -70,15 +70,19 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     if (!m_texture)
         return;
 
-    Point offset = g_atlas.cacheFont(m_texture);
     int numHorizontalGlyphs = m_texture->getSize().width() / glyphSize.width();
+#ifdef DONT_CACHE_FONTS
+    Point offset(0, 0);
+#else
+    Point offset = g_atlas.cacheFont(m_texture);
+    m_texture = g_atlas.get(1);
+#endif
     for (int glyph = m_firstGlyph; glyph < 256; ++glyph) {
         m_glyphsTextureCoords[glyph].setRect(((glyph - m_firstGlyph) % numHorizontalGlyphs) * glyphSize.width() + offset.x,
                                                 ((glyph - m_firstGlyph) / numHorizontalGlyphs) * glyphSize.height() + offset.y,
                                                 m_glyphsSize[glyph].width(),
                                                 m_glyphHeight);
     }
-    m_texture = g_atlas.get(1);
 }
 
 void BitmapFont::drawText(const std::string& text, const Point& startPos, const Color& color)
