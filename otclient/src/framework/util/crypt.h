@@ -28,7 +28,9 @@
 
 #include <boost/uuid/uuid.hpp>
 
+#ifndef __EMSCRIPTEN__
 typedef struct rsa_st RSA;
+#endif
 
 class Crypt
 {
@@ -67,7 +69,9 @@ private:
     std::string _decrypt(const std::string& encrypted_string, bool useMachineUUID);
     std::string getCryptKey(bool useMachineUUID);
     boost::uuids::uuid m_machineUUID;
+#ifndef __EMSCRIPTEN__
     RSA *m_rsa;
+#endif
 };
 
 extern Crypt g_crypt;

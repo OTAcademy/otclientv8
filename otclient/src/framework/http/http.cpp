@@ -4,8 +4,10 @@
 #include <framework/core/eventdispatcher.h>
 
 #include "http.h"
+#ifndef __EMSCRIPTEN__
 #include "session.h"
 #include "websocket.h"
+#endif
 
 Http g_http;
 
@@ -20,9 +22,11 @@ void Http::terminate() {
     if (!m_working)
         return;
     m_working = false;
+#ifndef __EMSCRIPTEN__
     for (auto& ws : m_websockets) {
         ws.second->close();
     }
+#endif
     for (auto& op : m_operations) {
         op.second->canceled = true;
     }
@@ -44,6 +48,7 @@ int Http::get(const std::string& url, int timeout) {
         result->url = url;
         result->operationId = operationId;
         m_operations[operationId] = result;
+#ifndef __EMSCRIPTEN__
         auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, result, [&](HttpResult_ptr result) {
             bool finished = result->finished;
             g_dispatcher.addEventEx("Http::onGet", [result, finished]() {
@@ -58,6 +63,7 @@ int Http::get(const std::string& url, int timeout) {
             }
         });
         session->start();
+#endif
     });
 
     return operationId;
@@ -78,6 +84,7 @@ int Http::post(const std::string& url, const std::string& data, int timeout) {
         result->operationId = operationId;
         result->postData = data;
         m_operations[operationId] = result;
+#ifndef __EMSCRIPTEN__
         auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, result, [&](HttpResult_ptr result) {
             bool finished = result->finished;
             g_dispatcher.addEventEx("Http::onPost", [result, finished]() {
@@ -92,6 +99,7 @@ int Http::post(const std::string& url, const std::string& data, int timeout) {
             }
         });
         session->start();
+#endif
     });
     return operationId;
 }
@@ -106,6 +114,7 @@ int Http::download(const std::string& url, std::string path, int timeout) {
         result->url = url;
         result->operationId = operationId;
         m_operations[operationId] = result;
+#ifndef __EMSCRIPTEN__
         auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, result, [&, path](HttpResult_ptr result) {
             m_speed = ((result->size) * 10) / (1 + stdext::micros() - m_lastSpeedUpdate);
             m_lastSpeedUpdate = stdext::micros();
@@ -130,6 +139,7 @@ int Http::download(const std::string& url, std::string path, int timeout) {
             m_operations.erase(operationId);
         });
         session->start();
+#endif
     });
     return operationId;
 }
@@ -145,6 +155,7 @@ int Http::ws(const std::string& url, int timeout)
         result->url = url;
         result->operationId = operationId;
         m_operations[operationId] = result;
+#ifndef __EMSCRIPTEN__
         auto session = std::make_shared<WebsocketSession>(m_ios, url, m_userAgent, timeout, result, [&, result](WebsocketCallbackType type, std::string message) {
             g_dispatcher.addEventEx("Http::ws", [result, type, message]() {
                 if (type == WEBSOCKET_OPEN) {
@@ -163,6 +174,7 @@ int Http::ws(const std::string& url, int timeout)
         });
         m_websockets[result->operationId] = session;
         session->start();
+#endif
     });
 
     return operationId;
@@ -170,6 +182,7 @@ int Http::ws(const std::string& url, int timeout)
 
 bool Http::wsSend(int operationId, std::string message)
 {
+#ifndef __EMSCRIPTEN__
     boost::asio::post(m_ios, [&, operationId, message] {
         auto wit = m_websockets.find(operationId);
         if (wit == m_websockets.end()) {
@@ -177,6 +190,7 @@ bool Http::wsSend(int operationId, std::string message)
         }
         wit->second->send(message);
     });
+#endif
     return true;
 }
 
@@ -188,6 +202,7 @@ bool Http::wsClose(int operationId)
 
 
 bool Http::cancel(int id) {
+#ifndef __EMSCRIPTEN__
     boost::asio::post(m_ios, [&, id] {
         auto wit = m_websockets.find(id);
         if (wit != m_websockets.end()) {
@@ -200,6 +215,7 @@ bool Http::cancel(int id) {
             return;
         it->second->canceled = true;
     });
+#endif
     return true;
 }
 

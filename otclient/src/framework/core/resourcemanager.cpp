@@ -38,8 +38,10 @@
 
 #define PHYSFS_DEPRECATED
 #include <physfs.h>
+#ifndef __EMSCRIPTEN__
 #include <zip.h>
 #include <zlib.h>
+#endif
 
 ResourceManager g_resources;
 static const std::string INIT_FILENAME = "init.lua";
@@ -347,8 +349,10 @@ bool ResourceManager::loadDataFromSelf(bool unmountIfMounted) {
 
 bool ResourceManager::fileExists(const std::string& fileName)
 {
+#ifdef FW_NET
     if (fileName.find("/downloads") != std::string::npos)
         return g_http.getFile(fileName.substr(10)) != nullptr;
+#endif
     return (PHYSFS_exists(resolvePath(fileName).c_str()) && !PHYSFS_isDirectory(resolvePath(fileName).c_str()));
 }
 
@@ -375,11 +379,13 @@ std::string ResourceManager::readFileContents(const std::string& fileName, bool 
 {
     std::string fullPath = resolvePath(fileName);
     
+#ifdef FW_NET
     if (fullPath.find("/downloads") != std::string::npos) {
         auto dfile = g_http.getFile(fullPath.substr(10));
         if (dfile)
             return std::string(dfile->response.begin(), dfile->response.end());
     }
+#endif
 
     PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
     if(!file)
@@ -560,6 +566,7 @@ std::string ResourceManager::fileChecksum(const std::string& path) {
 std::map<std::string, std::string> ResourceManager::filesChecksums()
 {
     std::map<std::string, std::string> ret;
+#ifndef __EMSCRIPTEN__
     if (!m_memoryData)
         return ret;
 
@@ -600,6 +607,7 @@ std::map<std::string, std::string> ResourceManager::filesChecksums()
     if (zip_close(za) < 0)
         g_logger.fatal(stdext::format("can't close zip archive: %s", zip_strerror(za)));
     zip_error_fini(&error);
+#endif
     return ret;
 }
 
@@ -624,6 +632,7 @@ std::string ResourceManager::selfChecksum() {
 }
 
 void ResourceManager::updateData(const std::set<std::string>& files, bool reMount) {
+#ifndef __EMSCRIPTEN__
     if (!m_loadedFromArchive)
         g_logger.fatal("Client can be updated only when running from zip archive");
 
@@ -649,11 +658,13 @@ void ResourceManager::updateData(const std::set<std::string>& files, bool reMoun
         if (fileName.size() > 1 && fileName[0] == '/')
             fileName = fileName.substr(1);
         zip_source_t* s;
+#ifdef FW_NET
         auto dFile = g_http.getFile(fileName);
         if (dFile) {
             if ((s = zip_source_buffer(za, dFile->response.data(), dFile->response.size(), 0)) == NULL)
                 return g_logger.fatal(stdext::format("can't create source buffer: %s", zip_strerror(za)));
         } else {
+#endif
             PHYSFS_File* file = PHYSFS_openRead((std::string("/") + fileName).c_str());
             if (!file)
                 g_logger.fatal(stdext::format("unable to open file '%s': %s", fileName, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
@@ -664,7 +675,9 @@ void ResourceManager::updateData(const std::set<std::string>& files, bool reMoun
             PHYSFS_close(file);
             if ((s = zip_source_buffer(za, buffer, fileSize, 1)) == NULL)
                 return g_logger.fatal(stdext::format("can't create source buffer: %s", zip_strerror(za)));
+#ifdef FW_NET
         }
+#endif
 
         int fileIndex = zip_file_add(za, fileName.c_str(), s, ZIP_FL_OVERWRITE);
         if(fileIndex < 0)
@@ -720,6 +733,9 @@ void ResourceManager::updateData(const std::set<std::string>& files, bool reMoun
             g_logger.fatal("Error while mounting new data.zip");
         }
     }
+#else
+    g_logger.fatal("updateData is unsupported");
+#endif
 }
 
 void ResourceManager::updateExecutable(std::string fileName)
@@ -727,6 +743,7 @@ void ResourceManager::updateExecutable(std::string fileName)
 #ifdef ANDROID
     g_logger.fatal("Executable cannot be updated on android");
 #else
+#ifdef FW_NET
     if (fileName.size() <= 2) {
         g_logger.fatal("Invalid executable name");
     }
@@ -751,11 +768,17 @@ void ResourceManager::updateExecutable(std::string fileName)
 #ifdef WIN32
     installDlls(newBinaryPath);
 #endif
+#else
+    g_logger.fatal("updateExecutable is not available (FW_NET not declared)");
+#endif
 #endif
 }
 
 std::string ResourceManager::createArchive(const std::map<std::string, std::string>& files)
 {
+#ifdef __EMSCRIPTEN__
+    return "";
+#else
     if (files.empty()) return "";
 
     zip_source_t* src;
@@ -811,11 +834,15 @@ std::string ResourceManager::createArchive(const std::map<std::string, std::stri
     zip_source_free(src);
 
     return data;
+#endif
 }
 
 std::map<std::string, std::string> ResourceManager::decompressArchive(std::string dataOrPath)
 {
     std::map<std::string, std::string> ret;
+#ifdef __EMSCRIPTEN__
+    return ret;
+#else
     if (dataOrPath.size() < 64) {
         dataOrPath = readFileContents(dataOrPath);
     }
@@ -865,6 +892,7 @@ std::map<std::string, std::string> ResourceManager::decompressArchive(std::strin
         stdext::throw_exception(stdext::format("can't close zip archive: %s", zip_strerror(za)));
     zip_error_fini(&error);
     return ret; // success
+#endif
 }
 
 #ifdef WIN32

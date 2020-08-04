@@ -57,6 +57,7 @@
 #ifdef FW_NET
 #include <framework/net/server.h>
 #include <framework/net/protocol.h>
+#include <framework/http/http.h>
 #ifdef FW_PROXY
 #include <extras/proxy/proxy.h>
 #endif
@@ -67,9 +68,6 @@
 #endif
 
 #include <framework/util/extras.h>
-
-#include <framework/http/http.h>
-
 
 void Application::registerLuaFunctions()
 {
@@ -219,16 +217,6 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_extras", "get", &Extras::get, &g_extras);
     g_lua.bindSingletonFunction("g_extras", "getDescription", &Extras::getDescription, &g_extras);
     g_lua.bindSingletonFunction("g_extras", "getAll", &Extras::getAll, &g_extras);
-
-    g_lua.registerSingletonClass("g_http");
-    g_lua.bindSingletonFunction("g_http", "get", &Http::get, &g_http);
-    g_lua.bindSingletonFunction("g_http", "post", &Http::post, &g_http);
-    g_lua.bindSingletonFunction("g_http", "download", &Http::download, &g_http);
-    g_lua.bindSingletonFunction("g_http", "ws", &Http::ws, &g_http);
-    g_lua.bindSingletonFunction("g_http", "wsSend", &Http::wsSend, &g_http);
-    g_lua.bindSingletonFunction("g_http", "wsClose", &Http::wsClose, &g_http);
-    g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
-    g_lua.bindSingletonFunction("g_http", "setUserAgent", &Http::setUserAgent, &g_http);
 
     g_lua.registerSingletonClass("g_atlas");
     g_lua.bindSingletonFunction("g_atlas", "getStats", &Atlas::getStats, &g_atlas);
@@ -914,6 +902,15 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_proxy", "getPing", &ProxyManager::getPing, &g_proxy);
 #endif
 
+    g_lua.registerSingletonClass("g_http");
+    g_lua.bindSingletonFunction("g_http", "get", &Http::get, &g_http);
+    g_lua.bindSingletonFunction("g_http", "post", &Http::post, &g_http);
+    g_lua.bindSingletonFunction("g_http", "download", &Http::download, &g_http);
+    g_lua.bindSingletonFunction("g_http", "ws", &Http::ws, &g_http);
+    g_lua.bindSingletonFunction("g_http", "wsSend", &Http::wsSend, &g_http);
+    g_lua.bindSingletonFunction("g_http", "wsClose", &Http::wsClose, &g_http);
+    g_lua.bindSingletonFunction("g_http", "cancel", &Http::cancel, &g_http);
+    g_lua.bindSingletonFunction("g_http", "setUserAgent", &Http::setUserAgent, &g_http);
 #endif
 
 #ifdef FW_SOUND

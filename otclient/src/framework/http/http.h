@@ -51,7 +51,9 @@ private:
     boost::asio::io_context m_ios;
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_guard;
     std::map<int, HttpResult_ptr> m_operations;
+#ifndef __EMSCRIPTEN__
     std::map<int, std::shared_ptr<WebsocketSession>> m_websockets;
+#endif
     std::map<std::string, HttpResult_ptr> m_downloads;
     std::string m_userAgent = "Mozilla/5.0";
 };

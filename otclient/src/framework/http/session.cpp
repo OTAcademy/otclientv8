@@ -1,3 +1,5 @@
+#ifndef __EMSCRIPTEN__
+
 #include <framework/stdext/uri.h>
 #include <chrono>
 
@@ -221,3 +223,5 @@ void HttpSession::onError(const std::string& error, const std::string& details) 
         m_callback(m_result);
     }
 }
+
+#endif

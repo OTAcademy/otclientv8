@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 project(otclient)
 
-set(VERSION "0.6.6")
+if(CMAKE_BASE_NAME STREQUAL "em++")
+    set(WASM ON)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 option(FRAMEWORK_SOUND "Use SOUND " OFF)

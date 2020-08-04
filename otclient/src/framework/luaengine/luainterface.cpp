@@ -25,11 +25,17 @@
 
 #include <framework/core/resourcemanager.h>
 #include <framework/util/stats.h>
+extern "C" {
 #if defined(_MSC_VER) || defined(ANDROID)
-#include <luajit/lua.hpp>
+#include <luajit/lua.h>
+#include <luajit/lualib.h>
+#include <luajit/lauxlib.h>
 #else
-#include <lua.hpp>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #endif
+}
 
 #include "lbitlib.h"
 

@@ -31,11 +31,13 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/functional/hash.hpp>
 
+#ifndef __EMSCRIPTEN__
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
 #include <openssl/bn.h>
 #include <openssl/err.h>
+#endif
 #include <zlib.h>
 
 static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -45,12 +47,16 @@ Crypt g_crypt;
 
 Crypt::Crypt()
 {
+#ifndef __EMSCRIPTEN__
     m_rsa = RSA_new();
+#endif
 }
 
 Crypt::~Crypt()
 {
+#ifndef __EMSCRIPTEN__
     RSA_free(m_rsa);
+#endif
 }
 
 std::string Crypt::base64Encode(const std::string& decoded_string)
@@ -222,6 +228,7 @@ std::string Crypt::_decrypt(const std::string& encrypted_string, bool useMachine
 
 std::string Crypt::md5Encode(const std::string& decoded_string, bool upperCase)
 {
+#ifndef __EMSCRIPTEN__
     MD5_CTX c;
     MD5_Init(&c);
     MD5_Update(&c, decoded_string.c_str(), decoded_string.length());
@@ -239,10 +246,14 @@ std::string Crypt::md5Encode(const std::string& decoded_string, bool upperCase)
 
     std::transform(result.begin(), result.end(), result.begin(), tolower);
     return result;
+#else
+    return "";
+#endif
 }
 
 std::string Crypt::sha1Encode(const std::string& decoded_string, bool upperCase)
 {
+#ifndef __EMSCRIPTEN__
     SHA_CTX c;
     SHA1_Init(&c);
     SHA1_Update(&c, decoded_string.c_str(), decoded_string.length());
@@ -260,10 +271,14 @@ std::string Crypt::sha1Encode(const std::string& decoded_string, bool upperCase)
 
     std::transform(result.begin(), result.end(), result.begin(), tolower);
     return result;
+#else
+    return "";
+#endif
 }
 
 std::string Crypt::sha256Encode(const std::string& decoded_string, bool upperCase)
 {
+#ifndef __EMSCRIPTEN__
     SHA256_CTX c;
     SHA256_Init(&c);
     SHA256_Update(&c, decoded_string.c_str(), decoded_string.length());
@@ -281,10 +296,14 @@ std::string Crypt::sha256Encode(const std::string& decoded_string, bool upperCas
 
     std::transform(result.begin(), result.end(), result.begin(), tolower);
     return result;
+#else
+    return "";
+#endif
 }
 
 std::string Crypt::sha512Encode(const std::string& decoded_string, bool upperCase)
 {
+#ifndef __EMSCRIPTEN__
     SHA512_CTX c;
     SHA512_Init(&c);
     SHA512_Update(&c, decoded_string.c_str(), decoded_string.length());
@@ -302,6 +321,9 @@ std::string Crypt::sha512Encode(const std::string& decoded_string, bool upperCas
 
     std::transform(result.begin(), result.end(), result.begin(), tolower);
     return result;
+#else
+    return "";
+#endif
 }
 
 std::string Crypt::crc32(const std::string& decoded_string, bool upperCase)
@@ -338,6 +360,7 @@ void Crypt::rsaGenerateKey(int bits, int e)
 
 void Crypt::rsaSetPublicKey(const std::string& n, const std::string& e)
 {
+#ifndef __EMSCRIPTEN__
 #if OPENSSL_VERSION_NUMBER < 0x10100005L
     BN_dec2bn(&m_rsa->n, n.c_str());
     BN_dec2bn(&m_rsa->e, e.c_str());
@@ -352,10 +375,12 @@ void Crypt::rsaSetPublicKey(const std::string& n, const std::string& e)
     BN_dec2bn(&be, e.c_str());
     RSA_set0_key(m_rsa, bn, be, nullptr);
 #endif
+#endif
 }
 
 void Crypt::rsaSetPrivateKey(const std::string& p, const std::string& q, const std::string& d)
 {
+#ifndef __EMSCRIPTEN__
 #if OPENSSL_VERSION_NUMBER < 0x10100005L
     BN_dec2bn(&m_rsa->p, p.c_str());
     BN_dec2bn(&m_rsa->q, q.c_str());
@@ -377,10 +402,12 @@ void Crypt::rsaSetPrivateKey(const std::string& p, const std::string& q, const s
     RSA_set0_key(m_rsa, nullptr, nullptr, bd);
     RSA_set0_factors(m_rsa, bp, bq);
 #endif
+#endif
 }
 
 bool Crypt::rsaCheckKey()
 {
+#ifndef __EMSCRIPTEN__
     // only used by server, that sets both public and private
     if(RSA_check_key(m_rsa)) {
         BN_CTX *ctx = BN_CTX_new();
@@ -412,25 +439,40 @@ bool Crypt::rsaCheckKey()
         g_logger.error(stdext::format("RSA check failed - %s", ERR_error_string(ERR_get_error(), nullptr)));
         return false;
     }
+#else
+    return false;
+#endif
 }
 
 bool Crypt::rsaEncrypt(unsigned char *msg, int size)
 {
+#ifndef __EMSCRIPTEN__
     if(size != RSA_size(m_rsa))
         return false;
     return RSA_public_encrypt(size, msg, msg, m_rsa, RSA_NO_PADDING) != -1;
+#else
+    return false;
+#endif
 }
 
 bool Crypt::rsaDecrypt(unsigned char *msg, int size)
 {
+#ifndef __EMSCRIPTEN__
     if(size != RSA_size(m_rsa))
         return false;
     return RSA_private_decrypt(size, msg, msg, m_rsa, RSA_NO_PADDING) != -1;
+#else
+    return false;
+#endif
 }
 
 int Crypt::rsaGetSize()
 {
+#ifndef __EMSCRIPTEN__
     return RSA_size(m_rsa);
+#else
+    return 0;
+#endif
 }
 
 #define DELTA 0x9e3779b9

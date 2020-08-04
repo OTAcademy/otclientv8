@@ -1622,5 +1622,7 @@ int Game::getOs()
         return 23;
     if (g_app.getOs() == "ios")
         return 24;
+    if (g_app.getOs() == "web")
+        return 25;
     return 21; // linux
 }

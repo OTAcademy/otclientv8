@@ -1,3 +1,5 @@
+#ifndef __EMSCRIPTEN__
+
 #include <framework/stdext/uri.h>
 #include <chrono>
 
@@ -187,3 +189,5 @@ void WebsocketSession::onError(const std::string& error, const std::string& deta
     }
     close();
 }
+
+#endif

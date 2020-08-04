@@ -72,9 +72,9 @@
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
+//#include <boost/asio/ssl.hpp>
 
-#include <boost/beast/ssl.hpp>
+//#include <boost/beast/ssl.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/http/write.hpp>
 #include <boost/beast/http/string_body.hpp>
@@ -82,6 +82,6 @@
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/http/parser.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
+//#include <boost/beast/websocket/ssl.hpp>
 
 #endif

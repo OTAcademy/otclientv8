@@ -173,12 +173,20 @@ set (CMAKE_CXX_STANDARD 17)
 
 # gcc compile flags
 set(WARNS_FLAGS "-Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-unused-result -Wno-deprecated-copy -Wno-deprecated-declarations")
-set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -pipe -no-pie")
-set(CMAKE_CXX_FLAGS_COMPILESPEED      "-O0")
-set(CMAKE_CXX_FLAGS_DEBUG             "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO    "-O1 -g -fno-omit-frame-pointer")
-set(CMAKE_CXX_FLAGS_RELEASE           "-O2")
-set(CMAKE_CXX_FLAGS_PERFORMANCE       "-Ofast -march=native")
+if(WASM)
+    set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -s USE_ZLIB=1 -s USE_LIBPNG=1 -s USE_SDL=2 -s USE_BOOST_HEADERS=1 -s USE_PTHREADS=1 -O1") # add -Ofast
+    set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS} 
+            D:\\wasm\\physfs\\src 
+            D:\\wasm\\wasm_lua\\lua-5.3.4\\src)
+    set(framework_LIBRARIES ${framework_LIBRARIES} D:\\wasm\\lua-5.3.4\\src\\liblua.a)
+else()
+    set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -pipe -no-pie")
+    set(CMAKE_CXX_FLAGS_COMPILESPEED      "-O0")
+    set(CMAKE_CXX_FLAGS_DEBUG             "-O0 -g")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO    "-O1 -g -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS_RELEASE           "-O2")
+    set(CMAKE_CXX_FLAGS_PERFORMANCE       "-Ofast -march=native")
+endif()
 
 if(USE_LTO)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fwhole-program -flto")
@@ -187,17 +195,17 @@ if(USE_LTO)
     else()
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,-O1,--gc-sections,--sort-common,--relax,-z,relro")
     endif()
-endif()
 
-# process options
-if(USE_STATIC_LIBS)
-    if(NOT APPLE)
-        set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -static-libgcc -static-libstdc++")
+    # process options
+    if(USE_STATIC_LIBS)
+        if(NOT APPLE)
+            set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -static-libgcc -static-libstdc++")
+        endif()
+        message(STATUS "Link to static libraries: ON")
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    else()
+        message(STATUS "Link to static libraries: OFF")
     endif()
-    message(STATUS "Link to static libraries: ON")
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-else()
-    message(STATUS "Link to static libraries: OFF")
 endif()
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
@@ -210,55 +218,59 @@ add_definitions(-D"BUILD_REVISION=\\\"${BUILD_REVISION}\\\"")
 message(STATUS "Build with encryption")
 add_definitions(-D"WITH_ENCRYPTION")
 
-# find boost
-set(REQUIRED_BOOST_COMPONENTS system filesystem)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_LIBS ${USE_STATIC_LIBS})
-find_package(Boost 1.67.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
+# main libs
+if(NOT WASM)
+    # find boost
+    set(REQUIRED_BOOST_COMPONENTS system filesystem)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_LIBS ${USE_STATIC_LIBS})
+    find_package(Boost 1.67.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
 
-#find zip
-find_package(LibZip REQUIRED)
+    #find zip
+    find_package(LibZip REQUIRED)
 
-#find lua
-if(LUAJIT)
-    find_package(LuaJIT REQUIRED)
-    set(LUA_INCLUDE_DIR ${LUAJIT_INCLUDE_DIR})
-    set(LUA_LIBRARY ${LUAJIT_LIBRARY})
+    #find lua
+    if(LUAJIT)
+        find_package(LuaJIT REQUIRED)
+        set(LUA_INCLUDE_DIR ${LUAJIT_INCLUDE_DIR})
+        set(LUA_LIBRARY ${LUAJIT_LIBRARY})
 
-    if(APPLE)
-      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -pagezero_size 10000 -image_base 100000000")
+        if(APPLE)
+          set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -pagezero_size 10000 -image_base 100000000")
+        endif()
+    else()
+        find_package(Lua REQUIRED)
     endif()
-else()
-    find_package(Lua REQUIRED)
+    message(STATUS "LuaJIT: " ${LUAJIT})
+
+    find_package(PhysFS REQUIRED)
+    find_package(OpenSSL REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    set(framework_LIBRARIES ${framework_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${LUA_LIBRARY}
+        ${PHYSFS_LIBRARY}
+        ${OPENSSL_LIBRARIES}
+        ${ZLIB_LIBRARY}
+        ${LIBZIP_LIBRARY}
+    )
+
+    if(WIN32)
+        set(framework_LIBRARIES ${framework_LIBRARIES} -lbcrypt -ldbghelp -lshlwapi -liphlpapi -lpsapi)
+    endif()
+
+    set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
+        ${Boost_INCLUDE_DIRS}
+        ${LUA_INCLUDE_DIR}
+        ${PHYSFS_INCLUDE_DIR}
+        ${OPENSSL_INCLUDE_DIR}
+        ${framework_INCLUDE_DIRS}
+        ${LIBZIP_INCLUDE_DIR_ZIP}
+        ${LIBZIP_INCLUDE_DIR_ZIPCONF}
+    )
 endif()
-message(STATUS "LuaJIT: " ${LUAJIT})
 
-find_package(PhysFS REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(ZLIB REQUIRED)
-
-set(framework_LIBRARIES ${framework_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${LUA_LIBRARY}
-    ${PHYSFS_LIBRARY}
-    ${OPENSSL_LIBRARIES}
-    ${ZLIB_LIBRARY}
-    ${LIBZIP_LIBRARY}
-)
-
-if(WIN32)
-    set(framework_LIBRARIES ${framework_LIBRARIES} -lbcrypt -ldbghelp -lshlwapi -liphlpapi -lpsapi)
-endif()
-
-set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIR}
-    ${PHYSFS_INCLUDE_DIR}
-    ${OPENSSL_INCLUDE_DIR}
-    ${framework_INCLUDE_DIRS}
-    ${LIBZIP_INCLUDE_DIR_ZIP}
-    ${LIBZIP_INCLUDE_DIR_ZIPCONF}
-)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     message(STATUS "Debug information: ON")
@@ -310,7 +322,10 @@ endif()
 
 if(FRAMEWORK_GRAPHICS)
     set(OPENGLES "OFF" CACHE "Use OpenGL ES 1.0 or 2.0 (for mobiles devices)" STRING)
-    if(OPENGLES STREQUAL "2.0")
+    if(WASM)
+        set(OPENGLES "2.0")
+        set(framework_DEFINITIONS ${framework_DEFINITIONS} -DOPENGL_ES=2)
+    ELSEif(OPENGLES STREQUAL "2.0")
         find_package(OpenGLES2 REQUIRED)
         find_package(EGL REQUIRED)
         set(framework_DEFINITIONS ${framework_DEFINITIONS} -DOPENGL_ES=2)
@@ -354,7 +369,7 @@ if(FRAMEWORK_GRAPHICS)
             set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -mwindows")
             message(STATUS "Windows console: OFF")
         endif()
-    else()
+    elseif(NOT WASM)
         set(framework_LIBRARIES ${framework_LIBRARIES} X11)
     endif()
 
@@ -446,6 +461,8 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/platform/win32window.h
         ${CMAKE_CURRENT_LIST_DIR}/platform/x11window.cpp
         ${CMAKE_CURRENT_LIST_DIR}/platform/x11window.h
+        ${CMAKE_CURRENT_LIST_DIR}/platform/sdlwindow.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/platform/sdlwindow.h
 
         # window input
         ${CMAKE_CURRENT_LIST_DIR}/input/mouse.cpp

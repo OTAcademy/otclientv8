@@ -24,7 +24,7 @@
 #ifndef GLUTIL_H
 #define GLUTIL_H
 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__EMSCRIPTEN__)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <EGL/egl.h>

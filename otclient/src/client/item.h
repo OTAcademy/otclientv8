@@ -112,8 +112,8 @@ public:
     void setDoorId(uint8 doorId) { m_attribs.set(ATTR_HOUSEDOORID, doorId); }
     uint8 getDoorId() { return m_attribs.get<uint8>(ATTR_HOUSEDOORID); }
 
-    uint16 getUniqueId() { return m_attribs.get<uint16>(ATTR_ACTION_ID); }
-    uint16 getActionId() { return m_attribs.get<uint16>(ATTR_UNIQUE_ID); }
+    uint16 getUniqueId() { return m_attribs.get<uint16>(ATTR_UNIQUE_ID); }
+    uint16 getActionId() { return m_attribs.get<uint16>(ATTR_ACTION_ID); }
     void setActionId(uint16 actionId) { m_attribs.set(ATTR_ACTION_ID, actionId); }
     void setUniqueId(uint16 uniqueId) { m_attribs.set(ATTR_UNIQUE_ID, uniqueId); }
 
