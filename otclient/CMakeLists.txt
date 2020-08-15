@@ -17,7 +17,7 @@ include(src/framework/CMakeLists.txt)
 include(src/client/CMakeLists.txt)
 
 # functions map for reading backtraces
-if(NOT APPLE)
+if(NOT APPLE AND NOT WASM)
     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie -Wl,-Map=${PROJECT_NAME}.map")
 endif()
 

@@ -39,16 +39,16 @@ public:
     void draw(const Point& dest, int offsetX = 0, int offsetY = 0, bool animate = true, LightView* lightView = nullptr);
     
     void setId(uint32 id) override;
-    uint32 getId() { return m_id; }
+    uint32 getId() override { return m_id; }
 
     EffectPtr asEffect() { return static_self_cast<Effect>(); }
-    bool isEffect() { return true; }
+    bool isEffect() override { return true; }
 
     const ThingTypePtr& getThingType() override;
     ThingType *rawGetThingType() override;
 
 protected:
-    void onAppear();
+    void onAppear() override;
 
 private:
     uint16 m_id;

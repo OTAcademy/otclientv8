@@ -460,6 +460,7 @@ namespace Otc
         GameWingsAndAura = 104,
         GamePlayerStateU32 = 105,
         GameOutfitShaders = 106,
+        GameForceAllowItemHotkeys = 107,
 
         // advanced features
         GamePacketSizeU32 = 110,

@@ -177,8 +177,19 @@ if(WASM)
     set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -s USE_ZLIB=1 -s USE_LIBPNG=1 -s USE_SDL=2 -s USE_BOOST_HEADERS=1 -s USE_PTHREADS=1 -O1") # add -Ofast
     set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS} 
             D:\\wasm\\physfs\\src 
-            D:\\wasm\\wasm_lua\\lua-5.3.4\\src)
-    set(framework_LIBRARIES ${framework_LIBRARIES} D:\\wasm\\lua-5.3.4\\src\\liblua.a)
+            D:\\wasm\\lua-lua-5.1\\src)
+    set(framework_LIBRARIES ${framework_LIBRARIES} "D:/wasm/physfs/build/libphysfs.a")
+
+    include_directories("D:\\wasm\\lua-lua-5.1")
+    set( LUA_DIR "D:/wasm/lua-lua-5.1/src" )
+    set ( LUA_SRC ${LUA_DIR}/lapi.c ${LUA_DIR}/lcode.c ${LUA_DIR}/ldebug.c ${LUA_DIR}/ldo.c ${LUA_DIR}/ldump.c ${LUA_DIR}/lfunc.c 
+      ${LUA_DIR}/lgc.c ${LUA_DIR}/llex.c ${LUA_DIR}/lmem.c ${LUA_DIR}/lobject.c ${LUA_DIR}/lopcodes.c ${LUA_DIR}/lparser.c ${LUA_DIR}/lstate.c 
+      ${LUA_DIR}/lstring.c ${LUA_DIR}/ltable.c ${LUA_DIR}/ltm.c ${LUA_DIR}/lundump.c ${LUA_DIR}/lvm.c ${LUA_DIR}/lzio.c ${LUA_DIR}/lauxlib.c 
+      ${LUA_DIR}/lbaselib.c ${LUA_DIR}/ldblib.c ${LUA_DIR}/liolib.c ${LUA_DIR}/lmathlib.c ${LUA_DIR}/loslib.c ${LUA_DIR}/ltablib.c 
+      ${LUA_DIR}/lstrlib.c ${LUA_DIR}/linit.c )
+    set_source_files_properties(${LUA_SRC} PROPERTIES LANGUAGE CXX )
+    set(framework_SOURCES ${framework_SOURCES} ${LUA_SRC})
+    message(STATUS "LUA: " ${LUA_SRC})
 else()
     set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -pipe -no-pie")
     set(CMAKE_CXX_FLAGS_COMPILESPEED      "-O0")
@@ -281,7 +292,9 @@ else()
     endif()
     if(NOT APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,-s") # strip all debug information
-        set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,--as-needed") # only link needed libraries
+        if(NOT WASM)
+            set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,--as-needed") # only link needed libraries
+        endif()
     endif()
 endif()
 
@@ -308,7 +321,7 @@ else()
     if(APPLE)
         set(framework_DEFINITIONS ${framework_DEFINITIONS} -D_REENTRANT) # enable thread safe code
         set(SYSTEM_LIBRARIES "")
-    else()
+    elseif(NOT WASM)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -rdynamic -Wl,-rpath,./libs") # rdynamic is needed by backtrace.h used in crash handler
         set(SYSTEM_LIBRARIES dl rt)

@@ -847,7 +847,7 @@ void Game::useWith(const ItemPtr& item, const ThingPtr& toThing, int subType)
     if(!pos.isValid()) // virtual item
         pos = Position(0xFFFF, 0, 0); // means that is an item in inventory
 
-    if(toThing->isCreature() && g_game.getProtocolVersion() >= 780)
+    if(toThing->isCreature() && (g_game.getProtocolVersion() >= 780 || g_game.getFeature(Otc::GameForceAllowItemHotkeys)))
         m_protocolGame->sendUseOnCreature(pos, item->getId(), subType ? subType : item->getStackPos(), toThing->getId());
     else
         m_protocolGame->sendUseItemWith(pos, item->getId(), subType ? subType : item->getStackPos(), toThing->getPosition(), toThing->getId(), toThing->getStackPos());
@@ -1369,7 +1369,14 @@ void Game::mount(bool mount)
 {
     if(!canPerformGameAction())
         return;
-    m_protocolGame->sendMountStatus(mount);
+    m_protocolGame->sendOutfitExtensionStatus(mount ? 1 : 0);
+}
+
+void Game::setOutfitExtensions(int mount, int wings, int aura, int shader)
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendOutfitExtensionStatus(mount, wings, aura, shader);
 }
 
 void Game::requestItemInfo(const ItemPtr& item, int index)

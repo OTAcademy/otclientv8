@@ -114,9 +114,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\framework\luafunctions.cpp">
-      <Filter>Source Files\framework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\core\application.cpp">
       <Filter>Source Files\framework\core</Filter>
     </ClCompile>
@@ -139,9 +136,6 @@
       <Filter>Source Files\framework\core</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\core\filestream.cpp">
-      <Filter>Source Files\framework\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\framework\core\graphicalapplication.cpp">
       <Filter>Source Files\framework\core</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\core\logger.cpp">
@@ -545,6 +539,12 @@
     </ClCompile>
     <ClCompile Include="..\src\framework\graphics\graph.cpp">
       <Filter>Source Files\framework\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\luafunctions.cpp">
+      <Filter>Source Files\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\core\graphicalapplication.cpp">
+      <Filter>Source Files\framework\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

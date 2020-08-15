@@ -74,9 +74,9 @@
 #include <boost/asio/ip/tcp.hpp>
 #ifndef __EMSCRIPTEN__
 #include <boost/asio/ssl.hpp>
-#endif
 
 #include <boost/beast/ssl.hpp>
+#endif
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/http/write.hpp>
 #include <boost/beast/http/string_body.hpp>

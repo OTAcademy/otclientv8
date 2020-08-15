@@ -285,6 +285,7 @@ public:
     // 870 only
     void equipItem(const ItemPtr& item);
     void mount(bool mount);
+    void setOutfitExtensions(int mount, int wings, int aura, int shader);
 
     // 910 only
     void requestItemInfo(const ItemPtr& item, int index);

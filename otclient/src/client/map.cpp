@@ -614,12 +614,11 @@ std::vector<CreaturePtr> Map::getSpectatorsInRangeEx(const Position& centerPos, 
     std::vector<CreaturePtr> creatures;
 
     if(multiFloor) {
-        minZRange = 0;
-        maxZRange = Otc::MAX_Z;
+        minZRange = centerPos.z - getFirstAwareFloor();
+        maxZRange = getLastAwareFloor() - centerPos.z;
     }
 
     //TODO: optimize
-    //TODO: get creatures from other floors corretly
     //TODO: delivery creatures in distance order
 
     for(int iz=-minZRange; iz<=maxZRange; ++iz) {

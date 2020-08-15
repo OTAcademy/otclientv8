@@ -137,14 +137,14 @@ public:
     void finishServerWalking() { m_serverWalking = false; }
 
 protected:
-    void walk(const Position& oldPos, const Position& newPos);
+    void walk(const Position& oldPos, const Position& newPos) override;
     void cancelWalk(Otc::Direction direction = Otc::InvalidDirection);
     
     void cancelNewWalk(Otc::Direction dir);
     bool predictiveCancelWalk(const Position& pos, uint32_t predictionId, Otc::Direction dir);
     
     bool retryAutoWalk();
-    void stopWalk();
+    void stopWalk() override;
 
     friend class Game;
 
