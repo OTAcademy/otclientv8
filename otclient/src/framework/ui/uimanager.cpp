@@ -74,18 +74,24 @@ void UIManager::inputEvent(const InputEvent& event)
     UIWidgetList widgetList;
     switch(event.type) {
         case Fw::KeyTextInputEvent:
+            g_lua.callGlobalField("g_ui", "onKeyText", event.keyText);
             m_keyboardReceiver->propagateOnKeyText(event.keyText);
             break;
         case Fw::KeyDownInputEvent:
+            g_lua.callGlobalField("g_ui", "onKeyDown", event.keyCode, event.keyboardModifiers);
             m_keyboardReceiver->propagateOnKeyDown(event.keyCode, event.keyboardModifiers);
             break;
         case Fw::KeyPressInputEvent:
+            g_lua.callGlobalField("g_ui", "onKeyPress", event.keyCode, event.keyboardModifiers, event.autoRepeatTicks);
             m_keyboardReceiver->propagateOnKeyPress(event.keyCode, event.keyboardModifiers, event.autoRepeatTicks);
             break;
         case Fw::KeyUpInputEvent:
+            g_lua.callGlobalField("g_ui", "onKeyUp", event.keyCode, event.keyboardModifiers);
             m_keyboardReceiver->propagateOnKeyUp(event.keyCode, event.keyboardModifiers);
             break;
         case Fw::MousePressInputEvent:
+            g_lua.callGlobalField("g_ui", "onMousePress", event.mousePos, event.mouseButton);
+
             if(m_mouseReceiver->isVisible() && (event.mouseButton == Fw::MouseLeftButton || event.mouseButton == Fw::MouseTouch2 || event.mouseButton == Fw::MouseTouch3)) {
                 UIWidgetPtr pressedWidget = m_mouseReceiver->recursiveGetChildByPos(event.mousePos, false);
                 if(pressedWidget && !pressedWidget->isEnabled())
@@ -102,6 +108,8 @@ void UIManager::inputEvent(const InputEvent& event)
 
             break;
         case Fw::MouseReleaseInputEvent: {
+            g_lua.callGlobalField("g_ui", "onMouseRelease", event.mousePos, event.mouseButton);
+
             // release dragging widget
             bool accepted = false;
             if(m_draggingWidget && event.mouseButton == Fw::MouseLeftButton)
@@ -132,6 +140,8 @@ void UIManager::inputEvent(const InputEvent& event)
             break;
         }
         case Fw::MouseMoveInputEvent: {
+            g_lua.callGlobalField("g_ui", "onMouseMove", event.mousePos, event.mouseMoved);
+
             // start dragging when moving a pressed widget
             if(m_pressedWidget[Fw::MouseLeftButton] && m_pressedWidget[Fw::MouseLeftButton]->isDraggable() && m_draggingWidget != m_pressedWidget[Fw::MouseLeftButton]) {
                 // only drags when moving more than 4 pixels
@@ -163,6 +173,8 @@ void UIManager::inputEvent(const InputEvent& event)
             break;
         }
         case Fw::MouseWheelInputEvent:
+            g_lua.callGlobalField("g_ui", "onMouseWheel", event.mousePos, event.wheelDirection);
+
             m_rootWidget->propagateOnMouseEvent(event.mousePos, widgetList);
             for(const UIWidgetPtr& widget : widgetList) {
                 if(widget->onMouseWheel(event.mousePos, event.wheelDirection))
