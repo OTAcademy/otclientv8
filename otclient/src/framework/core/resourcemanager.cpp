@@ -416,6 +416,46 @@ std::string ResourceManager::readFileContents(const std::string& fileName, bool 
     return buffer;
 }
 
+bool ResourceManager::isFileEncryptedOrCompressed(const std::string& fileName)
+{
+    std::string fullPath = resolvePath(fileName);
+    std::string fileContent;
+
+#ifdef FW_NET
+    if (fullPath.find("/downloads") != std::string::npos) {
+        auto dfile = g_http.getFile(fullPath.substr(10));
+        if (dfile) {
+            if (dfile->response.size() < 10)
+                return false;
+            fileContent = std::string(dfile->response.begin(), dfile->response.begin() + 10);
+        }
+    }
+#endif
+
+    if (!fileContent.empty()) {
+        PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
+        if (!file)
+            stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
+
+        int fileSize = std::min<int>(10, PHYSFS_fileLength(file));
+        fileContent.resize(fileSize);
+        PHYSFS_readBytes(file, (void*)&fileContent[0], fileSize);
+        PHYSFS_close(file);
+    }
+
+    if (fileContent.size() < 10)
+        return false;
+    
+    if (fileContent.substr(0, 4).compare("ENC3") == 0)
+        return true;
+
+    if ((uint8_t)fileContent[0] != 0x1f || (uint8_t)fileContent[1] != 0x8b || (uint8_t)fileContent[2] != 0x08) {
+        return false;
+    }
+
+    return true;
+}
+
 bool ResourceManager::writeFileBuffer(const std::string& fileName, const uchar* data, uint size)
 {
     PHYSFS_file* file = PHYSFS_openWrite(fileName.c_str());
@@ -450,7 +490,14 @@ bool ResourceManager::writeFileContents(const std::string& fileName, const std::
 FileStreamPtr ResourceManager::openFile(const std::string& fileName)
 {
     std::string fullPath = resolvePath(fileName);
-    return FileStreamPtr(new FileStream(fullPath, readFileContents(fullPath)));
+//  If you uncomment it won't cache spr file in memory, not recommended, lags client
+//    if (isFileEncryptedOrCompressed(fullPath)) {
+        return FileStreamPtr(new FileStream(fullPath, std::move(readFileContents(fullPath))));
+//    }
+//    PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
+//    if (!file)
+//        stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
+//    return FileStreamPtr(new FileStream(fullPath, file, false));
 }
 
 FileStreamPtr ResourceManager::appendFile(const std::string& fileName)

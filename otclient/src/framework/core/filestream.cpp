@@ -37,7 +37,7 @@ FileStream::FileStream(const std::string& name, PHYSFS_File *fileHandle, bool wr
 {
 }
 
-FileStream::FileStream(const std::string& name, const std::string& buffer) :
+FileStream::FileStream(const std::string& name, std::string&& buffer) :
     m_name(name),
     m_fileHandle(nullptr),
     m_pos(0),
@@ -45,8 +45,7 @@ FileStream::FileStream(const std::string& name, const std::string& buffer) :
     m_caching(true)
 {
     if (!initFromGzip(buffer)) {
-        m_data.resize(buffer.length());
-        memcpy(&m_data[0], &buffer[0], buffer.length());
+        m_strData = std::move(buffer);
     }
 }
 
@@ -56,6 +55,12 @@ bool FileStream::initFromGzip(const std::string& buffer)
         (uint8_t)buffer[1] != 0x8b || (uint8_t)buffer[2] != 0x08) {
         return false;
     }
+
+    uint32_t fileSize = *(uint32_t*)(&buffer[buffer.size() - 4]);
+    if (fileSize > 512 * 1024 * 1024 || fileSize * 2 < buffer.size()) {
+        return false;
+    }
+
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
 
@@ -64,25 +69,13 @@ bool FileStream::initFromGzip(const std::string& buffer)
     if (inflateInit2(&stream, 15 + 32) != Z_OK)
         return false;
 
-    std::vector<uint8_t> chunk(buffer.size());
-    while (true) {
-        stream.next_out = (Bytef*)(&chunk[0]);
-        stream.avail_out = chunk.size();
+    m_data.grow(fileSize, true);
+    stream.next_out = &m_data[0];
+    stream.avail_out = m_data.size();
 
-        // Inflate another chunk.
-        int err = inflate(&stream, Z_SYNC_FLUSH);
-        int newData = chunk.size() - stream.avail_out;
-        if (newData > 0) {
-            m_data.grow(m_pos + newData, true);
-            memcpy(&m_data[m_pos], &chunk[0], newData);
-            m_pos += newData;
-        }
-        if (err != Z_OK) {
-            break;
-        }
-    }
+    inflate(&stream, Z_SYNC_FLUSH);
+
     inflateEnd(&stream);
-    m_pos = 0;
     return true;
 }
 
@@ -103,6 +96,7 @@ void FileStream::close()
     }
 
     m_data.clear();
+    m_strData.clear();
     m_pos = 0;
 }
 
@@ -125,13 +119,24 @@ void FileStream::flush()
     }
 }
 
-int FileStream::read(void *buffer, uint32 size, uint32 nmemb)
+int FileStream::read(void* buffer, uint32 size, uint32 nmemb)
 {
-    if(!m_caching) {
+    if (!m_caching) {
         int res = PHYSFS_readBytes(m_fileHandle, buffer, size * nmemb);
-        if(res == -1)
+        if (res == -1)
             throwError("read failed", true);
         return res;
+    } if (!m_strData.empty()) {
+        int writePos = 0;
+        uint8* outBuffer = (uint8*)buffer;
+        for (uint i = 0; i < nmemb; ++i) {
+            if (m_pos + size > m_data.size())
+                return i;
+
+            for (uint j = 0; j < size; ++j)
+                outBuffer[writePos++] = m_strData[m_pos++];
+        }
+        return nmemb;
     } else {
         int writePos = 0;
         uint8 *outBuffer = (uint8*)buffer;
@@ -160,9 +165,13 @@ void FileStream::write(const void *buffer, uint32 count)
 
 void FileStream::seek(uint32 pos)
 {
-    if(!m_caching) {
-        if(!PHYSFS_seek(m_fileHandle, pos))
+    if (!m_caching) {
+        if (!PHYSFS_seek(m_fileHandle, pos))
             throwError("seek failed", true);
+    } else if(!m_strData.empty()) {
+        if (pos > m_strData.size())
+            throwError("seek failed");
+        m_pos = pos;
     } else {
         if(pos > m_data.size())
             throwError("seek failed");
@@ -177,8 +186,10 @@ void FileStream::skip(uint len)
 
 uint FileStream::size()
 {
-    if(!m_caching)
+    if (!m_caching)
         return PHYSFS_fileLength(m_fileHandle);
+    else if (!m_strData.empty())
+        return m_strData.size();
     else
         return m_data.size();
 }
@@ -195,6 +206,8 @@ bool FileStream::eof()
 {
     if(!m_caching)
         return PHYSFS_eof(m_fileHandle);
+    else if (!m_strData.empty())
+        return m_pos >= m_strData.size();
     else
         return m_pos >= m_data.size();
 }
@@ -205,6 +218,12 @@ uint8 FileStream::getU8()
     if(!m_caching) {
         if(PHYSFS_readBytes(m_fileHandle, &v, 1) != 1)
             throwError("read failed", true);
+    } else if (!m_strData.empty()) {
+        if (m_pos + 1 > m_strData.size())
+            throwError("read failed");
+
+        v = m_strData[m_pos];
+        m_pos += 1;
     } else {
         if(m_pos+1 > m_data.size())
             throwError("read failed");
@@ -221,6 +240,12 @@ uint16 FileStream::getU16()
     if(!m_caching) {
         if(PHYSFS_readULE16(m_fileHandle, &v) == 0)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 2 > m_strData.size())
+            throwError("read failed");
+
+        v = stdext::readULE16((const uint8_t*)&m_strData[m_pos]);
+        m_pos += 2;
     } else {
         if(m_pos+2 > m_data.size())
             throwError("read failed");
@@ -237,8 +262,14 @@ uint32 FileStream::getU32()
     if(!m_caching) {
         if(PHYSFS_readULE32(m_fileHandle, &v) == 0)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 4 > m_strData.size())
+            throwError("read failed");
+
+        v = stdext::readULE32((const uint8_t*)&m_strData[m_pos]);
+        m_pos += 4;
     } else {
-        if(m_pos+4 > m_data.size())
+        if (m_pos + 4 > m_data.size())
             throwError("read failed");
 
         v = stdext::readULE32(&m_data[m_pos]);
@@ -253,8 +284,13 @@ uint64 FileStream::getU64()
     if(!m_caching) {
         if(PHYSFS_readULE64(m_fileHandle, (PHYSFS_uint64*)&v) == 0)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 8 > m_strData.size())
+            throwError("read failed");
+        v = stdext::readULE64((const uint8_t*)&m_strData[m_pos]);
+        m_pos += 8;
     } else {
-        if(m_pos+8 > m_data.size())
+        if (m_pos + 8 > m_data.size())
             throwError("read failed");
         v = stdext::readULE64(&m_data[m_pos]);
         m_pos += 8;
@@ -268,6 +304,12 @@ int8 FileStream::get8()
     if(!m_caching) {
         if(PHYSFS_readBytes(m_fileHandle, &v, 1) != 1)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 1 > m_strData.size())
+            throwError("read failed");
+
+        v = m_strData[m_pos];
+        m_pos += 1;
     } else {
         if(m_pos+1 > m_data.size())
             throwError("read failed");
@@ -284,8 +326,14 @@ int16 FileStream::get16()
     if(!m_caching) {
         if(PHYSFS_readSLE16(m_fileHandle, &v) == 0)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 2 > m_strData.size())
+            throwError("read failed");
+
+        v = stdext::readSLE16((const uint8_t*)&m_strData[m_pos]);
+        m_pos += 2;
     } else {
-        if(m_pos+2 > m_data.size())
+        if (m_pos + 2 > m_data.size())
             throwError("read failed");
 
         v = stdext::readSLE16(&m_data[m_pos]);
@@ -300,8 +348,14 @@ int32 FileStream::get32()
     if(!m_caching) {
         if(PHYSFS_readSLE32(m_fileHandle, &v) == 0)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 4 > m_strData.size())
+            throwError("read failed");
+
+        v = stdext::readSLE32((const uint8_t*)&m_strData[m_pos]);
+        m_pos += 4;
     } else {
-        if(m_pos+4 > m_data.size())
+        if (m_pos + 4 > m_data.size())
             throwError("read failed");
 
         v = stdext::readSLE32(&m_data[m_pos]);
@@ -316,8 +370,13 @@ int64 FileStream::get64()
     if(!m_caching) {
         if(PHYSFS_readSLE64(m_fileHandle, (PHYSFS_sint64*)&v) == 0)
             throwError("read failed", true);
+    } else if(!m_strData.empty()) {
+        if (m_pos + 8 > m_strData.size())
+            throwError("read failed");
+        v = stdext::readSLE64((const uint8_t*)&m_strData[m_pos]);
+        m_pos += 8;
     } else {
-        if(m_pos+8 > m_data.size())
+        if (m_pos + 8 > m_data.size())
             throwError("read failed");
         v = stdext::readSLE64(&m_data[m_pos]);
         m_pos += 8;
@@ -336,6 +395,14 @@ std::string FileStream::getString()
                 throwError("read failed", true);
             else
                 str = std::string(buffer.begin(), buffer.end());
+        } else if(!m_strData.empty()) {
+            if (m_pos + len > m_strData.size()) {
+                throwError("read failed");
+                return 0;
+            }
+
+            str = std::string((char*)&m_strData[m_pos], len);
+            m_pos += len;
         } else {
             if (m_pos + len > m_data.size()) {
                 throwError("read failed");

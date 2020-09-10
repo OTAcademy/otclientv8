@@ -461,6 +461,7 @@ namespace Otc
         GamePlayerStateU32 = 105,
         GameOutfitShaders = 106,
         GameForceAllowItemHotkeys = 107,
+        GameCountU16 = 108,
 
         // advanced features
         GamePacketSizeU32 = 110,
