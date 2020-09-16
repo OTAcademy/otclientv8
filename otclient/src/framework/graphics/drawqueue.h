@@ -47,13 +47,25 @@ struct DrawQueueItemTexturedRect : public DrawQueueItem {
 
 struct DrawQueueItemTextureCoords : public DrawQueueItem {
     DrawQueueItemTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture, const Color& color) :
-        DrawQueueItem(texture, color), m_coordsBuffer(std::move(coordsBuffer)) {};
+        DrawQueueItem(texture, color), m_coordsBuffer(std::move(coordsBuffer))
+    {};
 
     void draw();
     void draw(const Point& pos);
     bool cache();
 
     CoordsBuffer m_coordsBuffer;
+};
+
+struct DrawQueueItemColoredTextureCoords : public DrawQueueItem {
+    DrawQueueItemColoredTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture, const std::vector<std::pair<int, Color>>& colors) :
+        DrawQueueItem(texture), m_coordsBuffer(std::move(coordsBuffer)), m_colors(colors)
+    {};
+
+    void draw();
+
+    CoordsBuffer m_coordsBuffer;
+    std::vector<std::pair<int, Color>> m_colors;
 };
 
 struct DrawQueueItemFilledRect : public DrawQueueItem {
@@ -178,6 +190,10 @@ public:
     void addTextureCoords(CoordsBuffer& coords, const TexturePtr& texture, const Color& color = Color::white)
     {
         m_queue.push_back(new DrawQueueItemTextureCoords(coords, texture, color));
+    }
+    void addColoredTextureCoords(CoordsBuffer& coords, const TexturePtr& texture, const std::vector<std::pair<int, Color>>& colors)
+    {
+        m_queue.push_back(new DrawQueueItemColoredTextureCoords(coords, texture, colors));
     }
     void addFilledRect(const Rect& dest, const Color& color = Color::white)
     {

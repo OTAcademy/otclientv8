@@ -39,6 +39,11 @@ void DrawQueueItemTextureCoords::draw(const Point& pos)
     g_painter->drawTexturedRect(Rect(pos, m_texture->getSize()), m_texture);
 }
 
+void DrawQueueItemColoredTextureCoords::draw()
+{
+    g_painter->drawTextureCoords(m_coordsBuffer, m_texture, &m_colors);
+}
+
 void DrawQueueItemTexturedRect::draw()
 {
     g_painter->setColor(m_color);

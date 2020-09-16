@@ -1360,9 +1360,16 @@ void Game::requestQuestLine(int questId)
 
 void Game::equipItem(const ItemPtr& item)
 {
-    if(!canPerformGameAction())
+    if (!item || !canPerformGameAction())
         return;
     m_protocolGame->sendEquipItem(item->getId(), item->getCountOrSubType());
+}
+
+void Game::equipItemId(int itemId, int subType)
+{
+    if (!canPerformGameAction())
+        return;
+    m_protocolGame->sendEquipItem(itemId, subType);
 }
 
 void Game::mount(bool mount)

@@ -81,10 +81,20 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
     if(m_color != Color::alpha) {
         if(glyphsMustRecache) {
             m_glyphsTextCoordsBuffer.clear();
-            for(int i=0;i<textLength;++i)
-                m_glyphsTextCoordsBuffer.addRect(m_glyphsCoords[i], m_glyphsTexCoords[i]);
+            for (int i = 0; i < textLength; ++i) {
+                if(m_glyphsCoords[i].isValid())
+                    m_glyphsTextCoordsBuffer.addRect(m_glyphsCoords[i], m_glyphsTexCoords[i]);
+            }
         }
-        g_drawQueue->addTextureCoords(m_glyphsTextCoordsBuffer, texture, m_color);
+        if (m_drawTextColors.empty()) {
+            g_drawQueue->addTextureCoords(m_glyphsTextCoordsBuffer, texture, m_color);
+        } else {
+            if (m_drawTextColors.size() == 1) { // optimization for 1 color
+                g_drawQueue->addTextureCoords(m_glyphsTextCoordsBuffer, texture, m_drawTextColors[0].second);
+            } else {
+                g_drawQueue->addColoredTextureCoords(m_glyphsTextCoordsBuffer, texture, m_drawTextColors);
+            }
+        }
     }
 
     if(hasSelection()) {
@@ -263,7 +273,7 @@ void UITextEdit::update(bool focusCursor)
         m_glyphsCoords[i].clear();
 
         // skip invalid glyphs
-        if(glyph < 32 && glyph != (uchar)'\n')
+        if(glyph < 32)
             continue;
 
         // calculate initial glyph rect and texture coords
@@ -491,7 +501,9 @@ std::string UITextEdit::cut()
 
 void UITextEdit::wrapText()
 {
-    setText(m_font->wrapText(m_text, getPaddingRect().width() - m_textOffset.x));
+    std::vector<std::pair<int, Color>> copiedColors = m_textColors;
+    setText(m_font->wrapText(m_text, getPaddingRect().width() - m_textOffset.x, &copiedColors));
+    m_textColors = copiedColors;
 }
 
 void UITextEdit::moveCursorHorizontally(bool right)
@@ -612,8 +624,9 @@ std::string UITextEdit::getDisplayedText()
     else
         text = m_text;
 
+    m_drawTextColors = m_textColors;
     if(m_textWrap && m_rect.isValid())
-        text = m_font->wrapText(text, getPaddingRect().width() - m_textOffset.x);
+        text = m_font->wrapText(text, getPaddingRect().width() - m_textOffset.x, &m_drawTextColors);
 
     return text;
 }

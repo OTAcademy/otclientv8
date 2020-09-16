@@ -133,9 +133,9 @@ public:
     void resetTransformMatrix() { setTransformMatrix(Matrix3()); }
 
     /* org */
-    void drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode = Triangles, ColorArray* colorBuffer = nullptr);
+    void drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode = Triangles, ColorArray* colorBuffer = nullptr, const std::vector<std::pair<int, Color>>* colors = nullptr);
     void drawFillCoords(CoordsBuffer& coordsBuffer);
-    void drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture);
+    void drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture, const std::vector<std::pair<int, Color>>* colors = nullptr);
     void drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);
     inline void drawTexturedRect(const Rect& dest, const TexturePtr& texture) { drawTexturedRect(dest, texture, Rect(Point(0, 0), texture->getSize())); }
     void drawColorOnTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src);

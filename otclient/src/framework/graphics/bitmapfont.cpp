@@ -382,7 +382,7 @@ void BitmapFont::updateColors(std::vector<std::pair<int, Color>>* colors, int po
 {
     if (!colors) return;
     for (auto& it : *colors) {
-        if (it.first >= pos) {
+        if (it.first > pos) {
             it.first += newTextLen;
         }
     }

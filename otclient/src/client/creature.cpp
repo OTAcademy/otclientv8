@@ -240,6 +240,8 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
 
 bool Creature::isInsideOffset(Point offset)
 {
+    // for worse precision:
+    // Rect rect(getDrawOffset(), Size(Otc::TILE_PIXELS - getDisplacementY(), Otc::TILE_PIXELS - getDisplacementX()));
     Rect rect(getDrawOffset() - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS));
     return rect.contains(offset);
 }

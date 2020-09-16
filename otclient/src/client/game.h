@@ -284,6 +284,7 @@ public:
 
     // 870 only
     void equipItem(const ItemPtr& item);
+    void equipItemId(int itemId, int subType);
     void mount(bool mount);
     void setOutfitExtensions(int mount, int wings, int aura, int shader);
 

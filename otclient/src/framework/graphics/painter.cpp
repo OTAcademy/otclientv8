@@ -453,7 +453,7 @@ void Painter::updateGlViewport()
     glViewport(0, 0, m_resolution.width(), m_resolution.height());
 }
 
-void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArray* colorArray)
+void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArray* colorArray, const std::vector<std::pair<int, Color>>* colors)
 {
     coordsBuffer.cache();
     int vertexCount = coordsBuffer.getVertexCount();
@@ -513,10 +513,20 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
         m_drawProgram->setAttributeArray(PainterShaderProgram::VERTEX_ATTR, coordsBuffer.getVertexArray(), 2);
     }
 
-    if (drawMode == Triangles)
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-    else if (drawMode == TriangleStrip)
+    if (drawMode == Triangles) {
+        if (colors) {
+            int s = 0;
+            for (auto& cp : *colors) {
+                m_drawProgram->setColor(cp.second);
+                glDrawArrays(GL_TRIANGLES, s * 6, (cp.first - s) * 6);
+                s = cp.first;
+            }
+        } else {
+            glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        }
+    } else if (drawMode == TriangleStrip) {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+    }
     m_draws += vertexCount;
     m_calls += 1;
 
@@ -533,14 +543,14 @@ void Painter::drawFillCoords(CoordsBuffer& coordsBuffer)
     drawCoords(coordsBuffer);
 }
 
-void Painter::drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture)
+void Painter::drawTextureCoords(CoordsBuffer& coordsBuffer, const TexturePtr& texture, const std::vector<std::pair<int, Color>>* colors)
 {
     if (texture && texture->isEmpty())
         return;
 
     setDrawProgram(m_shaderProgram ? m_shaderProgram : m_drawTexturedProgram.get());
     setTexture(texture);
-    drawCoords(coordsBuffer);
+    drawCoords(coordsBuffer, Painter::Triangles, nullptr, colors);
 }
 
 void Painter::drawTexturedRect(const Rect& dest, const TexturePtr& texture, const Rect& src)
