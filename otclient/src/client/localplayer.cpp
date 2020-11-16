@@ -95,8 +95,11 @@ bool LocalPlayer::canWalk(Otc::Direction direction, bool ignoreLock) {
         return false;
 
     // Limit pre walking steps
-    if (m_preWalking.size() >= g_game.getMaxPreWalkingSteps()) // max 3 extra steps
+    if (m_preWalking.size() >= g_game.getMaxPreWalkingSteps()) { // max 3 extra steps
+        if (m_walkTimer.ticksElapsed() >= getStepDuration() + 300)
+            return true;
         return false;
+    }
 
     if (!m_preWalking.empty()) { // disallow diagonal extented prewalking walking
         auto dir = m_position.getDirectionFromPosition(m_preWalking.back());

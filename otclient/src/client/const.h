@@ -462,6 +462,7 @@ namespace Otc
         GameOutfitShaders = 106,
         GameForceAllowItemHotkeys = 107,
         GameCountU16 = 108,
+        GameDrawAuraOnTop = 109,
 
         // advanced features
         GamePacketSizeU32 = 110,

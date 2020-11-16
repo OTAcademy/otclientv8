@@ -185,6 +185,11 @@ public:
     void drawTopWidgets(const Point& rect, const Otc::Direction direction);
     void drawBottomWidgets(const Point& rect, const Otc::Direction direction);
 
+    // progress bar
+    uint8 getProgressBarPercent() { return m_progressBarPercent; }
+    void setProgressBar(uint32 duration, bool ltr);
+    void updateProgressBar(uint32 duration, bool ltr);
+
 protected:
     virtual void updateWalkAnimation(int totalPixelsWalked);
     virtual void updateWalkOffset(int totalPixelsWalked, bool inNextFrame = false);
@@ -269,6 +274,11 @@ protected:
     std::list<UIWidgetPtr> m_bottomWidgets;
     std::list<UIWidgetPtr> m_directionalWidgets;
     std::list<UIWidgetPtr> m_topWidgets;
+
+    // progress bar
+    uint8 m_progressBarPercent;
+    ScheduledEventPtr m_progressBarUpdateEvent;
+    Timer m_progressBarTimer;
 };
 
 // @bindclass

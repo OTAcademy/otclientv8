@@ -555,6 +555,11 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Creature>("clearBottomWidgets", &Creature::clearBottomWidgets);
     g_lua.bindClassMemberFunction<Creature>("clearDirectionalWidgets", &Creature::clearDirectionalWidgets);
 
+    // progress bar
+    g_lua.bindClassMemberFunction<Creature>("setProgressBar", &Creature::setProgressBar);
+    g_lua.bindClassMemberFunction<Creature>("getProgressBarPercent", &Creature::getProgressBarPercent);
+    
+
     g_lua.registerClass<ItemType>();
     g_lua.bindClassMemberFunction<ItemType>("getServerId", &ItemType::getServerId);
     g_lua.bindClassMemberFunction<ItemType>("getClientId", &ItemType::getClientId);

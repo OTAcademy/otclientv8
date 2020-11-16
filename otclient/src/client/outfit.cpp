@@ -100,14 +100,40 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         dest += type->getDisplacement();
     }
 
-    if (m_aura) {
+    auto drawWings = [&] {
+        int wingAnimationPhase = walkAnimationPhase;
+        auto wingsType = g_things.rawGetThingType(m_wings, ThingCategoryCreature);
+        auto idleAnimator = wingsType->getIdleAnimator();
+        if (idleAnimator && animate) {
+            if (walkAnimationPhase > 0) {
+                wingAnimationPhase += idleAnimator->getAnimationPhases() - 1;
+            } else {
+                wingAnimationPhase = idleAnimator->getPhase();
+            }
+        }
+        wingsType->draw(dest, 0, direction, 0, 0, wingAnimationPhase, Color::white, lightView);
+    };
+
+    auto drawAura = [&] {
+        int auraAnimationPhase = 0;
         auto auraType = g_things.rawGetThingType(m_aura, ThingCategoryCreature);
-        auraType->draw(dest, 0, direction, 0, 0, 0, Color::white, lightView);
+        auto auraAnimator = auraType->getAnimator();
+        if (animate) {
+            if (auraAnimator) {
+                auraAnimationPhase = auraAnimator->getPhase();
+            } else {
+                auraAnimationPhase = (stdext::millis() / 75) % auraType->getAnimationPhases();
+            }
+        }
+        auraType->draw(dest, 0, direction, 0, 0, auraAnimationPhase, Color::white, lightView);
+    };
+
+    if (m_aura && !g_game.getFeature(Otc::GameDrawAuraOnTop)) {
+        drawAura();
     }
 
-    if (m_wings && (direction == Otc::South || direction == Otc::West)) {
-        auto wingsType = g_things.rawGetThingType(m_wings, ThingCategoryCreature);
-        wingsType->draw(dest, 0, direction, 0, 0, animationPhase, Color::white, lightView);
+    if (m_wings && (direction == Otc::South || direction == Otc::East)) {
+        drawWings();
     }
 
     Point center;
@@ -147,9 +173,12 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         g_drawQueue->add(outfit);
     }
 
-    if (m_wings && (direction == Otc::North || direction == Otc::East)) {
-        auto wingsType = g_things.rawGetThingType(m_wings, ThingCategoryCreature);
-        wingsType->draw(dest, 0, direction, 0, 0, animationPhase, Color::white, lightView);
+    if (m_wings && (direction == Otc::North || direction == Otc::West)) {
+        drawWings();
+    }
+
+    if (m_aura && g_game.getFeature(Otc::GameDrawAuraOnTop)) {
+        drawAura();
     }
 }
 
