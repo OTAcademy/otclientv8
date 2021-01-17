@@ -280,6 +280,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Config>("remove", &Config::remove);
     g_lua.bindClassMemberFunction<Config>("setNode", &Config::setNode);
     g_lua.bindClassMemberFunction<Config>("getNode", &Config::getNode);
+    g_lua.bindClassMemberFunction<Config>("getNodeSize", &Config::getNodeSize);
     g_lua.bindClassMemberFunction<Config>("mergeNode", &Config::mergeNode);
     g_lua.bindClassMemberFunction<Config>("getFileName", &Config::getFileName);
 

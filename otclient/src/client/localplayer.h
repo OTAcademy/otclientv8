@@ -49,8 +49,8 @@ public:
     void turn(Otc::Direction) override;
 
     void setStates(int states);
-    void setSkill(Otc::Skill skill, int level, int levelPercent);
-    void setBaseSkill(Otc::Skill skill, int baseLevel);
+    void setSkill(uint8_t skill, int level, int levelPercent);
+    void setBaseSkill(uint8_t skill, int baseLevel);
     void setHealth(double health, double maxHealth);
     void setFreeCapacity(double freeCapacity);
     void setTotalCapacity(double totalCapacity);
@@ -72,9 +72,9 @@ public:
     void setBlessings(int blessings);
 
     int getStates() { return m_states; }
-    int getSkillLevel(Otc::Skill skill) { return m_skillsLevel[skill]; }
-    int getSkillBaseLevel(Otc::Skill skill) { return m_skillsBaseLevel[skill]; }
-    int getSkillLevelPercent(Otc::Skill skill) { return m_skillsLevelPercent[skill]; }
+    int getSkillLevel(uint8_t skill) { return skill < m_skillsLevel.size() ? m_skillsLevel[skill] : 0; }
+    int getSkillBaseLevel(uint8_t skill) { return skill < m_skillsBaseLevel.size() ? m_skillsBaseLevel[skill] : 0; }
+    int getSkillLevelPercent(uint8_t skill) { return skill < m_skillsLevelPercent.size() ? m_skillsLevelPercent[skill] : 0; }
     int getVocation() { return m_vocation; }
     double getHealth() { return m_health; }
     double getMaxHealth() { return m_maxHealth; }
@@ -175,9 +175,9 @@ private:
     ItemPtr m_inventoryItems[Otc::LastInventorySlot];
     Timer m_idleTimer;
 
-    std::array<int, Otc::LastSkill> m_skillsLevel;
-    std::array<int, Otc::LastSkill> m_skillsBaseLevel;
-    std::array<int, Otc::LastSkill> m_skillsLevelPercent;
+    std::vector<int> m_skillsLevel;
+    std::vector<int> m_skillsBaseLevel;
+    std::vector<int> m_skillsLevelPercent;
     std::vector<int> m_spells;
 
     int m_states;

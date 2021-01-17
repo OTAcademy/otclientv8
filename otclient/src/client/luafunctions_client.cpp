@@ -708,6 +708,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<LocalPlayer>("canWalk", &LocalPlayer::canWalk);
     g_lua.bindClassMemberFunction<LocalPlayer>("setStates", &LocalPlayer::setStates);
     g_lua.bindClassMemberFunction<LocalPlayer>("setSkill", &LocalPlayer::setSkill);
+    g_lua.bindClassMemberFunction<LocalPlayer>("setBaseSkill", &LocalPlayer::setBaseSkill);
     g_lua.bindClassMemberFunction<LocalPlayer>("setHealth", &LocalPlayer::setHealth);
     g_lua.bindClassMemberFunction<LocalPlayer>("setTotalCapacity", &LocalPlayer::setTotalCapacity);
     g_lua.bindClassMemberFunction<LocalPlayer>("setFreeCapacity", &LocalPlayer::setFreeCapacity);

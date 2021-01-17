@@ -256,7 +256,7 @@ bool Creature::isInsideOffset(Point offset)
 {
     // for worse precision:
     // Rect rect(getDrawOffset() - (m_walking ? m_walkOffset : Point(0,0)), Size(Otc::TILE_PIXELS - getDisplacementY(), Otc::TILE_PIXELS - getDisplacementX()));
-    Rect rect(getDrawOffset() - m_walkOffset - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS));
+    Rect rect(getDrawOffset() - getDisplacement(), Size(Otc::TILE_PIXELS, Otc::TILE_PIXELS));
     return rect.contains(offset);
 }
 

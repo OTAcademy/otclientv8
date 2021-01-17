@@ -106,7 +106,7 @@ function onContainerOpen(container, previousContainer)
     containerWindow = g_ui.createWidget('ContainerWindow', modules.game_interface.getContainerPanel())
   end
   
-  containerWindow:setId('container' .. container:getId() .. '_' .. container:getName())
+  containerWindow:setId('container' .. container:getId())
   if gameStart + 1000 < g_clock.millis() then
     containerWindow:clearSettings()
   end

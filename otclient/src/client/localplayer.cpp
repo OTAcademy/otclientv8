@@ -35,9 +35,9 @@ LocalPlayer::LocalPlayer()
     m_blessings = Otc::BlessingNone;
     m_walkLockExpiration = 0;
 
-    m_skillsLevel.fill(-1);
-    m_skillsBaseLevel.fill(-1);
-    m_skillsLevelPercent.fill(-1);
+    m_skillsLevel.resize(Otc::LastSkill + 1, 0);
+    m_skillsBaseLevel.resize(Otc::LastSkill + 1, 0);
+    m_skillsLevelPercent.resize(Otc::LastSkill + 1, 0);
 
     m_health = -1;
     m_maxHealth = -1;
@@ -452,11 +452,12 @@ void LocalPlayer::setStates(int states)
     }
 }
 
-void LocalPlayer::setSkill(Otc::Skill skill, int level, int levelPercent)
+void LocalPlayer::setSkill(uint8_t skill, int level, int levelPercent)
 {
-    if(skill >= Otc::LastSkill) {
-        g_logger.traceError("invalid skill");
-        return;
+    if(skill >= m_skillsLevel.size()) {
+        m_skillsLevel.resize(skill + 1, 0);
+        m_skillsBaseLevel.resize(skill + 1, 0);
+        m_skillsLevelPercent.resize(skill + 1, 0);
     }
 
     int oldLevel = m_skillsLevel[skill];
@@ -470,11 +471,12 @@ void LocalPlayer::setSkill(Otc::Skill skill, int level, int levelPercent)
     }
 }
 
-void LocalPlayer::setBaseSkill(Otc::Skill skill, int baseLevel)
+void LocalPlayer::setBaseSkill(uint8_t skill, int baseLevel)
 {
-    if(skill >= Otc::LastSkill) {
-        g_logger.traceError("invalid skill");
-        return;
+    if (skill >= m_skillsLevel.size()) {
+        m_skillsLevel.resize(skill + 1, 0);
+        m_skillsBaseLevel.resize(skill + 1, 0);
+        m_skillsLevelPercent.resize(skill + 1, 0);
     }
 
     int oldBaseLevel = m_skillsBaseLevel[skill];

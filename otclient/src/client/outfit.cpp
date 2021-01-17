@@ -103,6 +103,7 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
     auto drawWings = [&] {
         int wingAnimationPhase = walkAnimationPhase;
         auto wingsType = g_things.rawGetThingType(m_wings, ThingCategoryCreature);
+        int wingsZPattern = m_mount > 0 ? std::min<int>(1, wingsType->getNumPatternZ() - 1) : 0;
         auto idleAnimator = wingsType->getIdleAnimator();
         if (idleAnimator && animate) {
             if (walkAnimationPhase > 0) {
@@ -111,12 +112,13 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
                 wingAnimationPhase = idleAnimator->getPhase();
             }
         }
-        wingsType->draw(dest, 0, direction, 0, 0, wingAnimationPhase, Color::white, lightView);
+        wingsType->draw(dest, 0, direction, 0, wingsZPattern, wingAnimationPhase, Color::white, lightView);
     };
 
     auto drawAura = [&] {
         int auraAnimationPhase = 0;
         auto auraType = g_things.rawGetThingType(m_aura, ThingCategoryCreature);
+        int auraZPattern = m_mount > 0 ? std::min<int>(1, auraType->getNumPatternZ() - 1) : 0;
         auto auraAnimator = auraType->getAnimator();
         if (animate) {
             if (auraAnimator) {
@@ -125,7 +127,7 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
                 auraAnimationPhase = (stdext::millis() / 75) % auraType->getAnimationPhases();
             }
         }
-        auraType->draw(dest, 0, direction, 0, 0, auraAnimationPhase, Color::white, lightView);
+        auraType->draw(dest, 0, direction, 0, auraZPattern, auraAnimationPhase, Color::white, lightView);
     };
 
     if (m_aura && !g_game.getFeature(Otc::GameDrawAuraOnTop)) {

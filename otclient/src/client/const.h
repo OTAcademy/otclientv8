@@ -454,6 +454,7 @@ namespace Otc
         GameBotProtection = 99,
 
         // Custom features for customer
+        GameCreatureDirectionPassable = 100,
         GameFasterAnimations = 101,
         GameCenteredOutfits = 102,
         GameSendIdentifiers = 103,
@@ -468,7 +469,7 @@ namespace Otc
         GamePacketSizeU32 = 110,
         GamePacketCompression = 111,
 
-        LastGameFeature = 120
+        LastGameFeature = 130
     };
 
     enum PathFindResult {

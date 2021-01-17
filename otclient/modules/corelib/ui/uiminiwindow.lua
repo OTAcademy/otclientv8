@@ -139,7 +139,12 @@ function UIMiniWindow:setup()
 
   local oldParent = self:getParent()
 
-  local settings = g_settings.getNode('MiniWindows')
+
+  local settings = {}
+  if g_settings.getNodeSize('MiniWindows') < 100 then
+    g_settings.getNode('MiniWindows')
+  end
+
   if settings then
     local selfSettings = settings[self:getId()]
     if selfSettings then
