@@ -5,3 +5,4 @@ ARM/*
 .vs
 !.xml
 !*/*.xml
+!otclientv8/res/*/*.xml
