@@ -1,0 +1,82 @@
+name: Build and Test
+on: [push, pull_request]
+
+jobs:
+  Windows:
+    name: build-windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Setup MSBuild and add to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+      id: setup_msbuild
+
+    - name: Install dependencies 
+      timeout-minutes: 5
+      run: |
+        C:\vcpkg\vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static `
+        boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static `
+        boost-lockfree:x86-windows-static boost-process:x86-windows-static boost-program-options:x86-windows-static `
+        luajit:x86-windows-static glew:x86-windows-static boost-filesystem:x86-windows-static boost-uuid:x86-windows-static `
+        physfs:x86-windows-static openal-soft:x86-windows-static libogg:x86-windows-static libvorbis:x86-windows-static `
+        zlib:x86-windows-static libzip:x86-windows-static openssl:x86-windows-static
+
+    - name: Compile 
+      timeout-minutes: 5
+      run: |
+        cd vc14
+        MSBuild /property:Configuration=DirectX
+        MSBuild /property:Configuration=OpenGL
+        cd ..
+
+    - name: Decompress tests
+      run: |        
+        7z x tests.7z -aoa
+
+    - name: Run OTCv8
+      timeout-minutes: 10
+      run: |        
+        $process = (Start-Process -Wait -PassThru otclient_dx.exe --test)        
+        Get-Content otclientv8.log
+        if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
+        Remove-Item 'data\things' -Recurse
+
+    - name: Upload otclientv8.log
+      uses: 'actions/upload-artifact@v2'
+      with:
+        path: otclientv8.log
+        name: Download-otclientv8.log
+        
+    - name: Upload otclient_dx.exe
+      uses: 'actions/upload-artifact@v2'
+      with:
+        name: Download-otclient
+        path: |
+          otclient_dx.exe
+          *.dll
+          data
+          modules
+          layouts
+          init.lua
+        
+    - name: Copy screenshots
+      run: |        
+        $location = Get-Location
+        cd $env:appdata\otclientv8\otclientv8
+        pip3 install pillow
+        python3 -c "from PIL import Image; import glob; [Image.open(file).convert('RGB').save(file[:-3] + 'jpg', quality=50) for file in glob.glob('*.png')]"
+        cd $location
+        mkdir screenshots
+        Get-ChildItem $env:appdata\otclientv8\otclientv8 -Filter *.jpg | Copy-Item -Destination screenshots -Force -PassThru
+
+    - name: Upload screenshot
+      uses: 'actions/upload-artifact@v2'
+      with:
+        path: screenshots
+        name: Download-screenshots
