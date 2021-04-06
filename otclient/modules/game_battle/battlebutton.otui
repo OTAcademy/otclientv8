@@ -1,2 +1,0 @@
-BattleButton < CreatureButton
-  &isBattleButton: true
