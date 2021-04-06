@@ -156,8 +156,8 @@ bool OTMLNode::removeChild(const OTMLNodePtr& oldChild)
 {
     auto it = std::find(m_children.begin(), m_children.end(), oldChild);
     if(it != m_children.end()) {
-        m_children.erase(it);
         m_childrenTagCache.erase((*it)->tag());
+        m_children.erase(it);
         return true;
     }
     return false;

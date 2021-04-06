@@ -52,11 +52,13 @@ void GraphicalApplication::init(std::vector<std::string>& args)
     Application::init(args);
 
     // setup platform window
+    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
     g_window.init();
     g_window.hide();
     g_window.setOnResize(std::bind(&GraphicalApplication::resize, this, std::placeholders::_1));
     g_window.setOnInputEvent(std::bind(&GraphicalApplication::inputEvent, this, std::placeholders::_1));
     g_window.setOnClose(std::bind(&GraphicalApplication::close, this));
+    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
 
     g_mouse.init();
 
@@ -141,6 +143,7 @@ void GraphicalApplication::run()
     std::shared_ptr<DrawQueue> drawMapQueue;
     std::shared_ptr<DrawQueue> drawMapForegroundQueue;
     bool isOnline = false;
+    size_t totalFrames = 0;
 
     std::mutex mutex;
     std::thread worker([&] {
@@ -217,6 +220,9 @@ void GraphicalApplication::run()
             continue;
         }
 
+#ifdef FREE_VERSION_LIB
+        m_maxFps = 150;
+#endif
         int frameDelay = m_maxFps <= 0 ? 0 : (1000000 / m_maxFps);
         if (lastRender + frameDelay > stdext::micros() && !m_mustRepaint) {
             AutoStat s(STATS_RENDER, "Sleep");
@@ -327,6 +333,25 @@ void GraphicalApplication::run()
         g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
         g_graphs[GRAPH_TOTAL_FRAME_TIME].addValue(stdext::millis() - lastFrame);
         lastFrame = stdext::millis();
+        totalFrames += 1;
+
+#ifdef FREE_VERSION_LIB
+        if (totalFrames > m_maxFps * 3600 * 1.2 || stdext::millis() > 3600'000) {
+            g_logger.info("Free version of OTCv8 is limited to 1 hour of runtime. Exiting...");
+            g_app.exit();
+        }
+        if (totalFrames > m_maxFps * 3600 * 1.3 || stdext::millis() > 3900'000) {
+            // force exit
+            g_logger.fatal("Free version of OTCv8 is limited to 1 hour of runtime. Exiting...");
+            std::exit(0);
+        }
+        if (totalFrames > m_maxFps * 3600 * 1.4) {
+            // can't exit, crash app
+            m_framebuffer = nullptr;
+            m_mapFramebuffer = nullptr;
+            g_drawQueue = nullptr;
+        }
+#endif
     }
 
     worker.join();

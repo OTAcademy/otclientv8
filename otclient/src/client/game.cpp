@@ -36,6 +36,8 @@
 
 #include <framework/util/extras.h>
 #include <framework/graphics/graph.h>
+#include <framework/net/packet_player.h>
+#include <framework/net/packet_recorder.h>
 
 Game g_game;
 
@@ -551,7 +553,7 @@ void Game::processWalkId(uint32_t walkId)
     m_walkId = std::max(m_walkId, walkId); // fixes desync
 }
 
-void Game::loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey)
+void Game::loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey, const std::string& recordTo)
 {
     if(m_protocolGame || isOnline())
         stdext::throw_exception("Unable to login into a world while already online or logging.");
@@ -566,9 +568,36 @@ void Game::loginWorld(const std::string& account, const std::string& password, c
     m_localPlayer->setName(characterName);
 
     m_protocolGame = ProtocolGamePtr(new ProtocolGame);
+    if (!recordTo.empty()) {
+        m_protocolGame->setRecorder(PacketRecorderPtr(new PacketRecorder(recordTo)));
+    }
     m_protocolGame->login(account, password, worldHost, (uint16)worldPort, characterName, authenticatorToken, sessionKey, worldName);
     m_characterName = characterName;
     m_worldName = worldName;
+}
+
+void Game::playRecord(const std::string& file)
+{
+    if (m_protocolGame || isOnline())
+        stdext::throw_exception("Unable to login into a world while already online or logging.");
+
+    if (m_protocolVersion == 0)
+        stdext::throw_exception("Must set a valid game protocol version before logging.");
+
+    auto packetPlayer = PacketPlayerPtr(new PacketPlayer(file));
+    if (!packetPlayer)
+        stdext::throw_exception("Invalid record file.");
+
+    // reset the new game state
+    resetGameStates();
+
+    m_localPlayer = LocalPlayerPtr(new LocalPlayer);
+    m_localPlayer->setName("Player");
+
+    m_protocolGame = ProtocolGamePtr(new ProtocolGame);
+    m_protocolGame->playRecord(packetPlayer);
+    m_characterName = "Player";
+    m_worldName = "Record";
 }
 
 void Game::cancelLogin()

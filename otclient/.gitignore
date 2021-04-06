@@ -13,6 +13,10 @@ Makefile
 *.gch
 *.a
 *.exe
+*.apk
+*.recipe*
+*.gz
+*.7z
 *.spr
 *.dat
 *.kdev*
@@ -45,6 +49,8 @@ modules/.project/modules.sublime-workspace
 vc14/.vs/
 vc14/DirectX/
 vc14/OpenGL/
+vc14/Debug/
+vc14/Debug_lib/
 /*.lib
 *.exp
 *.zip

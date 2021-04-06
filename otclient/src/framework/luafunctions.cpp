@@ -58,9 +58,7 @@
 #include <framework/net/server.h>
 #include <framework/net/protocol.h>
 #include <framework/http/http.h>
-#ifdef FW_PROXY
-#include <extras/proxy/proxy.h>
-#endif
+#include <framework/proxy/proxy.h>
 #endif
 
 #ifdef FW_SQL
@@ -126,9 +124,11 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_platform", "getFileModificationTime", &Platform::getFileModificationTime, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getMacAddresses", &Platform::getMacAddresses, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getUserName", &Platform::getUserName, &g_platform);
+#ifdef UNSAFE_LUA_FUNCTIONS
     g_lua.bindSingletonFunction("g_platform", "getDlls", &Platform::getDlls, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getProcesses", &Platform::getProcesses, &g_platform);
     g_lua.bindSingletonFunction("g_platform", "getWindows", &Platform::getWindows, &g_platform);
+#endif
 
     // Application
     g_lua.registerSingletonClass("g_app");
@@ -892,7 +892,6 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<OutputMessage>("getWritePos", &OutputMessage::getWritePos);
     g_lua.bindClassMemberFunction<OutputMessage>("setWritePos", &OutputMessage::setWritePos);
 
-#ifdef FW_PROXY
     g_lua.registerSingletonClass("g_proxy");
     g_lua.bindSingletonFunction("g_proxy", "addProxy", &ProxyManager::addProxy, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "removeProxy", &ProxyManager::removeProxy, &g_proxy);
@@ -901,7 +900,6 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_proxy", "getProxies", &ProxyManager::getProxies, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "getProxiesDebugInfo", &ProxyManager::getProxiesDebugInfo, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "getPing", &ProxyManager::getPing, &g_proxy);
-#endif
 
     g_lua.registerSingletonClass("g_http");
     g_lua.bindSingletonFunction("g_http", "get", &Http::get, &g_http);

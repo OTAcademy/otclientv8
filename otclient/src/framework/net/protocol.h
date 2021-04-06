@@ -29,10 +29,7 @@
 #include "connection.h"
 
 #include <framework/luaengine/luaobject.h>
-
-#ifdef FW_PROXY
-#include <extras/proxy/proxy.h>
-#endif
+#include <framework/proxy/proxy.h>
 
 #include <zlib.h>
 
@@ -43,8 +40,12 @@ public:
     Protocol();
     virtual ~Protocol();
 
+
     void connect(const std::string& host, uint16 port);
     void disconnect();
+
+    void setRecorder(PacketRecorderPtr recorder);
+    void playRecord(PacketPlayerPtr player);
 
     bool isConnected();
     bool isConnecting();
@@ -73,15 +74,17 @@ protected:
     virtual void onRecv(const InputMessagePtr& inputMessage);
     virtual void onError(const boost::system::error_code& err);
 
-#ifdef FW_PROXY
-    void onProxyPacket(ProxyPacketPtr packet);
-    void onProxyDisconnected(boost::system::error_code ec);
-    uint32_t m_proxy = 0;
+    void onProxyPacket(const std::shared_ptr<std::vector<uint8_t>>& packet);
+    void onPlayerPacket(const std::shared_ptr<std::vector<uint8_t>>& packet);
+    void onLocalDisconnected(boost::system::error_code ec);
     bool m_disconnected = false;
-#endif
+    uint32_t m_proxy = 0;
 
     uint32 m_xteaKey[4];
-    uint32 m_packedNumber;
+    uint32 m_packetNumber;
+
+    PacketPlayerPtr m_player;
+    PacketRecorderPtr m_recorder;
 
 private:
     void internalRecvHeader(uint8* buffer, uint32 size);

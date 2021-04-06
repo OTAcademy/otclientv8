@@ -98,7 +98,7 @@ public:
     bool encryptBuffer(std::string & buffer, uint32_t seed = 0);
 #endif
     bool decryptBuffer(std::string & buffer);
-#ifdef WIN32
+#if defined(WIN32) && not(defined(FREE_VERSION))
     void installDlls(std::filesystem::path dest);
 #endif
 

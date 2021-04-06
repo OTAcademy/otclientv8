@@ -62,12 +62,18 @@ public:
         return m_lastLog;
     }
 
+    void setTestingMode()
+    {
+        m_testingMode = true;
+    }
+
 private:
     std::list<LogMessage> m_logMessages;
     OnLogCallback m_onLog;
     std::fstream m_outFile;
     std::recursive_mutex m_mutex;
     std::string m_lastLog;
+    bool m_testingMode = false;
 };
 
 extern Logger g_logger;

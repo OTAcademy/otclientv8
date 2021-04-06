@@ -19,6 +19,8 @@
  * THE SOFTWARE.
  */
 
+#include <framework/core/application.h>
+
 #include "protocolgame.h"
 #include "game.h"
 #include "player.h"

@@ -100,17 +100,17 @@
     <Filter Include="Source Files\framework\http">
       <UniqueIdentifier>{67a00e24-c036-48ed-9f50-23ed60b336b7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Extras">
-      <UniqueIdentifier>{16274854-ef03-4907-8ea2-9a55bd766779}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Extras\proxy">
-      <UniqueIdentifier>{f0f0ec5b-d8d1-40c3-aaa4-a28c031a4186}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\framework\graphics\shaders">
       <UniqueIdentifier>{10c8d6a0-582a-4226-8dd3-943b203acabf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\framework\http\input">
+    <Filter Include="Source Files\framework\input">
       <UniqueIdentifier>{1f73f301-1d35-408a-b566-0d52b6820292}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\framework\proxy">
+      <UniqueIdentifier>{79aae350-b529-4234-914e-75e37cc993ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\framework\proxy">
+      <UniqueIdentifier>{02ae06e3-ad5a-44f4-8fde-5b7553943b95}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -208,7 +208,7 @@
       <Filter>Source Files\framework\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\input\mouse.cpp">
-      <Filter>Source Files\framework\http\input</Filter>
+      <Filter>Source Files\framework\input</Filter>
     </ClCompile>
     <ClCompile Include="..\src\framework\luaengine\lbitlib.cpp">
       <Filter>Source Files\framework\luaengine</Filter>
@@ -510,9 +510,6 @@
     <ClCompile Include="..\src\framework\graphics\atlas.cpp">
       <Filter>Source Files\framework\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\extras\proxy\proxy.cpp">
-      <Filter>Extras\proxy</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\http\websocket.cpp">
       <Filter>Source Files\framework\http</Filter>
     </ClCompile>
@@ -534,9 +531,6 @@
     <ClCompile Include="..\src\client\luavaluecasts_client.cpp">
       <Filter>Source Files\client</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\extras\proxy\proxy_client.cpp">
-      <Filter>Extras\proxy</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\framework\graphics\graph.cpp">
       <Filter>Source Files\framework\graphics</Filter>
     </ClCompile>
@@ -545,6 +539,27 @@
     </ClCompile>
     <ClCompile Include="..\src\framework\core\graphicalapplication.cpp">
       <Filter>Source Files\framework\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\net\packet_player.cpp">
+      <Filter>Source Files\framework\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\net\packet_recorder.cpp">
+      <Filter>Source Files\framework\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\proxy\proxy.cpp">
+      <Filter>Source Files\framework\proxy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\framework\proxy\proxy_client.cpp">
+      <Filter>Source Files\framework\proxy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\lightview_private.cpp">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\localplayer_private.cpp">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\map_private.cpp">
+      <Filter>Source Files\client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1052,9 +1067,6 @@
     <ClInclude Include="..\src\framework\graphics\atlas.h">
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\extras\proxy\proxy.h">
-      <Filter>Extras\proxy</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\client\walkmatrix.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
@@ -1088,14 +1100,23 @@
     <ClInclude Include="..\src\client\luavaluecasts_client.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\extras\proxy\proxy_client.h">
-      <Filter>Extras\proxy</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\framework\graphics\graph.h">
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\src\framework\graphics\shaders\outfits.h">
       <Filter>Header Files\framework\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\net\packet_player.h">
+      <Filter>Header Files\framework\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\net\packet_recorder.h">
+      <Filter>Header Files\framework\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\proxy\proxy.h">
+      <Filter>Header Files\framework\proxy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\framework\proxy\proxy_client.h">
+      <Filter>Header Files\framework\proxy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

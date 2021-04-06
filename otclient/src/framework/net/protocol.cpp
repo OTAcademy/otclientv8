@@ -25,6 +25,9 @@
 #include <framework/core/application.h>
 #include <random>
 
+#include <framework/net/packet_player.h>
+#include <framework/net/packet_recorder.h>
+
 extern asio::io_service g_ioService;
 
 Protocol::Protocol()
@@ -35,7 +38,7 @@ Protocol::Protocol()
     m_bigPackets = false;
     m_compression = false;
     m_inputMessage = InputMessagePtr(new InputMessage);
-    m_packedNumber = 0;
+    m_packetNumber = 0;
 
     // compression
     m_zstreamBuffer.resize(InputMessage::BUFFER_MAXSIZE);
@@ -61,15 +64,13 @@ Protocol::~Protocol()
 
 void Protocol::connect(const std::string& host, uint16 port)
 {
-#ifdef FW_PROXY
     if (host == "proxy" || host == "0.0.0.0" || (host == "127.0.0.1" && g_proxy.isActive())) {
         m_disconnected = false;
         m_proxy = g_proxy.addSession(port,
                                      std::bind(&Protocol::onProxyPacket, asProtocol(), std::placeholders::_1),
-                                     std::bind(&Protocol::onProxyDisconnected, asProtocol(), std::placeholders::_1));
+                                     std::bind(&Protocol::onLocalDisconnected, asProtocol(), std::placeholders::_1));
         return onConnect();
     }
-#endif
     m_connection = ConnectionPtr(new Connection);
     m_connection->setErrorCallback(std::bind(&Protocol::onError, asProtocol(), std::placeholders::_1));
     m_connection->connect(host, port, std::bind(&Protocol::onConnect, asProtocol()));
@@ -77,43 +78,69 @@ void Protocol::connect(const std::string& host, uint16 port)
 
 void Protocol::disconnect()
 {
-#ifdef FW_PROXY
     m_disconnected = true;
+    if (m_player) {
+        m_player->stop();
+        return;
+    }
     if (m_proxy) {
         g_proxy.removeSession(m_proxy);
         return;
     }
-#endif
-    if(m_connection) {
+    if (m_connection) {
         m_connection->close();
         m_connection.reset();
     }
 }
 
+
+void Protocol::playRecord(PacketPlayerPtr player)
+{
+    m_disconnected = false;
+    m_player = player;
+    m_player->start(std::bind(&Protocol::onPlayerPacket, asProtocol(), std::placeholders::_1),
+                    std::bind(&Protocol::onLocalDisconnected, asProtocol(), std::placeholders::_1));
+    return onConnect();
+}
+
+void Protocol::setRecorder(PacketRecorderPtr recorder)
+{
+    m_recorder = recorder;
+}
+
 bool Protocol::isConnected()
 {
-#ifdef FW_PROXY
+    if (m_player)
+        return !m_disconnected;
     if (m_proxy)
         return !m_disconnected;
-#endif
-    if(m_connection && m_connection->isConnected())
+    if (m_connection && m_connection->isConnected())
         return true;
     return false;
 }
 
 bool Protocol::isConnecting()
 {
-#ifdef FW_PROXY
+    if (m_player)
+        return false;
     if (m_proxy)
         return false;
-#endif
-    if(m_connection && m_connection->isConnecting())
+    if (m_connection && m_connection->isConnecting())
         return true;
     return false;
 }
 
 void Protocol::send(const OutputMessagePtr& outputMessage, bool rawPacket)
 {
+    if (m_player) {
+        m_player->onOutputPacket(outputMessage);
+        return;
+    }
+
+    if (m_recorder) {
+        m_recorder->addOutputPacket(outputMessage);
+    }
+
     if (!rawPacket) {
         // encrypt
         if (m_xteaEncryptionEnabled)
@@ -121,7 +148,7 @@ void Protocol::send(const OutputMessagePtr& outputMessage, bool rawPacket)
 
         // write checksum
         if (m_sequencedPackets)
-            outputMessage->writeSequence(m_packedNumber++);
+            outputMessage->writeSequence(m_packetNumber++);
         else if (m_checksumEnabled)
             outputMessage->writeChecksum();
 
@@ -129,17 +156,15 @@ void Protocol::send(const OutputMessagePtr& outputMessage, bool rawPacket)
         outputMessage->writeMessageSize(m_bigPackets);
     }
 
-#ifdef FW_PROXY
     if (m_proxy) {
         auto packet = std::make_shared<ProxyPacket>(outputMessage->getHeaderBuffer(), outputMessage->getWriteBuffer());
         g_proxy.send(m_proxy, packet);
         outputMessage->reset();
         return;
     }
-#endif
 
     // send
-    if(m_connection)
+    if (m_connection)
         m_connection->write(outputMessage->getHeaderBuffer(), outputMessage->getMessageSize());
 
     // reset message to allow reuse
@@ -148,24 +173,26 @@ void Protocol::send(const OutputMessagePtr& outputMessage, bool rawPacket)
 
 void Protocol::recv()
 {
-#ifdef FW_PROXY
+    if (m_player)
+        return;
+
     if (m_proxy) {
         return;
     }
-#endif
+
     m_inputMessage->reset();
 
     // first update message header size
     int headerSize = m_bigPackets ? 4 : 2; // 2 or 4 bytes for message size
-    if(m_checksumEnabled)
+    if (m_checksumEnabled)
         headerSize += 4; // 4 bytes for checksum
-    if(m_xteaEncryptionEnabled)
+    if (m_xteaEncryptionEnabled)
         headerSize += m_bigPackets ? 4 : 2; // 2 or 4 bytes for XTEA encrypted message size
     m_inputMessage->setHeaderSize(headerSize);
 
     // read the first 2 bytes which contain the message size
-    if(m_connection)
-        m_connection->read(m_bigPackets ? 4 : 2, std::bind(&Protocol::internalRecvHeader, asProtocol(), std::placeholders::_1,  std::placeholders::_2));
+    if (m_connection)
+        m_connection->read(m_bigPackets ? 4 : 2, std::bind(&Protocol::internalRecvHeader, asProtocol(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void Protocol::internalRecvHeader(uint8* buffer, uint32 size)
@@ -175,26 +202,26 @@ void Protocol::internalRecvHeader(uint8* buffer, uint32 size)
     uint32 remainingSize = m_inputMessage->readSize(m_bigPackets);
 
     // read remaining message data
-    if(m_connection)
-        m_connection->read(remainingSize, std::bind(&Protocol::internalRecvData, asProtocol(), std::placeholders::_1,  std::placeholders::_2));
+    if (m_connection)
+        m_connection->read(remainingSize, std::bind(&Protocol::internalRecvData, asProtocol(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void Protocol::internalRecvData(uint8* buffer, uint32 size)
 {
     // process data only if really connected
-    if(!isConnected()) {
+    if (!isConnected()) {
         g_logger.traceError("received data while disconnected");
         return;
     }
 
     m_inputMessage->fillBuffer(buffer, size);
-    
+
     bool decompress = false;
     if (m_sequencedPackets) {
         if (m_inputMessage->getU32() >= 0xC0000000) {
             decompress = true;
         }
-    } else if(m_checksumEnabled) {
+    } else if (m_checksumEnabled) {
         if (m_inputMessage->peekU32() == 0) { // compressed data
             m_inputMessage->getU32();
             decompress = true;
@@ -204,8 +231,8 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
         }
     }
 
-    if(m_xteaEncryptionEnabled) {
-        if(!xteaDecrypt(m_inputMessage)) {
+    if (m_xteaEncryptionEnabled) {
+        if (!xteaDecrypt(m_inputMessage)) {
             g_logger.traceError("failed to decrypt message");
             return;
         }
@@ -228,6 +255,10 @@ void Protocol::internalRecvData(uint8* buffer, uint32 size)
         }
         m_inputMessage->fillBuffer(m_zstreamBuffer.data(), decryptedSize);
         m_inputMessage->setMessageSize(m_inputMessage->getHeaderSize() + decryptedSize);
+    }
+
+    if (m_recorder) {
+        m_recorder->addInputPacket(m_inputMessage);
     }
     onRecv(m_inputMessage);
 }
@@ -254,7 +285,7 @@ std::vector<uint32> Protocol::getXteaKey()
 {
     std::vector<uint32> xteaKey;
     xteaKey.resize(4);
-    for(int i = 0; i < 4; ++i)
+    for (int i = 0; i < 4; ++i)
         xteaKey[i] = m_xteaKey[i];
     return xteaKey;
 }
@@ -262,21 +293,21 @@ std::vector<uint32> Protocol::getXteaKey()
 bool Protocol::xteaDecrypt(const InputMessagePtr& inputMessage)
 {
     uint32 encryptedSize = inputMessage->getUnreadSize();
-    if(encryptedSize % 8 != 0) {
+    if (encryptedSize % 8 != 0) {
         g_logger.traceError(stdext::format("invalid encrypted network message %i", (int)encryptedSize));
         return false;
     }
 
-    uint32 *buffer = (uint32*)(inputMessage->getReadBuffer());
+    uint32* buffer = (uint32*)(inputMessage->getReadBuffer());
     uint32_t readPos = 0;
 
-    while(readPos < encryptedSize/4) {
+    while (readPos < encryptedSize / 4) {
         uint32 v0 = buffer[readPos], v1 = buffer[readPos + 1];
         uint32 delta = 0x61C88647;
         uint32 sum = 0xC6EF3720;
 
-        for(int32 i = 0; i < 32; i++) {
-            v1 -= ((v0 << 4 ^ v0 >> 5) + v0) ^ (sum + m_xteaKey[sum>>11 & 3]);
+        for (int32 i = 0; i < 32; i++) {
+            v1 -= ((v0 << 4 ^ v0 >> 5) + v0) ^ (sum + m_xteaKey[sum >> 11 & 3]);
             sum += delta;
             v0 -= ((v1 << 4 ^ v1 >> 5) + v1) ^ (sum + m_xteaKey[sum & 3]);
         }
@@ -286,7 +317,7 @@ bool Protocol::xteaDecrypt(const InputMessagePtr& inputMessage)
 
     uint32 decryptedSize = m_bigPackets ? (inputMessage->getU32() + 4) : (inputMessage->getU16() + 2);
     int sizeDelta = decryptedSize - encryptedSize;
-    if(sizeDelta > 0 || -sizeDelta > (int)encryptedSize) {
+    if (sizeDelta > 0 || -sizeDelta > (int)encryptedSize) {
         g_logger.traceError("invalid decrypted network message");
         return false;
     }
@@ -301,23 +332,23 @@ void Protocol::xteaEncrypt(const OutputMessagePtr& outputMessage)
     uint32 encryptedSize = outputMessage->getMessageSize();
 
     //add bytes until reach 8 multiple
-    if((encryptedSize % 8) != 0) {
+    if ((encryptedSize % 8) != 0) {
         uint32 n = 8 - (encryptedSize % 8);
         outputMessage->addPaddingBytes(n);
         encryptedSize += n;
     }
 
     uint32_t readPos = 0;
-    uint32 *buffer = (uint32*)(outputMessage->getDataBuffer() - (m_bigPackets ? 4 : 2));
-    while(readPos < encryptedSize / 4) {
+    uint32* buffer = (uint32*)(outputMessage->getDataBuffer() - (m_bigPackets ? 4 : 2));
+    while (readPos < encryptedSize / 4) {
         uint32 v0 = buffer[readPos], v1 = buffer[readPos + 1];
         uint32 delta = 0x61C88647;
         uint32 sum = 0;
 
-        for(int32 i = 0; i < 32; i++) {
+        for (int32 i = 0; i < 32; i++) {
             v0 += ((v1 << 4 ^ v1 >> 5) + v1) ^ (sum + m_xteaKey[sum & 3]);
             sum -= delta;
-            v1 += ((v0 << 4 ^ v0 >> 5) + v0) ^ (sum + m_xteaKey[sum>>11 & 3]);
+            v1 += ((v0 << 4 ^ v0 >> 5) + v0) ^ (sum + m_xteaKey[sum >> 11 & 3]);
         }
         buffer[readPos] = v0; buffer[readPos + 1] = v1;
         readPos = readPos + 2;
@@ -340,14 +371,29 @@ void Protocol::onError(const boost::system::error_code& err)
     disconnect();
 }
 
-#ifdef FW_PROXY
-void Protocol::onProxyPacket(ProxyPacketPtr packet)
+void Protocol::onPlayerPacket(const std::shared_ptr<std::vector<uint8_t>>& packet)
 {
     if (m_disconnected)
         return;
     auto self(asProtocol());
-    boost::asio::post(g_ioService, [&, self, packet]
-    {
+    boost::asio::post(g_ioService, [&, self, packet] {
+        if (m_disconnected)
+            return;
+        m_inputMessage->reset();
+
+        m_inputMessage->setHeaderSize(0);
+        m_inputMessage->fillBuffer(packet->data(), packet->size());
+        m_inputMessage->setMessageSize(packet->size());
+        onRecv(m_inputMessage);
+    });
+}
+
+void Protocol::onProxyPacket(const std::shared_ptr<std::vector<uint8_t>>& packet)
+{
+    if (m_disconnected)
+        return;
+    auto self(asProtocol());
+    boost::asio::post(g_ioService, [&, self, packet] {
         if (m_disconnected)
             return;
         m_inputMessage->reset();
@@ -365,7 +411,7 @@ void Protocol::onProxyPacket(ProxyPacketPtr packet)
     });
 }
 
-void Protocol::onProxyDisconnected(boost::system::error_code ec)
+void Protocol::onLocalDisconnected(boost::system::error_code ec)
 {
     if (m_disconnected)
         return;
@@ -377,4 +423,3 @@ void Protocol::onProxyDisconnected(boost::system::error_code ec)
         onError(ec);
     });
 }
-#endif

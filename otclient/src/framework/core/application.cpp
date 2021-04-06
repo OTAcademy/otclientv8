@@ -32,15 +32,16 @@
 #include <framework/platform/crashhandler.h>
 #include <framework/platform/platform.h>
 #include <framework/http/http.h>
+
+#if not(defined(ANDROID) || defined(FREE_VERSION))
 #include <boost/process.hpp>
+#endif
 
 #include <locale>
 
 #ifdef FW_NET
 #include <framework/net/connection.h>
-#ifdef FW_PROXY
-#include <extras/proxy/proxy.h>
-#endif
+#include <framework/proxy/proxy.h>
 #endif
 
 void exitSignalHandler(int sig)
@@ -105,10 +106,8 @@ void Application::init(std::vector<std::string>& args)
     g_lua.init();
     registerLuaFunctions();
 
-#ifdef FW_PROXY
     // initalize proxy
     g_proxy.init();
-#endif
 }
 
 void Application::deinit()
@@ -145,10 +144,8 @@ void Application::terminate()
     // terminate script environment
     g_lua.terminate();
 
-#ifdef FW_PROXY
     // terminate proxy
     g_proxy.terminate();
-#endif
 
     m_terminated = true;
 
@@ -193,7 +190,7 @@ void Application::close()
 
 void Application::restart()
 {
-#ifndef ANDROID
+#if not(defined(ANDROID) || defined(FREE_VERSION))
     boost::process::child c(g_resources.getBinaryName());
     std::error_code ec2;
     if (c.wait_for(std::chrono::seconds(1), ec2)) {

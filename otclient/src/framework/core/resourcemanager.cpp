@@ -32,7 +32,9 @@
 #include <queue>
 #include <regex>
 
+#if not(defined(ANDROID) || defined(FREE_VERSION))
 #include <boost/process.hpp>
+#endif
 #include <locale>
 #include <zlib.h>
 
@@ -67,7 +69,7 @@ void ResourceManager::terminate()
 }
 
 bool ResourceManager::launchCorrect(const std::string& product, const std::string& app) { // curently works only on windows
-#ifndef ANDROID
+#if not(defined(ANDROID) || defined(FREE_VERSION))
     auto init_path = m_binaryPath.parent_path();
     init_path /= INIT_FILENAME;
     if (std::filesystem::exists(init_path)) // debug version
@@ -85,7 +87,7 @@ bool ResourceManager::launchCorrect(const std::string& product, const std::strin
     std::error_code ec;
     auto lastWrite = std::filesystem::last_write_time(m_binaryPath, ec);
     std::filesystem::path binary = m_binaryPath;
-    for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(path), {})) {
+    for (auto& entry : std::filesystem::directory_iterator(path)) {
         if (std::filesystem::is_directory(entry.path()))
             continue;
 
@@ -105,7 +107,7 @@ bool ResourceManager::launchCorrect(const std::string& product, const std::strin
         }
     }
 
-    for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(path), {})) { // remove old
+    for (auto& entry : std::filesystem::directory_iterator(path)) { // remove old
         if (std::filesystem::is_directory(entry.path()))
             continue;
 
@@ -679,7 +681,7 @@ std::string ResourceManager::selfChecksum() {
 }
 
 void ResourceManager::updateData(const std::set<std::string>& files, bool reMount) {
-#ifndef __EMSCRIPTEN__
+#if not(defined(__EMSCRIPTEN__) || defined(FREE_VERSION))
     if (!m_loadedFromArchive)
         g_logger.fatal("Client can be updated only when running from zip archive");
 
@@ -787,8 +789,8 @@ void ResourceManager::updateData(const std::set<std::string>& files, bool reMoun
 
 void ResourceManager::updateExecutable(std::string fileName)
 {
-#ifdef ANDROID
-    g_logger.fatal("Executable cannot be updated on android");
+#if defined(ANDROID) || defined(FREE_VERSION)
+    g_logger.fatal("Executable cannot be updated on android or in free version");
 #else
 #ifdef FW_NET
     if (fileName.size() <= 2) {
@@ -812,7 +814,7 @@ void ResourceManager::updateExecutable(std::string fileName)
     PHYSFS_close(file);
 
     std::filesystem::path newBinaryPath(std::filesystem::u8path(PHYSFS_getWriteDir()));
-#ifdef WIN32
+#if defined(WIN32) && not(defined(FREE_VERSION))
     installDlls(newBinaryPath);
 #endif
 #else
@@ -942,7 +944,7 @@ std::map<std::string, std::string> ResourceManager::decompressArchive(std::strin
 #endif
 }
 
-#ifdef WIN32
+#if defined(WIN32) && not(defined(FREE_VERSION))
 void ResourceManager::installDlls(std::filesystem::path dest)
 {
     static std::list<std::string> dlls = {
@@ -1035,6 +1037,9 @@ void ResourceManager::encrypt(const std::string& seed) {
 #endif 
 
 bool ResourceManager::decryptBuffer(std::string& buffer) {
+#ifdef FREE_VERSION
+    return false;
+#else
     if (buffer.size() < 5)
         return true;
 
@@ -1070,6 +1075,7 @@ bool ResourceManager::decryptBuffer(std::string& buffer) {
 
     buffer = new_buffer;
     return true;
+#endif
 }
 
 #ifdef WITH_ENCRYPTION

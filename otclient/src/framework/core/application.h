@@ -58,7 +58,11 @@ public:
     std::string getBuildDate() { return std::string(__DATE__); }
     std::string getBuildRevision() { return BUILD_REVISION; }
     std::string getBuildCommit() { return BUILD_COMMIT; }
-    std::string getBuildType() { return BUILD_TYPE; }
+#ifdef FREE_VERSION
+    std::string getBuildType() { return "FREE"; }
+#else
+    std::string getBuildType() { return "FULL"; }
+#endif
     std::string getBuildArch() { return BUILD_ARCH; }
     std::string getAuthor() { return "otclient.ovh"; }
     std::string getOs();

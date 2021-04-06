@@ -32,11 +32,15 @@ class OutputMessage;
 class Connection;
 class Protocol;
 class Server;
+class PacketPlayer;
+class PacketRecorder;
 
 typedef stdext::shared_object_ptr<InputMessage> InputMessagePtr;
 typedef stdext::shared_object_ptr<OutputMessage> OutputMessagePtr;
 typedef stdext::shared_object_ptr<Connection> ConnectionPtr;
 typedef stdext::shared_object_ptr<Protocol> ProtocolPtr;
 typedef stdext::shared_object_ptr<Server> ServerPtr;
+typedef stdext::shared_object_ptr<PacketPlayer> PacketPlayerPtr;
+typedef stdext::shared_object_ptr<PacketRecorder> PacketRecorderPtr;
 
 #endif

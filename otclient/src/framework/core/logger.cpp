@@ -77,15 +77,17 @@ void Logger::log(Fw::LogLevel level, const std::string& message)
         });
     }
 
-    if(level == Fw::LogFatal) {
+    if(level == Fw::LogFatal || (m_testingMode && level == Fw::LogError)) {
 #ifdef FW_GRAPHICS
-        g_window.displayFatalError(message);
+        if (!m_testingMode) {
+            g_window.displayFatalError(message);
+        }
 #endif
         ignoreLogs = true;
 #ifdef _MSC_VER
-        ::quick_exit(0);
+        ::quick_exit(-1);
 #else
-        exit(0);
+        exit(-1);
 #endif
     }
 }

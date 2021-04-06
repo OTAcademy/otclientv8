@@ -167,7 +167,8 @@ protected:
 
 public:
     // login related
-    void loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey);
+    void loginWorld(const std::string& account, const std::string& password, const std::string& worldName, const std::string& worldHost, int worldPort, const std::string& characterName, const std::string& authenticatorToken, const std::string& sessionKey, const std::string& recordTo = "");
+    void playRecord(const std::string& file);
     void cancelLogin();
     void forceLogout();
     void safeLogout();

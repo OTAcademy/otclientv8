@@ -1,3 +1,4 @@
+#include <framework/global.h>
 #include <framework/luaengine/luainterface.h>
 #include <framework/util/crypt.h>
 #include <framework/util/stats.h>
