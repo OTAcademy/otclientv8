@@ -37,7 +37,7 @@ jobs:
       timeout-minutes: 20
       run: |
         cd vc16
-        MSBuild /property:Configuration=DirectX
+        MSBuild /property:Configuration=DirectX /p:BUILD_REVISION=${{github.run_number}}
 
     - name: Run tests
       timeout-minutes: 10
@@ -47,6 +47,11 @@ jobs:
         Get-Content otclientv8.log
         if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
         Remove-Item 'data\things' -Recurse
+
+    - name: Set version
+      run: |
+        $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' | select-object -First 1 | % { $_.Matches } | % { $_.Value }
+        "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
 
     - name: Upload otclientv8.log
       uses: 'actions/upload-artifact@v2'
@@ -58,9 +63,9 @@ jobs:
       timeout-minutes: 40
       run: |
         cd vc16
-        MSBuild /property:Configuration=OpenGL
-        MSBuild /property:Configuration=Debug_lib
-        MSBuild /property:Configuration=Debug
+        MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
+        MSBuild /property:Configuration=Debug_lib /p:BUILD_REVISION=${{github.run_number}}
+        MSBuild /property:Configuration=Debug /p:BUILD_REVISION=${{github.run_number}}
 
     - name: Decompress android libs
       run: |
@@ -76,7 +81,7 @@ jobs:
       run: |
         cd android
         $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
-        MSBuild.exe /p:Configuration=Release /p:Platform="ARM"
+        MSBuild.exe /p:Configuration=Release /p:Platform="ARM" /p:BUILD_REVISION=${{github.run_number}}
         
     - name: Upload otclient
       uses: 'actions/upload-artifact@v2'
@@ -111,47 +116,50 @@ jobs:
     - name: Download public otclientv8
       uses: actions/checkout@v2
       with:
-          repository: bbarwik/otclient-actions-test2
+          repository: OTCv8/otcleitnv8
           path: otclientv8
           submodules: recursive
-          token: ${{ secrets.token }}
+          token: ${{ secrets.otcv8_token }}
 
     - name: Update public otclientv8 files
       run: |        
         cd otclientv8
         git rm . -f -r
-        git checkout HEAD -- README.md
+        git checkout HEAD -- README.md LICENSE
         cd ..
-        Copy-Item -Path "init.lua*" -Destination "release"
-        Copy-Item -Path "test.lua*" -Destination "release"
-        Copy-Item -Path "otclient_dx.exe" -Destination "release"
-        Copy-Item -Path "otclient_gl.exe" -Destination "release"
-        Copy-Item -Path "otclientv8.apk" -Destination "release"
-        Copy-Item -Path "libGLESv2.dll" -Destination "release"
-        Copy-Item -Path "libEGL.dll" -Destination "release"
-        Copy-Item -Path "d3dcompiler_47.dll" -Destination "release"
-        Copy-Item -Path "data" -Destination "release" -Recurse
-        Copy-Item -Path "layouts" -Destination "release" -Recurse
-        Copy-Item -Path "modules" -Destination "release" -Recurse
+        Copy-Item -Path "init.lua*" -Destination "otclientv8"
+        Copy-Item -Path "otclient_dx.exe" -Destination "otclientv8"
+        Copy-Item -Path "otclient_gl.exe" -Destination "otclientv8"
+        Copy-Item -Path "otclientv8.apk" -Destination "otclientv8"
+        Copy-Item -Path "libGLESv2.dll" -Destination "otclientv8"
+        Copy-Item -Path "libEGL.dll" -Destination "otclientv8"
+        Copy-Item -Path "d3dcompiler_47.dll" -Destination "otclientv8"
+        Copy-Item -Path "data" -Destination "otclientv8" -Recurse
+        Copy-Item -Path "layouts" -Destination "otclientv8" -Recurse
+        Copy-Item -Path "modules" -Destination "otclientv8" -Recurse
 
     - name: Commit public otclientv8
       uses: EndBug/add-and-commit@v7
       with:
         cwd: otclientv8
         push: true
+        author_name: OTCv8
+        author_email: otclient@otclient.ovh
+        message: ${{env.VERSION}}
 
     - name: Download otcv8-dev
       uses: actions/checkout@v2
       with:
-          repository: bbarwik/otcv8-dev
+          repository: OTCv8/otcv8-dev
           path: otcv8-dev
           submodules: recursive
-          token: ${{ secrets.token }}
+          token: ${{ secrets.otcv8_token }}
 
     - name: Update otcv8-dev files
       run: |        
         cd otcv8-dev
         git rm src/framework -f -r
+        git rm lib.7z
         cd ..
         robocopy src/framework release/framework *.h /s
         7z a -t7z release/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
@@ -161,3 +169,6 @@ jobs:
       with:
         cwd: otcv8-dev
         push: true
+        author_name: OTCv8
+        author_email: otclient@otclient.ovh
+        message: Updated framework to ${{env.VERSION}}

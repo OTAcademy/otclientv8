@@ -130,6 +130,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
+  <PropertyGroup Condition=" '$(BUILD_REVISION)' != '' ">
+    <PREPROCESSOR_DEFS>
+      $(PREPROCESSOR_DEFS);
+      BUILD_REVISION=$(BUILD_REVISION)
+    </PREPROCESSOR_DEFS>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -160,7 +166,7 @@
       <CLanguageStandard>c11</CLanguageStandard>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\src;C:\android\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;NOMINMAX;$(PREPROCESSOR_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-Wno-inconsistent-missing-override</AdditionalOptions>
       <FloatABI>soft</FloatABI>
     </ClCompile>
@@ -182,7 +188,7 @@
       <CLanguageStandard>c11</CLanguageStandard>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\src;C:\android\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;FW_PROXY;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;FW_PROXY;NOMINMAX;NDEBUG;$(PREPROCESSOR_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-Wno-inconsistent-missing-override</AdditionalOptions>
       <FloatABI>soft</FloatABI>
       <FunctionLevelLinking>true</FunctionLevelLinking>

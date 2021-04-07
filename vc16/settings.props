@@ -13,9 +13,6 @@
         FW_NET;
         FW_XML;
         FW_SOUND;
-        BUILD_TYPE="RelWithDebInfo";
-        BUILD_COMMIT="alpha";
-        BUILD_REVISION="0";
         FW_CAM;
         AB;
         NOMINMAX;
@@ -56,9 +53,15 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-     <VcpkgConfiguration>Release</VcpkgConfiguration>
+   <VcpkgConfiguration>Release</VcpkgConfiguration>
 	 <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
 	 <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(BUILD_REVISION)' != '' ">
+    <PREPROCESSOR_DEFS>
+      $(PREPROCESSOR_DEFS);
+      BUILD_REVISION=$(BUILD_REVISION)
+    </PREPROCESSOR_DEFS>
   </PropertyGroup>  
   <ItemDefinitionGroup>
     <ClCompile>
