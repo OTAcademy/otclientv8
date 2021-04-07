@@ -91,13 +91,6 @@ jobs:
           modules
           layouts
           init.lua
-
-    - name: Upload debug lib
-      uses: 'actions/upload-artifact@v2'
-      with:
-        name: Download-debug-lib
-        path: |
-          otclient_debug_lib.lib
         
     - name: Copy screenshots
       run: |        

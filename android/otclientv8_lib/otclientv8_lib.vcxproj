@@ -79,13 +79,13 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
-    <AndroidAPILevel>android-25</AndroidAPILevel>
+    <AndroidAPILevel>android-28</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
-    <AndroidAPILevel>android-25</AndroidAPILevel>
+    <AndroidAPILevel>android-28</AndroidAPILevel>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -444,15 +444,12 @@
     <ClCompile Include="..\..\src\client\item.cpp" />
     <ClCompile Include="..\..\src\client\itemtype.cpp" />
     <ClCompile Include="..\..\src\client\lightview.cpp" />
-    <ClCompile Include="..\..\src\client\lightview_private.cpp" />
     <ClCompile Include="..\..\src\client\localplayer.cpp" />
-    <ClCompile Include="..\..\src\client\localplayer_private.cpp" />
     <ClCompile Include="..\..\src\client\luafunctions_client.cpp" />
     <ClCompile Include="..\..\src\client\luavaluecasts_client.cpp" />
     <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\mapio.cpp" />
     <ClCompile Include="..\..\src\client\mapview.cpp" />
-    <ClCompile Include="..\..\src\client\map_private.cpp" />
     <ClCompile Include="..\..\src\client\minimap.cpp" />
     <ClCompile Include="..\..\src\client\missile.cpp" />
     <ClCompile Include="..\..\src\client\outfit.cpp" />

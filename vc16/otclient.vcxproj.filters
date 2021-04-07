@@ -552,15 +552,6 @@
     <ClCompile Include="..\src\framework\proxy\proxy_client.cpp">
       <Filter>Source Files\framework\proxy</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\client\lightview_private.cpp">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\localplayer_private.cpp">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\map_private.cpp">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework\const.h">
