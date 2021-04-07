@@ -50,6 +50,7 @@
 #include <framework/graphics/atlas.h>
 #include <framework/platform/platformwindow.h>
 #include <framework/graphics/fontmanager.h>
+#include <framework/graphics/shadermanager.h>
 #include <framework/ui/ui.h>
 #include <framework/input/mouse.h>
 #endif
@@ -400,6 +401,12 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_textures", "preload", &TextureManager::preload, &g_textures);
     g_lua.bindSingletonFunction("g_textures", "clearCache", &TextureManager::clearCache, &g_textures);
     g_lua.bindSingletonFunction("g_textures", "reload", &TextureManager::reload, &g_textures);
+
+    // Shaders
+    g_lua.registerSingletonClass("g_shaders");
+    g_lua.bindSingletonFunction("g_shaders", "createShader", &ShaderManager::createShader, &g_shaders);
+    g_lua.bindSingletonFunction("g_shaders", "createOutfitShader", &ShaderManager::createOutfitShader, &g_shaders);
+    g_lua.bindSingletonFunction("g_shaders", "addTexture", &ShaderManager::addTexture, &g_shaders);
 
     // UI
     g_lua.registerSingletonClass("g_ui");

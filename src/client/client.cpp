@@ -24,9 +24,9 @@
 #include <framework/core/modulemanager.h>
 #include <framework/core/resourcemanager.h>
 #include <framework/graphics/graphics.h>
+#include <framework/graphics/shadermanager.h>
 #include "game.h"
 #include "map.h"
-#include "shadermanager.h"
 #include "spritemanager.h"
 #include "minimap.h"
 #include <framework/core/configmanager.h>

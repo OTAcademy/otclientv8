@@ -37,6 +37,7 @@
 #include <framework/graphics/atlas.h>
 #include <framework/graphics/image.h>
 #include <framework/graphics/textrender.h>
+#include <framework/graphics/shadermanager.h>
 #include <framework/input/mouse.h>
 #include <framework/util/extras.h>
 #include <framework/util/stats.h>
@@ -282,7 +283,10 @@ void GraphicalApplication::run()
             isOnline = toDrawMapQueue->hasFrameBuffer();
             if(isOnline) {
                 AutoStat s(STATS_RENDER, "DrawMapBackground");
-                PainterShaderProgramPtr shader = toDrawMapQueue->getShader();
+                PainterShaderProgramPtr shader = nullptr;
+                if (!toDrawMapQueue->getShader().empty()) {
+                    shader = g_shaders.getShader(toDrawMapQueue->getShader());
+                }
                 if (shader) {
                     g_painter->setShaderProgram(shader);
                     shader->bindMultiTextures();
