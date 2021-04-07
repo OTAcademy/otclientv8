@@ -19,8 +19,8 @@ jobs:
 
     - uses: actions/cache@v2
       with:
-        path: C:/vcpkg/installed/x86-windows-static
-        key: ${{ runner.os }}-vcpkg-x86-windows-static
+        path: C:/vcpkg
+        key: ${{ runner.os }}-vcpkg
 
     - name: Install dependencies 
       timeout-minutes: 25
@@ -141,8 +141,30 @@ jobs:
         Copy-Item -Path "layouts" -Destination "release" -Recurse
         Copy-Item -Path "modules" -Destination "release" -Recurse
 
-    - name: Commit public otclientv8 files
+    - name: Commit public otclientv8
       uses: EndBug/add-and-commit@v7
       with:
         cwd: otclientv8
+        push: true
+
+    - name: Download otcv8-dev
+      uses: actions/checkout@v2
+      with:
+          repository: bbarwik/otcv8-dev
+          path: otcv8-dev
+          submodules: recursive
+          token: ${{ secrets.token }}
+
+    - name: Update otcv8-dev files
+      run: |        
+        cd otcv8-dev
+        git rm src/framework -f -r
+        cd ..
+        robocopy src/framework release/framework *.h /s
+        7z a -t7z release/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
+
+    - name: Commit otcv8-dev
+      uses: EndBug/add-and-commit@v7
+      with:
+        cwd: otcv8-dev
         push: true

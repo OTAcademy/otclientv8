@@ -230,6 +230,7 @@
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <PreprocessToFile>false</PreprocessToFile>
       <SmallerTypeCheck>false</SmallerTypeCheck>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
