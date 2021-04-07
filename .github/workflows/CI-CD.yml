@@ -46,14 +46,10 @@ jobs:
         $process = (Start-Process -Wait -PassThru otclient_dx.exe --test)        
         Get-Content otclientv8.log
         if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
-        Remove-Item 'data\things' -Recurse
-        Remove-Item 'src\android' -Recurse
-        Get-ChildItem -Path 'src\framework' *.c* -Recurse | foreach { Remove-Item -Path $_.FullName }
 
-    - name: Set version
-      run: |
-        $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' | select-object -First 1 | % { $_.Matches } | % { $_.Value }
-        "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
+    - name: Cleanup things
+      run: |        
+        Remove-Item 'data\things' -Recurse
 
     - name: Upload otclientv8.log
       uses: 'actions/upload-artifact@v2'
@@ -84,7 +80,17 @@ jobs:
         cd android
         $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
         MSBuild.exe /p:Configuration=Release /p:Platform="ARM" /p:BUILD_REVISION=${{github.run_number}}
-        
+
+    - name: Cleanup src
+      run: |        
+        Remove-Item 'src\android' -Recurse
+        Get-ChildItem -Path 'src\framework' *.c* -Recurse | foreach { Remove-Item -Path $_.FullName }
+
+    - name: Set version
+      run: |
+        $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' | select-object -First 1 | % { $_.Matches } | % { $_.Value }
+        "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
+
     - name: Upload otclient
       uses: 'actions/upload-artifact@v2'
       with:
@@ -174,3 +180,11 @@ jobs:
         author_name: OTCv8
         author_email: otclient@otclient.ovh
         message: ${{env.VERSION}}
+
+    - name: Deploy on otclient.ovh
+      uses: garygrossgarten/github-action-ssh@release
+      with:
+        command: ./update_otcv8.sh
+        host: otclient.ovh
+        username: debian
+        privateKey: ${{ secrets.SSH_KEY }}
