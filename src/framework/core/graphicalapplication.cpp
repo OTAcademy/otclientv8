@@ -286,6 +286,8 @@ void GraphicalApplication::run()
                 if (shader) {
                     g_painter->setShaderProgram(shader);
                     shader->bindMultiTextures();
+                    shader->setCenter(toDrawMapQueue->getFrameBufferDest().center());
+                    shader->setOffset(toDrawMapQueue->getFrameBufferSrc().topLeft());
                 }
                 m_mapFramebuffer->draw(toDrawMapQueue->getFrameBufferDest(), toDrawMapQueue->getFrameBufferSrc());
                 if (shader) {

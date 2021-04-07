@@ -1,5 +1,3 @@
-data/shaders/*
-!data/shaders/*default*
 build*
 pdbs
 CMakeCache.txt

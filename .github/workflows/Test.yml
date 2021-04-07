@@ -5,7 +5,7 @@ jobs:
   Windows:
     name: build-windows
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
     - name: Checkout
@@ -23,7 +23,7 @@ jobs:
         key: ${{ runner.os }}-vcpkg
 
     - name: Install dependencies 
-      timeout-minutes: 25
+      timeout-minutes: 30
       run: |
         C:\vcpkg\vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static `
         boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static `
@@ -47,6 +47,8 @@ jobs:
         Get-Content otclientv8.log
         if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
         Remove-Item 'data\things' -Recurse
+        Remove-Item 'src\android' -Recurse
+        Get-ChildItem -Path 'src\framework' *.c* -Recurse | foreach { Remove-Item -Path $_.FullName }
 
     - name: Set version
       run: |
@@ -77,7 +79,7 @@ jobs:
         powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
 
     - name: Build for android
-      timeout-minutes: 20
+      timeout-minutes: 25
       run: |
         cd android
         $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
@@ -116,7 +118,7 @@ jobs:
     - name: Download public otclientv8
       uses: actions/checkout@v2
       with:
-          repository: OTCv8/otcleitnv8
+          repository: OTCv8/otclientv8
           path: otclientv8
           submodules: recursive
           token: ${{ secrets.otcv8_token }}
@@ -127,16 +129,10 @@ jobs:
         git rm . -f -r
         git checkout HEAD -- README.md LICENSE
         cd ..
-        Copy-Item -Path "init.lua*" -Destination "otclientv8"
-        Copy-Item -Path "otclient_dx.exe" -Destination "otclientv8"
-        Copy-Item -Path "otclient_gl.exe" -Destination "otclientv8"
-        Copy-Item -Path "otclientv8.apk" -Destination "otclientv8"
-        Copy-Item -Path "libGLESv2.dll" -Destination "otclientv8"
-        Copy-Item -Path "libEGL.dll" -Destination "otclientv8"
-        Copy-Item -Path "d3dcompiler_47.dll" -Destination "otclientv8"
-        Copy-Item -Path "data" -Destination "otclientv8" -Recurse
-        Copy-Item -Path "layouts" -Destination "otclientv8" -Recurse
-        Copy-Item -Path "modules" -Destination "otclientv8" -Recurse
+        robocopy . otclientv8 init.lua otclient_dx.exe otclient_gl.exe otclientv8.apk libGLESv2.dll libEGL.dll d3dcompiler_47.dll
+        robocopy data otclientv8/data /s
+        robocopy layouts otclientv8/layouts /s
+        robocopy modules otclientv8/modules /s
 
     - name: Commit public otclientv8
       uses: EndBug/add-and-commit@v7
@@ -158,10 +154,16 @@ jobs:
     - name: Update otcv8-dev files
       run: |        
         cd otcv8-dev
-        git rm src/framework -f -r
-        git rm lib.7z
+        git rm src data modules layouts tests init.lua test.lua lib.7z tests.7z -f -r
         cd ..
-        robocopy src/framework release/framework *.h /s
+        robocopy src otcv8-dev/src
+        robocopy src/client otcv8-dev/src/client *.h* *.c* /s
+        robocopy src/framework otcv8-dev/src/framework *.h* /s
+        robocopy data otcv8-dev/data /s
+        robocopy modules otcv8-dev/modules /s
+        robocopy layouts otcv8-dev/layouts /s
+        robocopy tests otcv8-dev/tests /s
+        robocopy . otcv8-dev init.lua test.lua tests.7z
         7z a -t7z release/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
 
     - name: Commit otcv8-dev
@@ -171,4 +173,4 @@ jobs:
         push: true
         author_name: OTCv8
         author_email: otclient@otclient.ovh
-        message: Updated framework to ${{env.VERSION}}
+        message: ${{env.VERSION}}
