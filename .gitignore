@@ -18,6 +18,7 @@ Makefile
 *.gz
 *.7z
 !tests.7z
+!android_libs.7z
 *.spr
 *.dat
 *.kdev*
@@ -47,11 +48,11 @@ Thumbs.db
 .directory
 src/framework/graphics/dx/
 modules/.project/modules.sublime-workspace
-vc14/.vs/
-vc14/DirectX/
-vc14/OpenGL/
-vc14/Debug/
-vc14/Debug_lib/
+vc16/.vs/
+vc16/DirectX/
+vc16/OpenGL/
+vc16/Debug/
+vc16/Debug_lib/
 /*.lib
 *.exp
 *.zip

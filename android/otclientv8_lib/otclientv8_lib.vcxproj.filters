@@ -355,12 +355,6 @@
     <ClCompile Include="..\..\src\framework\otml\otmlparser.cpp">
       <Filter>framework\otml</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\extras\proxy\proxy.cpp">
-      <Filter>extras\proxy</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\extras\proxy\proxy_client.cpp">
-      <Filter>extras\proxy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\framework\platform\androidplatform.cpp">
       <Filter>framework\platform</Filter>
     </ClCompile>
@@ -439,6 +433,27 @@
     </ClCompile>
     <ClCompile Include="..\..\src\framework\graphics\graph.cpp">
       <Filter>framework\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\framework\net\packet_player.cpp">
+      <Filter>framework\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\framework\net\packet_recorder.cpp">
+      <Filter>framework\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\framework\proxy\proxy.cpp">
+      <Filter>framework\proxy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\framework\proxy\proxy_client.cpp">
+      <Filter>framework\proxy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\client\map_private.cpp">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\client\localplayer_private.cpp">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\client\lightview_private.cpp">
+      <Filter>client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -898,17 +913,11 @@
     <ClInclude Include="..\..\src\framework\otml\otmlparser.h">
       <Filter>framework\otml</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\extras\proxy\proxy.h">
-      <Filter>extras\proxy</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\android\android_native_app_glue.h">
       <Filter>android</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\android\pch.h">
       <Filter>android</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\extras\proxy\proxy_client.h">
-      <Filter>extras\proxy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\framework\platform\androidwindow.h">
       <Filter>framework\platform</Filter>
@@ -1003,6 +1012,18 @@
     <ClInclude Include="..\..\src\framework\graphics\graph.h">
       <Filter>framework\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\framework\net\packet_player.h">
+      <Filter>framework\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framework\net\packet_recorder.h">
+      <Filter>framework\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framework\proxy\proxy.h">
+      <Filter>framework\proxy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framework\proxy\proxy_client.h">
+      <Filter>framework\proxy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="client">
@@ -1010,9 +1031,6 @@
     </Filter>
     <Filter Include="framework">
       <UniqueIdentifier>{b55a81ff-4b28-40a4-ab4f-8b813852a8d4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extras">
-      <UniqueIdentifier>{c069a3a8-81e9-4cf0-b523-8dc40a566dbc}</UniqueIdentifier>
     </Filter>
     <Filter Include="android">
       <UniqueIdentifier>{36113479-22cb-47f8-8c25-39a610bb24b0}</UniqueIdentifier>
@@ -1056,14 +1074,14 @@
     <Filter Include="framework\xml">
       <UniqueIdentifier>{b9924ce1-09fb-440a-b9db-d23ac5f537bb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="extras\proxy">
-      <UniqueIdentifier>{8c8a9635-aa1d-4d51-8bba-006a8bbf00b9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="framework\graphics">
       <UniqueIdentifier>{ca9ac688-a118-41d1-9b63-369489453044}</UniqueIdentifier>
     </Filter>
     <Filter Include="framework\graphics\shaders">
       <UniqueIdentifier>{11e87172-6eea-46eb-81d1-9fbbf91a65b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="framework\proxy">
+      <UniqueIdentifier>{4ffa42e4-f1ba-409d-aad1-aa9ee9b639e6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

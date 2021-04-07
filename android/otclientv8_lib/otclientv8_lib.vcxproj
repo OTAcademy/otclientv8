@@ -85,7 +85,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
-    <AndroidAPILevel>android-28</AndroidAPILevel>
+    <AndroidAPILevel>android-25</AndroidAPILevel>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -188,6 +188,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <DataLevelLinking>true</DataLevelLinking>
       <OmitFramePointers>true</OmitFramePointers>
+      <Verbose>false</Verbose>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);GLESv2;EGL;unwind</LibraryDependencies>
@@ -283,8 +284,6 @@
     <ClInclude Include="..\..\src\client\uiprogressrect.h" />
     <ClInclude Include="..\..\src\client\uisprite.h" />
     <ClInclude Include="..\..\src\client\walkmatrix.h" />
-    <ClInclude Include="..\..\src\extras\proxy\proxy_client.h" />
-    <ClInclude Include="..\..\src\extras\proxy\proxy.h" />
     <ClInclude Include="..\..\src\framework\const.h" />
     <ClInclude Include="..\..\src\framework\core\adaptiverenderer.h" />
     <ClInclude Include="..\..\src\framework\core\application.h" />
@@ -352,6 +351,8 @@
     <ClInclude Include="..\..\src\framework\net\declarations.h" />
     <ClInclude Include="..\..\src\framework\net\inputmessage.h" />
     <ClInclude Include="..\..\src\framework\net\outputmessage.h" />
+    <ClInclude Include="..\..\src\framework\net\packet_player.h" />
+    <ClInclude Include="..\..\src\framework\net\packet_recorder.h" />
     <ClInclude Include="..\..\src\framework\net\protocol.h" />
     <ClInclude Include="..\..\src\framework\net\server.h" />
     <ClInclude Include="..\..\src\framework\otml\declarations.h" />
@@ -366,6 +367,8 @@
     <ClInclude Include="..\..\src\framework\platform\crashhandler.h" />
     <ClInclude Include="..\..\src\framework\platform\platform.h" />
     <ClInclude Include="..\..\src\framework\platform\platformwindow.h" />
+    <ClInclude Include="..\..\src\framework\proxy\proxy.h" />
+    <ClInclude Include="..\..\src\framework\proxy\proxy_client.h" />
     <ClInclude Include="..\..\src\framework\sound\combinedsoundsource.h" />
     <ClInclude Include="..\..\src\framework\sound\declarations.h" />
     <ClInclude Include="..\..\src\framework\sound\oggsoundfile.h" />
@@ -441,12 +444,15 @@
     <ClCompile Include="..\..\src\client\item.cpp" />
     <ClCompile Include="..\..\src\client\itemtype.cpp" />
     <ClCompile Include="..\..\src\client\lightview.cpp" />
+    <ClCompile Include="..\..\src\client\lightview_private.cpp" />
     <ClCompile Include="..\..\src\client\localplayer.cpp" />
+    <ClCompile Include="..\..\src\client\localplayer_private.cpp" />
     <ClCompile Include="..\..\src\client\luafunctions_client.cpp" />
     <ClCompile Include="..\..\src\client\luavaluecasts_client.cpp" />
     <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\mapio.cpp" />
     <ClCompile Include="..\..\src\client\mapview.cpp" />
+    <ClCompile Include="..\..\src\client\map_private.cpp" />
     <ClCompile Include="..\..\src\client\minimap.cpp" />
     <ClCompile Include="..\..\src\client\missile.cpp" />
     <ClCompile Include="..\..\src\client\outfit.cpp" />
@@ -470,8 +476,6 @@
     <ClCompile Include="..\..\src\client\uiminimap.cpp" />
     <ClCompile Include="..\..\src\client\uiprogressrect.cpp" />
     <ClCompile Include="..\..\src\client\uisprite.cpp" />
-    <ClCompile Include="..\..\src\extras\proxy\proxy_client.cpp" />
-    <ClCompile Include="..\..\src\extras\proxy\proxy.cpp" />
     <ClCompile Include="..\..\src\framework\core\adaptiverenderer.cpp" />
     <ClCompile Include="..\..\src\framework\core\application.cpp" />
     <ClCompile Include="..\..\src\framework\core\asyncdispatcher.cpp" />
@@ -524,6 +528,8 @@
     <ClCompile Include="..\..\src\framework\net\connection.cpp" />
     <ClCompile Include="..\..\src\framework\net\inputmessage.cpp" />
     <ClCompile Include="..\..\src\framework\net\outputmessage.cpp" />
+    <ClCompile Include="..\..\src\framework\net\packet_player.cpp" />
+    <ClCompile Include="..\..\src\framework\net\packet_recorder.cpp" />
     <ClCompile Include="..\..\src\framework\net\protocol.cpp" />
     <ClCompile Include="..\..\src\framework\net\server.cpp" />
     <ClCompile Include="..\..\src\framework\otml\otmldocument.cpp" />
@@ -535,6 +541,8 @@
     <ClCompile Include="..\..\src\framework\platform\androidwindow.cpp" />
     <ClCompile Include="..\..\src\framework\platform\platform.cpp" />
     <ClCompile Include="..\..\src\framework\platform\platformwindow.cpp" />
+    <ClCompile Include="..\..\src\framework\proxy\proxy.cpp" />
+    <ClCompile Include="..\..\src\framework\proxy\proxy_client.cpp" />
     <ClCompile Include="..\..\src\framework\sound\combinedsoundsource.cpp" />
     <ClCompile Include="..\..\src\framework\sound\oggsoundfile.cpp" />
     <ClCompile Include="..\..\src\framework\sound\soundbuffer.cpp" />

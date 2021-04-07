@@ -5,7 +5,7 @@ jobs:
   Windows:
     name: build-windows
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
 
     steps:
     - name: Checkout
@@ -17,8 +17,13 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
       id: setup_msbuild
 
+    - uses: actions/cache@v2
+      with:
+        path: C:/vcpkg/installed/x86-windows-static
+        key: ${{ runner.os }}-vcpkg-x86-windows-static
+
     - name: Install dependencies 
-      timeout-minutes: 5
+      timeout-minutes: 25
       run: |
         C:\vcpkg\vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static `
         boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static `
@@ -26,22 +31,18 @@ jobs:
         luajit:x86-windows-static glew:x86-windows-static boost-filesystem:x86-windows-static boost-uuid:x86-windows-static `
         physfs:x86-windows-static openal-soft:x86-windows-static libogg:x86-windows-static libvorbis:x86-windows-static `
         zlib:x86-windows-static libzip:x86-windows-static openssl:x86-windows-static
+        C:\vcpkg\vcpkg integrate install
 
-    - name: Compile 
-      timeout-minutes: 5
+    - name: Compile otclient_dx
+      timeout-minutes: 20
       run: |
-        cd vc14
+        cd vc16
         MSBuild /property:Configuration=DirectX
-        MSBuild /property:Configuration=OpenGL
-        cd ..
 
-    - name: Decompress tests
-      run: |        
-        7z x tests.7z -aoa
-
-    - name: Run OTCv8
+    - name: Run tests
       timeout-minutes: 10
       run: |        
+        7z x tests.7z -aoa
         $process = (Start-Process -Wait -PassThru otclient_dx.exe --test)        
         Get-Content otclientv8.log
         if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
@@ -53,17 +54,50 @@ jobs:
         path: otclientv8.log
         name: Download-otclientv8.log
         
-    - name: Upload otclient_dx.exe
+    - name: Compile otclient_gl, otclient_debug_lib, otclient_debug
+      timeout-minutes: 40
+      run: |
+        cd vc16
+        MSBuild /property:Configuration=OpenGL
+        MSBuild /property:Configuration=Debug_lib
+        MSBuild /property:Configuration=Debug
+
+    - name: Decompress android libs
+      run: |
+        dir C:\android
+        7z x android_libs.7z -aoa -oC:\android
+
+    - name: Create data.zip for android
+      run: |
+        powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
+
+    - name: Build for android
+      timeout-minutes: 20
+      run: |
+        cd android
+        $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
+        MSBuild.exe /p:Configuration=Release /p:Platform="ARM"
+        
+    - name: Upload otclient
       uses: 'actions/upload-artifact@v2'
       with:
-        name: Download-otclient
+        name: Download-otclientv8
         path: |
+          otclient_gl.exe
           otclient_dx.exe
+          otclientv8.apk
           *.dll
           data
           modules
           layouts
           init.lua
+
+    - name: Upload debug lib
+      uses: 'actions/upload-artifact@v2'
+      with:
+        name: Download-debug-lib
+        path: |
+          otclient_debug_lib.lib
         
     - name: Copy screenshots
       run: |        
@@ -80,3 +114,35 @@ jobs:
       with:
         path: screenshots
         name: Download-screenshots
+
+    - name: Download public otclientv8
+      uses: actions/checkout@v2
+      with:
+          repository: bbarwik/otclient-actions-test2
+          path: otclientv8
+          submodules: recursive
+          token: ${{ secrets.token }}
+
+    - name: Update public otclientv8 files
+      run: |        
+        cd otclientv8
+        git rm . -f -r
+        git checkout HEAD -- README.md
+        cd ..
+        Copy-Item -Path "init.lua*" -Destination "release"
+        Copy-Item -Path "test.lua*" -Destination "release"
+        Copy-Item -Path "otclient_dx.exe" -Destination "release"
+        Copy-Item -Path "otclient_gl.exe" -Destination "release"
+        Copy-Item -Path "otclientv8.apk" -Destination "release"
+        Copy-Item -Path "libGLESv2.dll" -Destination "release"
+        Copy-Item -Path "libEGL.dll" -Destination "release"
+        Copy-Item -Path "d3dcompiler_47.dll" -Destination "release"
+        Copy-Item -Path "data" -Destination "release" -Recurse
+        Copy-Item -Path "layouts" -Destination "release" -Recurse
+        Copy-Item -Path "modules" -Destination "release" -Recurse
+
+    - name: Commit public otclientv8 files
+      uses: EndBug/add-and-commit@v7
+      with:
+        cwd: otclientv8
+        push: true

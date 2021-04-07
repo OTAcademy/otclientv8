@@ -12,7 +12,11 @@ PacketPlayer::~PacketPlayer()
 PacketPlayer::PacketPlayer(const std::string& file)
 {
     static uint32_t sessionId = 1;
+#ifdef ANDROID
+    std::ifstream f(std::string("records/") + file);
+#else
     std::ifstream f(std::filesystem::path("records") / file);
+#endif
     if (!f.is_open())
         return;
     std::string type, packetHex;
