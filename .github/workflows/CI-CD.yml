@@ -180,7 +180,7 @@ jobs:
         robocopy layouts otcv8-dev/layouts /s
         robocopy tests otcv8-dev/tests /s
         robocopy . otcv8-dev init.lua test.lua tests.7z
-        7z a -t7z release/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
+        7z a -t7z otcv8-dev/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
         exit 0 # required, robocopy has exit code 1
 
     - name: Commit otcv8-dev
