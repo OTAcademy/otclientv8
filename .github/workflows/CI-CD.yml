@@ -139,6 +139,7 @@ jobs:
         robocopy data otclientv8/data /s
         robocopy layouts otclientv8/layouts /s
         robocopy modules otclientv8/modules /s
+        exit 0
 
     - name: Commit public otclientv8
       uses: EndBug/add-and-commit@v7
@@ -171,6 +172,7 @@ jobs:
         robocopy tests otcv8-dev/tests /s
         robocopy . otcv8-dev init.lua test.lua tests.7z
         7z a -t7z release/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
+        exit 0
 
     - name: Commit otcv8-dev
       uses: EndBug/add-and-commit@v7
