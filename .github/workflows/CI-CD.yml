@@ -1,11 +1,17 @@
-name: Build and Test
-on: [push, pull_request]
+name: Build, Test, Release
+on: [push]
 
 jobs:
   Windows:
-    name: build-windows
+    name: Windows and Android version
     runs-on: windows-latest
     timeout-minutes: 120
+    if: |
+      !contains(github.event.head_commit.message, '[skip release]')
+      && (
+        startsWith(github.ref, 'refs/tags/')
+        || github.ref == 'refs/heads/main'
+      )
 
     steps:
     - name: Checkout
@@ -17,7 +23,8 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
       id: setup_msbuild
 
-    - uses: actions/cache@v2
+    - name: Load cache
+      uses: actions/cache@v2
       with:
         path: C:/vcpkg
         key: ${{ runner.os }}-vcpkg
@@ -56,6 +63,7 @@ jobs:
       with:
         path: otclientv8.log
         name: Download-otclientv8.log
+        if-no-files-found: error
         
     - name: Compile otclient_gl, otclient_debug_lib, otclient_debug
       timeout-minutes: 40
@@ -67,7 +75,6 @@ jobs:
 
     - name: Decompress android libs
       run: |
-        dir C:\android
         7z x android_libs.7z -aoa -oC:\android
 
     - name: Create data.zip for android
@@ -104,6 +111,7 @@ jobs:
           modules
           layouts
           init.lua
+        if-no-files-found: error
         
     - name: Copy screenshots
       run: |        
@@ -121,7 +129,7 @@ jobs:
         path: screenshots
         name: Download-screenshots
 
-    - name: Download public otclientv8
+    - name: Checkout public otclientv8
       uses: actions/checkout@v2
       with:
           repository: OTCv8/otclientv8
@@ -139,7 +147,7 @@ jobs:
         robocopy data otclientv8/data /s
         robocopy layouts otclientv8/layouts /s
         robocopy modules otclientv8/modules /s
-        exit 0
+        exit 0 # required, robocopy has exit code 1
 
     - name: Commit public otclientv8
       uses: EndBug/add-and-commit@v7
@@ -150,7 +158,7 @@ jobs:
         author_email: otclient@otclient.ovh
         message: ${{env.VERSION}}
 
-    - name: Download otcv8-dev
+    - name: Checkout otcv8-dev
       uses: actions/checkout@v2
       with:
           repository: OTCv8/otcv8-dev
@@ -172,7 +180,7 @@ jobs:
         robocopy tests otcv8-dev/tests /s
         robocopy . otcv8-dev init.lua test.lua tests.7z
         7z a -t7z release/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
-        exit 0
+        exit 0 # required, robocopy has exit code 1
 
     - name: Commit otcv8-dev
       uses: EndBug/add-and-commit@v7
