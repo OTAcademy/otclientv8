@@ -258,6 +258,7 @@
     <ClInclude Include="..\..\src\client\effect.h" />
     <ClInclude Include="..\..\src\client\game.h" />
     <ClInclude Include="..\..\src\client\global.h" />
+    <ClInclude Include="..\..\src\client\healthbars.h" />
     <ClInclude Include="..\..\src\client\houses.h" />
     <ClInclude Include="..\..\src\client\item.h" />
     <ClInclude Include="..\..\src\client\itemtype.h" />
@@ -446,6 +447,7 @@
     <ClCompile Include="..\..\src\client\creatures.cpp" />
     <ClCompile Include="..\..\src\client\effect.cpp" />
     <ClCompile Include="..\..\src\client\game.cpp" />
+    <ClCompile Include="..\..\src\client\healthbars.cpp" />
     <ClCompile Include="..\..\src\client\houses.cpp" />
     <ClCompile Include="..\..\src\client\item.cpp" />
     <ClCompile Include="..\..\src\client\itemtype.cpp" />

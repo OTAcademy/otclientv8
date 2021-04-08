@@ -139,6 +139,7 @@ jobs:
           data
           modules
           layouts
+          mods
           init.lua
         if-no-files-found: error
         
@@ -159,6 +160,7 @@ jobs:
         robocopy . otclientv8 init.lua otclient_dx.exe otclient_gl.exe otclientv8.apk libGLESv2.dll libEGL.dll d3dcompiler_47.dll
         robocopy data otclientv8/data /s
         robocopy layouts otclientv8/layouts /s
+        robocopy mods otclientv8/mods /s
         robocopy modules otclientv8/modules /s
         exit 0 # required, robocopy has exit code 1
 
@@ -182,7 +184,7 @@ jobs:
     - name: Update otcv8-dev files
       run: |        
         cd otcv8-dev
-        git rm src data modules layouts tests init.lua test.lua lib.7z tests.7z -f -r --ignore-unmatch
+        git rm src data modules layouts mods tests init.lua test.lua lib.7z tests.7z -f -r --ignore-unmatch
         cd ..
         robocopy src otcv8-dev/src
         robocopy src/client otcv8-dev/src/client *.h* *.c* /s
@@ -190,6 +192,7 @@ jobs:
         robocopy data otcv8-dev/data /s
         robocopy modules otcv8-dev/modules /s
         robocopy layouts otcv8-dev/layouts /s
+        robocopy mods otcv8-dev/mods /s
         robocopy tests otcv8-dev/tests /s
         robocopy . otcv8-dev init.lua test.lua tests.7z
         7z a -t7z otcv8-dev/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb

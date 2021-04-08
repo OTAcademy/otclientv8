@@ -25,13 +25,14 @@ jobs:
     - name: Update files
       run: |        
         cd otclient
-        git rm src/client data modules layouts tests init.lua test.lua -f -r --ignore-unmatch
+        git rm src/client data modules layouts mods tests init.lua test.lua -f -r --ignore-unmatch
         git checkout HEAD -- src/client/CMakeLists.txt
         cd ..
         robocopy otcv8-dev/src/client otclient/src/client /s
         robocopy otcv8-dev/data otclient/data /s
         robocopy otcv8-dev/modules otclient/modules /s
         robocopy otcv8-dev/layouts otclient/layouts /s
+        robocopy otcv8-dev/mods otclient/mods /s
         robocopy otcv8-dev/tests otclient/tests /s
         robocopy otcv8-dev otclient init.lua test.lua tests.7z
         exit 0 # required, robocopy has exit code 1

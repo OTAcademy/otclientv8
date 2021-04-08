@@ -446,6 +446,9 @@
     <ClCompile Include="..\..\src\framework\graphics\shadermanager.cpp">
       <Filter>framework\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\client\healthbars.cpp">
+      <Filter>client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\animatedtext.h">
@@ -1014,6 +1017,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\framework\graphics\shadermanager.h">
       <Filter>framework\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\client\healthbars.h">
+      <Filter>client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
