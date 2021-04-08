@@ -233,16 +233,16 @@ void DrawQueue::draw(DrawType drawType)
         ++condition;
     // execute conditions & draw
     for (size_t i = start; i < end; ++i) {
+        while (!activeConditions.empty() && activeConditions.top()->m_end <= i) {
+            g_drawCache.draw();
+            activeConditions.top()->end(this);
+            activeConditions.pop();
+        }
         while (condition != m_conditions.end() && (*condition)->m_start <= i) {
             g_drawCache.draw();
             (*condition)->start(this);
             activeConditions.push(*condition);
             ++condition;
-        }
-        while (!activeConditions.empty() && activeConditions.top()->m_end <= i) {
-            g_drawCache.draw();
-            activeConditions.top()->end(this);
-            activeConditions.pop();
         }
 
         if (!m_queue[i]->cache()) {
