@@ -63,9 +63,6 @@
       BUILD_REVISION=$(BUILD_REVISION)
     </PREPROCESSOR_DEFS>
   </PropertyGroup>  
-  <PropertyGroup>
-    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

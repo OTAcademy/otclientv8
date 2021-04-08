@@ -59,16 +59,28 @@ jobs:
         Get-Content otclientv8.log
         if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
 
-    - name: Cleanup things
-      run: |        
-        Remove-Item 'data\things' -Recurse
-
     - name: Upload otclientv8.log
       uses: 'actions/upload-artifact@v2'
       with:
         path: otclientv8.log
         name: Download-otclientv8.log
         if-no-files-found: error
+
+    - name: Copy screenshots
+      run: |        
+        $location = Get-Location
+        cd $env:appdata\otclientv8\otclientv8
+        pip3 install pillow
+        python3 -c "from PIL import Image; import glob; [Image.open(file).convert('RGB').save(file[:-3] + 'jpg', quality=50) for file in glob.glob('*.png')]"
+        cd $location
+        mkdir screenshots
+        Get-ChildItem $env:appdata\otclientv8\otclientv8 -Filter *.jpg | Copy-Item -Destination screenshots -Force -PassThru
+
+    - name: Upload screenshot
+      uses: 'actions/upload-artifact@v2'
+      with:
+        path: screenshots
+        name: Download-screenshots
         
     - name: Compile otclient_gl, otclient_debug_lib, otclient_debug
       timeout-minutes: 40
@@ -78,13 +90,25 @@ jobs:
         MSBuild /property:Configuration=Debug_lib /p:BUILD_REVISION=${{github.run_number}}
         MSBuild /property:Configuration=Debug /p:BUILD_REVISION=${{github.run_number}}
 
-    - name: Decompress android libs
+    - name: Run debug tests
+      timeout-minutes: 10
       run: |
-        7z x android_libs.7z -aoa -oC:\android
+        Remove-Item otclientv8.log
+        $process = (Start-Process -Wait -PassThru otclient_debug.exe --test)        
+        Get-Content otclientv8.log
+        if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
+
+    - name: Cleanup things
+      run: |        
+        Remove-Item 'data\things' -Recurse
 
     - name: Create data.zip for android
       run: |
         powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
+
+    - name: Decompress android libs
+      run: |
+        7z x android_libs.7z -aoa -oC:\android
 
     - name: Build for android
       timeout-minutes: 25
@@ -118,22 +142,6 @@ jobs:
           init.lua
         if-no-files-found: error
         
-    - name: Copy screenshots
-      run: |        
-        $location = Get-Location
-        cd $env:appdata\otclientv8\otclientv8
-        pip3 install pillow
-        python3 -c "from PIL import Image; import glob; [Image.open(file).convert('RGB').save(file[:-3] + 'jpg', quality=50) for file in glob.glob('*.png')]"
-        cd $location
-        mkdir screenshots
-        Get-ChildItem $env:appdata\otclientv8\otclientv8 -Filter *.jpg | Copy-Item -Destination screenshots -Force -PassThru
-
-    - name: Upload screenshot
-      uses: 'actions/upload-artifact@v2'
-      with:
-        path: screenshots
-        name: Download-screenshots
-
     - name: Checkout public otclientv8
       uses: actions/checkout@v2
       with:
