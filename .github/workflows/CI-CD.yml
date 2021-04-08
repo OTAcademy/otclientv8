@@ -1,5 +1,9 @@
 name: Build, Test, Release
-on: [push]
+on:
+  push:
+  workflow_run:
+    workflows: ["Merge otcv8-dev"]
+    types: [completed]
 
 jobs:
   Windows:
@@ -141,7 +145,7 @@ jobs:
     - name: Update public otclientv8 files
       run: |        
         cd otclientv8
-        git rm . -f -r
+        git rm . -f -r --ignore-unmatch
         git checkout HEAD -- README.md LICENSE
         cd ..
         robocopy . otclientv8 init.lua otclient_dx.exe otclient_gl.exe otclientv8.apk libGLESv2.dll libEGL.dll d3dcompiler_47.dll
@@ -170,7 +174,7 @@ jobs:
     - name: Update otcv8-dev files
       run: |        
         cd otcv8-dev
-        git rm src data modules layouts tests init.lua test.lua lib.7z tests.7z -f -r
+        git rm src data modules layouts tests init.lua test.lua lib.7z tests.7z -f -r --ignore-unmatch
         cd ..
         robocopy src otcv8-dev/src
         robocopy src/client otcv8-dev/src/client *.h* *.c* /s

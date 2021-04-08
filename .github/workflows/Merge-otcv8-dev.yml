@@ -25,7 +25,8 @@ jobs:
     - name: Update files
       run: |        
         cd otclient
-        git rm src/client data modules layouts tests init.lua test.lua -f -r
+        git rm src/client data modules layouts tests init.lua test.lua -f -r --ignore-unmatch
+        git checkout HEAD -- src/client/CMakeLists.txt
         cd ..
         robocopy otcv8-dev/src/client otclient/src/client /s
         robocopy otcv8-dev/data otclient/data /s
