@@ -161,7 +161,7 @@ jobs:
         push: true
         author_name: OTCv8
         author_email: otclient@otclient.ovh
-        message: ${{env.VERSION}}
+        message: Updated to ${{env.VERSION}}
 
     - name: Checkout otcv8-dev
       uses: actions/checkout@v2
@@ -194,7 +194,7 @@ jobs:
         push: true
         author_name: OTCv8
         author_email: otclient@otclient.ovh
-        message: ${{env.VERSION}}
+        message: Updated to ${{env.VERSION}}
 
     - name: Deploy on otclient.ovh
       uses: garygrossgarten/github-action-ssh@release
