@@ -33,6 +33,7 @@ CMakeLists.txt.user*
 *.bak
 *.swp
 *.pic
+.vs
 .lvimrc
 .clang_complete
 config.otml
