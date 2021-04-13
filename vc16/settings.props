@@ -19,33 +19,25 @@
     </PREPROCESSOR_DEFS>
     
     <OTCLIENT_LIBDEPS>
-        OpenAL32.lib;
-        advapi32.lib;
-        bcrypt.lib;	
-        bz2.lib;
-        boost_filesystem-vc140-mt.lib;
-        dbghelp.lib;
-        gdi32.lib;
-        kernel32.lib;
-        libcrypto.lib;
-        libssl.lib;
-        lua51.lib;
-        lzma.lib;
-        ogg.lib;
-        mincore.lib;
-        mincore_downlevel.lib;
-        msvcrt.lib;
-        physfs-static.lib;
-        psapi.lib;
-        shell32.lib;
-        ucrt.lib;
-        user32.lib;
-        vcruntime.lib;
-        vorbis.lib;
-        vorbisfile.lib;
-        winmm.lib;
-        zip.lib;
         zlib.lib;
+        libssl.lib;
+        physfs-static.lib;
+        winmm.lib;
+        lua51.lib;
+        dbghelp.lib;
+        kernel32.lib;
+        user32.lib;
+        shell32.lib;
+        gdi32.lib;
+        advapi32.lib;
+    		Ole32.lib;
+        psapi.lib;
+        bcrypt.lib;		
+        ucrt.lib;
+        vcruntime.lib;
+        msvcrt.lib;
+        mincore_downlevel.lib;
+        mincore.lib;    
     </OTCLIENT_LIBDEPS>
   </PropertyGroup>
   <PropertyGroup>
