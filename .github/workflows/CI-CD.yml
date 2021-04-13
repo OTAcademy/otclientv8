@@ -29,7 +29,7 @@ jobs:
       id: setup_msbuild
 
     - name: Load cache
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v2.1.5
       with:
         path: C:/vcpkg
         key: ${{ runner.os }}-vcpkg
