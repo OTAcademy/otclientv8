@@ -51,33 +51,9 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
     else if (direction == Otc::NorthWest || direction == Otc::SouthWest)
         direction = Otc::West;
 
-    Point wingDest = dest;
-    if(g_game.getFeature(Otc::GameWingOffset) && m_wings)
-        dest -= Point(6, 6);
-
     auto type = g_things.rawGetThingType(m_category == ThingCategoryCreature ? m_id : m_auxId, m_category);
     if (!type) return;
     int animationPhase = walkAnimationPhase;
-
-    auto wingBounce = [&] {
-        int maxoffset = 4;
-        uint floatingTicks = 8;
-        int tick = (g_clock.millis() % (1000)) / (1000 / floatingTicks);
-        int offset = 0;
-        if (walkAnimationPhase > 0) {
-            auto idleAnimator = type->getIdleAnimator();
-            if (idleAnimator) {
-                animationPhase = idleAnimator->getPhase();
-            }
-            else {
-                animationPhase = 0;
-            }
-        }
-        offset = tick <= floatingTicks / 2 ? tick * (maxoffset / (floatingTicks / 2)) : (2 * maxoffset) - tick * (maxoffset / (floatingTicks / 2));
-        dest -= Point(offset, offset);
-        wingDest -= Point(offset, offset);
-    };
-
     if (animate && m_category == ThingCategoryCreature) {
         auto idleAnimator = type->getIdleAnimator();
         if (idleAnimator) {
@@ -90,9 +66,6 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
             int phases = type->getAnimator() ? type->getAnimator()->getAnimationPhases() : type->getAnimationPhases();
             int ticksPerFrame = 1000 / phases;
             animationPhase = (g_clock.millis() % (ticksPerFrame * phases)) / ticksPerFrame;
-        }
-        if (g_game.getFeature(Otc::GameWingOffset) && m_wings) {
-            wingBounce();
         }
     } else if(animate) {
         int animationPhases = type->getAnimationPhases();
@@ -110,44 +83,39 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
     }
 
     int zPattern = m_mount > 0 ? std::min<int>(1, type->getNumPatternZ() - 1) : 0;
-    if (zPattern > 0) {
-        int mountAnimationPhase = walkAnimationPhase;
-        auto mountType = g_things.rawGetThingType(m_mount, ThingCategoryCreature);
-        auto idleAnimator = mountType->getIdleAnimator();
-        if (idleAnimator && animate) {
-            if (walkAnimationPhase > 0) {
-                mountAnimationPhase += idleAnimator->getAnimationPhases() - 1;
-            } else {
-                mountAnimationPhase = idleAnimator->getPhase();
+ 
+    auto drawMount = [&] {
+        if (zPattern > 0) {
+            int mountAnimationPhase = walkAnimationPhase;
+            auto mountType = g_things.rawGetThingType(m_mount, ThingCategoryCreature);
+            auto idleAnimator = mountType->getIdleAnimator();
+            if (idleAnimator && animate) {
+                if (walkAnimationPhase > 0) {
+                    mountAnimationPhase += idleAnimator->getAnimationPhases() - 1;
+                } else {
+                    mountAnimationPhase = idleAnimator->getPhase();
+                }
             }
-        }
 
-        dest -= mountType->getDisplacement();
-        mountType->draw(dest, 0, direction, 0, 0, mountAnimationPhase, Color::white, lightView);
-        dest += type->getDisplacement();
-    }
+            dest -= mountType->getDisplacement();
+            mountType->draw(dest, 0, direction, 0, 0, mountAnimationPhase, Color::white, lightView);
+            dest += type->getDisplacement();
+        }
+    };
 
     auto drawWings = [&] {
         int wingAnimationPhase = walkAnimationPhase;
         auto wingsType = g_things.rawGetThingType(m_wings, ThingCategoryCreature);
         int wingsZPattern = m_mount > 0 ? std::min<int>(1, wingsType->getNumPatternZ() - 1) : 0;
         auto idleAnimator = wingsType->getIdleAnimator();
-        if (animate) {
-            if (idleAnimator) {
-                if (walkAnimationPhase > 0) {
-                    wingAnimationPhase += idleAnimator->getAnimationPhases() - 1;
-                }
-                else {
-                    wingAnimationPhase = idleAnimator->getPhase();
-                }
-            }
-            else if (wingsType->isAnimateAlways()) {
-                int phases = wingsType->getAnimator() ? wingsType->getAnimator()->getAnimationPhases() : wingsType->getAnimationPhases();
-                int ticksPerFrame = 1000 / phases;
-                wingAnimationPhase = (g_clock.millis() % (ticksPerFrame * phases)) / ticksPerFrame;
+        if (idleAnimator && animate) {
+            if (walkAnimationPhase > 0) {
+                wingAnimationPhase += idleAnimator->getAnimationPhases() - 1;
+            } else {
+                wingAnimationPhase = idleAnimator->getPhase();
             }
         }
-        wingsType->draw(wingDest, 0, direction, 0, wingsZPattern, wingAnimationPhase, Color::white, lightView);
+        wingsType->draw(dest, 0, direction, 0, wingsZPattern, wingAnimationPhase, Color::white, lightView);
     };
 
     auto drawAura = [&] {
@@ -169,13 +137,9 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
         drawAura();
     }
 
+    drawMount();
+
     if (m_wings && (direction == Otc::South || direction == Otc::East)) {
-        if (g_game.getFeature(Otc::GameWingOffset) && zPattern > 0) {
-            if (direction == Otc::East)
-                wingDest -= Point(6, 2);
-            else
-                wingDest -= Point(0, 6);
-        }
         drawWings();
     }
 
@@ -217,9 +181,6 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
     }
 
     if (m_wings && (direction == Otc::North || direction == Otc::West)) {
-        if (g_game.getFeature(Otc::GameWingOffset) && zPattern > 0)
-            wingDest += Point(4, 6);
-
         drawWings();
     }
 

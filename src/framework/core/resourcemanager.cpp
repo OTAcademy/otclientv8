@@ -492,7 +492,6 @@ bool ResourceManager::writeFileContents(const std::string& fileName, const std::
 FileStreamPtr ResourceManager::openFile(const std::string& fileName, bool dontCache)
 {
     std::string fullPath = resolvePath(fileName);
-//  If you uncomment it won't cache spr file in memory, not recommended, lags client
     if (isFileEncryptedOrCompressed(fullPath) || !dontCache) {
         return FileStreamPtr(new FileStream(fullPath, std::move(readFileContents(fullPath))));
     }
