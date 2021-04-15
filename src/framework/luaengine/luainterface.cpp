@@ -696,7 +696,11 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
         g_lua.m_cppCallbackDepth++;
         numRets = (*(funcPtr->get()))(&g_lua);
         g_lua.m_cppCallbackDepth--;
-        VALIDATE(numRets == g_lua.stackSize());
+#ifndef NDEBUG
+        if (numRets != g_lua.stackSize()) {
+            throw stdext::exception(stdext::format("LuaInterface::luaCppFunctionCallback, numRets != g_lua.stackSize() (%i != %i)", numRets, g_lua.stackSize());
+        }
+#endif
     } catch(stdext::exception& e) {
         // cleanup stack
         while(g_lua.stackSize() > 0)

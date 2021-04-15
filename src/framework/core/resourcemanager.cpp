@@ -489,17 +489,17 @@ bool ResourceManager::writeFileContents(const std::string& fileName, const std::
     return writeFileBuffer(fileName, (const uchar*)data.c_str(), data.size());
 }
 
-FileStreamPtr ResourceManager::openFile(const std::string& fileName)
+FileStreamPtr ResourceManager::openFile(const std::string& fileName, bool dontCache)
 {
     std::string fullPath = resolvePath(fileName);
 //  If you uncomment it won't cache spr file in memory, not recommended, lags client
-//    if (isFileEncryptedOrCompressed(fullPath)) {
+    if (isFileEncryptedOrCompressed(fullPath) || !dontCache) {
         return FileStreamPtr(new FileStream(fullPath, std::move(readFileContents(fullPath))));
-//    }
-//    PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
-//    if (!file)
-//        stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-//    return FileStreamPtr(new FileStream(fullPath, file, false));
+    }
+    PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
+    if (!file)
+        stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
+    return FileStreamPtr(new FileStream(fullPath, file, false));
 }
 
 FileStreamPtr ResourceManager::appendFile(const std::string& fileName)
