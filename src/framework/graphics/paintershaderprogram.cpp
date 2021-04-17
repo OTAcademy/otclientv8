@@ -28,7 +28,7 @@
 #include <framework/core/clock.h>
 #include <framework/platform/platformwindow.h>
 
-PainterShaderProgram::PainterShaderProgram()
+PainterShaderProgram::PainterShaderProgram(const std::string& name) : ShaderProgram(name)
 {
     m_startTime = g_clock.seconds();
     m_depth = 0;
@@ -82,7 +82,7 @@ void PainterShaderProgram::setupUniforms()
     setUniformValue(CENTER_UNIFORM, (float)m_center.x, (float)m_center.y);
 }
 
-void PainterShaderProgram::link()
+bool PainterShaderProgram::link()
 {
     m_startTime = g_clock.seconds();
     bindAttributeLocation(VERTEX_ATTR, "a_Vertex");
@@ -90,11 +90,12 @@ void PainterShaderProgram::link()
     bindAttributeLocation(DEPTH_ATTR, "a_Depth");
     bindAttributeLocation(COLOR_ATTR, "a_Color");
     bindAttributeLocation(DEPTH_TEXCOORD_ATTR, "a_DepthTexCoord");
-    ShaderProgram::link();
+    if (!ShaderProgram::link())
+        return false;
     bind();
     setupUniforms();
     release();
-    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
+    g_graphics.checkForError(stdext::format("%s (%s)", __FUNCTION__, getName()), __FILE__, __LINE__);
 }
 
 void PainterShaderProgram::setTransformMatrix(const Matrix3& transformMatrix)
@@ -203,7 +204,7 @@ void PainterShaderProgram::updateTime()
 void PainterShaderProgram::addMultiTexture(const std::string& file)
 {
     if (m_multiTextures.size() > 3)
-        g_logger.error("cannot add more multi textures to shader, the max is 3");
+        g_logger.error(stdext::format("cannot add more multi textures to shader, the max is 3 - %s", getName()));
 
     TexturePtr texture = g_textures.getTexture(file);
     if (!texture)

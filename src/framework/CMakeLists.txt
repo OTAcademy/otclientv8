@@ -335,6 +335,7 @@ endif()
 
 if(FRAMEWORK_GRAPHICS)
     set(OPENGLES "OFF" CACHE "Use OpenGL ES 1.0 or 2.0 (for mobiles devices)" STRING)
+    set(OpenGL_GL_PREFERENCE "LEGACY")
     if(WASM)
         set(OPENGLES "2.0")
         set(framework_DEFINITIONS ${framework_DEFINITIONS} -DOPENGL_ES=2)
@@ -429,6 +430,8 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shader.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shaderprogram.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shaderprogram.h
+	${CMAKE_CURRENT_LIST_DIR}/graphics/shadermanager.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/graphics/shadermanager.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/textrender.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/textrender.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/texture.cpp

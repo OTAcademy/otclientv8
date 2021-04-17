@@ -50,7 +50,7 @@ void ShaderManager::createShader(const std::string& name, std::string vertex, st
     }
 
     g_graphicsDispatcher.addEventEx("createShader", [&, name, vertex, fragment, colorMatrix] {
-        auto program = PainterShaderProgram::create(vertex, fragment, colorMatrix);
+        auto program = PainterShaderProgram::create(name, vertex, fragment, colorMatrix);
         if (program)
             m_shaders[name] = program;
     });
