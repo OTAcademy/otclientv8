@@ -96,6 +96,7 @@ bool PainterShaderProgram::link()
     setupUniforms();
     release();
     g_graphics.checkForError(stdext::format("%s (%s)", __FUNCTION__, getName()), __FILE__, __LINE__);
+    return true;
 }
 
 void PainterShaderProgram::setTransformMatrix(const Matrix3& transformMatrix)

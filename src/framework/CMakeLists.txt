@@ -550,6 +550,10 @@ if(FRAMEWORK_NET)
         ${CMAKE_CURRENT_LIST_DIR}/net/outputmessage.h
         ${CMAKE_CURRENT_LIST_DIR}/net/protocol.cpp
         ${CMAKE_CURRENT_LIST_DIR}/net/protocol.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/proxy_player.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/proxy_player.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/proxy_recorder.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/proxy_recorder.h
         ${CMAKE_CURRENT_LIST_DIR}/net/server.cpp
         ${CMAKE_CURRENT_LIST_DIR}/net/server.h
         ${CMAKE_CURRENT_LIST_DIR}/http/http.cpp
@@ -559,6 +563,10 @@ if(FRAMEWORK_NET)
         ${CMAKE_CURRENT_LIST_DIR}/http/websocket.cpp
         ${CMAKE_CURRENT_LIST_DIR}/http/websocket.h
         ${CMAKE_CURRENT_LIST_DIR}/http/result.h
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy.h
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy_client.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy_client.h
     )
     set(framework_DEFINITIONS ${framework_DEFINITIONS} -DFW_NET)
 endif()
