@@ -41,7 +41,8 @@ UIWidget::UIWidget()
     m_source = g_lua.getSource(2);
     // find correct source
     int level = 3;
-    while((m_source.find("corelib") != std::string::npos || m_source.find("gamelib") != std::string::npos || m_source.find("[C]") != std::string::npos) && level < 8) {
+    while((m_source.find("corelib") != std::string::npos || m_source.find("gamelib") != std::string::npos 
+           || m_source.find("game_bot/functions/ui") != std::string::npos || m_source.find("[C]") != std::string::npos) && level < 8) {
         std::string tmp_src = g_lua.getSource(level);
         if (tmp_src.length() <= 3) break;
         m_source = tmp_src;
