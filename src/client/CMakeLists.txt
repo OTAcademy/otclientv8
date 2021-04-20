@@ -1,17 +1,4 @@
-# CMAKE_CURRENT_LIST_DIR cmake 2.6 compatibility
-if(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 6)
-    get_filename_component(CMAKE_CURRENT_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
-endif(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 6)
-
-# client options
 add_definitions(-DCLIENT)
-option(BOT_PROTECTION "Enable bot protection" ON)
-if(BOT_PROTECTION)
-    add_definitions(-DBOT_PROTECTION)
-    message(STATUS "Bot protection: ON")
-else(BOT_PROTECTION)
-    message(STATUS "Bot protection: OFF")
-endif(BOT_PROTECTION)
 
 set(client_SOURCES ${client_SOURCES}
     # client
@@ -108,6 +95,3 @@ set(client_SOURCES ${client_SOURCES}
     # util
     ${CMAKE_CURRENT_LIST_DIR}/position.h
 )
-
-set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/luafunctions.cpp
-                            PROPERTIES LANGUAGE CXX COMPILE_FLAGS "-g0 -Os")

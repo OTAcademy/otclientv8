@@ -7,6 +7,11 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
+# default build type
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "release")
+endif()
+
 option(FRAMEWORK_SOUND "Use SOUND " OFF)
 option(FRAMEWORK_GRAPHICS "Use GRAPHICS " ON)
 option(FRAMEWORK_XML "Use XML " ON)
@@ -21,7 +26,7 @@ if(NOT APPLE AND NOT WASM)
     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie -Wl,-Map=${PROJECT_NAME}.map")
 endif()
 
-option(USE_PCH "Use precompiled header (speed up compile)" OFF)
+option(USE_PCH "Use precompiled header (speed up compile)" ON)
 
 set(executable_SOURCES
     src/main.cpp
@@ -44,6 +49,10 @@ add_definitions(-D"VERSION=\\"${VERSION}\\"")
 add_executable(${PROJECT_NAME} ${framework_SOURCES} ${client_SOURCES} ${executable_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${framework_LIBRARIES})
 
+if(APPLE AND USE_STATIC_LIBS)
+    target_link_libraries(${PROJECT_NAME} "-framework Foundation" "-framework IOKit")
+endif()
+
 if(USE_PCH)
     include(cotire)
     cotire(${PROJECT_NAME})
@@ -51,15 +60,6 @@ if(USE_PCH)
 else()
     message(STATUS "Use precompiled header: OFF")
 endif()
-
-# installation
-set(DATA_INSTALL_DIR share/${PROJECT_NAME})
-install(TARGETS ${PROJECT_NAME}
-		RUNTIME DESTINATION bin
-		LIBRARY DESTINATION lib
-		ARCHIVE DESTINATION lib)
-install(FILES README.md BUGS LICENSE AUTHORS init.lua ${PROJECT_NAME}rc.lua DESTINATION ${DATA_INSTALL_DIR})
-install(DIRECTORY data modules DESTINATION ${DATA_INSTALL_DIR} PATTERN ".git" EXCLUDE)
 
 # add "make run"
 add_custom_target(run COMMAND ${PROJECT_NAME} DEPENDS ${PROJECT_NAME} WORKING_DIRECTORY ${CMAKE_PROJECT_DIR})
