@@ -1,9 +1,12 @@
+---
 name: Build, Test, Release
-on:
+'on':
   push:
   workflow_run:
-    workflows: ["Merge otcv8-dev"]
-    types: [completed]
+    workflows:
+      - "Merge otcv8-dev"
+    types:
+      - completed
 
 jobs:
   Windows:
@@ -17,200 +20,259 @@ jobs:
         || github.ref == 'refs/heads/main'
         || github.ref == 'refs/heads/master'
       )
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
           submodules: recursive
 
-    - name: Setup MSBuild and add to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-      id: setup_msbuild
+      - name: Setup MSBuild and add to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+        id: setup_msbuild
 
-    - name: Load cache
-      uses: actions/cache@v2
-      with:
-        path: C:/vcpkg
-        key: ${{ runner.os }}-vcpkg
+      - name: Load cache
+        uses: actions/cache@v2
+        with:
+          path: C:/vcpkg
+          key: "${{ runner.os }}-vcpkg"
 
-    - name: Install dependencies 
-      timeout-minutes: 30
-      run: |
-        C:\vcpkg\vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static `
-        boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static `
-        boost-lockfree:x86-windows-static boost-process:x86-windows-static boost-program-options:x86-windows-static `
-        luajit:x86-windows-static glew:x86-windows-static boost-filesystem:x86-windows-static boost-uuid:x86-windows-static `
-        physfs:x86-windows-static openal-soft:x86-windows-static libogg:x86-windows-static libvorbis:x86-windows-static `
-        zlib:x86-windows-static libzip:x86-windows-static openssl:x86-windows-static
-        C:\vcpkg\vcpkg integrate install
+      - name: Install dependencies
+        timeout-minutes: 30
+        run: |
+          C:\vcpkg\vcpkg install `
+            boost-iostreams:x86-windows-static `
+            boost-asio:x86-windows-static `
+            boost-beast:x86-windows-static `
+            boost-system:x86-windows-static `
+            boost-variant:x86-windows-static `
+            boost-lockfree:x86-windows-static `
+            boost-process:x86-windows-static `
+            boost-program-options:x86-windows-static `
+            luajit:x86-windows-static `
+            glew:x86-windows-static `
+            boost-filesystem:x86-windows-static `
+            boost-uuid:x86-windows-static `
+            physfs:x86-windows-static `
+            openal-soft:x86-windows-static `
+            libogg:x86-windows-static `
+            libvorbis:x86-windows-static `
+            zlib:x86-windows-static `
+            libzip:x86-windows-static `
+            openssl:x86-windows-static
+          C:\vcpkg\vcpkg integrate install
 
-    - name: Compile otclient_dx
-      timeout-minutes: 20
-      run: |
-        cd vc16
-        MSBuild /property:Configuration=DirectX /p:BUILD_REVISION=${{github.run_number}}
+      - name: Compile otclient_dx
+        timeout-minutes: 20
+        run: |
+          cd vc16
+          MSBuild `
+          /property:Configuration=DirectX `
+          /p:BUILD_REVISION=${{ github.run_number }}
 
-    - name: Run tests
-      timeout-minutes: 10
-      run: |        
-        7z x tests.7z -aoa
-        $process = (Start-Process -Wait -PassThru otclient_dx.exe --test)        
-        Get-Content otclientv8.log
-        if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
+      - name: Run tests
+        timeout-minutes: 10
+        run: |
+          7z x tests.7z -aoa
+          $process = (Start-Process -Wait -PassThru otclient_dx.exe --test)
+          Get-Content otclientv8.log
+          if ($process.ExitCode -ne 0) {
+            throw "Invalid exit code: " + $process.ExitCode;
+          }
 
-    - name: Upload otclientv8.log
-      uses: 'actions/upload-artifact@v2'
-      with:
-        path: otclientv8.log
-        name: Download-otclientv8.log
-        if-no-files-found: error
+      - name: Upload otclientv8.log
+        uses: actions/upload-artifact@v2
+        with:
+          path: otclientv8.log
+          name: Download-otclientv8.log
+          if-no-files-found: error
 
-    - name: Copy screenshots
-      run: |        
-        $location = Get-Location
-        cd $env:appdata\otclientv8\otclientv8
-        pip3 install pillow
-        python3 -c "from PIL import Image; import glob; [Image.open(file).convert('RGB').save(file[:-3] + 'jpg', quality=50) for file in glob.glob('*.png')]"
-        cd $location
-        mkdir screenshots
-        Get-ChildItem $env:appdata\otclientv8\otclientv8 -Filter *.jpg | Copy-Item -Destination screenshots -Force -PassThru
+      - name: Copy screenshots
+        run: |
+          $location = Get-Location
+          $pillowScript = @"
+            from PIL import Image
+            import glob
 
-    - name: Upload screenshot
-      uses: 'actions/upload-artifact@v2'
-      with:
-        path: screenshots
-        name: Download-screenshots
-        
-    - name: Compile otclient_gl, otclient_debug_lib, otclient_debug
-      timeout-minutes: 40
-      run: |
-        cd vc16
-        MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
-        MSBuild /property:Configuration=Debug_lib /p:BUILD_REVISION=${{github.run_number}}
-        MSBuild /property:Configuration=Debug /p:BUILD_REVISION=${{github.run_number}}
+            for file in glob.glob('*.png'):
+              Image.open(file).convert('RGB').save(
+                file[:-3] + 'jpg',
+                quality=50,
+              )
+          "@
+          cd $env:appdata\otclientv8\otclientv8
+          pip3 install pillow
+          python3 -c $pillowScript
+          cd $location
+          mkdir screenshots
+          Get-ChildItem $env:appdata\otclientv8\otclientv8 -Filter *.jpg `
+          | Copy-Item -Destination screenshots -Force -PassThru
 
-    - name: Run debug tests
-      timeout-minutes: 10
-      run: |
-        Remove-Item otclientv8.log
-        $process = (Start-Process -Wait -PassThru otclient_debug.exe --test)        
-        Get-Content otclientv8.log
-        if ($process.ExitCode -ne 0) { throw "Invalid exit code: " + $process.ExitCode; }
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v2
+        with:
+          path: screenshots
+          name: Download-screenshots
 
-    - name: Cleanup things
-      run: |        
-        Remove-Item 'data\things' -Recurse
+      - name: Compile otclient_gl, otclient_debug_lib, otclient_debug
+        timeout-minutes: 40
+        run: |
+          cd vc16
+          MSBuild `
+          /property:Configuration=OpenGL `
+          /p:BUILD_REVISION=${{ github.run_number }}
 
-    - name: Create data.zip for android
-      run: |
-        powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
+          MSBuild `
+          /property:Configuration=Debug_lib `
+          /p:BUILD_REVISION=${{ github.run_number }}
 
-    - name: Decompress android libs
-      run: |
-        7z x android_libs.7z -aoa -oC:\android
+          MSBuild `
+          /property:Configuration=Debug `
+          /p:BUILD_REVISION=${{ github.run_number }}
 
-    - name: Build for android
-      timeout-minutes: 25
-      run: |
-        cd android
-        $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
-        MSBuild.exe /p:Configuration=Release /p:Platform="ARM" /p:BUILD_REVISION=${{github.run_number}}
+      - name: Run debug tests
+        timeout-minutes: 10
+        run: |
+          Remove-Item otclientv8.log
+          $process = (Start-Process -Wait -PassThru otclient_debug.exe --test)
+          Get-Content otclientv8.log
+          if ($process.ExitCode -ne 0) {
+            throw "Invalid exit code: " + $process.ExitCode;
+          }
 
-    - name: Cleanup src
-      run: |        
-        Remove-Item 'src\android' -Recurse
-        Get-ChildItem -Path 'src\framework' *.c* -Recurse | foreach { Remove-Item -Path $_.FullName }
+      - name: Cleanup things
+        run: |
+          Remove-Item 'data\things' -Recurse
 
-    - name: Set version
-      run: |
-        $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' | select-object -First 1 | % { $_.Matches } | % { $_.Value }
-        "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
+      - name: Create data.zip for android
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
 
-    - name: Upload otclient
-      uses: 'actions/upload-artifact@v2'
-      with:
-        name: Download-otclientv8
-        path: |
-          otclient_gl.exe
-          otclient_dx.exe
-          otclientv8.apk
-          *.dll
-          data
-          modules
-          layouts
-          mods
-          init.lua
-        if-no-files-found: error
-        
-    - name: Checkout public otclientv8
-      uses: actions/checkout@v2
-      with:
+      - name: Decompress android libs
+        run: |
+          7z x android_libs.7z -aoa -oC:\android
+
+      - name: Build for android
+        timeout-minutes: 25
+        run: |
+          cd android
+          $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
+          MSBuild.exe `
+          /p:Configuration=Release `
+          /p:Platform="ARM" `
+          /p:BUILD_REVISION=${{ github.run_number }}
+
+      - name: Cleanup src
+        run: |
+          Remove-Item 'src\android' -Recurse
+          Get-ChildItem -Path 'src\framework' *.c* -Recurse `
+          | foreach { Remove-Item -Path $_.FullName }
+
+      - name: Set version
+        run: |
+          $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' | select-object -First 1 | % { $_.Matches } | % { $_.Value }
+          "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
+
+      - name: Upload otclient
+        uses: actions/upload-artifact@v2
+        with:
+          name: Download-otclientv8
+          path: |
+            otclient_gl.exe
+            otclient_dx.exe
+            otclientv8.apk
+            *.dll
+            data
+            modules
+            layouts
+            mods
+            init.lua
+          if-no-files-found: error
+
+      - name: Checkout public otclientv8
+        uses: actions/checkout@v2
+        with:
           repository: OTCv8/otclientv8
           path: otclientv8
           submodules: recursive
-          token: ${{ secrets.otcv8_token }}
+          token: "${{ secrets.otcv8_token }}"
 
-    - name: Update public otclientv8 files
-      run: |        
-        cd otclientv8
-        git rm . -f -r --ignore-unmatch
-        git checkout HEAD -- README.md LICENSE
-        cd ..
-        robocopy . otclientv8 init.lua otclient_dx.exe otclient_gl.exe otclientv8.apk libGLESv2.dll libEGL.dll d3dcompiler_47.dll
-        robocopy data otclientv8/data /s
-        robocopy layouts otclientv8/layouts /s
-        robocopy mods otclientv8/mods /s
-        robocopy modules otclientv8/modules /s
-        exit 0 # required, robocopy has exit code 1
+      - name: Update public otclientv8 files
+        run: |
+          cd otclientv8
+          git rm . -f -r --ignore-unmatch
+          git checkout HEAD -- README.md LICENSE
+          cd ..
 
-    - name: Commit public otclientv8
-      uses: EndBug/add-and-commit@v7
-      with:
-        cwd: otclientv8
-        push: true
-        author_name: OTCv8
-        author_email: otclient@otclient.ovh
-        message: Updated to ${{env.VERSION}}
+          robocopy `
+          . `
+          otclientv8 `
+          init.lua `
+          otclient_dx.exe `
+          otclient_gl.exe `
+          otclientv8.apk `
+          libGLESv2.dll `
+          libEGL.dll `
+          d3dcompiler_47.dll
 
-    - name: Checkout otcv8-dev
-      uses: actions/checkout@v2
-      with:
+          robocopy data otclientv8/data /s
+          robocopy layouts otclientv8/layouts /s
+          robocopy mods otclientv8/mods /s
+          robocopy modules otclientv8/modules /s
+          exit 0 # required, robocopy has exit code 1
+
+      - name: Commit public otclientv8
+        uses: EndBug/add-and-commit@v7
+        with:
+          cwd: otclientv8
+          push: true
+          author_name: OTCv8
+          author_email: otclient@otclient.ovh
+          message: "Updated to ${{ env.VERSION }}"
+
+      - name: Checkout otcv8-dev
+        uses: actions/checkout@v2
+        with:
           repository: OTCv8/otcv8-dev
           path: otcv8-dev
           submodules: recursive
-          token: ${{ secrets.otcv8_token }}
+          token: "${{ secrets.otcv8_token }}"
 
-    - name: Update otcv8-dev files
-      run: |        
-        cd otcv8-dev
-        git rm src data modules layouts mods tests init.lua test.lua lib.7z tests.7z -f -r --ignore-unmatch
-        cd ..
-        robocopy src otcv8-dev/src
-        robocopy src/client otcv8-dev/src/client *.h* *.c* /s
-        robocopy src/framework otcv8-dev/src/framework *.h* /s
-        robocopy data otcv8-dev/data /s
-        robocopy modules otcv8-dev/modules /s
-        robocopy layouts otcv8-dev/layouts /s
-        robocopy mods otcv8-dev/mods /s
-        robocopy tests otcv8-dev/tests /s
-        robocopy . otcv8-dev init.lua test.lua tests.7z
-        7z a -t7z otcv8-dev/lib.7z otclient_debug_lib.lib otclient_debug_lib.pdb
-        exit 0 # required, robocopy has exit code 1
+      - name: Update otcv8-dev files
+        run: |
+          cd otcv8-dev
+          git rm `
+            -f -r --ignore-unmatch `
+          src data modules layouts mods tests init.lua test.lua lib.7z tests.7z
+          cd ..
+          robocopy src otcv8-dev/src
+          robocopy src/client otcv8-dev/src/client *.h* *.c* /s
+          robocopy src/framework otcv8-dev/src/framework *.h* /s
+          robocopy data otcv8-dev/data /s
+          robocopy modules otcv8-dev/modules /s
+          robocopy layouts otcv8-dev/layouts /s
+          robocopy mods otcv8-dev/mods /s
+          robocopy tests otcv8-dev/tests /s
+          robocopy . otcv8-dev init.lua test.lua tests.7z
+          7z a `
+            -t7z `
+          otcv8-dev/lib.7z `
+          otclient_debug_lib.lib otclient_debug_lib.pdb
 
-    - name: Commit otcv8-dev
-      uses: EndBug/add-and-commit@v7
-      with:
-        cwd: otcv8-dev
-        push: true
-        author_name: OTCv8
-        author_email: otclient@otclient.ovh
-        message: Updated to ${{env.VERSION}}
+          exit 0 # required, robocopy has exit code 1
 
-    - name: Deploy on otclient.ovh
-      uses: garygrossgarten/github-action-ssh@release
-      with:
-        command: ./update_otcv8.sh
-        host: otclient.ovh
-        username: debian
-        privateKey: ${{ secrets.SSH_KEY }}
+      - name: Commit otcv8-dev
+        uses: EndBug/add-and-commit@v7
+        with:
+          cwd: otcv8-dev
+          push: true
+          author_name: OTCv8
+          author_email: otclient@otclient.ovh
+          message: "Updated to ${{ env.VERSION }}"
+
+      - name: Deploy on otclient.ovh
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: ./update_otcv8.sh
+          host: otclient.ovh
+          username: debian
+          privateKey: "${{ secrets.SSH_KEY }}"
