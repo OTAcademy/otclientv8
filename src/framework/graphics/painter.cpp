@@ -52,16 +52,21 @@ Painter::Painter()
     m_drawProgram = nullptr;
     resetState();
 
-    m_drawTexturedProgram = PainterShaderProgram::create(glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader,
+    m_drawTexturedProgram = PainterShaderProgram::create("drawTexturedProgram", glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader,
                                                     glslMainFragmentShader + glslTextureSrcFragmentShader);
-    m_drawSolidColorProgram = PainterShaderProgram::create(glslMainVertexShader + glslPositionOnlyVertexShader,
+    m_drawSolidColorProgram = PainterShaderProgram::create("drawSolidColorProgram", glslMainVertexShader + glslPositionOnlyVertexShader,
                                                       glslMainFragmentShader + glslSolidColorFragmentShader);
-    m_drawSolidColorOnTextureProgram = PainterShaderProgram::create(glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader,
+    m_drawSolidColorOnTextureProgram = PainterShaderProgram::create("drawSolidColorOnTextureProgram", glslMainWithTexCoordsVertexShader + glslPositionOnlyVertexShader,
                                                                glslMainFragmentShader + glslSolidColorOnTextureFragmentShader);
-    m_drawOutfitLayersProgram = PainterShaderProgram::create(glslOutfitVertexShader, glslOutfitFragmentShader, true);
-    m_drawNewProgram = PainterShaderProgram::create(newVertexShader, newFragmentShader);
-    m_drawTextProgram = PainterShaderProgram::create(textVertexShader, textFragmentShader);
-    m_drawLineProgram = PainterShaderProgram::create(lineVertexShader, lineFragmentShader);
+    m_drawOutfitLayersProgram = PainterShaderProgram::create("drawOutfitLayersProgram", glslOutfitVertexShader, glslOutfitFragmentShader, true);
+    m_drawNewProgram = PainterShaderProgram::create("drawNewProgram", newVertexShader, newFragmentShader);
+    m_drawTextProgram = PainterShaderProgram::create("drawTextProgram", textVertexShader, textFragmentShader);
+    m_drawLineProgram = PainterShaderProgram::create("drawLineProgram", lineVertexShader, lineFragmentShader);
+
+    if (!m_drawTexturedProgram || !m_drawSolidColorProgram || !m_drawSolidColorOnTextureProgram || !m_drawOutfitLayersProgram ||
+        !m_drawNewProgram || !m_drawTextProgram || !m_drawLineProgram) {
+        g_logger.fatal("Can't setup default shaders, check log file for details");
+    }
 
     PainterShaderProgram::release();
     g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);

@@ -39,10 +39,8 @@
 
 #include <locale>
 
-#ifdef FW_NET
 #include <framework/net/connection.h>
 #include <framework/proxy/proxy.h>
-#endif
 
 void exitSignalHandler(int sig)
 {
@@ -130,10 +128,8 @@ void Application::deinit()
 
 void Application::terminate()
 {
-#ifdef FW_NET
     // terminate network
     Connection::terminate();
-#endif
 
     // release configs
     g_configs.terminate();
@@ -155,16 +151,12 @@ void Application::terminate()
 
 void Application::poll()
 {
-#ifdef FW_NET
     Connection::poll();
-#endif
 
     g_dispatcher.poll();
 
     // poll connection again to flush pending write
-#ifdef FW_NET
     Connection::poll();
-#endif
 }
 
 void Application::exit()

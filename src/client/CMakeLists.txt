@@ -1,17 +1,4 @@
-# CMAKE_CURRENT_LIST_DIR cmake 2.6 compatibility
-if(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 6)
-    get_filename_component(CMAKE_CURRENT_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
-endif(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 6)
-
-# client options
 add_definitions(-DCLIENT)
-option(BOT_PROTECTION "Enable bot protection" ON)
-if(BOT_PROTECTION)
-    add_definitions(-DBOT_PROTECTION)
-    message(STATUS "Bot protection: ON")
-else(BOT_PROTECTION)
-    message(STATUS "Bot protection: OFF")
-endif(BOT_PROTECTION)
 
 set(client_SOURCES ${client_SOURCES}
     # client
@@ -35,8 +22,6 @@ set(client_SOURCES ${client_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/effect.h
     ${CMAKE_CURRENT_LIST_DIR}/game.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game.h
-    ${CMAKE_CURRENT_LIST_DIR}/shadermanager.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/shadermanager.h
     ${CMAKE_CURRENT_LIST_DIR}/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item.h
     ${CMAKE_CURRENT_LIST_DIR}/localplayer.cpp
@@ -70,6 +55,8 @@ set(client_SOURCES ${client_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/itemtype.h
     ${CMAKE_CURRENT_LIST_DIR}/tile.cpp
     ${CMAKE_CURRENT_LIST_DIR}/tile.h
+    ${CMAKE_CURRENT_LIST_DIR}/healthbars.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/healthbars.h
     ${CMAKE_CURRENT_LIST_DIR}/houses.cpp
     ${CMAKE_CURRENT_LIST_DIR}/houses.h
     ${CMAKE_CURRENT_LIST_DIR}/towns.cpp
@@ -108,6 +95,3 @@ set(client_SOURCES ${client_SOURCES}
     # util
     ${CMAKE_CURRENT_LIST_DIR}/position.h
 )
-
-set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/luafunctions.cpp
-                            PROPERTIES LANGUAGE CXX COMPILE_FLAGS "-g0 -Os")

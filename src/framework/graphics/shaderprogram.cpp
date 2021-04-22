@@ -27,7 +27,7 @@
 
 uint ShaderProgram::m_currentProgram = 0;
 
-ShaderProgram::ShaderProgram()
+ShaderProgram::ShaderProgram(const std::string& name) : m_name(name)
 {
     m_linked = false;
     m_programId = glCreateProgram();
@@ -43,18 +43,26 @@ ShaderProgram::~ShaderProgram()
         glDeleteProgram(m_programId);
 }
 
-PainterShaderProgramPtr ShaderProgram::create(const std::string& vertexShader, const std::string& fragmentShader, bool colorMatrix)
+PainterShaderProgramPtr ShaderProgram::create(const std::string& name, const std::string& vertexShader, const std::string& fragmentShader, bool colorMatrix)
 {
-    PainterShaderProgramPtr program(new PainterShaderProgram);
-    if (!program)
-        g_logger.fatal(stdext::format("Cant creatre shader: \n%s", vertexShader));
-    program->addShaderFromSourceCode(Shader::Vertex, vertexShader);
-    program->addShaderFromSourceCode(Shader::Fragment, fragmentShader);
+    PainterShaderProgramPtr program(new PainterShaderProgram(name));
+    if (!program) {
+        g_logger.error(stdext::format("Cant creatre shader: %s", program->getName()));
+        return nullptr;
+    }
+    if (!program->addShaderFromSourceCode(Shader::Vertex, vertexShader))
+        return nullptr;
+    if(!program->addShaderFromSourceCode(Shader::Fragment, fragmentShader))
+        return nullptr;
+
     if (colorMatrix) {
         program->enableColorMatrix();
     }
-    program->link();
-    g_graphics.checkForError(__FUNCTION__, vertexShader + "\n" + fragmentShader, __LINE__);
+    if (!program->link()) {
+        g_graphics.checkForError(stdext::format("%s (%s)", __FUNCTION__, program->getName()), vertexShader + "\n" + fragmentShader, __LINE__);
+        return nullptr;
+    }
+    g_graphics.checkForError(stdext::format("%s (%s)", __FUNCTION__, program->getName()), vertexShader + "\n" + fragmentShader, __LINE__);
     return program;
 }
 
@@ -69,7 +77,7 @@ bool ShaderProgram::addShader(const ShaderPtr& shader) {
 bool ShaderProgram::addShaderFromSourceCode(Shader::ShaderType shaderType, const std::string& sourceCode) {
     ShaderPtr shader(new Shader(shaderType));
     if(!shader->compileSourceCode(sourceCode)) {
-        g_logger.fatal(stdext::format("failed to compile shader: %s", shader->log()));
+        g_logger.error(stdext::format("failed to compile shader: %s\n%s", getName(), shader->log()));
         return false;
     }
     return addShader(shader);
@@ -78,7 +86,7 @@ bool ShaderProgram::addShaderFromSourceCode(Shader::ShaderType shaderType, const
 bool ShaderProgram::addShaderFromSourceFile(Shader::ShaderType shaderType, const std::string& sourceFile) {
     ShaderPtr shader(new Shader(shaderType));
     if(!shader->compileSourceFile(sourceFile)) {
-        g_logger.fatal(stdext::format("failed to compile shader (%s): %s", sourceFile, shader->log()));
+        g_logger.error(stdext::format("failed to compile shader %s (%s): %s", getName(), sourceFile, shader->log()));
         return false;
     }
     return addShader(shader);
@@ -101,10 +109,10 @@ void ShaderProgram::removeAllShaders()
         removeShader(m_shaders.front());
 }
 
-void ShaderProgram::link()
+bool ShaderProgram::link()
 {
     if(m_linked)
-        return;
+        return true;
 
     glLinkProgram(m_programId);
 
@@ -112,16 +120,17 @@ void ShaderProgram::link()
     glGetProgramiv(m_programId, GL_LINK_STATUS, &value);
     m_linked = (value != GL_FALSE);
     if (m_linked) {
-        return;
+        return true;
     }
 
     GLint maxLength = 0;
     glGetProgramiv(m_programId, GL_INFO_LOG_LENGTH, &maxLength);
     std::vector<GLchar> infoLog(maxLength);
     glGetProgramInfoLog(m_programId, maxLength, &maxLength, &infoLog[0]);
-    g_logger.fatal(stdext::format("Program %i linking error (%i): %s - %s - %s %s\nExtensions: %s", m_programId, infoLog.size(),
+    g_logger.error(stdext::format("Program %i, %s linking error (%i): %s - %s - %s %s\nExtensions: %s", m_programId, getName(), infoLog.size(),
         std::string(infoLog.begin(), infoLog.end()).c_str(), log().c_str(),
         g_graphics.getRenderer(), g_graphics.getVersion(), g_graphics.getExtensions()));
+    return false;
 }
 
 bool ShaderProgram::bind()

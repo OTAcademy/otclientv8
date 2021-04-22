@@ -31,7 +31,7 @@ jobs:
         id: setup_msbuild
 
       - name: Load cache
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         with:
           path: C:/vcpkg
           key: "${{ runner.os }}-vcpkg"
@@ -169,7 +169,10 @@ jobs:
 
       - name: Set version
         run: |
-          $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' | select-object -First 1 | % { $_.Matches } | % { $_.Value }
+          $version = Select-String -path otclientv8.log '(OTCv8[^(]+)' |
+            select-object -First 1 |
+            % { $_.Matches } |
+            % { $_.Value }
           "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
 
       - name: Upload otclient
