@@ -1067,19 +1067,17 @@ void WIN32Window::setClipboardText(const std::string& text)
     if(!OpenClipboard(m_window))
         return;
 
-    HGLOBAL hglb = GlobalAlloc(GMEM_MOVEABLE, (text.length() + 1) * sizeof(WCHAR));
+    HGLOBAL hglb = GlobalAlloc(GMEM_MOVEABLE, (text.length() + 1));
     if(!hglb)
         return;
 
-    std::wstring wtext = stdext::latin1_to_utf16(text);
-
-    LPWSTR lpwstr = (LPWSTR)GlobalLock(hglb);
-    memcpy(lpwstr, (char*)&wtext[0], wtext.length() * sizeof(WCHAR));
-    lpwstr[text.length()] = (WCHAR)0;
+    LPSTR lpstr = (LPSTR)GlobalLock(hglb);
+    memcpy(lpstr, (char*)&text[0], text.length());
+    lpstr[text.length()] = 0;
     GlobalUnlock(hglb);
 
     EmptyClipboard();
-    SetClipboardData(CF_UNICODETEXT, hglb);
+    SetClipboardData(CF_TEXT, hglb);
     CloseClipboard();
 }
 
@@ -1095,11 +1093,11 @@ std::string WIN32Window::getClipboardText()
     if(!OpenClipboard(m_window))
         return text;
 
-    HGLOBAL hglb = GetClipboardData(CF_UNICODETEXT);
+    HGLOBAL hglb = GetClipboardData(CF_TEXT);
     if(hglb) {
-        LPWSTR lpwstr = (LPWSTR)GlobalLock(hglb);
-        if(lpwstr) {
-            text = stdext::utf16_to_latin1(lpwstr);
+        LPSTR lpstr = (LPSTR)GlobalLock(hglb);
+        if(lpstr) {
+            text = std::string(lpstr);// stdext::utf16_to_utf8(lpwstr);
             GlobalUnlock(hglb);
         }
     }
