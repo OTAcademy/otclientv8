@@ -385,9 +385,6 @@
     <ClInclude Include="..\..\src\framework\sound\soundmanager.h" />
     <ClInclude Include="..\..\src\framework\sound\soundsource.h" />
     <ClInclude Include="..\..\src\framework\sound\streamsoundsource.h" />
-    <ClInclude Include="..\..\src\framework\sql\database.h" />
-    <ClInclude Include="..\..\src\framework\sql\declarations.h" />
-    <ClInclude Include="..\..\src\framework\sql\mysql.h" />
     <ClInclude Include="..\..\src\framework\stdext\any.h" />
     <ClInclude Include="..\..\src\framework\stdext\boolean.h" />
     <ClInclude Include="..\..\src\framework\stdext\cast.h" />
@@ -556,8 +553,6 @@
     <ClCompile Include="..\..\src\framework\sound\soundmanager.cpp" />
     <ClCompile Include="..\..\src\framework\sound\soundsource.cpp" />
     <ClCompile Include="..\..\src\framework\sound\streamsoundsource.cpp" />
-    <ClCompile Include="..\..\src\framework\sql\database.cpp" />
-    <ClCompile Include="..\..\src\framework\sql\mysql.cpp" />
     <ClCompile Include="..\..\src\framework\stdext\demangle.cpp" />
     <ClCompile Include="..\..\src\framework\stdext\math.cpp" />
     <ClCompile Include="..\..\src\framework\stdext\net.cpp" />

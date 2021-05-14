@@ -1,4 +1,5 @@
 build*
+!Build-on-request.yml
 data/things
 pdbs
 CMakeCache.txt

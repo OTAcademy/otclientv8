@@ -301,12 +301,6 @@
     <ClCompile Include="..\..\src\framework\stdext\uri.cpp">
       <Filter>framework\stdext</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\framework\sql\database.cpp">
-      <Filter>framework\sql</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\framework\sql\mysql.cpp">
-      <Filter>framework\sql</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\framework\sound\combinedsoundsource.cpp">
       <Filter>framework\sound</Filter>
     </ClCompile>
@@ -838,15 +832,6 @@
     <ClInclude Include="..\..\src\framework\stdext\uri.h">
       <Filter>framework\stdext</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\framework\sql\database.h">
-      <Filter>framework\sql</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\framework\sql\declarations.h">
-      <Filter>framework\sql</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\framework\sql\mysql.h">
-      <Filter>framework\sql</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\framework\sound\combinedsoundsource.h">
       <Filter>framework\sound</Filter>
     </ClInclude>
@@ -1055,9 +1040,6 @@
     </Filter>
     <Filter Include="framework\sound">
       <UniqueIdentifier>{a4b7f6fb-46ce-44ed-bc5c-227f59bd58a2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="framework\sql">
-      <UniqueIdentifier>{c83d9216-3d6e-4075-a191-c006202e16c4}</UniqueIdentifier>
     </Filter>
     <Filter Include="framework\stdext">
       <UniqueIdentifier>{40595184-80a3-4e99-8fb8-636845aecde8}</UniqueIdentifier>

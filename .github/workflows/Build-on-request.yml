@@ -1,0 +1,79 @@
+name: Build on request
+on: [workflow_dispatch]
+
+jobs:
+  Windows:
+    name: Windows and Android version
+    runs-on: windows-latest
+    timeout-minutes: 120
+    if: |
+      !contains(github.event.head_commit.message, '[skip release]')
+      && (
+        startsWith(github.ref, 'refs/tags/')
+        || github.ref == 'refs/heads/main'
+        || github.ref == 'refs/heads/master'
+      )
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Setup MSBuild and add to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+      id: setup_msbuild
+
+    - name: Load cache
+      uses: actions/cache@v2.1.5
+      with:
+        path: C:/vcpkg
+        key: ${{ runner.os }}-vcpkg
+
+    - name: Install dependencies 
+      timeout-minutes: 30
+      run: |
+        C:\vcpkg\vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static `
+        boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static `
+        boost-lockfree:x86-windows-static boost-process:x86-windows-static boost-program-options:x86-windows-static `
+        luajit:x86-windows-static glew:x86-windows-static boost-filesystem:x86-windows-static boost-uuid:x86-windows-static `
+        physfs:x86-windows-static openal-soft:x86-windows-static libogg:x86-windows-static libvorbis:x86-windows-static `
+        zlib:x86-windows-static libzip:x86-windows-static openssl:x86-windows-static
+        C:\vcpkg\vcpkg integrate install
+
+    - name: Compile otclient_dx
+      timeout-minutes: 20
+      run: |
+        cd vc16
+        MSBuild /property:Configuration=DirectX /p:BUILD_REVISION=${{github.run_number}}
+        
+    - name: Compile otclient_gl
+      timeout-minutes: 20
+      run: |
+        cd vc16
+        MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
+
+    - name: Create data.zip for android
+      run: |
+        powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
+
+    - name: Decompress android libs
+      run: |
+        7z x android_libs.7z -aoa -oC:\android
+
+    - name: Build for android
+      timeout-minutes: 25
+      run: |
+        cd android
+        $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
+        MSBuild.exe /p:Configuration=Release /p:Platform="ARM" /p:BUILD_REVISION=${{github.run_number}}
+
+    - name: Upload binaries
+      uses: 'actions/upload-artifact@v2'
+      with:
+        name: Download-binaries
+        path: |
+          otclient_gl.exe
+          otclient_dx.exe
+          otclientv8.apk
+        if-no-files-found: error
