@@ -1,4 +1,3 @@
----
 name: Build, Test, Release
 'on':
   push:
@@ -279,3 +278,4 @@ jobs:
           host: otclient.ovh
           username: debian
           privateKey: "${{ secrets.SSH_KEY }}"
+
