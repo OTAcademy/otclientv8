@@ -89,14 +89,14 @@ jobs:
         run: |
           $location = Get-Location
           $pillowScript = @"
-            from PIL import Image
-            import glob
+          from PIL import Image
+          import glob
 
-            for file in glob.glob('*.png'):
-              Image.open(file).convert('RGB').save(
-                file[:-3] + 'jpg',
-                quality=50,
-              )
+          for file in glob.glob('*.png'):
+            Image.open(file).convert('RGB').save(
+              file[:-3] + 'jpg',
+              quality=50,
+            )
           "@
           cd $env:appdata\otclientv8\otclientv8
           pip3 install pillow
