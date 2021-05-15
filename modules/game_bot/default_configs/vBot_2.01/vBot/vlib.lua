@@ -309,7 +309,7 @@ function isFriend(c)
     if table.find(storage.playerList.friendList, name) then
         CachedFriends[c] = true
         return true
-    elseif string.find(storage.serverMembers, name) then
+    elseif string.find(storage.serverMembers or "", name) then
         CachedFriends[c] = true
         return true
     elseif storage.playerList.groupMembers then
