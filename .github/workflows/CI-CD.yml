@@ -41,7 +41,7 @@ jobs:
         ${{ runner.workspace }}/vcpkg/vcpkg integrate install
         
     - name: Compile 
-      timeout-minutes: 20
+      timeout-minutes: 60
       run: |
         cd vc16
         MSBuild /property:Configuration=DirectX /p:BUILD_REVISION=${{github.run_number}}
