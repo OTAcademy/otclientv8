@@ -49,30 +49,32 @@ jobs:
           path: C:/vcpkg
           key: "${{ runner.os }}-vcpkg"
 
-      - name: Install dependencies
-        timeout-minutes: 30
-        run: |
-          C:\vcpkg\vcpkg install `
-            boost-iostreams:x86-windows-static `
-            boost-asio:x86-windows-static `
-            boost-beast:x86-windows-static `
-            boost-system:x86-windows-static `
-            boost-variant:x86-windows-static `
-            boost-lockfree:x86-windows-static `
-            boost-process:x86-windows-static `
-            boost-program-options:x86-windows-static `
-            luajit:x86-windows-static `
-            glew:x86-windows-static `
-            boost-filesystem:x86-windows-static `
-            boost-uuid:x86-windows-static `
-            physfs:x86-windows-static `
-            openal-soft:x86-windows-static `
-            libogg:x86-windows-static `
-            libvorbis:x86-windows-static `
-            zlib:x86-windows-static `
-            libzip:x86-windows-static `
-            openssl:x86-windows-static
-          C:\vcpkg\vcpkg integrate install
+      - name: Run vcpkg
+        uses: lukka/run-vcpkg@v7.1
+        with:
+          vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
+          vcpkgTriplet: x86-windows-static
+          vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+          vcpkgArguments: >
+            boost-iostreams
+            boost-asio
+            boost-beast
+            boost-system
+            boost-variant
+            boost-lockfree
+            boost-process
+            boost-program-options
+            luajit
+            glew
+            boost-filesystem
+            boost-uuid
+            physfs
+            openal-soft
+            libogg
+            libvorbis
+            zlib
+            libzip
+            openssl
 
       - name: Compile otclient_dx
         timeout-minutes: 20

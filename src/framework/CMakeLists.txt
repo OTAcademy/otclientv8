@@ -1,10 +1,8 @@
-
 # framework flags
 # FRAMEWORK_SOUND
 # FRAMEWORK_GRAPHICS
 # FRAMEWORK_NET
 # FRAMEWORK_XML
-# FRAMEWORK_SQL
 
 # CMAKE_CURRENT_LIST_DIR cmake 2.6 compatibility
 if(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 6)
@@ -164,16 +162,40 @@ endif()
 set(BUILD_COMMIT "devel" CACHE "Git commit string (intended for releases)" STRING)
 set(BUILD_REVISION 0 CACHE "Git revision string (intended for releases)" STRING)
 
+# default build type
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "release")
+endif()
+
+set (CMAKE_CXX_STANDARD 17)
+
 # gcc compile flags
 set(WARNS_FLAGS "-Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-unused-result")
+if(WASM)
+    set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -s USE_ZLIB=1 -s USE_LIBPNG=1 -s USE_SDL=2 -s USE_BOOST_HEADERS=1 -s USE_PTHREADS=1 -O1") # add -Ofast
+    set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS} 
+            D:\\wasm\\physfs\\src 
+            D:\\wasm\\lua-lua-5.1\\src)
+    set(framework_LIBRARIES ${framework_LIBRARIES} "D:/wasm/physfs/build/libphysfs.a")
 
-
-set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -pipe -no-pie")
-set(CMAKE_CXX_FLAGS_COMPILESPEED      "-O0")
-set(CMAKE_CXX_FLAGS_DEBUG             "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO    "-O1 -g -fno-omit-frame-pointer")
-set(CMAKE_CXX_FLAGS_RELEASE           "-O2")
-set(CMAKE_CXX_FLAGS_PERFORMANCE       "-Ofast -march=native")
+    include_directories("D:\\wasm\\lua-lua-5.1")
+    set( LUA_DIR "D:/wasm/lua-lua-5.1/src" )
+    set ( LUA_SRC ${LUA_DIR}/lapi.c ${LUA_DIR}/lcode.c ${LUA_DIR}/ldebug.c ${LUA_DIR}/ldo.c ${LUA_DIR}/ldump.c ${LUA_DIR}/lfunc.c 
+      ${LUA_DIR}/lgc.c ${LUA_DIR}/llex.c ${LUA_DIR}/lmem.c ${LUA_DIR}/lobject.c ${LUA_DIR}/lopcodes.c ${LUA_DIR}/lparser.c ${LUA_DIR}/lstate.c 
+      ${LUA_DIR}/lstring.c ${LUA_DIR}/ltable.c ${LUA_DIR}/ltm.c ${LUA_DIR}/lundump.c ${LUA_DIR}/lvm.c ${LUA_DIR}/lzio.c ${LUA_DIR}/lauxlib.c 
+      ${LUA_DIR}/lbaselib.c ${LUA_DIR}/ldblib.c ${LUA_DIR}/liolib.c ${LUA_DIR}/lmathlib.c ${LUA_DIR}/loslib.c ${LUA_DIR}/ltablib.c 
+      ${LUA_DIR}/lstrlib.c ${LUA_DIR}/linit.c )
+    set_source_files_properties(${LUA_SRC} PROPERTIES LANGUAGE CXX )
+    set(framework_SOURCES ${framework_SOURCES} ${LUA_SRC})
+    message(STATUS "LUA: " ${LUA_SRC})
+else()
+    set(CMAKE_CXX_FLAGS                   "${CMAKE_CXX_FLAGS} ${WARNS_FLAGS} ${ARCH_FLAGS} -pipe")
+    set(CMAKE_CXX_FLAGS_COMPILESPEED      "-O0")
+    set(CMAKE_CXX_FLAGS_DEBUG             "-O0 -g")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO    "-O1 -g -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS_RELEASE           "-O2")
+    set(CMAKE_CXX_FLAGS_PERFORMANCE       "-Ofast -march=native")
+endif()
 
 if(USE_LTO)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fwhole-program -flto")
@@ -205,55 +227,64 @@ add_definitions(-D"BUILD_REVISION=${BUILD_REVISION}")
 message(STATUS "Build with encryption")
 add_definitions(-D"WITH_ENCRYPTION")
 
-# find boost
-set(REQUIRED_BOOST_COMPONENTS system)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_LIBS ${USE_STATIC_LIBS})
-find_package(Boost 1.67.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
+# main libs
+if(NOT WASM)
+    # find boost
+    set(REQUIRED_BOOST_COMPONENTS system filesystem)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_LIBS ${USE_STATIC_LIBS})
+    find_package(Boost 1.67.0 COMPONENTS ${REQUIRED_BOOST_COMPONENTS} REQUIRED)
 
-#find zip
-find_package(LibZip REQUIRED)
+    #find zip
+    find_package(LibZip REQUIRED)
+    find_package(ZLIB REQUIRED)
+    find_package(BZip2 REQUIRED)
 
-#find lua
-if(LUAJIT)
-    find_package(LuaJIT REQUIRED)
-    set(LUA_INCLUDE_DIR ${LUAJIT_INCLUDE_DIR})
-    set(LUA_LIBRARY ${LUAJIT_LIBRARY})
+    #find lua
+    if(LUAJIT)
+        find_package(LuaJIT REQUIRED)
+        set(LUA_INCLUDE_DIR ${LUAJIT_INCLUDE_DIR})
+        set(LUA_LIBRARY ${LUAJIT_LIBRARY})
 
-    if(APPLE)
-        set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -pagezero_size 10000 -image_base 100000000")
+        if(APPLE)
+          set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -pagezero_size 10000 -image_base 100000000")
+        endif()
+    else()
+        find_package(Lua REQUIRED)
     endif()
-else()
-    find_package(Lua REQUIRED)
+    message(STATUS "LuaJIT: " ${LUAJIT})
+
+    find_package(PhysFS REQUIRED)
+    find_package(OpenSSL REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    set(framework_LIBRARIES ${framework_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${LUA_LIBRARY}
+        ${PHYSFS_LIBRARY}
+        ${OPENSSL_LIBRARIES}
+        ${ZLIB_LIBRARY}
+        ${LIBZIP_LIBRARY}
+	${ZLIB_LIBRARY}
+	${BZIP2_LIBRARIES}
+    )
+
+    if(WIN32)
+        set(framework_LIBRARIES ${framework_LIBRARIES} -lbcrypt -ldbghelp -lshlwapi -liphlpapi -lpsapi)
+    endif()
+
+    set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
+        ${Boost_INCLUDE_DIRS}
+        ${LUA_INCLUDE_DIR}
+        ${PHYSFS_INCLUDE_DIR}
+        ${OPENSSL_INCLUDE_DIR}
+        ${framework_INCLUDE_DIRS}
+        ${LIBZIP_INCLUDE_DIR_ZIP}
+        ${LIBZIP_INCLUDE_DIR_ZIPCONF}
+	${ZLIB_INCLUDE_DIR}
+	${BZIP2_INCLUDE_DIR}
+    )
 endif()
-message(STATUS "LuaJIT: " ${LUAJIT} " - " ${LUA_LIBRARY})
-
-find_package(PhysFS REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(ZLIB REQUIRED)
-
-set(framework_LIBRARIES ${framework_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${LUA_LIBRARY}
-    ${PHYSFS_LIBRARY}
-    ${OPENSSL_LIBRARIES}
-    ${ZLIB_LIBRARY}
-    ${LIBZIP_LIBRARY}
-)
-
-if(WIN32)
-    set(framework_LIBRARIES ${framework_LIBRARIES} -lbcrypt -ldbghelp -lshlwapi -liphlpapi -lpsapi)
-endif()
-
-set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIR}
-    ${PHYSFS_INCLUDE_DIR}
-    ${OPENSSL_INCLUDE_DIR}
-    ${framework_INCLUDE_DIRS}
-    ${LIBZIP_INCLUDE_DIR_ZIP}
-    ${LIBZIP_INCLUDE_DIR_ZIPCONF}
-)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -282,7 +313,7 @@ else()
 endif()
 
 if(USE_LIBCPP)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wno-deprecated-declarations")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
 if(WIN32)
@@ -302,32 +333,50 @@ else()
 endif()
 set(framework_LIBRARIES ${framework_LIBRARIES} ${SYSTEM_LIBRARIES})
 
-set(framework_DEFINITIONS ${framework_DEFINITIONS} -DTHREAD_SAFE)
+if(FRAMEWORK_THREAD_SAFE)
+    set(framework_DEFINITIONS ${framework_DEFINITIONS} -DTHREAD_SAFE)
+endif()
 
 if(FRAMEWORK_GRAPHICS)
     set(OPENGLES "OFF" CACHE "Use OpenGL ES 1.0 or 2.0 (for mobiles devices)" STRING)
     set(OpenGL_GL_PREFERENCE "LEGACY")
-
-    ## TODO: CMake Documentation says that this is not the right
-    # Thing for Mac OS X, but it works for now.
-    if(APPLE)
-        include_directories(/usr/X11R6/include/)
-        link_directories(/usr/X11R6/lib/)
-        SET(OPENGL_LIBRARIES GL)
+    if(WASM)
+        set(OPENGLES "2.0")
+        set(framework_DEFINITIONS ${framework_DEFINITIONS} -DOPENGL_ES=2)
+    ELSEif(OPENGLES STREQUAL "2.0")
+        find_package(OpenGLES2 REQUIRED)
+        find_package(EGL REQUIRED)
+        set(framework_DEFINITIONS ${framework_DEFINITIONS} -DOPENGL_ES=2)
+        set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS} ${EGL_INCLUDE_DIR} ${OPENGLES2_INCLUDE_DIR})
+        set(framework_LIBRARIES ${framework_LIBRARIES} ${EGL_LIBRARY} ${OPENGLES2_LIBRARY})
+    ELSEif(OPENGLES STREQUAL "1.0")
+        find_package(OpenGLES1 REQUIRED)
+        find_package(EGL REQUIRED)
+        set(framework_DEFINITIONS ${framework_DEFINITIONS} -DOPENGL_ES=1)
+        set(framework_INCLUDE_DIRS ${framework_INCLUDE_DIRS} ${EGL_INCLUDE_DIR} ${OPENGLES1_INCLUDE_DIR})
+        set(framework_LIBRARIES ${framework_LIBRARIES} ${EGL_LIBRARY} ${OPENGLES1_LIBRARY})
     else()
-        if(USE_STATIC_LIBS)
-            set(CMAKE_FIND_LIBRARY_SUFFIXES ".so")
-            find_package(OpenGL REQUIRED)
-            set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+        ## TODO: CMake Documentation says that this is not the right
+        # Thing for Mac OS X, but it works for now.
+        if(APPLE)
+            include_directories(/usr/X11R6/include/)
+            link_directories(/usr/X11R6/lib/)
+            SET(OPENGL_LIBRARIES GL)
         else()
-            find_package(OpenGL REQUIRED)            
+            if(USE_STATIC_LIBS)
+                set(CMAKE_FIND_LIBRARY_SUFFIXES ".so")
+                find_package(OpenGL REQUIRED)
+                set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+            else()
+                find_package(OpenGL REQUIRED)            
+            endif()
         endif()
+        set(USE_STATIC_LIBS OFF)
+        find_package(GLEW REQUIRED)
+        set(USE_STATIC_LIBS ON)
+        set(framework_LIBRARIES ${framework_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
+        MESSAGE(${framework_LIBRARIES})
     endif()
-    set(USE_STATIC_LIBS OFF)
-    find_package(GLEW REQUIRED)
-    set(USE_STATIC_LIBS ON)
-    set(framework_LIBRARIES ${framework_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
-    MESSAGE(${framework_LIBRARIES})
     message(STATUS "OpenGL ES: " ${OPENGLES})
 
     if(WIN32)
@@ -385,7 +434,7 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shader.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shaderprogram.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shaderprogram.h
-    	${CMAKE_CURRENT_LIST_DIR}/graphics/shadermanager.cpp
+	${CMAKE_CURRENT_LIST_DIR}/graphics/shadermanager.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/shadermanager.h
         ${CMAKE_CURRENT_LIST_DIR}/graphics/textrender.cpp
         ${CMAKE_CURRENT_LIST_DIR}/graphics/textrender.h
@@ -487,41 +536,44 @@ if(FRAMEWORK_SOUND)
     set(framework_DEFINITIONS ${framework_DEFINITIONS} -DFW_SOUND)
 endif()
 
-if(WIN32)
-    set(NET_LIBRARIES ws2_32 mswsock)
-else()
-    set(NET_LIBRARIES "")
-endif()
-set(framework_LIBRARIES ${framework_LIBRARIES} ${NET_LIBRARIES})
+if(FRAMEWORK_NET)
+    if(WIN32)
+        set(NET_LIBRARIES ws2_32 mswsock)
+    else()
+        set(NET_LIBRARIES "")
+    endif()
+    set(framework_LIBRARIES ${framework_LIBRARIES} ${NET_LIBRARIES})
 
-set(framework_SOURCES ${framework_SOURCES}
-    ${CMAKE_CURRENT_LIST_DIR}/net/connection.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/connection.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/declarations.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/inputmessage.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/inputmessage.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/outputmessage.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/outputmessage.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/protocol.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/protocol.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/packet_player.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/packet_player.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/packet_recorder.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/packet_recorder.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/server.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/server.h
-    ${CMAKE_CURRENT_LIST_DIR}/http/http.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/http/http.h
-    ${CMAKE_CURRENT_LIST_DIR}/http/session.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/http/session.h
-    ${CMAKE_CURRENT_LIST_DIR}/http/websocket.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/http/websocket.h
-    ${CMAKE_CURRENT_LIST_DIR}/http/result.h
-    ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy.h
-    ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy_client.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy_client.h
-)
+    set(framework_SOURCES ${framework_SOURCES}
+        ${CMAKE_CURRENT_LIST_DIR}/net/connection.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/connection.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/declarations.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/inputmessage.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/inputmessage.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/outputmessage.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/outputmessage.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/protocol.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/protocol.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/server.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/server.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/packet_player.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/packet_player.h
+        ${CMAKE_CURRENT_LIST_DIR}/net/packet_recorder.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/net/packet_recorder.h
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy.h
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy_client.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/proxy/proxy_client.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/http.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/http/http.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/session.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/http/session.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/websocket.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/http/websocket.h
+        ${CMAKE_CURRENT_LIST_DIR}/http/result.h
+    )
+    set(framework_DEFINITIONS ${framework_DEFINITIONS} -DFW_NET)
+endif()
 
 if(FRAMEWORK_XML)
     set(framework_SOURCES ${framework_SOURCES}

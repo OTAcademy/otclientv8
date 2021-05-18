@@ -3,16 +3,9 @@ on: [workflow_dispatch]
 
 jobs:
   Windows:
-    name: Windows and Android version
+    name: Build windows version
     runs-on: windows-latest
     timeout-minutes: 120
-    if: |
-      !contains(github.event.head_commit.message, '[skip release]')
-      && (
-        startsWith(github.ref, 'refs/tags/')
-        || github.ref == 'refs/heads/main'
-        || github.ref == 'refs/heads/master'
-      )
 
     steps:
     - name: Checkout
@@ -24,23 +17,20 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
       id: setup_msbuild
 
-    - name: Load cache
-      uses: actions/cache@v2.1.5
+    - name: Run vcpkg
+      uses: lukka/run-vcpkg@v7.1
       with:
-        path: C:/vcpkg
-        key: ${{ runner.os }}-vcpkg
+        vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
+        vcpkgTriplet: x86-windows-static
+        vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+        vcpkgArguments: >
+          boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
+          luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
 
-    - name: Install dependencies 
-      timeout-minutes: 30
+    - name: Integrate vcpkg
       run: |
-        C:\vcpkg\vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static `
-        boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static `
-        boost-lockfree:x86-windows-static boost-process:x86-windows-static boost-program-options:x86-windows-static `
-        luajit:x86-windows-static glew:x86-windows-static boost-filesystem:x86-windows-static boost-uuid:x86-windows-static `
-        physfs:x86-windows-static openal-soft:x86-windows-static libogg:x86-windows-static libvorbis:x86-windows-static `
-        zlib:x86-windows-static libzip:x86-windows-static openssl:x86-windows-static
-        C:\vcpkg\vcpkg integrate install
-
+        ${{ runner.workspace }}/vcpkg/vcpkg integrate install
+        
     - name: Compile otclient_dx
       timeout-minutes: 20
       run: |
@@ -52,6 +42,30 @@ jobs:
       run: |
         cd vc16
         MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
+
+    - name: Upload binaries
+      uses: 'actions/upload-artifact@v2'
+      with:
+        name: Download-binaries
+        path: |
+          otclient_gl.exe
+          otclient_dx.exe
+        if-no-files-found: error
+
+  Android:
+    name: Build android version
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Setup MSBuild and add to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+      id: setup_msbuild
 
     - name: Create data.zip for android
       run: |
@@ -73,7 +87,101 @@ jobs:
       with:
         name: Download-binaries
         path: |
-          otclient_gl.exe
-          otclient_dx.exe
           otclientv8.apk
+        if-no-files-found: error
+
+  Mac:
+    name: Build mac os version
+    runs-on: macos-latest
+    timeout-minutes: 120
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Get latest CMake
+      uses: lukka/get-cmake@latest
+
+    - name: MacOS - install physfs pkgconfig luajit xquartz
+      run: brew install physfs pkgconfig luajit xquartz
+
+    - name: Run vcpkg
+      uses: lukka/run-vcpkg@v7.1
+      with:
+        vcpkgArguments: >
+          boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-beast glew 
+          boost-filesystem boost-uuid libogg libvorbis zlib opengl libzip openal-soft bzip2
+          boost-process openssl
+        vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
+        vcpkgTriplet: x64-osx
+        vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+
+    - name: Build with CMake
+      uses: lukka/run-cmake@v3
+      with:
+        buildDirectory: ${{ runner.workspace }}/build
+        cmakeAppendedArgs: '-G Ninja -DCMAKE_BUILD_TYPE="Release" -DVERSION=${{github.run_number}}'
+        cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+        useVcpkgToolchainFile: true
+
+    - name: Change name
+      run: |
+        mv '${{ runner.workspace }}/build/otclient' '${{ runner.workspace }}/build/otclient_mac'
+
+    - name: Upload otclient
+      uses: actions/upload-artifact@v2
+      with:
+        name: Download-binaries
+        path: |
+          ${{ runner.workspace }}/build/otclient_mac
+        if-no-files-found: error
+
+  Linux:
+    name: Build linux version
+    runs-on: ubuntu-20.04
+    timeout-minutes: 120
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Get latest CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Ubuntu - install opengl lua5.1 luajit
+      run: sudo apt-get install libglew-dev liblua5.1-0-dev libluajit-5.1-dev
+
+    - name: Run vcpkg
+      uses: lukka/run-vcpkg@v7.1
+      with:
+        vcpkgArguments: >
+          boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-beast glew 
+          boost-filesystem boost-uuid libogg libvorbis zlib opengl libzip openal-soft bzip2
+          boost-process openssl physfs
+        vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
+        vcpkgTriplet: x64-linux
+        vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+
+    - name: Build with CMake
+      uses: lukka/run-cmake@v3
+      with:
+        buildDirectory: ${{ runner.workspace }}/build
+        cmakeAppendedArgs: '-G Ninja -DCMAKE_BUILD_TYPE="Release" -DVERSION=${{github.run_number}}'
+        cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+        useVcpkgToolchainFile: true
+
+    - name: Change name
+      run: |
+        mv '${{ runner.workspace }}/build/otclient' '${{ runner.workspace }}/build/otclient_linux'
+
+    - name: Upload otclient
+      uses: actions/upload-artifact@v2
+      with:
+        name: Download-binaries
+        path: |
+          ${{ runner.workspace }}/build/otclient_linux
         if-no-files-found: error
