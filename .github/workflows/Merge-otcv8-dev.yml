@@ -43,12 +43,6 @@ jobs:
       - name: Setup MSBuild and add to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Load cache
-        uses: actions/cache@v2.1.5
-        with:
-          path: C:/vcpkg
-          key: "${{ runner.os }}-vcpkg"
-
       - name: Run vcpkg
         uses: lukka/run-vcpkg@v7.1
         with:
@@ -56,25 +50,12 @@ jobs:
           vcpkgTriplet: x86-windows-static
           vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
           vcpkgArguments: >
-            boost-iostreams
-            boost-asio
-            boost-beast
-            boost-system
-            boost-variant
-            boost-lockfree
-            boost-process
-            boost-program-options
-            luajit
-            glew
-            boost-filesystem
-            boost-uuid
-            physfs
-            openal-soft
-            libogg
-            libvorbis
-            zlib
-            libzip
-            openssl
+            boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
+            luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
+
+      - name: Integrate vcpkg
+        run: |
+          ${{ runner.workspace }}\vcpkg\vcpkg integrate install
 
       - name: Compile otclient_dx
         timeout-minutes: 20
