@@ -70,7 +70,7 @@ jobs:
           otclient_gl.exe
           otclient_dx.exe
           otclient_debug.exe
-          otclient_debug_lib.7z
+          lib.7z
         if-no-files-found: error
 
   Android:
