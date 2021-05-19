@@ -1145,10 +1145,18 @@ std::string X11Window::getClipboardText()
 
 std::string X11Window::getPlatformType()
 {
+#if defined(__APPLE__)
+#ifndef OPENGL_ES
+    return "MAC_GLX";
+#else
+    return "MAC-EGL";
+#endif
+#else
 #ifndef OPENGL_ES
     return "X11-GLX";
 #else
     return "X11-EGL";
+#endif
 #endif
 }
 
