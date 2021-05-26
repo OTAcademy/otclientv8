@@ -9,6 +9,10 @@ local function setup()
     CaveBot.addAction("goto", pos.x .. "," .. pos.y .. "," .. pos.z, true)
     lastPos = pos
   end
+  local function addStairs(pos)
+    CaveBot.addAction("goto", pos.x .. "," .. pos.y .. "," .. pos.z .. ",0", true)
+    lastPos = pos
+  end
 
   onPlayerPositionChange(function(newPos, oldPos)
     if CaveBot.isOn() or not isEnabled then return end    
@@ -17,7 +21,7 @@ local function setup()
       addPosition(oldPos)
     elseif newPos.z ~= oldPos.z or math.abs(oldPos.x - newPos.x) > 1 or math.abs(oldPos.y - newPos.y) > 1 then
       -- stairs/teleport
-      addPosition(oldPos)
+      addStairs(oldPos)
     elseif math.max(math.abs(lastPos.x - newPos.x), math.abs(lastPos.y - newPos.y)) > 5 then
       -- 5 steps from last pos
       addPosition(newPos)

@@ -80,7 +80,7 @@ UI.Button("vBot Settings and Scripts", function()
 end)
 UI.Separator()
 
--- to remain order, add options right after another:
+---- to maintain order, add options right after another:
 --- add object
 --- add variables for function (optional)
 --- add callback (optional)
@@ -127,7 +127,7 @@ if true then
                  6257, 6256, 2772, 27260, 2773, 1632, 1633, 1948, 435, 6252, 6253, 5007, 4911, 
                  1629, 1630, 5108, 5107, 5281, 1968, 435, 1948, 5542, 31116, 31120, 30742, 31115, 
                  31118, 20474, 5737, 5736, 5734, 5733, 31202, 31228, 31199, 31200, 33262, 30824, 
-                 5125, 5126, 5116, 5117, 8257, 8258, 8255, 8256}
+                 5125, 5126, 5116, 5117, 8257, 8258, 8255, 8256, 5120, 30777, 30776}
   local shovelId = {606, 593, 867}
   local ropeId = {17238, 12202, 12935, 386, 421, 21966, 14238}
   local macheteId = {2130, 3696}
@@ -207,7 +207,7 @@ end
 
 addCheckBox("antiKick", "Anti - Kick", true, rightPanel)
 if true then
-  macro(60*1000, function()
+  macro(600*1000, function()
     if not settings.antiKick then return end
     local dir = player:getDirection()
     turn((dir + 1) % 4)
@@ -281,7 +281,7 @@ if true then
   local doorsIds = { 5007, 8265, 1629, 1632, 5129, 6252, 6249, 7715, 7712, 7714, 
                      7719, 6256, 1669, 1672, 5125, 5115, 5124, 17701, 17710, 1642, 
                      6260, 5107, 4912, 6251, 5291, 1683, 1696, 1692, 5006, 2179, 5116, 
-                     1632, 11705, 30772, 30774, 6248, 5735, 5732 }
+                     1632, 11705, 30772, 30774, 6248, 5735, 5732, 5120 }
 
   function checkForDoors(pos)
     local tile = g_map.getTile(pos)

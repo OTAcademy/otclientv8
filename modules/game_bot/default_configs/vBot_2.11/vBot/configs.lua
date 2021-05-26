@@ -1,4 +1,7 @@
--- [[ test config part ]] -- 
+--[[ 
+    Configs for modules
+    Based on Kondrah storage method  
+--]]
 configName = modules.game_bot.contentsPanel.config:getCurrentOption().text
 
 -- make vBot config dir
@@ -48,35 +51,37 @@ if g_resources.fileExists(suppliesFile) then
 end
 
 function vBotConfigSave(file)
-    -- file can be either
-    --- heal
-    --- atk
-    --- supply
-    local configFile 
-    local configTable
-    if not file then return end
-    file = file:lower()
-    if file == "heal" then
-        configFile = healBotFile
-        configTable = HealBotConfig
-    elseif file == "atk" then
-        configFile = attackBotFile
-        configTable = AttackBotConfig
-    elseif file == "supply" then
-        configFile = suppliesFile
-        configTable = SuppliesConfig
-    end
+  -- file can be either
+  --- heal
+  --- atk
+  --- supply
+  local configFile 
+  local configTable
+  if not file then return end
+  file = file:lower()
+  if file == "heal" then
+      configFile = healBotFile
+      configTable = HealBotConfig
+  elseif file == "atk" then
+      configFile = attackBotFile
+      configTable = AttackBotConfig
+  elseif file == "supply" then
+      configFile = suppliesFile
+      configTable = SuppliesConfig
+  else
+    return
+  end
 
-    local status, result = pcall(function() 
-        return json.encode(configTable, 2) 
-      end)
-      if not status then
-        return onError("Error while saving config. it won't be saved. Details: " .. result)
-      end
-      
-      if result:len() > 100 * 1024 * 1024 then
-        return onError("config file is too big, above 100MB, it won't be saved")
-      end
+  local status, result = pcall(function() 
+    return json.encode(configTable, 2) 
+  end)
+  if not status then
+    return onError("Error while saving config. it won't be saved. Details: " .. result)
+  end
+  
+  if result:len() > 100 * 1024 * 1024 then
+    return onError("config file is too big, above 100MB, it won't be saved")
+  end
 
-      g_resources.writeFileContents(configFile, result)
+  g_resources.writeFileContents(configFile, result)
 end

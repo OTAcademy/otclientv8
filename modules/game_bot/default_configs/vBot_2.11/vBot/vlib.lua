@@ -3,6 +3,10 @@
 -- burst damage calculation, for function burstDamageValue()
 -- sums monster hits on a span of last 3seconds
 -- if last message was more than 3s ago then clears the table
+
+-- initial global variables declaration
+BotServerMembers = {}
+
 local dmgTable = {}
 local lastDmgMessage = now
 onTextMessage(function(mode, text)
@@ -40,6 +44,10 @@ end
 -- displays string as white colour message
 function whiteInfoMessage(text)
     return modules.game_textmessage.displayGameMessage(text)
+end
+
+function broadcastMessage(text)
+    return modules.game_textmessage.displayBroadcastMessage(text)
 end
 
 -- almost every talk action inside cavebot has to be done by using schedule
@@ -183,6 +191,7 @@ end)
 SpellCastTable = {}
 onTalk(function(name, level, mode, text, channelId, pos)
     if name ~= player:getName() then return end
+    text = text:lower()
 
     if SpellCastTable[text] then SpellCastTable[text].t = now end
 end)
@@ -190,6 +199,7 @@ end)
 -- if delay is nil or delay is lower than 100 then this function will act as a normal say function
 -- checks or adds a spell to SpellCastTable and updates cast time if exist
 function cast(text, delay)
+    text = text:lower()
     if type(text) ~= "string" then return end
     if not delay or delay < 100 then
         return say(text) -- if not added delay or delay is really low then just treat it like casual say
@@ -213,24 +223,24 @@ local Spells = modules.gamelib.SpellInfo['Default']
 function canCast(spell, ignoreRL, ignoreCd)
     if type(spell) ~= "string" then return end
     spell = spell:lower()
-    if not getSpellData(spell) then
-        if SpellCastTable[spell] then
-            if now - SpellCastTable[spell].t > SpellCastTable[spell].d then
-                return true
-            else
-                return false
-            end
-        else
+    if SpellCastTable[spell] then
+        if now - SpellCastTable[spell].t > SpellCastTable[spell].d or ignoreCd then
             return true
+        else
+            return false
         end
     end
-    if (ignoreCd or not getSpellCoolDown(spell)) and
-        (ignoreRL or level() >= getSpellData(spell).level and mana() >=
-            getSpellData(spell).mana) then
-        return true
-    else
-        return false
+    if getSpellData(spell) then
+        if (ignoreCd or not getSpellCoolDown(spell)) and
+            (ignoreRL or level() >= getSpellData(spell).level and mana() >=
+                getSpellData(spell).mana) then
+            return true
+        else
+            return false
+        end
     end
+    -- if no data nor spell table then return true
+    return true
 end
 
 -- exctracts data about spell from gamelib SpellInfo table
@@ -269,17 +279,23 @@ end
 -- global var to indicate that player is trying to do something
 -- prevents action blocking by scripts
 -- below callbacks are triggers to changing the var state
+local isUsingTime = now
 storage.isUsing = false
+macro(100, function()
+    storage.isUsing = now < isUsingTime and true or false
+end)
 onUse(function(pos, itemId, stackPos, subType)
-    if pos.x < 65000 then storage.isUsing = true end
-    schedule(1500,
-             function() if storage.isUsing then storage.isUsing = false end end)
+    if pos.x > 65000 then return end
+    local tile = g_map.getTile(pos)
+    if not tile then return end
+
+    local topThing = tile:getTopUseThing()
+    if topThing:isContainer() then return end
+
+    isUsingTime = now + 1000
 end)
 onUseWith(function(pos, itemId, target, subType)
-    if itemId ~= 3180 then return end
-    if pos.x < 65000 then storage.isUsing = true end
-    schedule(1500,
-             function() if storage.isUsing then storage.isUsing = false end end)
+    if pos.x < 65000 then isUsingTime = now + 1000 end
 end)
 
 -- returns first word in string 
@@ -293,23 +309,21 @@ end
 -- if exected then adds name or name and creature to tables
 -- returns boolean
 CachedFriends = {}
-CachedNeutrals = {}
 CachedEnemies = {}
 function isFriend(c)
     local name = c
     if type(c) ~= "string" then
         if c == player then return true end
         name = c:getName()
-        if name == name() then return true end
     end
 
     if CachedFriends[c] then return true end
-    if CachedNeutrals[c] or CachedEnemies[c] then return false end
+    if CachedEnemies[c] then return false end
 
     if table.find(storage.playerList.friendList, name) then
         CachedFriends[c] = true
         return true
-    elseif string.find(storage.serverMembers or "", name) then
+    elseif BotServerMembers[name] ~= nil then
         CachedFriends[c] = true
         return true
     elseif storage.playerList.groupMembers then
@@ -323,17 +337,9 @@ function isFriend(c)
                 CachedFriends[c] = true
                 CachedFriends[p] = true
                 return true
-            else
-                CachedNeutrals[c] = true
-                CachedNeutrals[p] = true
-                return false
             end
         end
     else
-        CachedNeutrals[c] = true
-        if c ~= p and p then
-            CachedNeutrals[p] = true
-        end
         return false
     end
 end

@@ -116,7 +116,7 @@ local valueInSeconds = function(t)
     return math.ceil(d/((now-time)/1000))
 end
 
-local regex = "You lose ([0-9]*) hitpoints due to an attack by ([a-z*]) ([a-z A-z-]*)" 
+local regex = "You lose ([0-9]*) hitpoints due to an attack by ([a-z]*) ([a-z A-z-]*)" 
 onTextMessage(function(mode, text)
     if mode == 21 then -- damage dealt
       totalDmg = totalDmg + getFirstNumberInText(text)

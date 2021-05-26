@@ -1,7 +1,5 @@
 setDefaultTab("HP")
 
-UI.Separator()
-
 UI.Label("Eatable items:")
 if type(storage.foodItems) ~= "table" then
   storage.foodItems = {3582, 3577}
@@ -27,3 +25,4 @@ macro(500, "Eat Food", function()
     end
   end
 end)
+UI.Separator()

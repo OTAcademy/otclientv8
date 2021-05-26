@@ -622,8 +622,8 @@ end)
 -- items
 macro(100, function()
   if not currentSettings.enabled or #currentSettings.itemTable == 0 then return end
-  if currentSettings.Delay and HealBotConfig.isUsing then return end
-  if currentSettings.MessageDelay and HealBotConfig.isUsingPotion then return end
+  if currentSettings.Delay and storage.isUsing then return end
+  if currentSettings.MessageDelay and storage.isUsingPotion then return end
 
   if not currentSettings.MessageDelay then
     delay(400)

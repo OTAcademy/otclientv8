@@ -46,7 +46,7 @@ SuppliesWindow < MainWindow
     text-align: center
     text: Cap Below:
 
-  TextEdit
+  BotTextEdit
     id: capValue
     size: 40 20
     anchors.left: prev.right
@@ -65,7 +65,7 @@ SuppliesWindow < MainWindow
     text-align: center
     text: Stamina:
 
-  TextEdit
+  BotTextEdit
     id: staminaValue
     size: 40 20
     anchors.left: prev.right
@@ -152,7 +152,7 @@ SuppliesWindow < MainWindow
     anchors.top: prev.top
     margin-left: 35
 
-  TextEdit
+  BotTextEdit
     id: item1Min
     size: 100 20
     anchors.left: parent.left
@@ -161,7 +161,7 @@ SuppliesWindow < MainWindow
     margin-left: 40
     text-align: center
 
-  TextEdit
+  BotTextEdit
     id: item1Max
     size: 100 20
     anchors.left: prev.right
@@ -189,7 +189,7 @@ SuppliesWindow < MainWindow
     anchors.top: prev.top
     margin-left: 35
 
-  TextEdit
+  BotTextEdit
     id: item2Min
     size: 100 20
     anchors.left: parent.left
@@ -198,7 +198,7 @@ SuppliesWindow < MainWindow
     margin-left: 40
     text-align: center
 
-  TextEdit
+  BotTextEdit
     id: item2Max
     size: 100 20
     anchors.left: prev.right
@@ -226,7 +226,7 @@ SuppliesWindow < MainWindow
     anchors.top: prev.top
     margin-left: 35
 
-  TextEdit
+  BotTextEdit
     id: item3Min
     size: 100 20
     anchors.left: parent.left
@@ -235,7 +235,7 @@ SuppliesWindow < MainWindow
     margin-left: 40
     text-align: center
 
-  TextEdit
+  BotTextEdit
     id: item3Max
     size: 100 20
     anchors.left: prev.right
@@ -263,7 +263,7 @@ SuppliesWindow < MainWindow
     anchors.top: prev.top
     margin-left: 35
 
-  TextEdit
+  BotTextEdit
     id: item4Min
     size: 100 20
     anchors.left: parent.left
@@ -272,7 +272,7 @@ SuppliesWindow < MainWindow
     margin-left: 40
     text-align: center
 
-  TextEdit
+  BotTextEdit
     id: item4Max
     size: 100 20
     anchors.left: prev.right
@@ -300,7 +300,7 @@ SuppliesWindow < MainWindow
     anchors.top: prev.top
     margin-left: 35
 
-  TextEdit
+  BotTextEdit
     id: item5Min
     size: 100 20
     anchors.left: parent.left
@@ -309,7 +309,7 @@ SuppliesWindow < MainWindow
     margin-left: 40
     text-align: center
 
-  TextEdit
+  BotTextEdit
     id: item5Max
     size: 100 20
     anchors.left: prev.right
@@ -337,7 +337,7 @@ SuppliesWindow < MainWindow
     anchors.top: prev.top
     margin-left: 35
 
-  TextEdit
+  BotTextEdit
     id: item6Min
     size: 100 20
     anchors.left: parent.left
@@ -346,7 +346,7 @@ SuppliesWindow < MainWindow
     margin-left: 40
     text-align: center
 
-  TextEdit
+  BotTextEdit
     id: item6Max
     size: 100 20
     anchors.left: prev.right

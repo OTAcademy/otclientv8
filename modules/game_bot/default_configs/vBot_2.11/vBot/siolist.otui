@@ -1,22 +1,96 @@
-SioListWindow < MainWindow
-  !text: tr('Healer Options')
-  size: 200 310
-  @onEscape: self:hide()
+VocationPanel < Panel
+  padding: 3
+  image-source: /images/ui/panel_flat
+  image-border: 6
+  size: 190 55
 
-  BotSwitch
-    id: spell
+  Label
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    text: Spell Healing
+    text-align: center
+    text: for BotServer, Heal only:
+
+  BotSwitch
+    id: ED
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.horizontalCenter
+    text: Druids
+
+  BotSwitch
+    id: MS
+    anchors.bottom: parent.bottom
+    anchors.left: parent.horizontalCenter
+    anchors.right: parent.right
+    text: Sorcerers
+
+  BotSwitch
+    id: EK
+    anchors.bottom: ED.top
+    anchors.left: parent.left
+    anchors.right: parent.horizontalCenter
+    text: Knights
+
+  BotSwitch
+    id: RP
+    anchors.bottom: ED.top
+    anchors.left: parent.horizontalCenter
+    anchors.right: parent.right
+    text: Paladins
+
+
+
+SioListWindow < MainWindow
+  !text: tr('Healer Options')
+  size: 220 360
+  @onEscape: self:hide()
+
+  BotSwitch
+    id: exuraSio
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.horizontalCenter
+    text: Exura Sio
+    margin-right: 2
+
+  BotSwitch
+    id: exuraGranSio
+    anchors.top: parent.top
+    anchors.left: prev.right
+    anchors.right: parent.right
+    text: Exura Gran Sio
+    margin-left: 2
+
+  BotSwitch
+    id: exuraMasRes
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    text: Exura Gran Mas Res
+    margin-top: 3
+
+  BotSwitch
+    id: spell
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    text: Custom Spell
+    margin-top: 3
     text-align: center
 
   BotTextEdit
     id: spellName
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.top: spell.bottom
+    anchors.top: prev.bottom
     margin-top: 3
+
+  HorizontalSeparator
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 10
 
   BotItem
     id: itemId
@@ -53,13 +127,19 @@ SioListWindow < MainWindow
     maximum: 10
     step: 1  
 
+  HorizontalSeparator
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+
   BotLabel
     id: manaInfo
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.top: Distance.bottom
+    anchors.top: prev.bottom
     text-align: center
-    margin-top: 15
+    margin-top: 5
 
   HorizontalScrollBar
     id: minMana
@@ -77,7 +157,7 @@ SioListWindow < MainWindow
     anchors.right: spellName.right
     anchors.top: prev.bottom
     text-align: center
-    margin-top: 10
+    margin-top: 5
 
   HorizontalScrollBar
     id: minFriendHp
@@ -87,7 +167,12 @@ SioListWindow < MainWindow
     margin-top: 2
     minimum: 1
     maximum: 100
-    step: 1   
+    step: 1  
+
+  VocationPanel
+    id: vocation
+    anchors.top: prev.bottom 
+    margin-top: 6
 
   HorizontalSeparator
     id: separator

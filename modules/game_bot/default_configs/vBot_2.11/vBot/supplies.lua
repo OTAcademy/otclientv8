@@ -39,6 +39,32 @@ SuppliesConfig[suppliesPanelName] = {
 }
 end
 
+-- data validation
+local setup = SuppliesConfig[suppliesPanelName]
+setup.item1 = setup.item1 or 0
+setup.item2 = setup.item2 or 0
+setup.item3 = setup.item3 or 0
+setup.item4 = setup.item4 or 0
+setup.item5 = setup.item5 or 0
+setup.item6 = setup.item6 or 0
+setup.item1Min = setup.item1Min or 0
+setup.item1Max = setup.item1Max or 0
+setup.item2Min = setup.item2Min or 0
+setup.item2Max = setup.item2Max or 0
+setup.item3Min = setup.item3Min or 0
+setup.item3Max = setup.item3Max or 0
+setup.item4Min = setup.item4Min or 0
+setup.item4Max = setup.item4Max or 0
+setup.item5Min = setup.item5Min or 0
+setup.item5Max = setup.item5Max or 0
+setup.item6Min = setup.item6Min or 0
+setup.item6Max = setup.item6Max or 0
+setup.capValue = setup.capValue or 0
+setup.staminaValue = setup.staminaValue or 0
+setup.potionBp = setup.potionBp or 0
+setup.runeBp = setup.runeBp or 0
+setup.ammoBp = setup.ammoBp or 0
+
 rootWidget = g_ui.getRootWidget()
 if rootWidget then
   SuppliesWindow = g_ui.createWidget('SuppliesWindow', rootWidget)
@@ -127,8 +153,11 @@ if rootWidget then
     local value = tonumber(SuppliesWindow.capValue:getText())
     if not value then
       SuppliesWindow.capValue:setText(0)
+      SuppliesConfig[suppliesPanelName].capValue = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].capValue = text
     end
-    SuppliesConfig[suppliesPanelName].capValue = text
 end
   
   SuppliesWindow.item1Min:setText(SuppliesConfig[suppliesPanelName].item1Min)
@@ -136,8 +165,11 @@ end
     local value = tonumber(SuppliesWindow.item1Min:getText())
     if not value then
       SuppliesWindow.item1Min:setText(0)
+      SuppliesConfig[suppliesPanelName].item1Min = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item1Min = text
     end
-    SuppliesConfig[suppliesPanelName].item1Min = text
 end
 
   SuppliesWindow.item1Max:setText(SuppliesConfig[suppliesPanelName].item1Max)
@@ -145,8 +177,11 @@ end
     local value = tonumber(SuppliesWindow.item1Max:getText())
     if not value then
       SuppliesWindow.item1Max:setText(0)
+      SuppliesConfig[suppliesPanelName].item1Max = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item1Max = text
     end
-    SuppliesConfig[suppliesPanelName].item1Max = text
 end
 
   SuppliesWindow.item2Min:setText(SuppliesConfig[suppliesPanelName].item2Min)
@@ -154,8 +189,11 @@ end
     local value = tonumber(SuppliesWindow.item2Min:getText())
     if not value then
       SuppliesWindow.item2Min:setText(0)
+      SuppliesConfig[suppliesPanelName].item2Min = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item2Min = text
     end
-    SuppliesConfig[suppliesPanelName].item2Min = text
 end
 
   SuppliesWindow.item2Max:setText(SuppliesConfig[suppliesPanelName].item2Max)
@@ -163,8 +201,11 @@ end
     local value = tonumber(SuppliesWindow.item2Max:getText())
     if not value then
       SuppliesWindow.item2Max:setText(0)
+      SuppliesConfig[suppliesPanelName].item2Max = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item2Max = text
     end
-    SuppliesConfig[suppliesPanelName].item2Max = text
 end 
 
   SuppliesWindow.item3Min:setText(SuppliesConfig[suppliesPanelName].item3Min)
@@ -172,8 +213,11 @@ end
     local value = tonumber(SuppliesWindow.item3Min:getText())
     if not value then
       SuppliesWindow.item3Min:setText(0)
+      SuppliesConfig[suppliesPanelName].item3Min = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item3Min = text
     end
-    SuppliesConfig[suppliesPanelName].item3Min = text
 end   
 
   SuppliesWindow.item3Max:setText(SuppliesConfig[suppliesPanelName].item3Max)
@@ -181,8 +225,10 @@ end
     local value = tonumber(SuppliesWindow.item3Max:getText())
     if not value then
       SuppliesWindow.item3Max:setText(0)
+      SuppliesConfig[suppliesPanelName].item3Max = 0
+    else
+      SuppliesConfig[suppliesPanelName].item3Max = text
     end
-    SuppliesConfig[suppliesPanelName].item3Max = text
 end
    
   SuppliesWindow.item4Min:setText(SuppliesConfig[suppliesPanelName].item4Min)
@@ -190,8 +236,11 @@ end
     local value = tonumber(SuppliesWindow.item4Min:getText())
     if not value then
       SuppliesWindow.item4Min:setText(0)
+      SuppliesConfig[suppliesPanelName].item4Min = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item4Min = text
     end
-    SuppliesConfig[suppliesPanelName].item4Min = text
 end
 
 SuppliesWindow.staminaValue:setText(SuppliesConfig[suppliesPanelName].staminaValue)
@@ -199,8 +248,11 @@ SuppliesWindow.staminaValue.onTextChange = function(widget, text)
   local value = tonumber(SuppliesWindow.staminaValue:getText())
   if not value then
     SuppliesWindow.staminaValue:setText(0)
+    SuppliesConfig[suppliesPanelName].staminaValue = 0
+  else
+    text = text:match("0*(%d+)")
+    SuppliesConfig[suppliesPanelName].staminaValue = text
   end
-  SuppliesConfig[suppliesPanelName].staminaValue = text
 end
 
   SuppliesWindow.item4Max:setText(SuppliesConfig[suppliesPanelName].item4Max)
@@ -208,35 +260,47 @@ end
     local value = tonumber(SuppliesWindow.item4Max:getText())
     if not value then
       SuppliesWindow.item4Max:setText(0)
+      SuppliesConfig[suppliesPanelName].item4Max = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item4Max = text
     end
-    SuppliesConfig[suppliesPanelName].item4Max = text
-end
+  end
 
   SuppliesWindow.item5Min:setText(SuppliesConfig[suppliesPanelName].item5Min)
   SuppliesWindow.item5Min.onTextChange = function(widget, text)
     local value = tonumber(SuppliesWindow.item5Min:getText())
     if not value then
       SuppliesWindow.item5Min:setText(0)
+      SuppliesConfig[suppliesPanelName].item5Min = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item5Min = text
     end
-    SuppliesConfig[suppliesPanelName].item5Min = text
-end
+  end
 
   SuppliesWindow.item5Max:setText(SuppliesConfig[suppliesPanelName].item5Max)
   SuppliesWindow.item5Max.onTextChange = function(widget, text)
     local value = tonumber(SuppliesWindow.item5Max:getText())
     if not value then
       SuppliesWindow.item5Max:setText(0)
+      SuppliesConfig[suppliesPanelName].item5Max = 0
+    else
+      text = text:match("0*(%d+)")
+      SuppliesConfig[suppliesPanelName].item5Max = text
     end
-    SuppliesConfig[suppliesPanelName].item5Max = text
-end
+  end
 
 SuppliesWindow.item6Min:setText(SuppliesConfig[suppliesPanelName].item6Min)
 SuppliesWindow.item6Min.onTextChange = function(widget, text)
   local value = tonumber(SuppliesWindow.item6Min:getText())
   if not value then
     SuppliesWindow.item6Min:setText(0)
+    SuppliesConfig[suppliesPanelName].item6Min = 0
+  else
+    text = text:match("0*(%d+)")
+    SuppliesConfig[suppliesPanelName].item6Min = text
   end
-  SuppliesConfig[suppliesPanelName].item6Min = text
 end
 
 SuppliesWindow.item6Max:setText(SuppliesConfig[suppliesPanelName].item6Max)
@@ -244,8 +308,11 @@ SuppliesWindow.item6Max.onTextChange = function(widget, text)
   local value = tonumber(SuppliesWindow.item6Max:getText())
   if not value then
     SuppliesWindow.item6Max:setText(0)
+    SuppliesConfig[suppliesPanelName].item6Max = 0
+  else
+    text = text:match("0*(%d+)")
+    SuppliesConfig[suppliesPanelName].item6Max = text
   end
-  SuppliesConfig[suppliesPanelName].item6Max = text
 end
 
 end

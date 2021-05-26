@@ -17,7 +17,7 @@ PlayerName < Label
 
 PlayerListsWindow < MainWindow
   !text: tr('Player Lists')
-  size: 570 350
+  size: 580 350
   @onEscape: self:hide()
 
   Label
@@ -37,7 +37,7 @@ PlayerListsWindow < MainWindow
     margin-right: 3
     padding: 1
     width: 180
-    height: 180
+    height: 160
     vertical-scrollbar: FriendListScrollBar
 
   VerticalScrollBar
@@ -82,7 +82,7 @@ PlayerListsWindow < MainWindow
     margin-left: 3
     padding: 1
     width: 180
-    height: 180
+    height: 160
     vertical-scrollbar: EnemyListScrollBar
 
   VerticalScrollBar
@@ -127,7 +127,7 @@ PlayerListsWindow < MainWindow
     margin-left: 3
     padding: 1
     width: 180
-    height: 180
+    height: 160
     vertical-scrollbar: BlackListScrollBar
 
   VerticalScrollBar
@@ -157,33 +157,39 @@ PlayerListsWindow < MainWindow
 
   BotSwitch
     id: Members
-    anchors.left: FriendList.left
-    anchors.right: FriendList.right
+    anchors.left: parent.left
     anchors.top: AddEnemy.bottom
-    margin-top: 10
-    width: 114
+    margin-top: 15
+    width: 135
     text-align: center
     text: Group Members  
 
   BotSwitch
     id: Outfit
-    anchors.left: EnemyList.left
-    anchors.right: EnemyList.right
-    anchors.top: AddEnemy.bottom
-    margin-top: 10
-    width: 114
+    anchors.bottom: prev.bottom
+    anchors.left: prev.right
+    margin-left: 3
+    width: 135
     text-align: center
     text: Color Outfits
 
   BotSwitch
     id: Marks
-    anchors.left: BlackList.left
-    anchors.right: BlackList.right
-    anchors.top: AddEnemy.bottom
-    margin-top: 10
-    width: 114
+    anchors.bottom: prev.bottom
+    anchors.left: prev.right
+    width: 135
+    margin-left: 3
     text-align: center
-    text: Not Ally = Enemy         
+    text: Not Ally = Enemy    
+
+  BotSwitch
+    id: Highlight    
+    anchors.bottom: prev.bottom
+    anchors.left: prev.right
+    width: 135
+    margin-left: 3
+    text-align: center
+    text: Highlight     
 
   HorizontalSeparator
     id: separator
