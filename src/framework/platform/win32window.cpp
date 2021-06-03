@@ -118,6 +118,17 @@ WIN32Window::WIN32Window()
     m_keyMap['8'] = Fw::Key8;
     m_keyMap['9'] = Fw::Key9;
 
+    m_keyMap[VK_NUMPAD0] = Fw::Key0;
+    m_keyMap[VK_NUMPAD1] = Fw::Key1;
+    m_keyMap[VK_NUMPAD2] = Fw::Key2;
+    m_keyMap[VK_NUMPAD3] = Fw::Key3;
+    m_keyMap[VK_NUMPAD4] = Fw::Key4;
+    m_keyMap[VK_NUMPAD5] = Fw::Key5;
+    m_keyMap[VK_NUMPAD6] = Fw::Key6;
+    m_keyMap[VK_NUMPAD7] = Fw::Key7;
+    m_keyMap[VK_NUMPAD8] = Fw::Key8;
+    m_keyMap[VK_NUMPAD9] = Fw::Key9;
+
     /*
     m_keyMap[':'] = Fw::KeyColon;
     m_keyMap[';'] = Fw::KeySemicolon;
@@ -570,8 +581,8 @@ void WIN32Window::poll()
 Fw::Key WIN32Window::retranslateVirtualKey(WPARAM wParam, LPARAM lParam)
 {
     // ignore numpad keys when numlock is on
-    if((wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9) || wParam == VK_SEPARATOR)
-        return Fw::KeyUnknown;
+    // if((wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9) || wParam == VK_SEPARATOR)
+    //   return Fw::KeyUnknown;
 
     // lParam will have this state when receiving insert,end,down,etc presses from numpad
     if(!(((HIWORD(lParam) >> 8) & 0xFF) & 1)) {
@@ -579,25 +590,25 @@ Fw::Key WIN32Window::retranslateVirtualKey(WPARAM wParam, LPARAM lParam)
         // retranslate numpad keys
         switch(wParam) {
             case VK_INSERT:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad0;
+                return numlockOn ? Fw::Key0 : Fw::KeyNumpad0;
             case VK_END:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad1;
+                return numlockOn ? Fw::Key1 : Fw::KeyNumpad1;
             case VK_DOWN:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad2;
+                return numlockOn ? Fw::Key2 : Fw::KeyNumpad2;
             case VK_NEXT:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad3;
+                return numlockOn ? Fw::Key3 : Fw::KeyNumpad3;
             case VK_LEFT:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad4;
+                return numlockOn ? Fw::Key4 : Fw::KeyNumpad4;
             case VK_CLEAR:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad5;
+                return numlockOn ? Fw::Key5 : Fw::KeyNumpad5;
             case VK_RIGHT:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad6;
+                return numlockOn ? Fw::Key6 : Fw::KeyNumpad6;
             case VK_HOME:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad7;
+                return numlockOn ? Fw::Key7 : Fw::KeyNumpad7;
             case VK_UP:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad8;
+                return numlockOn ? Fw::Key8 : Fw::KeyNumpad8;
             case VK_PRIOR:
-                return numlockOn ? Fw::KeyUnknown : Fw::KeyNumpad9;
+                return numlockOn ? Fw::Key9 : Fw::KeyNumpad9;
         }
     }
 

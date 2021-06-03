@@ -53,8 +53,8 @@ void GraphicalApplication::init(std::vector<std::string>& args)
     Application::init(args);
 
     // setup platform window
-    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
     g_window.init();
+    g_graphics.checkForError(__FUNCTION__, __FILE__, __LINE__);
     g_window.hide();
     g_window.setOnResize(std::bind(&GraphicalApplication::resize, this, std::placeholders::_1));
     g_window.setOnInputEvent(std::bind(&GraphicalApplication::inputEvent, this, std::placeholders::_1));
