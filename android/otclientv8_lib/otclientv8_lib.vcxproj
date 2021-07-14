@@ -172,7 +172,7 @@
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);GLESv2;EGL;unwind</LibraryDependencies>
-      <AdditionalOptions>-lm -lz</AdditionalOptions>
+      <AdditionalOptions>-lm -lz -latomic</AdditionalOptions>
       <AdditionalDependencies>C:\android\lib\libboost_system.a;C:\android\lib\libvorbisfile.a;C:\android\lib\libvorbis.a;C:\android\lib\libssl.a;C:\android\lib\libpng.a;C:\android\lib\libphysfs.a;C:\android\lib\libopenal.a;C:\android\lib\libogg.a;C:\android\lib\libluajit.a;C:\android\lib\libcrypto.a;C:\android\lib\libzip.a;%(AdditionalDependencies)</AdditionalDependencies>
       <SharedLibrarySearchPath>C:\android\lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
       <AdditionalLibraryDirectories>C:\android\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
