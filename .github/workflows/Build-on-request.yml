@@ -43,6 +43,11 @@ jobs:
         cd vc16
         MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
 
+    - name: Sign binaries
+      run: |
+         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
+         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
+
     - name: Upload binaries
       uses: 'actions/upload-artifact@v2'
       with:

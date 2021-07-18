@@ -55,6 +55,11 @@ jobs:
         MSBuild /property:Configuration=Debug_lib /p:BUILD_REVISION=${{github.run_number}}
         MSBuild /property:Configuration=Debug /p:BUILD_REVISION=${{github.run_number}}
 
+    - name: Sign binaries
+      run: |
+         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
+         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
+
     - name: Compress debug lib
       run: |
         7z a `
