@@ -12,6 +12,7 @@ Makefile
 *.gch
 *.a
 *.exe
+!signtool.exe
 *.apk
 *.recipe*
 *.gz
