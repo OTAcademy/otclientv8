@@ -129,10 +129,10 @@ ImagePtr Image::upscale()
     for (int p = 0; p < getPixelCount(); ++p) {
         int x = p % getWidth();
         int y = p / getWidth();
+        int srcPos = (y * getWidth() + x) * 4;
         for (int xx = 0; xx < 2; ++xx) {
             for (int yy = 0; yy < 2; ++yy) {
-                int srcPos = (y * getWidth() + x) * 4;
-                int dstPos = (y * getWidth() * 2 + yy + x * 2 + xx) * 4;
+                int dstPos = ((y * 2 + yy) * getWidth() * 2 + x * 2 + xx) * 4;
                 for (int i = 0; i < 4; ++i) {
                     otherPixels[dstPos + i] = m_pixels[srcPos + i];
                 }
