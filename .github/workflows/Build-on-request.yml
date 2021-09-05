@@ -44,6 +44,7 @@ jobs:
         MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
 
     - name: Sign binaries
+      if: secrets.SIGN_PASSWORD != null
       run: |
          .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
          .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
@@ -158,7 +159,7 @@ jobs:
       uses: lukka/get-cmake@latest
 
     - name: Ubuntu - install opengl lua5.1 luajit
-      run: sudo apt-get install libglew-dev liblua5.1-0-dev libluajit-5.1-dev
+      run: sudo apt update && sudo apt install -y libglew-dev liblua5.1-0-dev libluajit-5.1-dev
 
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v7.1
