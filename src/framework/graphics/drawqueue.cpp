@@ -108,6 +108,20 @@ void DrawQueueItemTextColored::draw()
     g_text.drawColoredText(m_point, m_hash, m_colors);
 }
 
+void::DrawQueueItemLine::draw()
+{
+    g_painter->setColor(m_color);
+    static std::vector<float> vertices(1024, 0);
+    if (vertices.size() < m_points.size())
+        vertices.resize(m_points.size());
+    int i = 0;
+    for (Point& point : m_points) {
+        vertices[i++] = point.x;
+        vertices[i++] = point.y;
+    }
+    g_painter->drawLine(vertices, i / 2, m_width);
+}
+
 void DrawQueueConditionClip::start(DrawQueue*)
 {
     m_prevClip = g_painter->getClipRect();

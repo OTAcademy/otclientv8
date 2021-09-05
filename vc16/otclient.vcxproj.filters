@@ -555,6 +555,9 @@
     <ClCompile Include="..\src\client\healthbars.cpp">
       <Filter>Source Files\client</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\client\uigraph.cpp">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework\const.h">
@@ -1113,6 +1116,9 @@
       <Filter>Header Files\framework\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\src\client\healthbars.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\client\uigraph.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
   </ItemGroup>

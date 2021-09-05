@@ -81,6 +81,8 @@ set(client_SOURCES ${client_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/uicreature.h
     ${CMAKE_CURRENT_LIST_DIR}/uiitem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/uiitem.h
+    ${CMAKE_CURRENT_LIST_DIR}/uigraph.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/uigraph.h
     ${CMAKE_CURRENT_LIST_DIR}/uimap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/uimap.h
     ${CMAKE_CURRENT_LIST_DIR}/uiminimap.cpp

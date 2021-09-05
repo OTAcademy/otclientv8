@@ -492,6 +492,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\client\uigraph.cpp" />
     <ClCompile Include="..\src\client\uiitem.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='OpenGL|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|Win32'">true</ExcludedFromBuild>
@@ -989,6 +990,7 @@
     <ClInclude Include="..\src\client\tile.h" />
     <ClInclude Include="..\src\client\towns.h" />
     <ClInclude Include="..\src\client\uicreature.h" />
+    <ClInclude Include="..\src\client\uigraph.h" />
     <ClInclude Include="..\src\client\uiitem.h" />
     <ClInclude Include="..\src\client\uimap.h" />
     <ClInclude Include="..\src\client\uimapanchorlayout.h" />
