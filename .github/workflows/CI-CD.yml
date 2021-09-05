@@ -56,7 +56,6 @@ jobs:
         MSBuild /property:Configuration=Debug /p:BUILD_REVISION=${{github.run_number}}
 
     - name: Sign binaries
-      if: secrets.SIGN_PASSWORD != null
       run: |
          .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
          .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
@@ -335,7 +334,6 @@ jobs:
         if-no-files-found: error
 
     - name: Checkout public otclientv8
-      if: secrets.otcv8_token != null
       uses: actions/checkout@v2
       with:
         repository: OTCv8/otclientv8
@@ -344,7 +342,6 @@ jobs:
         token: "${{ secrets.otcv8_token }}"
 
     - name: Update public otclientv8 files
-      if: secrets.otcv8_token != null
       run: |
         cd otclientv8
         git rm . -f -r --ignore-unmatch
@@ -371,7 +368,6 @@ jobs:
         exit 0 # required, robocopy has exit code 1
 
     - name: Commit public otclientv8
-      if: secrets.otcv8_token != null
       uses: EndBug/add-and-commit@v7
       with:
         cwd: otclientv8
@@ -381,7 +377,6 @@ jobs:
         message: "Updated to ${{ env.VERSION }}"
 
     - name: Checkout otcv8-dev
-      if: secrets.otcv8_token != null
       uses: actions/checkout@v2
       with:
         repository: OTCv8/otcv8-dev
@@ -390,7 +385,6 @@ jobs:
         token: "${{ secrets.otcv8_token }}"
 
     - name: Update otcv8-dev files
-      if: secrets.otcv8_token != null
       run: |
         cd otcv8-dev
         git rm `
@@ -410,7 +404,6 @@ jobs:
         exit 0 # required, robocopy has exit code 1
 
     - name: Commit otcv8-dev
-      if: secrets.otcv8_token != null
       uses: EndBug/add-and-commit@v7
       with:
         cwd: otcv8-dev
@@ -420,7 +413,6 @@ jobs:
         message: "Updated to ${{ env.VERSION }}"
 
     - name: Deploy on otclient.ovh
-      if: secrets.SSH_KEY != null
       uses: garygrossgarten/github-action-ssh@release
       with:
         command: ./update_otcv8.sh
