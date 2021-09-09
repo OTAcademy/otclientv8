@@ -1,4 +1,4 @@
-name: Build, Test, Release
+name: Build, Test, Release 3.1
 on:
   push:
     branches:
