@@ -688,8 +688,8 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 
     int numRets = 0;
 
-    // enable only for tests, high cpu usage
-    //AutoStat s(STATS_LUACALLBACK, g_lua.getCurrentFunction());
+    // enable only for tests, it has high cpu usage
+    // AutoStat s(STATS_LUACALLBACK, g_lua.getSource(1));
 
     // do the call
     try {
