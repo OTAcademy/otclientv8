@@ -142,6 +142,8 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
             setOn(node->value<bool>());
         else if(node->tag() == "focusable")
             setFocusable(node->value<bool>());
+        else if (node->tag() == "auto-draw")
+            setAutoDraw(node->value<bool>());
         else if(node->tag() == "auto-focus")
             setAutoFocusPolicy(Fw::translateAutoFocusPolicy(node->value()));
         else if(node->tag() == "phantom")

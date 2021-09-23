@@ -119,6 +119,9 @@ void UIWidget::drawChildren(const Rect& visibleRect, Fw::DrawPane drawPane)
 {
     // draw children
     for(const UIWidgetPtr& child : m_children) {
+        if (!child->isAutoDraw())
+            continue;
+
         // render only visible children with a valid rect inside parent rect
         if(!child->isExplicitlyVisible() || !child->getRect().isValid() || child->getOpacity() < Fw::MIN_ALPHA)
             continue;
@@ -1010,12 +1013,12 @@ void UIWidget::setEnabled(bool enabled)
 
 void UIWidget::setVisible(bool visible)
 {
-    if(m_visible != visible) {
+    if (m_visible != visible) {
         m_visible = visible;
 
         // hiding a widget make it lose focus
-        if(!visible && isFocused()) {
-            if(UIWidgetPtr parent = getParent())
+        if (!visible && isFocused()) {
+            if (UIWidgetPtr parent = getParent())
                 parent->focusPreviousChild(Fw::ActiveFocusReason, true);
         }
 
@@ -1026,11 +1029,16 @@ void UIWidget::setVisible(bool visible)
         updateState(Fw::HiddenState);
 
         // visibility can change the current hovered widget
-        if(visible)
+        if (visible)
             g_ui.onWidgetAppear(static_self_cast<UIWidget>());
         else
             g_ui.onWidgetDisappear(static_self_cast<UIWidget>());
     }
+}
+
+void UIWidget::setAutoDraw(bool value)
+{
+    m_autoDraw = value;
 }
 
 void UIWidget::setOn(bool on)

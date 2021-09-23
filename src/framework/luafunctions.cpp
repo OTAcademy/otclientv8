@@ -530,6 +530,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("isHidden", &UIWidget::isHidden);
     g_lua.bindClassMemberFunction<UIWidget>("isExplicitlyEnabled", &UIWidget::isExplicitlyEnabled);
     g_lua.bindClassMemberFunction<UIWidget>("isExplicitlyVisible", &UIWidget::isExplicitlyVisible);
+    g_lua.bindClassMemberFunction<UIWidget>("isAutoDraw", &UIWidget::isAutoDraw);
     g_lua.bindClassMemberFunction<UIWidget>("isFocusable", &UIWidget::isFocusable);
     g_lua.bindClassMemberFunction<UIWidget>("isPhantom", &UIWidget::isPhantom);
     g_lua.bindClassMemberFunction<UIWidget>("isDraggable", &UIWidget::isDraggable);
