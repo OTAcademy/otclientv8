@@ -206,17 +206,17 @@ if(USE_LTO)
     else()
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -Wl,-O1,--gc-sections,--sort-common,--relax,-z,relro")
     endif()
+endif()
 
-    # process options
-    if(USE_STATIC_LIBS)
+# process options
+if(USE_STATIC_LIBS)
         if(NOT APPLE)
             set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -static-libgcc -static-libstdc++")
         endif()
         message(STATUS "Link to static libraries: ON")
         set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-    else()
+else()
         message(STATUS "Link to static libraries: OFF")
-    endif()
 endif()
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
