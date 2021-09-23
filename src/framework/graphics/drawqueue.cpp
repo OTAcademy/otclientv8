@@ -18,7 +18,10 @@ void DrawQueueItemTextureCoords::draw()
 
 bool DrawQueueItemTextureCoords::cache()
 {
+    if (!m_texture->canCache())
+        return false;
     m_texture->update();
+
     uint64_t hash = 100 + m_texture->getUniqueId();
     bool drawNow = false;
     Point atlasPos = g_atlas.cache(hash, m_texture->getSize(), drawNow);
@@ -53,6 +56,8 @@ void DrawQueueItemTexturedRect::draw()
 bool DrawQueueItemTexturedRect::cache()
 {
     if (m_dest.size() > m_src.size()) // upscaling may create artifacts
+        return false;
+    if (!m_texture->canCache())
         return false;
 
     m_texture->update();

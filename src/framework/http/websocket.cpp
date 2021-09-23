@@ -53,6 +53,9 @@ void WebsocketSession::start() {
 
 void WebsocketSession::send(std::string data)
 {
+    if (m_closed)
+        return;
+
     bool sendNow = m_result->connected && m_sendQueue.empty();
     m_sendQueue.push(data);
     if (sendNow) {
@@ -102,6 +105,8 @@ void WebsocketSession::on_handshake(const boost::system::error_code& ec)
 {
     if (ec)
         return onError("handshake error", ec.message());
+    if (m_closed)
+        return;
 
     m_result->connected = true;
     m_callback(WEBSOCKET_OPEN, "");
@@ -122,6 +127,8 @@ void WebsocketSession::on_send(const boost::system::error_code& ec) {
     if(ec)
         return onError("send error", ec.message());
     m_sendQueue.pop();
+    if (m_closed)
+        return;
 
     if (!m_sendQueue.empty()) {
         if (m_ssl) {
@@ -137,6 +144,8 @@ void WebsocketSession::on_read(const boost::system::error_code& ec, size_t bytes
         return onError("canceled", ec.message());
     if (ec)
         return onError("read error", ec.message());
+    if (m_closed)
+        return;
 
     m_timer.expires_after(std::chrono::seconds(m_timeout));
     m_timer.async_wait(std::bind(&WebsocketSession::onTimeout, shared_from_this(), std::placeholders::_1));

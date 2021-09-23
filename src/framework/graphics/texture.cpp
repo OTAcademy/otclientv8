@@ -38,6 +38,7 @@ Texture::Texture(const Size& size, bool depthTexture, bool smooth, bool upsideDo
     m_smooth = smooth;
     m_upsideDown = upsideDown;
     setupSize(size);
+    m_needsUpdate = true;
 
     g_stats.addTexture();
 }
@@ -52,6 +53,7 @@ Texture::Texture(const ImagePtr& image, bool buildMipmaps, bool compress, bool s
     m_smooth = smooth;
     m_image = image;
     setupSize(m_image->getSize());
+    m_needsUpdate = true;
 
     g_stats.addTexture();
 }
@@ -84,6 +86,7 @@ void Texture::replace(const ImagePtr& image)
     m_id = 0;
     m_image = image;
     setupSize(m_image->getSize());
+    m_needsUpdate = true;
 }
 
 void Texture::resize(const Size& size)
@@ -93,8 +96,8 @@ void Texture::resize(const Size& size)
     setupSize(size);
     glBindTexture(GL_TEXTURE_2D, m_id);
     setupPixels(0, m_size, nullptr, 4);
-    //m_needsUpdate = true;
-    /* update(); */
+    m_needsUpdate = true;
+    update();
 }
 
 

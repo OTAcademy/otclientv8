@@ -161,7 +161,7 @@ end)
 
 -- mana
 local lastMana = 0
-macro(100, function()
+macro(500, function()
   if config.manaInfo then
     if manapercent() ~= lastMana then
       lastMana = manapercent()

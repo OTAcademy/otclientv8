@@ -173,12 +173,14 @@ void UIWidget::drawImage(const Rect& screenCoords)
         }
     }
 
+    m_imageTexture->setSmooth(m_imageSmooth);
     g_drawQueue->addTextureCoords(m_imageCoordsBuffer, m_imageTexture, m_imageColor);
 }
 
 void UIWidget::setQRCode(const std::string& code, int border)
 {
     m_imageTexture = TexturePtr(new Texture(Image::fromQRCode(code, border)));
+    m_imageTexture->setCanCache(false);
 
     if (m_imageTexture && (!m_rect.isValid() || m_imageAutoResize)) {
         Size size = getSize();

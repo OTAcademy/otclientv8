@@ -113,7 +113,7 @@ if true then
       vocText = "- ED"
   end
 
-  macro(2000, function()
+  macro(5000, function()
     if settings.title then
       if hppercent() > 0 then
           g_window.setTitle("Tibia - " .. name() .. " - " .. lvl() .. "lvl " .. vocText)

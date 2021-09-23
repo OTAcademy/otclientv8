@@ -38,27 +38,38 @@ local oldTibia = g_game.getClientVersion() < 960
 -- main loop, controlled by config
 targetbotMacro = macro(100, function()
   local pos = player:getPosition()
-  local creatures = g_map.getSpectatorsInRange(pos, false, 6, 6) -- 12x12 area
-  if #creatures > 10 then -- if there are too many monsters around, limit area
+  local specs = g_map.getSpectatorsInRange(pos, false, 6, 6) -- 12x12 area
+  local creatures = 0
+  for i, spec in ipairs(specs) do
+    if spec:isMonster() then
+      creatures = creatures + 1
+    end
+  end
+  if creatures > 10 then -- if there are too many monsters around, limit area
     creatures = g_map.getSpectatorsInRange(pos, false, 3, 3) -- 6x6 area
+  else
+    creatures = specs
   end
   local highestPriority = 0
   local dangerLevel = 0
   local targets = 0
   local highestPriorityParams = nil
   for i, creature in ipairs(creatures) do
-    local path = findPath(player:getPosition(), creature:getPosition(), 7, {ignoreLastCreature=true, ignoreNonPathable=true, ignoreCost=true, ignoreCreatures=true})
-    if creature:isMonster() and (oldTibia or creature:getType() < 3) and path then
-      local params = TargetBot.Creature.calculateParams(creature, path) -- return {craeture, config, danger, priority}
-      dangerLevel = dangerLevel + params.danger
-      if params.priority > 0 then
-        targets = targets + 1
-        if params.priority > highestPriority then
-          highestPriority = params.priority
-          highestPriorityParams = params
-        end
-        if ui.editor.debug:isOn() then
-          creature:setText(params.config.name .. "\n" .. params.priority)
+    local hppc = creature:getHealthPercent()
+    if hppc and hppc > 0 then
+      local path = findPath(player:getPosition(), creature:getPosition(), 7, {ignoreLastCreature=true, ignoreNonPathable=true, ignoreCost=true, ignoreCreatures=true})
+      if creature:isMonster() and (oldTibia or creature:getType() < 3) and path then
+        local params = TargetBot.Creature.calculateParams(creature, path) -- return {craeture, config, danger, priority}
+        dangerLevel = dangerLevel + params.danger
+        if params.priority > 0 then
+          targets = targets + 1
+          if params.priority > highestPriority then
+            highestPriority = params.priority
+            highestPriorityParams = params
+          end
+          if ui.editor.debug:isOn() then
+            creature:setText(params.config.name .. "\n" .. params.priority)
+          end
         end
       end
     end

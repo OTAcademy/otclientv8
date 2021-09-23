@@ -505,13 +505,16 @@ macro(100, function()
         if config.forceOpen then
             local container = getContainerByItem(dId)
             if not container then
-                if getBack() and getBack():getId() == dId then
-                    g_game.open(getBack())
-                else
-                    local cItem = findItem(dId)
-                    if cItem then
-                        return g_game.open(cItem)
+                local t = {getBack(), getAmmo(), getFinger(), getNeck(), getLeft(), getRight()}
+                for i=1,#t do
+                    local slot = t[i]
+                    if slot and slot:getId() == dId then
+                        return g_game.open(slot)
                     end
+                end
+                local cItem = findItem(dId)
+                if cItem then
+                    return g_game.open(cItem)
                 end
             end
         end

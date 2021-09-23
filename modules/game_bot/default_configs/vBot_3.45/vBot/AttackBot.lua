@@ -1036,6 +1036,14 @@ function getMonstersInArea(category, posOrCreature, pattern, minHp, maxHp, safeP
     t = monsterNamesTable
   end
 
+  if safePattern then
+    for i, spec in pairs(getSpectators(posOrCreature, safePattern)) do
+      if spec ~= player and spec:isPlayer() then
+        return 0
+      end
+    end
+  end 
+
   if category == 1 or category == 3 or category == 4 then
     for i, spec in pairs(getSpectators()) do
       local specHp = spec:getHealthPercent()
@@ -1045,14 +1053,6 @@ function getMonstersInArea(category, posOrCreature, pattern, minHp, maxHp, safeP
     end
     return monsters
   end
-
-  if safePattern then
-    for i, spec in pairs(getSpectators(posOrCreature, safePattern)) do
-      if spec ~= player and spec:isPlayer() then
-        return 0
-      end
-    end
-  end 
 
   for i, spec in pairs(getSpectators(posOrCreature, pattern)) do
       if spec ~= player then
@@ -1075,7 +1075,7 @@ function getBestTileByPattern(pattern, minHp, maxHp, safePattern, monsterNamesTa
   for i, tile in pairs(tiles) do
     local tPos = tile:getPosition()
     local distance = distanceFromPlayer(tPos)
-    if tile:canShoot() and tile:isWalkable() then
+    if tile:canShoot() and tile:isWalkable() and (not safePattern or distance < 4) then
       local amount = getMonstersInArea(2, tPos, pattern, minHp, maxHp, safePattern, monsterNamesTable)
       if amount > targetTile.amount then
         targetTile = {amount=amount,pos=tPos}
@@ -1184,15 +1184,15 @@ macro(100, function()
           local pCat = entry.patternCategory
           local pattern = entry.pattern
           local anchorParam = (pattern == 2 or pattern == 6 or pattern == 7 or pattern > 9) and player or pos()
-          local safe = currentSettings.pvpSafe and spellPatterns[pCat][entry.pattern][2] or false
+          local safe = currentSettings.PvpSafe and spellPatterns[pCat][entry.pattern][2] or false
           local monsterAmount = pCat ~= 8 and getMonstersInArea(entry.category, anchorParam, spellPatterns[pCat][entry.pattern][1], entry.minHp, entry.maxHp, safe, entry.monsters)
           if (pattern ~= 8 and (entry.orMore and monsterAmount >= entry.count or not entry.orMore and monsterAmount == entry.count)) or pattern == 8 and bestSide >= entry.count then
             return executeAttackBotAction(entry.category, attackData, entry.cooldown)
           end
         elseif entry.category == 2 then
           local pCat = entry.patternCategory
-          local safe = currentSettings.pvpSafe and spellPatterns[pCat][entry.pattern][2] or false
-          local data = getBestTileByPattern(spellPatterns[pCat][entry.pattern][1], entry.minHp, entry.maxHp, spellPatterns[pCat][entry.pattern][2], entry.monsters)
+          local safe = currentSettings.PvpSafe and spellPatterns[pCat][entry.pattern][2] or false
+          local data = getBestTileByPattern(spellPatterns[pCat][entry.pattern][1], entry.minHp, entry.maxHp, safe, entry.monsters)
           local monsterAmount
           local pos
           if data then

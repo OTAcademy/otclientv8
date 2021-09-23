@@ -44,8 +44,11 @@ void HttpSession::start() {
         m_request.method(boost::beast::http::verb::post);
         m_request.body().assign(m_result->postData);
         m_request.content_length(m_result->postData.size());
+        if (m_isJson)
+            m_request.set(boost::beast::http::field::content_type, "application/json");
     }
 
+    m_result->session = weak_from_this();
     m_resolver.async_resolve(m_domain, std::to_string(m_port), std::bind(&HttpSession::on_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -122,12 +125,12 @@ void HttpSession::on_read_header(const boost::system::error_code& ec, size_t byt
     auto location = msg["Location"];
 
     if (!location.empty()) {        
-        auto session = std::make_shared<HttpSession>(m_service, location.to_string(), m_agent, m_timeout, m_result, m_callback);
+        auto session = std::make_shared<HttpSession>(m_service, location.to_string(), m_agent, m_timeout, m_isJson, m_result, m_callback);
         session->start();
         return close();
     }
 
-    if (msg.result_int() != 200)
+    if (msg.result_int() < 200 || msg.result_int() >= 300)
         return onError("Invalid http status code", std::to_string(msg.result_int()));
 
     if (m_response.is_done()) { // there's nothing more to read
