@@ -107,9 +107,8 @@ local function validateThings(things)
     g_settings.setNode("things", {})
   end
   if missingFiles then
-  
     incorrectThings = incorrectThings .. "\nYou should open data/things and create directory " .. versionForMissingFiles .. 
-    ".\nIn this directory (data/things/" .. versionForMissingFiles .. ") you should put missing\nfiles (Tibia.dat and Tibia.spr) " ..
+    ".\nIn this directory (data/things/" .. versionForMissingFiles .. ") you should put missing\nfiles (Tibia.dat and Tibia.spr/Tibia.cwm) " ..
     "from correct Tibia version."
   end
   return incorrectThings
@@ -135,10 +134,18 @@ local function onTibia12HTTPResult(session, playdata)
     
   local things = {
     data = {G.clientVersion .. "/Tibia.dat", ""},
-    sprites = {G.clientVersion .. "/Tibia.spr", ""},
+    sprites = {G.clientVersion .. "/Tibia.cwm", ""},
   }
-  
+
   local incorrectThings = validateThings(things)
+  if #incorrectThings > 0 then
+    things = {
+      data = {G.clientVersion .. "/Tibia.dat", ""},
+      sprites = {G.clientVersion .. "/Tibia.spr", ""},
+    }  
+    incorrectThings = validateThings(things)
+  end
+  
   if #incorrectThings > 0 then
     g_logger.error(incorrectThings)
     if Updater and not checkedByUpdater[G.clientVersion] then
@@ -487,10 +494,17 @@ function EnterGame.doLogin(account, password, token, host)
   
   local things = {
     data = {G.clientVersion .. "/Tibia.dat", ""},
-    sprites = {G.clientVersion .. "/Tibia.spr", ""},
+    sprites = {G.clientVersion .. "/Tibia.cwm", ""},
   }
   
   local incorrectThings = validateThings(things)
+  if #incorrectThings > 0 then
+    things = {
+      data = {G.clientVersion .. "/Tibia.dat", ""},
+      sprites = {G.clientVersion .. "/Tibia.spr", ""},
+    }  
+    incorrectThings = validateThings(things)
+  end
   if #incorrectThings > 0 then
     g_logger.error(incorrectThings)
     if Updater and not checkedByUpdater[G.clientVersion] then

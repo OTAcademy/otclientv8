@@ -487,7 +487,7 @@ FileStreamPtr ResourceManager::openFile(const std::string& fileName, bool dontCa
 {
     std::string fullPath = resolvePath(fileName);
     if (isFileEncryptedOrCompressed(fullPath) || !dontCache) {
-        return FileStreamPtr(new FileStream(fullPath, std::move(readFileContents(fullPath))));
+        return FileStreamPtr(new FileStream(fullPath, readFileContents(fullPath)));
     }
     PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
     if (!file)

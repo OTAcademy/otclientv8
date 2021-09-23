@@ -64,6 +64,19 @@ ImagePtr Image::loadPNG(const std::string& file)
     return image;
 }
 
+ImagePtr Image::loadPNG(const void* data, uint32_t size)
+{
+    std::string temp((char*)data, size);
+    std::stringstream fin(temp);
+    ImagePtr image;
+    apng_data apng;
+    if (load_apng(fin, &apng) == 0) {
+        image = ImagePtr(new Image(Size(apng.width, apng.height), apng.bpp, apng.pdata));
+        free_apng(&apng);
+    }
+    return image;
+}
+
 void Image::savePNG(const std::string& fileName)
 {
     FileStreamPtr fin = g_resources.createFile(fileName);

@@ -923,6 +923,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\framework\util\pngunpacker.cpp" />
     <ClCompile Include="..\src\framework\util\qrcodegen.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -1133,6 +1134,7 @@
     <ClInclude Include="..\src\framework\util\databuffer.h" />
     <ClInclude Include="..\src\framework\util\framecounter.h" />
     <ClInclude Include="..\src\framework\util\matrix.h" />
+    <ClInclude Include="..\src\framework\util\pngunpacker.h" />
     <ClInclude Include="..\src\framework\util\point.h" />
     <ClInclude Include="..\src\framework\util\qrcodegen.h" />
     <ClInclude Include="..\src\framework\util\rect.h" />

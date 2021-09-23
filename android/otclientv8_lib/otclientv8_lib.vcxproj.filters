@@ -446,6 +446,9 @@
     <ClCompile Include="..\..\src\client\uigraph.cpp">
       <Filter>client</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\framework\util\pngunpacker.cpp">
+      <Filter>framework\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\animatedtext.h">
@@ -1011,6 +1014,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\client\uigraph.h">
       <Filter>client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framework\util\pngunpacker.h">
+      <Filter>framework\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

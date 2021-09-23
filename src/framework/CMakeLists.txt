@@ -28,6 +28,8 @@ set(framework_SOURCES ${framework_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/util/databuffer.h
     ${CMAKE_CURRENT_LIST_DIR}/util/extras.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/extras.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/pngunpacker.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/pngunpacker.h
     ${CMAKE_CURRENT_LIST_DIR}/util/framecounter.h
     ${CMAKE_CURRENT_LIST_DIR}/util/matrix.h
     ${CMAKE_CURRENT_LIST_DIR}/util/point.h
