@@ -74,6 +74,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
+    <AndroidAPILevel>android-28</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -117,7 +118,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <UseMultiToolTask>true</UseMultiToolTask>
+    <TargetName>libotclientv8</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <UseMultiToolTask>true</UseMultiToolTask>
     <TargetName>libotclientv8</TargetName>
@@ -149,11 +153,22 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>$(SolutionDir)..\src\android\pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;C:\android\include;$(StlIncludeDirectories);$(Sysroot)\usr\include;$(Sysroot)\usr\include\$(AndroidHeaderTriple);$(VS_NdkRoot)\sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ANDROID;OPENGL_ES;OTCLIENT;FW_GRAPHICS;FW_NET;FW_XML;FW_PROXY;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <CLanguageStandard>c11</CLanguageStandard>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
+      <ExceptionHandling>Enabled</ExceptionHandling>
+      <FloatABI>soft</FloatABI>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv2;EGL;atomic</LibraryDependencies>
+      <SharedLibrarySearchPath>C:\android\lib64;%(SharedLibrarySearchPath);$(SysrootLink)\usr\lib\$(AndroidHeaderTriple);$(SysrootLink)\usr\lib\$(AndroidHeaderTriple)\$(AndroidAPILevelNumber)</SharedLibrarySearchPath>
+      <AdditionalLibraryDirectories>C:\android\lib64;%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainFullVersionName);$(StlLibraryPath)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>C:\android\lib64\libboost_system.a;C:\android\lib64\libvorbisfile.a;C:\android\lib64\libvorbis.a;C:\android\lib64\libssl.a;C:\android\lib64\libpng.a;C:\android\lib64\libphysfs.a;C:\android\lib64\libopenal.a;C:\android\lib64\libogg.a;C:\android\lib64\libluajit.a;C:\android\lib64\libcrypto.a;C:\android\lib64\libzip.a;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>-lm -lz -latomic</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">

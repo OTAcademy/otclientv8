@@ -85,7 +85,7 @@ jobs:
       run: |
         cd android
         $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
-        MSBuild.exe /p:Configuration=Release /p:Platform="ARM" /p:BUILD_REVISION=${{github.run_number}}
+        MSBuild.exe /p:Configuration=Release /p:Platform="ARM64" /p:BUILD_REVISION=${{github.run_number}}
 
     - name: Upload binaries
       uses: 'actions/upload-artifact@v2'
