@@ -2,8 +2,8 @@
 
 FileMetadata::FileMetadata(const FileStreamPtr& file)
 {
-	offset = file->get32();
-	fileSize = file->get32();
+	offset = file->getU32();
+	fileSize = file->getU32();
 	fileName = file->getString();
 }
 
