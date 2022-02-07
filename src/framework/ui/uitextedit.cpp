@@ -22,6 +22,8 @@
 
 #include "uitextedit.h"
 #include "uimanager.h"
+#include "uitranslator.h"
+
 #include <framework/graphics/bitmapfont.h>
 #include <framework/graphics/graphics.h>
 #include <framework/platform/platformwindow.h>
@@ -29,6 +31,7 @@
 #include <framework/otml/otmlnode.h>
 #include <framework/core/application.h>
 #include <framework/input/mouse.h>
+#include <framework/graphics/fontmanager.h>
 
 UITextEdit::UITextEdit()
 {
@@ -56,6 +59,10 @@ UITextEdit::UITextEdit()
     m_selectionColor = Color::white;
     m_selectionBackgroundColor = Color::black;
     m_glyphsMustRecache = true;
+    m_placeholder = "";
+    m_placeholderColor = Color::gray;
+    m_placeholderFont = g_fonts.getDefaultFont();
+    m_placeholderAlign = Fw::AlignLeftCenter;
     blinkCursor();
 }
 
@@ -73,6 +80,12 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
     const TexturePtr& texture = m_font->getTexture();
     if(!texture)
         return;
+
+    if (!isActive() && textLength == 0) {
+        if (m_placeholderColor != Color::alpha && !m_placeholder.empty()) {
+            m_placeholderFont->drawText(m_placeholder, m_drawArea, m_placeholderAlign, m_placeholderColor);
+        }
+    }
 
     bool glyphsMustRecache = m_glyphsMustRecache;
     if(glyphsMustRecache)
@@ -699,6 +712,14 @@ void UITextEdit::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
             setAutoScroll(node->value<bool>());
         else if (node->tag() == "text-auto-submit")
             setAutoSubmit(node->value<bool>());
+        else if (node->tag() == "placeholder")
+            setPlaceholder(node->value());
+        else if (node->tag() == "placeholder-color")
+            setPlaceholderColor(node->value<Color>());
+        else if (node->tag() == "placeholder-align")
+            setPlaceholderAlign(Fw::translateAlignment(node->value()));
+        else if (node->tag() == "placeholder-font")
+            setPlaceholderFont(node->value());
     }
 }
 
@@ -941,4 +962,9 @@ bool UITextEdit::onDoubleClick(const Point& mousePos)
 void UITextEdit::onTextAreaUpdate(const Point& offset, const Size& visibleSize, const Size& totalSize)
 {
     callLuaField("onTextAreaUpdate", offset, visibleSize, totalSize);
+}
+
+void UITextEdit::setPlaceholderFont(const std::string& fontName)
+{
+    m_placeholderFont = g_fonts.getFont(fontName);
 }

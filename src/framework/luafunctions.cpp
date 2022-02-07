@@ -819,6 +819,10 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UITextEdit>("isTextHidden", &UITextEdit::isTextHidden);
     g_lua.bindClassMemberFunction<UITextEdit>("isShiftNavigation", &UITextEdit::isShiftNavigation);
     g_lua.bindClassMemberFunction<UITextEdit>("isMultiline", &UITextEdit::isMultiline);
+    g_lua.bindClassMemberFunction<UITextEdit>("setPlaceholder", &UITextEdit::setPlaceholder);
+    g_lua.bindClassMemberFunction<UITextEdit>("setPlaceholderColor", &UITextEdit::setPlaceholderColor);
+    g_lua.bindClassMemberFunction<UITextEdit>("setPlaceholderAlign", &UITextEdit::setPlaceholderAlign);
+    g_lua.bindClassMemberFunction<UITextEdit>("setPlaceholderFont", &UITextEdit::setPlaceholderFont);
 
     g_lua.registerClass<ShaderProgram>();
     g_lua.registerClass<PainterShaderProgram>();
