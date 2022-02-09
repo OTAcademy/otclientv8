@@ -983,6 +983,7 @@ void ResourceManager::encrypt(const std::string& seed) {
         }
     }
 
+    bool encryptForAndroid = seed.find("android") != std::string::npos;
     uint32_t uintseed = seed.empty() ? 0 : stdext::adler32((const uint8_t*)seed.c_str(), seed.size());
 
     while (!toEncrypt.empty()) {
@@ -996,7 +997,7 @@ void ResourceManager::encrypt(const std::string& seed) {
         if (buffer.size() >= 4 && buffer.substr(0, 4).compare("ENC3") == 0)
             continue; // already encrypted
 
-        if (it.extension().string() == luaExtension && it.filename().string() != INIT_FILENAME) {
+        if (!encryptForAndroid && it.extension().string() == luaExtension && it.filename().string() != INIT_FILENAME) {
             std::string bytecode = g_lua.generateByteCode(buffer, it.string());
             if (bytecode.length() > 10) {
                 buffer = bytecode;
