@@ -484,7 +484,6 @@ namespace Otc
         GameNewCreatureStacking = 121,
         GameCreaturesMana = 122,
         GameQuickLootFlags = 123,
-        GameDontMergeAnimatedText = 124,
 
         LastGameFeature = 130
     };
