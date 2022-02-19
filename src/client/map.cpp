@@ -139,7 +139,7 @@ void Map::addThing(const ThingPtr& thing, const Position& pos, int stackPos)
 			for (auto other : m_animatedTexts) {
 				if (other->getPosition() == pos) {
 					prevAnimatedText = other;
-					if (!g_game.getFeature(Otc::GameDontMergeAnimatedText) {
+					if (!g_game.getFeature(Otc::GameDontMergeAnimatedText)) {
 						if (other->merge(animatedText)) {
 							merged = true;
 							break;
