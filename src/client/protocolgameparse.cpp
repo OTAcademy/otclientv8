@@ -1071,6 +1071,7 @@ void ProtocolGame::parseDeath(const InputMessagePtr& msg)
 void ProtocolGame::parseMapDescription(const InputMessagePtr& msg)
 {
     Position pos = getPosition(msg);
+    Position oldPos = m_localPlayer->getPosition();
 
     if (!m_mapKnown)
         m_localPlayer->setPosition(pos);
@@ -1079,6 +1080,11 @@ void ProtocolGame::parseMapDescription(const InputMessagePtr& msg)
 
     AwareRange range = g_map.getAwareRange();
     setMapDescription(msg, pos.x - range.left, pos.y - range.top, pos.z, range.horizontal(), range.vertical());
+
+    if (m_mapKnown) {
+        // We know about the map so its not from logging in, it must be teleport
+        g_lua.callGlobalField("g_game", "onTeleport", m_localPlayer, pos, oldPos);
+    }
 
     if (!m_mapKnown) {
         g_dispatcher.addEvent([] { g_lua.callGlobalField("g_game", "onMapKnown"); });
@@ -2360,6 +2366,8 @@ void ProtocolGame::parseFloorChangeUp(const InputMessagePtr& msg)
     newPos.y++;
     g_map.setCentralPosition(newPos);
 
+    g_lua.callGlobalField("g_game", "onTeleport", m_localPlayer, newPos, pos);
+
     int skip = 0;
     if (pos.z == Otc::SEA_FLOOR)
         for (int i = Otc::SEA_FLOOR - Otc::AWARE_UNDEGROUND_FLOOR_RANGE; i >= 0; i--)
@@ -2383,6 +2391,8 @@ void ProtocolGame::parseFloorChangeDown(const InputMessagePtr& msg)
     newPos.x--;
     newPos.y--;
     g_map.setCentralPosition(newPos);
+
+    g_lua.callGlobalField("g_game", "onTeleport", m_localPlayer, newPos, pos);
 
     int skip = 0;
     if (pos.z == Otc::UNDERGROUND_FLOOR) {
