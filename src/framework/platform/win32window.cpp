@@ -839,6 +839,38 @@ LRESULT WIN32Window::dispatcherWindowProc(HWND, UINT uMsg, WPARAM wParam, LPARAM
             m_onInputEvent(m_inputEvent);
         break;
     }
+#if (_WIN32_WINNT >= 0x0500)
+    case WM_XBUTTONDOWN:
+    {
+        m_inputEvent.reset(Fw::MousePressInputEvent);
+        if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) {
+            m_inputEvent.mouseButton = Fw::MouseButton4;
+            m_mouseButtonStates[Fw::MouseButton4] = true;
+        }
+        else if(GET_XBUTTON_WPARAM(wParam) == XBUTTON2) {
+            m_inputEvent.mouseButton = Fw::MouseButton5;
+            m_mouseButtonStates[Fw::MouseButton5] = true;
+        }
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+    case WM_XBUTTONUP:
+    {
+        m_inputEvent.reset(Fw::MouseReleaseInputEvent);
+        if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) {
+            m_inputEvent.mouseButton = Fw::MouseButton4;
+            m_mouseButtonStates[Fw::MouseButton4] = false;
+        }
+        else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) {
+            m_inputEvent.mouseButton = Fw::MouseButton5;
+            m_mouseButtonStates[Fw::MouseButton5] = false;
+        }
+        if (m_onInputEvent)
+            m_onInputEvent(m_inputEvent);
+        break;
+    }
+#endif
     case WM_MOUSEMOVE:
     {
         m_inputEvent.reset(Fw::MouseMoveInputEvent);

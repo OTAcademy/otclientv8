@@ -175,7 +175,7 @@ void PlatformWindow::releaseAllKeys()
 
     m_inputEvent.keyboardModifiers = 0;
 
-    for(int i=0;i<Fw::MouseButtonLast;++i)
+    for(int i=0;i<Fw::MouseButtonLast + 1;++i)
         m_mouseButtonStates[i] = false;
 }
 
