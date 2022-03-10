@@ -1367,7 +1367,7 @@ void ProtocolGame::parseOpenNpcTrade(const InputMessagePtr& msg)
 
     for (int i = 0; i < listCount; ++i) {
         uint16 itemId = msg->getU16();
-        uint16 count = g_game.getFeature(Otc::GameCountU16) ? msg->getU16() : msg->getU8();
+        uint8 count = msg->getU8();
 
         ItemPtr item = Item::create(itemId);
         item->setCountOrSubType(count);
@@ -3568,8 +3568,12 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id, bool hasDescri
         msg->getU8(); // mark
     }
 
-    if (item->isStackable() || item->isFluidContainer() || item->isSplash() || item->isChargeable())
+    if (item->isStackable() || item->isChargeable()) {
         item->setCountOrSubType(g_game.getFeature(Otc::GameCountU16) ? msg->getU16() : msg->getU8());
+    }
+    else if (item->isFluidContainer() || item->isSplash()) {
+        item->setCountOrSubType(msg->getU8());
+    }
     else if (item->rawGetThingType()->isContainer() && (g_game.getFeature(Otc::GameTibia12Protocol) || g_game.getFeature(Otc::GameQuickLootFlags))) {
         // not sure about this part
         uint8_t hasQuickLootFlags = msg->getU8();
