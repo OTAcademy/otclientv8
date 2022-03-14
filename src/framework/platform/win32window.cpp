@@ -1216,4 +1216,15 @@ Rect WIN32Window::adjustWindowRect(const Rect& clientRect)
     return rect;
 }
 
+void WIN32Window::flash()
+{
+    FLASHWINFO fInfo;
+    fInfo.cbSize = sizeof(fInfo);
+    fInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+    fInfo.hwnd = m_window;
+    fInfo.uCount = 0;
+    fInfo.dwTimeout = 1000;
+    FlashWindowEx(&fInfo);
+}
+
 #endif
