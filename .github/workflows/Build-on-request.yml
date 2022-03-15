@@ -18,7 +18,7 @@ jobs:
       id: setup_msbuild
 
     - name: Run vcpkg
-      uses: lukka/run-vcpkg@v10.2
+      uses: lukka/run-vcpkg@v7
       with:
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x86-windows-static
@@ -113,7 +113,7 @@ jobs:
       run: brew install physfs pkgconfig luajit xquartz
 
     - name: Run vcpkg
-      uses: lukka/run-vcpkg@v10.2
+      uses: lukka/run-vcpkg@v7
       with:
         vcpkgArguments: >
           boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-beast glew 
@@ -161,7 +161,7 @@ jobs:
       run: sudo apt update && sudo apt install -y libglew-dev liblua5.1-0-dev libluajit-5.1-dev
 
     - name: Run vcpkg
-      uses: lukka/run-vcpkg@v10.2
+      uses: lukka/run-vcpkg@v7
       with:
         vcpkgArguments: >
           boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-beast glew 
