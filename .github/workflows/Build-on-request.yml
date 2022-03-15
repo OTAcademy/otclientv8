@@ -4,7 +4,7 @@ on: [workflow_dispatch]
 jobs:
   Windows:
     name: Build windows version
-    runs-on: windows-latest
+    runs-on: windows-2019
     timeout-minutes: 120
 
     steps:
@@ -59,7 +59,7 @@ jobs:
 
   Android:
     name: Build android version
-    runs-on: windows-latest
+    runs-on: windows-2019
     timeout-minutes: 120
 
     steps:

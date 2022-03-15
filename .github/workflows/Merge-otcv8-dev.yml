@@ -6,7 +6,7 @@ name: Merge otcv8-dev
 jobs:
   Windows:
     name: Merge otcv8-dev
-    runs-on: windows-latest
+    runs-on: windows-2019
     timeout-minutes: 60
     steps:
       - name: Checkout otclientv8
