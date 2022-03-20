@@ -493,3 +493,10 @@ void GraphicalApplication::scale(float value)
         m_mustRepaint = true;
     });
 }
+
+void GraphicalApplication::setSmooth(bool value)
+{
+    if (!m_mapFramebuffer) return;
+
+    m_mapFramebuffer->setSmooth(value);
+}

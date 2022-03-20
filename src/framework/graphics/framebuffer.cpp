@@ -190,3 +190,11 @@ Size FrameBuffer::getSize()
 {
     return m_texture->getSize();
 }
+
+void FrameBuffer::setSmooth(bool value)
+{
+    if (!m_texture || m_smooth == value) return;
+
+    m_smooth = value;
+    m_texture->setSmooth(value);
+}
