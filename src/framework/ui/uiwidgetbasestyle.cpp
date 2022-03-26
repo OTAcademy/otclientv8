@@ -396,10 +396,14 @@ void UIWidget::drawIcon(const Rect& screenCoords)
 
 void UIWidget::setIcon(const std::string& iconFile)
 {
-    if(iconFile.empty())
+    if (iconFile.empty()) {
         m_icon = nullptr;
-    else
+        m_iconPath = "";
+    }
+    else {
         m_icon = g_textures.getTexture(iconFile);
+        m_iconPath = iconFile;
+    }
     if(m_icon && !m_iconClipRect.isValid())
         m_iconClipRect = Rect(0, 0, m_icon->getSize());
 }
