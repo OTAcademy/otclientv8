@@ -500,3 +500,10 @@ void GraphicalApplication::setSmooth(bool value)
 
     m_mapFramebuffer->setSmooth(value);
 }
+
+void GraphicalApplication::doMapScreenshot(std::string fileName)
+{
+    if (!m_mapFramebuffer) return;
+
+    m_mapFramebuffer->doScreenshot(fileName);
+}

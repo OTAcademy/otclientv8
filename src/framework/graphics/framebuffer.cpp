@@ -26,6 +26,9 @@
 
 #include <framework/platform/platformwindow.h>
 #include <framework/core/application.h>
+#include <framework/core/eventdispatcher.h>
+#include <framework/core/asyncdispatcher.h>
+#include <framework/graphics/image.h>
 
 uint FrameBuffer::boundFbo = 0;
 
@@ -197,4 +200,40 @@ void FrameBuffer::setSmooth(bool value)
 
     m_smooth = value;
     m_texture->setSmooth(value);
+}
+
+void FrameBuffer::doScreenshot(std::string fileName)
+{
+    if (g_mainThreadId != std::this_thread::get_id()) {
+        g_graphicsDispatcher.addEvent(std::bind(&FrameBuffer::doScreenshot, this, fileName));
+        return;
+    }
+
+    if (fileName.empty()) {
+        fileName = "screenshot_map.png";
+    }
+
+    internalBind();
+    Size size = getSize();
+    int width = size.width();
+    int height = size.height();
+    auto pixels = std::make_shared<std::vector<uint8_t>>(width * height * 4 * sizeof(GLubyte), 0);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLubyte*)(pixels->data()));
+    internalRelease();
+
+    g_asyncDispatcher.dispatch([size, pixels, fileName] {
+        for (int line = 0, h = size.height(), w = size.width(); line != h / 2; ++line) {
+            std::swap_ranges(
+                pixels->begin() + 4 * w * line,
+                pixels->begin() + 4 * w * (line + 1),
+                pixels->begin() + 4 * w * (h - line - 1));
+        }
+        try {
+            Image image(size, 4, pixels->data());
+            image.savePNG(fileName);
+        }
+        catch (stdext::exception& e) {
+            g_logger.error(std::string("Can't do map screenshot: ") + e.what());
+        }
+    });
 }

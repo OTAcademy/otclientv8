@@ -327,6 +327,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_app", "scaleUp", &GraphicalApplication::scaleUp, &g_app);
     g_lua.bindSingletonFunction("g_app", "scale", &GraphicalApplication::scale, &g_app);
     g_lua.bindSingletonFunction("g_app", "setSmooth", &GraphicalApplication::setSmooth, &g_app);
+    g_lua.bindSingletonFunction("g_app", "doMapScreenshot", &GraphicalApplication::doMapScreenshot, &g_app);
 
     // AdaptiveRenderer
     g_lua.registerSingletonClass("g_adaptiveRenderer");
