@@ -986,9 +986,6 @@ void save_png(std::stringstream& f, unsigned int width, unsigned int height, int
     if(palsize > 0)
         write_chunk(f, "PLTE", (unsigned char*)(&pal), palsize * 3);
 
-    if(trnssize > 0)
-        write_chunk(f, "tRNS", trns, trnssize);
-
     zstream1.next_out  = zbuf1;
     zstream1.avail_out = zbuf_size;
     zstream2.next_out  = zbuf2;
