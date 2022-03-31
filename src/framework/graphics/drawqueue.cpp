@@ -105,12 +105,12 @@ bool DrawQueueItemFillCoords::cache()
 
 void DrawQueueItemText::draw()
 {
-    g_text.drawText(m_point, m_hash, m_color);
+    g_text.drawText(m_point, m_hash, m_color, m_shadow);
 }
 
 void DrawQueueItemTextColored::draw()
 {
-    g_text.drawColoredText(m_point, m_hash, m_colors);
+    g_text.drawColoredText(m_point, m_hash, m_colors, m_shadow);
 }
 
 void::DrawQueueItemLine::draw()
@@ -183,18 +183,18 @@ void DrawQueue::setFrameBuffer(const Rect& dest, const Size& size, const Rect& s
     }
 }
 
-void DrawQueue::addText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const Color& color)
+void DrawQueue::addText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const Color& color, bool shadow)
 {
     if (!font || text.empty()) return;
     uint64_t hash = g_text.addText(font, text, screenCoords.size(), align);
-    m_queue.push_back(new DrawQueueItemText(screenCoords.topLeft(), font->getTexture(), hash, color));
+    m_queue.push_back(new DrawQueueItemText(screenCoords.topLeft(), font->getTexture(), hash, color, shadow));
 }
 
-void DrawQueue::addColoredText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const std::vector<std::pair<int, Color>>& colors)
+void DrawQueue::addColoredText(BitmapFontPtr font, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const std::vector<std::pair<int, Color>>& colors, bool shadow)
 {
     if (!font || text.empty()) return;
     uint64_t hash = g_text.addText(font, text, screenCoords.size(), align);
-    m_queue.push_back(new DrawQueueItemTextColored(screenCoords.topLeft(), font->getTexture(), hash, colors));
+    m_queue.push_back(new DrawQueueItemTextColored(screenCoords.topLeft(), font->getTexture(), hash, colors, shadow));
 }
 
 void DrawQueue::correctOutfit(const Rect& dest, int fromPos)

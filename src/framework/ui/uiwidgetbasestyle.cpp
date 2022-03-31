@@ -332,6 +332,10 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
                 }
             }
         }
+        else if (node->tag() == "cursor")
+            setCursor(node->value());
+        else if (node->tag() == "change-cursor-image")
+            setChangeCursorImage(node->value<bool>());
     }
 }
 

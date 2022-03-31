@@ -66,14 +66,14 @@ uint64_t TextRender::addText(BitmapFontPtr font, const std::string& text, const 
     return hash;
 }
 
-void TextRender::drawText(const Rect& rect, const std::string& text, BitmapFontPtr font, const Color& color, Fw::AlignmentFlag align)
+void TextRender::drawText(const Rect& rect, const std::string& text, BitmapFontPtr font, const Color& color, Fw::AlignmentFlag align, bool shadow)
 {
     VALIDATE_GRAPHICS_THREAD();
     uint64_t hash = addText(font, text, rect.size(), align);
-    drawText(rect.topLeft(), hash, color);
+    drawText(rect.topLeft(), hash, color, shadow);
 }
 
-void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
+void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color, bool shadow)
 {
     VALIDATE_GRAPHICS_THREAD();
     int index = hash % INDEXES;
@@ -92,10 +92,18 @@ void TextRender::drawText(const Point& pos, uint64_t hash, const Color& color)
         it->text.clear();
         it->font.reset();
     }
+
+    if (shadow) {
+        auto shadowPos = Point(pos);
+        shadowPos.x += 1;
+        shadowPos.y += 1;
+        g_painter->drawText(shadowPos, it->coords, Color::black, it->texture);
+    }
+
     g_painter->drawText(pos, it->coords, color, it->texture);
 }
 
-void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vector<std::pair<int, Color>>& colors)
+void TextRender::drawColoredText(const Point& pos, uint64_t hash, const std::vector<std::pair<int, Color>>& colors, bool shadow)
 {
     VALIDATE_GRAPHICS_THREAD();
     if (colors.empty())

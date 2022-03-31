@@ -78,6 +78,8 @@ void UIWidget::parseTextStyle(const OTMLNodePtr& styleNode)
             setTextOnlyUpperCase(node->value<bool>());
         else if(node->tag() == "font")
             setFont(node->value());
+        else if (node->tag() == "shadow")
+            setShadow(node->value<bool>());
     }
 }
 
@@ -93,9 +95,9 @@ void UIWidget::drawText(const Rect& screenCoords)
     }
 
     if (!m_drawTextColors.empty()) {
-        m_font->drawColoredText(m_drawText, m_textCachedScreenCoords, m_textAlign, m_drawTextColors);
+        m_font->drawColoredText(m_drawText, m_textCachedScreenCoords, m_textAlign, m_drawTextColors, m_shadow);
     } else {
-        m_font->drawText(m_drawText, m_textCachedScreenCoords, m_textAlign, m_color);
+        m_font->drawText(m_drawText, m_textCachedScreenCoords, m_textAlign, m_color, m_shadow);
     }
 }
 

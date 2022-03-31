@@ -86,21 +86,21 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     }
 }
 
-void BitmapFont::drawText(const std::string& text, const Point& startPos, const Color& color)
+void BitmapFont::drawText(const std::string& text, const Point& startPos, const Color& color, bool shadow)
 {
     Size boxSize = g_painter->getResolution() - startPos.toSize();
     Rect screenCoords(startPos, boxSize);
-    drawText(text, screenCoords, Fw::AlignTopLeft);
+    drawText(text, screenCoords, Fw::AlignTopLeft, shadow);
 }
 
-void BitmapFont::drawText(const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const Color& color)
+void BitmapFont::drawText(const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const Color& color, bool shadow)
 {
-    g_drawQueue->addText(static_self_cast<BitmapFont>(), text, screenCoords, align, color);
+    g_drawQueue->addText(static_self_cast<BitmapFont>(), text, screenCoords, align, color, shadow);
 }
 
-void BitmapFont::drawColoredText(const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const std::vector<std::pair<int, Color>>& colors)
+void BitmapFont::drawColoredText(const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align, const std::vector<std::pair<int, Color>>& colors, bool shadow)
 {
-    g_drawQueue->addColoredText(static_self_cast<BitmapFont>(), text, screenCoords, align, colors);
+    g_drawQueue->addColoredText(static_self_cast<BitmapFont>(), text, screenCoords, align, colors, shadow);
 }
 
 void BitmapFont::calculateDrawTextCoords(CoordsBuffer& coordsBuffer, const std::string& text, const Rect& screenCoords, Fw::AlignmentFlag align)

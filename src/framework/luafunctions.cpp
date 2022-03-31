@@ -715,6 +715,9 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("getFont", &UIWidget::getFont);
     g_lua.bindClassMemberFunction<UIWidget>("getTextSize", &UIWidget::getTextSize);
     g_lua.bindClassMemberFunction<UIWidget>("getUseCount", &UIWidget::getUseCount);
+    g_lua.bindClassMemberFunction<UIWidget>("setShadow", &UIWidget::setShadow);
+    g_lua.bindClassMemberFunction<UIWidget>("setCursor", &UIWidget::setCursor);
+    g_lua.bindClassMemberFunction<UIWidget>("setChangeCursorImage", &UIWidget::setChangeCursorImage);
 
     // UILayout
     g_lua.registerClass<UILayout>();
@@ -780,7 +783,6 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UITextEdit>("setCursorPos", &UITextEdit::setCursorPos);
     g_lua.bindClassMemberFunction<UITextEdit>("setSelection", &UITextEdit::setSelection);
     g_lua.bindClassMemberFunction<UITextEdit>("setCursorVisible", &UITextEdit::setCursorVisible);
-    g_lua.bindClassMemberFunction<UITextEdit>("setChangeCursorImage", &UITextEdit::setChangeCursorImage);
     g_lua.bindClassMemberFunction<UITextEdit>("setTextHidden", &UITextEdit::setTextHidden);
     g_lua.bindClassMemberFunction<UITextEdit>("setValidCharacters", &UITextEdit::setValidCharacters);
     g_lua.bindClassMemberFunction<UITextEdit>("setShiftNavigation", &UITextEdit::setShiftNavigation);

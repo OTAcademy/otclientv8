@@ -34,6 +34,7 @@
 #include <framework/luaengine/luainterface.h>
 #include <framework/util/stats.h>
 #include <framework/util/extras.h>
+#include <framework/input/mouse.h>
 
 UIWidget::UIWidget()
 {
@@ -1591,6 +1592,12 @@ void UIWidget::onChildFocusChange(const UIWidgetPtr& focusedChild, const UIWidge
 
 void UIWidget::onHoverChange(bool hovered)
 {
+    if (m_changeCursorImage) {
+        if (hovered && !g_mouse.isCursorChanged())
+            g_mouse.pushCursor(m_cursor);
+        else
+            g_mouse.popCursor(m_cursor);
+    }
     callLuaField("onHoverChange", hovered);
 }
 
@@ -1811,4 +1818,18 @@ bool UIWidget::propagateOnMouseMove(const Point& mousePos, const Point& mouseMov
     }
 
     return true;
+}
+
+void UIWidget::setCursor(const std::string& cursor)
+{
+    if (m_cursor == cursor) return;
+
+    if (cursor.empty()) {
+        m_cursor = "";
+        m_changeCursorImage = false;
+        return;
+    }
+
+    m_cursor = cursor;
+    m_changeCursorImage = true;
 }

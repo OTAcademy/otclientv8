@@ -30,7 +30,6 @@
 #include <framework/core/clock.h>
 #include <framework/otml/otmlnode.h>
 #include <framework/core/application.h>
-#include <framework/input/mouse.h>
 #include <framework/graphics/fontmanager.h>
 
 UITextEdit::UITextEdit()
@@ -51,7 +50,7 @@ UITextEdit::UITextEdit()
     m_selectable = true;
     m_autoScroll = true;
     m_autoSubmit = false;
-    m_changeCursorImage = true;
+    setCursor("text");
     m_selectionReference = 0;
     m_selectionStart = 0;
     m_selectionEnd = 0;
@@ -666,16 +665,6 @@ void UITextEdit::updateText()
     update(true);
 }
 
-void UITextEdit::onHoverChange(bool hovered)
-{
-    if(m_changeCursorImage) {
-        if(hovered && !g_mouse.isCursorChanged())
-            g_mouse.pushCursor("text");
-        else
-            g_mouse.popCursor("text");
-    }
-}
-
 void UITextEdit::onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode)
 {
     UIWidget::onStyleApply(styleName, styleNode);
@@ -706,8 +695,6 @@ void UITextEdit::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
         }
         else if(node->tag() == "cursor-visible")
             setCursorVisible(node->value<bool>());
-        else if(node->tag() == "change-cursor-image")
-            setChangeCursorImage(node->value<bool>());
         else if (node->tag() == "auto-scroll")
             setAutoScroll(node->value<bool>());
         else if (node->tag() == "text-auto-submit")
