@@ -129,6 +129,14 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
                     mountAnimationPhase = idleAnimator->getPhase();
                 }
             }
+            else if (ui && animate) {
+                int phases = mountType->getAnimator() ? mountType->getAnimator()->getAnimationPhases() : mountType->getAnimationPhases();
+                int ticksPerFrame = 1000 / phases;
+                mountAnimationPhase = (g_clock.millis() % (ticksPerFrame * phases)) / ticksPerFrame;
+                if (!mountType->isAnimateAlways()) {
+                    mountAnimationPhase += 1;
+                }
+            }
             if (m_wings && g_game.getFeature(Otc::GameWingOffset)) {
                 if (idleAnimator) {
                     mountAnimationPhase = idleAnimator->getPhase();

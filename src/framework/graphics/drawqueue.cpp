@@ -204,15 +204,8 @@ void DrawQueue::correctOutfit(const Rect& dest, int fromPos)
         if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i]))
             rects.push_back(&texture->m_dest);
     }
-
-    int x1 = 0, y1 = 1, x2 = 0, y2 = 0;
-    for (auto& rect : rects) {
-        x1 = std::min<int>(x1, rect->left());
-        y1 = std::min<int>(y1, rect->top());
-        x2 = std::max<int>(x2, rect->right());
-        y2 = std::max<int>(y2, rect->bottom());
-    }
-    if (x1 == x2 || y1 == y2) return;
+    
+    int x1 = -32, y1 = -32, x2 = 32, y2 = 32;
     float scale = std::min<float>((float)dest.height() / (y2 - y1), (float)dest.width() / (x2 - x1));
     for (auto& rect : rects) {
         int x = rect->left() - x1, y = rect->top() - y1; // offset

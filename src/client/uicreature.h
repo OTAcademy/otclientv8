@@ -57,7 +57,7 @@ protected:
     stdext::boolean<false> m_autoRotating;
     stdext::boolean<false> m_animate;
     Otc::Direction m_direction = Otc::South;
-    float m_scale = 0;
+    float m_scale = 1.0;
 };
 
 #endif
