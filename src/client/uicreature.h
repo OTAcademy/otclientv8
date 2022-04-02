@@ -42,6 +42,7 @@ public:
 
     void setAutoRotating(bool value) { m_autoRotating = value; }
     void setDirection(Otc::Direction direction) { m_direction = direction; }
+    Otc::Direction getDirection() { return m_direction; }
 
     void setScale(float scale) { m_scale = scale; }
     float getScale() { return m_scale; }

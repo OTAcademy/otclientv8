@@ -859,6 +859,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UICreature>("isFixedCreatureSize", &UICreature::isFixedCreatureSize);
     g_lua.bindClassMemberFunction<UICreature>("setAutoRotating", &UICreature::setAutoRotating);
     g_lua.bindClassMemberFunction<UICreature>("setDirection", &UICreature::setDirection);
+    g_lua.bindClassMemberFunction<UICreature>("getDirection", &UICreature::getDirection);
     g_lua.bindClassMemberFunction<UICreature>("setScale", &UICreature::setScale);
     g_lua.bindClassMemberFunction<UICreature>("getScale", &UICreature::getScale);
     g_lua.bindClassMemberFunction<UICreature>("setAnimate", &UICreature::setAnimate);
