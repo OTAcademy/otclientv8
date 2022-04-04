@@ -7,6 +7,7 @@
 #include <framework/graphics/textrender.h>
 #include <framework/graphics/drawcache.h>
 #include <framework/graphics/image.h>
+#include <client/spritemanager.h>
 
 std::shared_ptr<DrawQueue> g_drawQueue;
 
@@ -205,7 +206,7 @@ void DrawQueue::correctOutfit(const Rect& dest, int fromPos)
             rects.push_back(&texture->m_dest);
     }
     
-    int x1 = -32, y1 = -32, x2 = 32, y2 = 32;
+    int x1 = -g_sprites.spriteSize(), y1 = -g_sprites.spriteSize(), x2 = g_sprites.spriteSize(), y2 = g_sprites.spriteSize();
     float scale = std::min<float>((float)dest.height() / (y2 - y1), (float)dest.width() / (x2 - x1));
     for (auto& rect : rects) {
         int x = rect->left() - x1, y = rect->top() - y1; // offset
