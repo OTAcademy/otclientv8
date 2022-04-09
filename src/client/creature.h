@@ -130,6 +130,8 @@ public:
     PointF getJumpOffset() { return m_jumpOffset; }
     bool isTimedSquareVisible() { return m_showTimedSquare; }
     Color getTimedSquareColor() { return m_timedSquareColor; }
+    bool isStaticSquareVisible() { return m_showStaticSquare; }
+    Color getStaticSquareColor() { return m_staticSquareColor; }
 
     void updateShield();
 
