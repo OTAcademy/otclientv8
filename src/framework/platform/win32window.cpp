@@ -562,6 +562,16 @@ void WIN32Window::maximize()
     });
 }
 
+void WIN32Window::minimize()
+{
+    g_graphicsDispatcher.addEvent([&] {
+        if (!m_hidden && m_maximized) {
+            ShowWindow(m_window, SW_MINIMIZE);
+            m_maximized = true;
+        }
+    });
+}
+
 void WIN32Window::poll()
 {
     AutoStat s(STATS_RENDER, "PollWindow");

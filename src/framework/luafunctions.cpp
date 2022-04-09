@@ -343,6 +343,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_window", "hide", &PlatformWindow::hide, &g_window);
     g_lua.bindSingletonFunction("g_window", "poll", [] {}); // for backward compability
     g_lua.bindSingletonFunction("g_window", "maximize", &PlatformWindow::maximize, &g_window);
+    g_lua.bindSingletonFunction("g_window", "minimize", &PlatformWindow::minimize, &g_window);
     g_lua.bindSingletonFunction("g_window", "restoreMouseCursor", &PlatformWindow::restoreMouseCursor, &g_window);
     g_lua.bindSingletonFunction("g_window", "showMouse", &PlatformWindow::showMouse, &g_window);
     g_lua.bindSingletonFunction("g_window", "hideMouse", &PlatformWindow::hideMouse, &g_window);
