@@ -109,6 +109,8 @@ void UICreature::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
             Outfit outfit = getOutfit();
             outfit.setShader(node->value<std::string>());
             setOutfit(outfit);
+        } else if (node->tag() == "outfit-center") {
+            setCenter(node->value<bool>());
         } else if (node->tag() == "scale") {
             setScale(node->value<float>());
         } else if (node->tag() == "animate") {
@@ -120,4 +122,11 @@ void UICreature::onStyleApply(const std::string& styleName, const OTMLNodePtr& s
 void UICreature::onGeometryChange(const Rect& oldRect, const Rect& newRect)
 {
     UIWidget::onGeometryChange(oldRect, newRect);
+}
+
+void UICreature::setCenter(bool value)
+{
+    Outfit outfit = getOutfit();
+    outfit.setCenter(value);
+    setOutfit(outfit);
 }

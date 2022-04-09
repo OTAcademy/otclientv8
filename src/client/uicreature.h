@@ -50,6 +50,8 @@ public:
     void setAnimate(bool value) { m_animate = value; }
     bool isAnimating() { return m_animate; }
 
+    void setCenter(bool value);
+
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
     void onGeometryChange(const Rect& oldRect, const Rect& newRect) override;

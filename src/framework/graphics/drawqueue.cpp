@@ -8,6 +8,7 @@
 #include <framework/graphics/drawcache.h>
 #include <framework/graphics/image.h>
 #include <client/spritemanager.h>
+#include <client/outfit.h>
 
 std::shared_ptr<DrawQueue> g_drawQueue;
 
@@ -201,15 +202,40 @@ void DrawQueue::addColoredText(BitmapFontPtr font, const std::string& text, cons
 void DrawQueue::correctOutfit(const Rect& dest, int fromPos)
 {
     std::vector<Rect*> rects;
+    bool center = false;
+    int centerX = 0;
+    int centerY = 0;
     for (size_t i = fromPos; i < m_queue.size(); ++i) {
-        if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i]))
+        if (DrawQueueItemOutfit* texture = dynamic_cast<DrawQueueItemOutfit*>(m_queue[i])) {
             rects.push_back(&texture->m_dest);
+            if (!center) {
+                center = texture->m_doCenter;
+            }
+
+            if (texture->m_doCenter) {
+                centerX = std::max<int>(centerX, texture->m_dest.center().x);
+                centerY = std::max<int>(centerY, texture->m_dest.center().y);
+            }
+        }
+        else if (DrawQueueItemOutfitWithShader* texture = dynamic_cast<DrawQueueItemOutfitWithShader*>(m_queue[i])) {
+            rects.push_back(&texture->m_dest);
+            if (!center) {
+                center = texture->m_doCenter;
+            }
+
+            if (texture->m_doCenter) {
+                centerX = std::max<int>(centerX, texture->m_dest.center().x);
+            }
+        }
+        else if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i])) {
+            rects.push_back(&texture->m_dest);
+        }
     }
     
     int x1 = -g_sprites.spriteSize(), y1 = -g_sprites.spriteSize(), x2 = g_sprites.spriteSize(), y2 = g_sprites.spriteSize();
     float scale = std::min<float>((float)dest.height() / (y2 - y1), (float)dest.width() / (x2 - x1));
     for (auto& rect : rects) {
-        int x = rect->left() - x1, y = rect->top() - y1; // offset
+        int x = rect->left() - x1 - centerX, y = rect->top() - y1 - centerY; // offset
         *rect = Rect(dest.left() + x * scale, dest.top() + y * scale, rect->size() * scale);
     }
 }

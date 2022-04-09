@@ -870,6 +870,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UICreature>("getScale", &UICreature::getScale);
     g_lua.bindClassMemberFunction<UICreature>("setAnimate", &UICreature::setAnimate);
     g_lua.bindClassMemberFunction<UICreature>("isAnimating", &UICreature::isAnimating);
+    g_lua.bindClassMemberFunction<UICreature>("setCenter", &UICreature::setCenter);
 
     g_lua.registerClass<UIMap, UIWidget>();
     g_lua.bindClassStaticFunction<UIMap>("create", []{ return UIMapPtr(new UIMap); });
