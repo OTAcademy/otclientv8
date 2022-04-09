@@ -356,6 +356,12 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_healthBars", "addManaBackground", &HealthBars::addManaBackground, &g_healthBars);
     g_lua.bindSingletonFunction("g_healthBars", "getHealthBarPath", &HealthBars::getHealthBarPath, &g_healthBars);
     g_lua.bindSingletonFunction("g_healthBars", "getManaBarPath", &HealthBars::getManaBarPath, &g_healthBars);
+    g_lua.bindSingletonFunction("g_healthBars", "getHealthBarOffset", &HealthBars::getHealthBarOffset, &g_healthBars);
+    g_lua.bindSingletonFunction("g_healthBars", "getManaBarOffset", &HealthBars::getManaBarOffset, &g_healthBars);
+    g_lua.bindSingletonFunction("g_healthBars", "getHealthBarOffsetBar", &HealthBars::getHealthBarOffsetBar, &g_healthBars);
+    g_lua.bindSingletonFunction("g_healthBars", "getManaBarOffsetBar", &HealthBars::getManaBarOffsetBar, &g_healthBars);
+    g_lua.bindSingletonFunction("g_healthBars", "getHealthBarHeight", &HealthBars::getHealthBarHeight, &g_healthBars);
+    g_lua.bindSingletonFunction("g_healthBars", "getManaBarHeight", &HealthBars::getManaBarHeight, &g_healthBars);
 
     g_lua.bindGlobalFunction("getOutfitColor", Outfit::getColor);
     g_lua.bindGlobalFunction("getAngleFromPos", Position::getAngleFromPositions);
