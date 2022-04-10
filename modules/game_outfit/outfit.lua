@@ -260,28 +260,7 @@ function create(currentOutfit, outfitList, mountList, wingList, auraList, shader
 
   updatePreview()
 
-  for key, value in pairs(currentOutfit) do
-    local newKey = key
-    local appKey = key
-    if key == "type" then
-      newKey = "outfits"
-      appKey = "outfit"
-    elseif key == "wings" then
-      newKey = "wings"
-      appKey = "wings"
-    else
-      newKey = key .. "s"
-      appKey = key
-    end
-    local dataTable = ServerData[newKey]
-    if dataTable then
-      for _, data in ipairs(dataTable) do
-        if currentOutfit[key] == data[1] or currentOutfit[key] == data[2] then
-          updateAppearanceText(appKey, data[2])
-        end
-      end
-    end
-  end
+  updateAppearanceTexts(currentOutfit)
 
   local isMount = g_game.getLocalPlayer():isMounted()
   if isMount then
@@ -384,7 +363,6 @@ function create(currentOutfit, outfitList, mountList, wingList, auraList, shader
   window.preview.options.showWings:setVisible(g_game.getFeature(GameWingsAndAura))
   window.preview.options.showAura:setVisible(g_game.getFeature(GameWingsAndAura))
   window.preview.options.showShader:setVisible(g_game.getFeature(GameOutfitShaders))
-  window.preview.options.showBars:setVisible(g_game.getFeature(GameHealthInfoBackground))
 
   window.appearance.settings.mount:setVisible(g_game.getFeature(GamePlayerMounts))
   window.appearance.settings.wings:setVisible(g_game.getFeature(GameWingsAndAura))
@@ -945,6 +923,7 @@ function onPresetSelect(list, focusedChild, unfocusedChild, reason)
 
     updatePreview()
 
+    updateAppearanceTexts(tempOutfit)
     updateAppearanceText("preset", preset.title)
   end
 end
@@ -1049,6 +1028,35 @@ function updateAppearanceText(widget, text)
   window.appearance.settings[widget].name:setText(text)
 end
 
+function updateAppearanceTexts(outfit)
+  for _, appKey in ipairs(AppearanceData) do
+    updateAppearanceText(appKey, "None")
+  end
+
+  for key, value in pairs(outfit) do
+    local newKey = key
+    local appKey = key
+    if key == "type" then
+      newKey = "outfits"
+      appKey = "outfit"
+    elseif key == "wings" then
+      newKey = "wings"
+      appKey = "wings"
+    else
+      newKey = key .. "s"
+      appKey = key
+    end
+    local dataTable = ServerData[newKey]
+    if dataTable then
+      for _, data in ipairs(dataTable) do
+        if outfit[key] == data[1] or outfit[key] == data[2] then
+          updateAppearanceText(appKey, data[2])
+        end
+      end
+    end
+  end
+end
+
 function deselectPreset()
   settings.currentPreset = 0
 end
@@ -1151,43 +1159,50 @@ function updatePreview()
 
     local healthBar = window.preview.panel.bars.healthBar
     local manaBar = window.preview.panel.bars.manaBar
-
-    local healthOffset = g_healthBars.getHealthBarOffset(previewOutfit.healthBar)
-    local healthBarOffset = g_healthBars.getHealthBarOffsetBar(previewOutfit.healthBar)
-    local manaOffset = g_healthBars.getHealthBarOffset(previewOutfit.manaBar)
-
-    if previewOutfit.healthBar > 0 then
-      healthBar.image:setImageSource(g_healthBars.getHealthBarPath(previewOutfit.healthBar))
-
-      healthBar:setMarginTop(-healthOffset.y + 1)
-      healthBar.image:setMarginTop(-healthOffset.y)
-      healthBar.image:setMarginBottom(-healthOffset.y)
-      healthBar.image:setMarginLeft(-healthOffset.x)
-      healthBar.image:setMarginRight(-healthOffset.x)
-      healthBar.image:show()
-      manaBar:setMarginTop(healthBarOffset.y + 1 - manaOffset.y)
-    else
+    if not g_game.getFeature(GameHealthInfoBackground) then
       manaBar:setMarginTop(0)
       healthBar:setMarginTop(1)
       healthBar.image:setMargin(0)
       healthBar.image:hide()
-    end
-
-    if previewOutfit.manaBar > 0 then
-      manaBar.image:setImageSource(g_healthBars.getManaBarPath(previewOutfit.manaBar))
-
-      manaBar:setMarginTop(healthBarOffset.y + 1 - manaOffset.y)
-
-      manaBar.image:setMarginTop(-manaOffset.y)
-      manaBar.image:setMarginBottom(-manaOffset.y)
-      manaBar.image:setMarginLeft(-manaOffset.x)
-      manaBar.image:setMarginRight(-manaOffset.x)
-      manaBar.image:show()
-    else
       manaBar.image:setMargin(0)
       manaBar.image:hide(0)
-    end
+    else
+      local healthOffset = g_healthBars.getHealthBarOffset(previewOutfit.healthBar)
+      local healthBarOffset = g_healthBars.getHealthBarOffsetBar(previewOutfit.healthBar)
+      local manaOffset = g_healthBars.getHealthBarOffset(previewOutfit.manaBar)
 
+      if previewOutfit.healthBar > 0 then
+        healthBar.image:setImageSource(g_healthBars.getHealthBarPath(previewOutfit.healthBar))
+
+        healthBar:setMarginTop(-healthOffset.y + 1)
+        healthBar.image:setMarginTop(-healthOffset.y)
+        healthBar.image:setMarginBottom(-healthOffset.y)
+        healthBar.image:setMarginLeft(-healthOffset.x)
+        healthBar.image:setMarginRight(-healthOffset.x)
+        healthBar.image:show()
+        manaBar:setMarginTop(healthBarOffset.y + 1 - manaOffset.y)
+      else
+        manaBar:setMarginTop(0)
+        healthBar:setMarginTop(1)
+        healthBar.image:setMargin(0)
+        healthBar.image:hide()
+      end
+
+      if previewOutfit.manaBar > 0 then
+        manaBar.image:setImageSource(g_healthBars.getManaBarPath(previewOutfit.manaBar))
+
+        manaBar:setMarginTop(healthBarOffset.y + 1 - manaOffset.y)
+
+        manaBar.image:setMarginTop(-manaOffset.y)
+        manaBar.image:setMarginBottom(-manaOffset.y)
+        manaBar.image:setMarginLeft(-manaOffset.x)
+        manaBar.image:setMarginRight(-manaOffset.x)
+        manaBar.image:show()
+      else
+        manaBar.image:setMargin(0)
+        manaBar.image:hide(0)
+      end
+    end
     window.preview.panel.bars:show()
   end
 
