@@ -107,6 +107,11 @@ SelectionButton < Panel
     margin-bottom: 10
     phantom: true
   
+  Panel
+    id: bar
+    anchors.centerIn: parent
+    visible: false
+  
   Label
     id: name
     anchors.top: outfit.bottom
