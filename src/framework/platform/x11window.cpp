@@ -580,6 +580,8 @@ void X11Window::hide()
     XFlush(m_display);
 }
 
+void X11Window::minimize() {}
+
 void X11Window::maximize()
 {
     if(m_visible) {

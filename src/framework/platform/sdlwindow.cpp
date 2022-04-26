@@ -124,6 +124,8 @@ void SDLWindow::hide() {}
 
 void SDLWindow::maximize() {}
 
+void SDLWindow::minimize() {}
+
 void SDLWindow::move(const Point& pos) {}
 
 void SDLWindow::resize(const Size& size) {}

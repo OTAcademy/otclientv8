@@ -212,8 +212,5 @@ void PlatformWindow::fireKeysPress()
     }
 }
 
-void PlatformWindow::flash()
-{
-    g_logger.error("Flashing is not supported by this platform.");
-}
+void PlatformWindow::flash() { }
 

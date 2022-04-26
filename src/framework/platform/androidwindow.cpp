@@ -343,6 +343,8 @@ void AndroidWindow::show() {}
 
 void AndroidWindow::hide() {}
 
+void AndroidWindow::minimize() {}
+
 void AndroidWindow::maximize() {}
 
 void AndroidWindow::move(const Point& pos) {}
