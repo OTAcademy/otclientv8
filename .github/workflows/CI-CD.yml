@@ -40,7 +40,7 @@ jobs:
         vcpkgGitCommitId: 9f643818c120f13fcbbb024b92ff74a6688a45e3
         vcpkgArguments: >
           boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
-          luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
+          luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl liblzma
 
     - name: Integrate vcpkg
       run: |
