@@ -37,10 +37,10 @@ jobs:
       with:
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x86-windows-static
-        vcpkgGitCommitId: 9f643818c120f13fcbbb024b92ff74a6688a45e3
+        vcpkgGitCommitId: 9d473a69545ac648b9ea2067c007b57dfad7462b
         vcpkgArguments: >
           boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
-          luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl liblzma
+          luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
 
     - name: Integrate vcpkg
       run: |
