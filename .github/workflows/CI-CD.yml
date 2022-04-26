@@ -37,7 +37,7 @@ jobs:
       with:
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x86-windows-static
-        vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+        vcpkgGitCommitId: 94c728df6b4c1c186e2ba58952f48ac744f4ef3b
         vcpkgArguments: >
           boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
           luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
@@ -154,7 +154,7 @@ jobs:
           boost-process openssl
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-osx
-        vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+        vcpkgGitCommitId: 94c728df6b4c1c186e2ba58952f48ac744f4ef3b
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
@@ -208,7 +208,7 @@ jobs:
           boost-process openssl physfs
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-linux
-        vcpkgGitCommitId: 9a49e3df7f729655318c59b9985c9c18ad0c99d6
+        vcpkgGitCommitId: 94c728df6b4c1c186e2ba58952f48ac744f4ef3b
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
