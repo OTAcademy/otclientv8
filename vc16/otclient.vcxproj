@@ -255,7 +255,7 @@
     <Lib>
       <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
       <AdditionalDependencies>$(ProjectDir)angle\lib\libGLESv2.dll.lib;$(ProjectDir)angle\lib\libEGL.dll.lib;vorbis.lib;ogg.lib;bz2d.lib;zip.lib;libssl.lib;OpenAL32.lib;lzmad.lib;vorbisfile.lib;zlibd.lib;libcrypto.lib;physfs-static.lib;lua51.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\vcpkg\installed\x86-windows-static\debug\lib;$(ProjectDir)..\vcpkg\installed\x86-windows-static\debug\lib;$(ProjectDir)..\..\vcpkg\installed\x86-windows-static\debug\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\a\otclient\vcpkg\installed\x86-windows-static\debug\lib</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
     </Lib>
     <ProjectReference>
