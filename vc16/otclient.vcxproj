@@ -254,7 +254,7 @@
     </ResourceCompile>
     <Lib>
       <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
-      <AdditionalDependencies>$(ProjectDir)angle\lib\libGLESv2.dll.lib;$(ProjectDir)angle\lib\libEGL.dll.lib;vorbis.lib;ogg.lib;bz2d.lib;zip.lib;libssl.lib;OpenAL32.lib;lzmad.lib;vorbisfile.lib;zlibd.lib;libcrypto.lib;physfs-static.lib;lua51.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)angle\lib\libGLESv2.dll.lib;$(ProjectDir)angle\lib\libEGL.dll.lib;vorbis.lib;ogg.lib;bz2d.lib;zip.lib;libssl.lib;OpenAL32.lib;lzma.lib;vorbisfile.lib;zlibd.lib;libcrypto.lib;physfs-static.lib;lua51.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\a\otclient\vcpkg\installed\x86-windows-static\debug\lib</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
     </Lib>
