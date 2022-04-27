@@ -166,7 +166,6 @@ WIN32Window::WIN32Window()
     m_keyMap['Y'] = Fw::KeyY;
     m_keyMap['Z'] = Fw::KeyZ;
 
-    /*
     m_keyMap['['] = Fw::KeyLeftBracket;
     m_keyMap['\\'] = Fw::KeyBackslash;
     m_keyMap[']'] = Fw::KeyRightBracket;
@@ -177,16 +176,13 @@ WIN32Window::WIN32Window()
     m_keyMap['|'] = Fw::KeyBar;
     m_keyMap['}'] = Fw::KeyRightCurly;
     m_keyMap['~'] = Fw::KeyTilde;
-    */
 
     // keypad
-    /*
     m_keyMap[VK_ADD] = Fw::KeyPlus;
     m_keyMap[VK_SUBTRACT] = Fw::KeyMinus;
     m_keyMap[VK_DECIMAL] = Fw::KeyPeriod;
     m_keyMap[VK_DIVIDE] = Fw::KeySlash;
     m_keyMap[VK_MULTIPLY] = Fw::KeyAsterisk;
-    */
 
     m_keyMap[VK_OEM_1] = Fw::KeySemicolon;
     m_keyMap[VK_OEM_2] = Fw::KeySlash;
