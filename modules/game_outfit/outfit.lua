@@ -1118,7 +1118,9 @@ function updatePreview()
   local previewOutfit = table.copy(tempOutfit)
 
   if not settings.showOutfit then
-    previewOutfit.type = 0
+    previewCreature:hide()
+  else
+    previewCreature:show()
   end
 
   if not settings.showMount then
