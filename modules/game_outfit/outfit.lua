@@ -262,13 +262,15 @@ function create(currentOutfit, outfitList, mountList, wingList, auraList, shader
 
   updateAppearanceTexts(currentOutfit)
 
-  local isMount = g_game.getLocalPlayer():isMounted()
-  if isMount then
-    window.configure.mount.check:setEnabled(true)
-    window.configure.mount.check:setChecked(true)
-  else
-    window.configure.mount.check:setEnabled(currentOutfit.mount > 0)
-    window.configure.mount.check:setChecked(isMount and currentOutfit.mount > 0)
+  if g_game.getFeature(GamePlayerMounts) then
+    local isMount = g_game.getLocalPlayer():isMounted()
+    if isMount then
+      window.configure.mount.check:setEnabled(true)
+      window.configure.mount.check:setChecked(true)
+    else
+      window.configure.mount.check:setEnabled(currentOutfit.mount > 0)
+      window.configure.mount.check:setChecked(isMount and currentOutfit.mount > 0)
+    end
   end
 
   if currentOutfit.addons == 3 then
@@ -917,7 +919,9 @@ function onPresetSelect(list, focusedChild, unfocusedChild, reason)
       end
     end
 
-    window.configure.mount.check:setChecked(preset.mounted and tempOutfit.mount > 0)
+    if g_game.getFeature(GamePlayerMounts) then
+      window.configure.mount.check:setChecked(preset.mounted and tempOutfit.mount > 0)
+    end
 
     settings.currentPreset = presetId
 
@@ -1144,7 +1148,7 @@ function updatePreview()
     previewOutfit.manaBar = 0
     window.preview.panel.bars:hide()
   else
-    if settings.showMount and previewOutfit.mount > 0 then
+    if g_game.getFeature(GamePlayerMounts) and settings.showMount and previewOutfit.mount > 0 then
       window.preview.panel.bars:setMarginTop(45)
       window.preview.panel.bars:setMarginLeft(25)
     else
