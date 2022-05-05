@@ -11,7 +11,7 @@ std::unordered_map<uint32_t, std::string> PngUnpacker::unpack(const FileStreamPt
 {
 	std::unordered_map<uint32_t, std::string> data;
 
-	uint32_t entries = file->get32();
+	uint32_t entries = file->getU32();
 	std::vector<FileMetadata> metadata;
 	metadata.reserve(entries);
 	for (uint32_t i = 0; i < entries; ++i) {
