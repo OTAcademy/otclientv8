@@ -199,44 +199,67 @@ void DrawQueue::addColoredText(BitmapFontPtr font, const std::string& text, cons
     m_queue.push_back(new DrawQueueItemTextColored(screenCoords.topLeft(), font->getTexture(), hash, colors, shadow));
 }
 
-void DrawQueue::correctOutfit(const Rect& dest, int fromPos)
+void DrawQueue::correctOutfit(const Rect& dest, int fromPos, bool oldScaling)
 {
     std::vector<Rect*> rects;
-    bool center = false;
-    int centerX = 0;
-    int centerY = 0;
-    for (size_t i = fromPos; i < m_queue.size(); ++i) {
-        if (DrawQueueItemOutfit* texture = dynamic_cast<DrawQueueItemOutfit*>(m_queue[i])) {
-            rects.push_back(&texture->m_dest);
-            if (!center) {
-                center = texture->m_doCenter;
-            }
+    if (!oldScaling) {
+        bool center = false;
+        int centerX = 0;
+        int centerY = 0;
+        for (size_t i = fromPos; i < m_queue.size(); ++i) {
+            if (DrawQueueItemOutfit* texture = dynamic_cast<DrawQueueItemOutfit*>(m_queue[i])) {
+                rects.push_back(&texture->m_dest);
+                if (!center) {
+                    center = texture->m_doCenter;
+                }
 
-            if (texture->m_doCenter) {
-                centerX = std::max<int>(centerX, texture->m_dest.center().x);
-                centerY = std::max<int>(centerY, texture->m_dest.center().y);
+                if (texture->m_doCenter) {
+                    centerX = std::max<int>(centerX, texture->m_dest.center().x);
+                    centerY = std::max<int>(centerY, texture->m_dest.center().y);
+                }
+            }
+            else if (DrawQueueItemOutfitWithShader* texture = dynamic_cast<DrawQueueItemOutfitWithShader*>(m_queue[i])) {
+                rects.push_back(&texture->m_dest);
+                if (!center) {
+                    center = texture->m_doCenter;
+                }
+
+                if (texture->m_doCenter) {
+                    centerX = std::max<int>(centerX, texture->m_dest.center().x);
+                }
+            }
+            else if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i])) {
+                rects.push_back(&texture->m_dest);
             }
         }
-        else if (DrawQueueItemOutfitWithShader* texture = dynamic_cast<DrawQueueItemOutfitWithShader*>(m_queue[i])) {
-            rects.push_back(&texture->m_dest);
-            if (!center) {
-                center = texture->m_doCenter;
-            }
 
-            if (texture->m_doCenter) {
-                centerX = std::max<int>(centerX, texture->m_dest.center().x);
-            }
-        }
-        else if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i])) {
-            rects.push_back(&texture->m_dest);
+        int x1 = -g_sprites.spriteSize(), y1 = -g_sprites.spriteSize(), x2 = g_sprites.spriteSize(), y2 = g_sprites.spriteSize();
+        float scale = std::min<float>((float)dest.height() / (y2 - y1), (float)dest.width() / (x2 - x1));
+        for (auto& rect : rects) {
+            int x = rect->left() - x1 - centerX, y = rect->top() - y1 - centerY; // offset
+            *rect = Rect(dest.left() + x * scale, dest.top() + y * scale, rect->size() * scale);
         }
     }
-    
-    int x1 = -g_sprites.spriteSize(), y1 = -g_sprites.spriteSize(), x2 = g_sprites.spriteSize(), y2 = g_sprites.spriteSize();
-    float scale = std::min<float>((float)dest.height() / (y2 - y1), (float)dest.width() / (x2 - x1));
-    for (auto& rect : rects) {
-        int x = rect->left() - x1 - centerX, y = rect->top() - y1 - centerY; // offset
-        *rect = Rect(dest.left() + x * scale, dest.top() + y * scale, rect->size() * scale);
+    else {
+        for (size_t i = fromPos; i < m_queue.size(); ++i) {
+            if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i]))
+                rects.push_back(&texture->m_dest);
+        }
+
+        int x1 = 0, y1 = 1, x2 = 0, y2 = 0;
+        for (auto& rect : rects) {
+            x1 = std::min<int>(x1, rect->left());
+            y1 = std::min<int>(y1, rect->top());
+            x2 = std::max<int>(x2, rect->right());
+            y2 = std::max<int>(y2, rect->bottom());
+        }
+        if (x1 == x2 || y1 == y2) return;
+
+        float scale = std::min<float>((float)dest.height() / (y2 - y1), (float)dest.width() / (x2 - x1));
+        for (auto& rect : rects) {
+            int x = rect->left() - x1, y = rect->top() - y1; // offset
+            *rect = Rect(dest.left() + x * scale, dest.top() + y * scale, rect->size() * scale);
+        }
     }
 }
 
