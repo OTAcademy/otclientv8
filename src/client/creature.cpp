@@ -220,7 +220,7 @@ void Creature::drawInformation(const Point& point, bool useGray, const Rect& par
         g_drawQueue->addFilledRect(healthRect, fillColor);
 
         if (drawFlags & Otc::DrawManaBar) {
-            int manaPercent = m_manaPercent;
+            int8 manaPercent = m_manaPercent;
             if (isLocalPlayer()) {
                 LocalPlayerPtr player = g_game.getLocalPlayer();
                 if (player) {
