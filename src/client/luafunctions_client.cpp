@@ -700,6 +700,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Missile>("getId", &Missile::getId);
     g_lua.bindClassMemberFunction<Missile>("getSource", &Missile::getSource);
     g_lua.bindClassMemberFunction<Missile>("getDestination", &Missile::getDestination);
+    g_lua.bindClassMemberFunction<Missile>("setPath", &Missile::setPath);
 
     g_lua.registerClass<StaticText, Thing>();
     g_lua.bindClassStaticFunction<StaticText>("create", []{ return StaticTextPtr(new StaticText); });
