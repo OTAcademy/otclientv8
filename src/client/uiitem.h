@@ -41,6 +41,7 @@ public:
     void setVirtual(bool virt) { m_virtual = virt; }
     void clearItem() { setItemId(0); }
     void setShowCount(bool value) { m_showCount = value; }
+    void setItemShader(const std::string& str);
 
     int getItemId() { return m_item ? m_item->getId() : 0; }
     int getItemCount() { return m_item ? m_item->getCount() : 0; }

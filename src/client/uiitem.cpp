@@ -102,6 +102,13 @@ void UIItem::setItem(const ItemPtr& item)
     callLuaField("onItemChange");
 }
 
+void UIItem::setItemShader(const std::string& str)
+{
+    if (m_item)
+        m_item->setShader(str);
+    callLuaField("onItemChange");
+}
+
 void UIItem::onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode)
 {
     UIWidget::onStyleApply(styleName, styleNode);
@@ -117,5 +124,7 @@ void UIItem::onStyleApply(const std::string& styleName, const OTMLNodePtr& style
             setVirtual(node->value<bool>());
         else if(node->tag() == "show-id")
             m_showId = node->value<bool>();
+        else if(node->tag() == "shader")
+            setItemShader(node->value());
     }
 }
