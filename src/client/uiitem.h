@@ -59,6 +59,7 @@ protected:
     stdext::boolean<true> m_itemVisible;
     stdext::boolean<false> m_showId;
     stdext::boolean<true> m_showCount;
+    std::string m_shader;
 };
 
 #endif
