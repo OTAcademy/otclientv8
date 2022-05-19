@@ -869,17 +869,8 @@ void DrawQueueItemThingWithShader::draw()
         g_painter->clear(Color::alpha);
     }
 
-    Matrix4 mat4;
-    for (int x = 0; x < 4; ++x) {
-        Color color = Color::getOutfitColor((m_colors >> (x * 8)) & 0xFF);
-        mat4(x + 1, 1) = color.rF();
-        mat4(x + 1, 2) = color.gF();
-        mat4(x + 1, 3) = color.bF();
-        mat4(x + 1, 4) = color.aF();
-    }
     g_painter->setShaderProgram(shader);
     g_painter->setOffset(m_offset);
-    shader->setMatrixColor(mat4);
     shader->setCenter(m_center);
     shader->bindMultiTextures();
     if (useFramebuffer) {
