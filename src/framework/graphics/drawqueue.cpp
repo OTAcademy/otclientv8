@@ -4,6 +4,7 @@
 #include <framework/graphics/atlas.h>
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/framebuffermanager.h>
+#include <framework/graphics/shadermanager.h>
 #include <framework/graphics/textrender.h>
 #include <framework/graphics/drawcache.h>
 #include <framework/graphics/image.h>
@@ -47,6 +48,32 @@ void DrawQueueItemTextureCoords::draw(const Point& pos)
 void DrawQueueItemColoredTextureCoords::draw()
 {
     g_painter->drawTextureCoords(m_coordsBuffer, m_texture, &m_colors);
+}
+
+void DrawQueueItemImageWithShader::draw()
+{
+    if (!m_texture) return;
+    PainterShaderProgramPtr shader = g_shaders.getShader(m_shader);
+    if (!shader) return;
+
+    g_painter->setShaderProgram(shader);
+    shader->bindMultiTextures();
+    g_painter->setColor(m_color);
+    g_painter->drawTextureCoords(m_coordsBuffer, m_texture);
+    g_painter->resetShaderProgram();
+}
+
+void DrawQueueItemImageWithShader::draw(const Point& pos)
+{
+    if (!m_texture) return;
+    PainterShaderProgramPtr shader = g_shaders.getShader(m_shader);
+    if (!shader) return;
+
+    g_painter->setShaderProgram(shader);
+    shader->bindMultiTextures();
+    g_painter->resetColor();
+    g_painter->drawTexturedRect(Rect(pos, m_texture->getSize()), m_texture);
+    g_painter->resetShaderProgram();
 }
 
 void DrawQueueItemTexturedRect::draw()

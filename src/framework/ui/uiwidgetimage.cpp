@@ -77,6 +77,8 @@ void UIWidget::parseImageStyle(const OTMLNodePtr& styleNode)
             setImageBorder(node->value<int>());
         else if(node->tag() == "image-auto-resize")
             setImageAutoResize(node->value<bool>());
+        else if(node->tag() == "image-shader")
+            setImageShader(node->value());
     }
 }
 
@@ -174,7 +176,13 @@ void UIWidget::drawImage(const Rect& screenCoords)
     }
 
     m_imageTexture->setSmooth(m_imageSmooth);
-    g_drawQueue->addTextureCoords(m_imageCoordsBuffer, m_imageTexture, m_imageColor);
+    if (!m_shader.empty()) {
+        DrawQueueItemTextureCoords* thing = new DrawQueueItemImageWithShader(m_imageCoordsBuffer, m_imageTexture, m_imageColor, m_shader);
+        g_drawQueue->add(thing);
+    }
+    else {
+        g_drawQueue->addTextureCoords(m_imageCoordsBuffer, m_imageTexture, m_imageColor);
+    }
 }
 
 void UIWidget::setQRCode(const std::string& code, int border)
