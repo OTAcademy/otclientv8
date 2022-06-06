@@ -398,6 +398,11 @@ std::string ResourceManager::readFileContents(const std::string& fileName, bool 
         return buffer;
     }
 
+    // skip decryption for bot configs
+    if (fullPath.find("/bot/") != std::string::npos) {
+        return buffer;
+    }
+
     static std::string unencryptedExtensions[] = { ".otml", ".otmm", ".dmp", ".log", ".txt", ".dll", ".exe", ".zip" };
 
     if (!decryptBuffer(buffer)) {
