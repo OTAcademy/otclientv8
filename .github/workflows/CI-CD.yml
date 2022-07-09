@@ -154,7 +154,7 @@ jobs:
           boost-process openssl
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-osx
-        vcpkgGitCommitId: 761c81d43335a5d5ccc2ec8ad90bd7e2cbba734e
+        vcpkgGitCommitId: 98f8d00e89fb6a8019c2045cfa1edbe9d92d3405
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
@@ -208,7 +208,7 @@ jobs:
           boost-process openssl physfs
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-linux
-        vcpkgGitCommitId: 761c81d43335a5d5ccc2ec8ad90bd7e2cbba734e
+        vcpkgGitCommitId: 98f8d00e89fb6a8019c2045cfa1edbe9d92d3405
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
