@@ -48,7 +48,7 @@ jobs:
         with:
           vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
           vcpkgTriplet: x86-windows-static
-          vcpkgGitCommitId: dd663f0bc42e066bf732c3ef5f9f294164ef425c
+          vcpkgGitCommitId: e82778a710538de07955dea6eb785132c3804d63
           vcpkgArguments: >
             boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
             luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
