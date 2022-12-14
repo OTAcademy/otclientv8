@@ -37,7 +37,7 @@ jobs:
       with:
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x86-windows-static
-        vcpkgGitCommitId: 314018fef43c7e3a52a3e46599313b70ace3977a
+        vcpkgGitCommitId: dd663f0bc42e066bf732c3ef5f9f294164ef425c
         vcpkgArguments: >
           boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
           luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl liblzma
@@ -55,10 +55,10 @@ jobs:
         MSBuild /property:Configuration=Debug_lib /p:BUILD_REVISION=${{github.run_number}}
         MSBuild /property:Configuration=Debug /p:BUILD_REVISION=${{github.run_number}}
 
-    - name: Sign binaries
-      run: |
-         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
-         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
+    #- name: Sign binaries
+    #  run: |
+    #     .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
+    #     .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
 
     - name: Compress debug lib
       run: |
@@ -154,7 +154,7 @@ jobs:
           boost-process openssl
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-osx
-        vcpkgGitCommitId: 98f8d00e89fb6a8019c2045cfa1edbe9d92d3405
+        vcpkgGitCommitId: dd663f0bc42e066bf732c3ef5f9f294164ef425c
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
@@ -208,7 +208,7 @@ jobs:
           boost-process openssl physfs
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-linux
-        vcpkgGitCommitId: 98f8d00e89fb6a8019c2045cfa1edbe9d92d3405
+        vcpkgGitCommitId: dd663f0bc42e066bf732c3ef5f9f294164ef425c
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
