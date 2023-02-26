@@ -22,7 +22,7 @@ jobs:
       with:
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x86-windows-static
-        vcpkgGitCommitId: e82778a710538de07955dea6eb785132c3804d63
+        vcpkgGitCommitId: 3b3bd424827a1f7f4813216f6b32b6c61e386b2e
         vcpkgArguments: >
           boost-iostreams boost-asio boost-beast boost-system boost-variant boost-lockfree boost-process boost-program-options boost-uuid boost-filesystem
           luajit glew physfs openal-soft libogg libvorbis zlib libzip bzip2 openssl
@@ -43,10 +43,10 @@ jobs:
         cd vc16
         MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
 
-    - name: Sign binaries
-      run: |
-         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
-         .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
+    #- name: Sign binaries
+    #  run: |
+    #     .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
+    #     .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
 
     - name: Upload binaries
       uses: 'actions/upload-artifact@v2'
@@ -80,6 +80,14 @@ jobs:
       run: |
         7z x android_libs.7z -aoa -oC:\android
 
+    - name: Install android
+      run: |
+        $sdkRoot = "C:\Android\android-sdk"
+        $sdkManager = "$sdkRoot\cmdline-tools\latest\bin\sdkmanager.bat"
+        Install-AndroidSDKPackages -AndroidSDKManagerPath $sdkManager `
+                                  -AndroidSDKRootPath $sdkRoot `
+                                  -AndroidPackages "ndk;21.4.7075529"
+
     - name: Build for android
       timeout-minutes: 25
       run: |
@@ -97,7 +105,7 @@ jobs:
 
   Mac:
     name: Build mac os version
-    runs-on: macos-latest
+    runs-on: 	macos-11
     timeout-minutes: 120
 
     steps:
@@ -121,7 +129,7 @@ jobs:
           boost-process openssl
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-osx
-        vcpkgGitCommitId: e82778a710538de07955dea6eb785132c3804d63
+        vcpkgGitCommitId: 761c81d43335a5d5ccc2ec8ad90bd7e2cbba734e
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
@@ -169,7 +177,7 @@ jobs:
           boost-process openssl physfs
         vcpkgDirectory: ${{ runner.workspace }}/vcpkg/
         vcpkgTriplet: x64-linux
-        vcpkgGitCommitId: e82778a710538de07955dea6eb785132c3804d63
+        vcpkgGitCommitId: 761c81d43335a5d5ccc2ec8ad90bd7e2cbba734e
 
     - name: Build with CMake
       uses: lukka/run-cmake@v3
