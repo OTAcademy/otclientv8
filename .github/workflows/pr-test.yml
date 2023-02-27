@@ -4,7 +4,7 @@ on: [pull_request]
 jobs:
   Windows:
     name: Build windows version
-    runs-on: windows-2019
+    runs-on: windows-2022
     timeout-minutes: 90
     steps:
     - name: Checkout
