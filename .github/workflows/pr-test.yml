@@ -1,22 +1,11 @@
-name: Build, Test, Release 3.2
-on:
-  push:
-    branches:
-      - main
-      - master
+name: Build and test pull request
+on: [pull_request]
 
 jobs:
   Windows:
     name: Build windows version
     runs-on: windows-2019
     timeout-minutes: 90
-    if: |
-      !contains(github.event.head_commit.message, '[skip release]')
-      && (
-        startsWith(github.ref, 'refs/tags/')
-        || github.ref == 'refs/heads/main'
-        || github.ref == 'refs/heads/master'
-      )
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -48,11 +37,6 @@ jobs:
         MSBuild /property:Configuration=DirectX /p:BUILD_REVISION=${{github.run_number}}
         MSBuild /property:Configuration=OpenGL /p:BUILD_REVISION=${{github.run_number}}
 
-    #- name: Sign binaries
-    #  run: |
-    #     .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_gl.exe
-    #     .\tools\sign\signtool.exe sign /f .\tools\sign\certificate.pfx /p ${{ secrets.SIGN_PASSWORD }} /fd SHA256 /t http://timestamp.digicert.com /d "OTclientV8" otclient_dx.exe
-
     - name: Upload binaries
       uses: 'actions/upload-artifact@v2'
       with:
@@ -67,13 +51,6 @@ jobs:
     name: Build android version
     runs-on: windows-2019
     timeout-minutes: 60
-    if: |
-      !contains(github.event.head_commit.message, '[skip release]')
-      && (
-        startsWith(github.ref, 'refs/tags/')
-        || github.ref == 'refs/heads/main'
-        || github.ref == 'refs/heads/master'
-      )
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -119,13 +96,6 @@ jobs:
     name: Build mac os version
     runs-on: 	macos-11
     timeout-minutes: 60
-    if: |
-      !contains(github.event.head_commit.message, '[skip release]')
-      && (
-        startsWith(github.ref, 'refs/tags/')
-        || github.ref == 'refs/heads/main'
-        || github.ref == 'refs/heads/master'
-      )
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -173,13 +143,6 @@ jobs:
     name: Build linux version
     runs-on: ubuntu-20.04
     timeout-minutes: 60
-    if: |
-      !contains(github.event.head_commit.message, '[skip release]')
-      && (
-        startsWith(github.ref, 'refs/tags/')
-        || github.ref == 'refs/heads/main'
-        || github.ref == 'refs/heads/master'
-      )
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -223,18 +186,11 @@ jobs:
           ${{ runner.workspace }}/build/otclient_linux
         if-no-files-found: error
 
-  Release:
-    name: Test and release
+  Test:
+    name: Test
     runs-on: windows-2019
     needs: [Windows, Android, Mac, Linux]
     timeout-minutes: 120
-    if: |
-      !contains(github.event.head_commit.message, '[skip release]')
-      && (
-        startsWith(github.ref, 'refs/tags/')
-        || github.ref == 'refs/heads/main'
-        || github.ref == 'refs/heads/master'
-      )
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -294,14 +250,6 @@ jobs:
       run: |
         Remove-Item 'data\things' -Recurse
 
-    - name: Set version
-      run: |
-        $version = Select-String -path otclientv8.log '(OTCv8 [^(]+)' |
-          select-object -First 1 |
-          % { $_.Matches } |
-          % { $_.Value }
-        "VERSION=${version}" | Add-Content -Path $ENV:GITHUB_ENV
-
     - name: Upload otclient
       uses: actions/upload-artifact@v2
       with:
@@ -319,46 +267,3 @@ jobs:
           mods
           init.lua
         if-no-files-found: error
-
-    - name: Checkout public otclientv8
-      uses: actions/checkout@v2
-      with:
-        repository: OTCv8/otclientv8
-        path: otclientv8
-        submodules: recursive
-        token: "${{ secrets.otcv8_token }}"
-
-    - name: Update public otclientv8 files
-      run: |
-        cd otclientv8
-        git rm . -f -r --ignore-unmatch
-        git checkout HEAD -- README.md LICENSE
-        cd ..
-
-        robocopy `
-        . `
-        otclientv8 `
-        init.lua `
-        otclient_dx.exe `
-        otclient_gl.exe `
-        otclientv8.apk `
-        otclient_linux `
-        otclient_mac `
-        libGLESv2.dll `
-        libEGL.dll `
-        d3dcompiler_47.dll
-
-        robocopy data otclientv8/data /s
-        robocopy layouts otclientv8/layouts /s
-        robocopy mods otclientv8/mods /s
-        robocopy modules otclientv8/modules /s
-        exit 0 # required, robocopy has exit code 1
-
-    - name: Commit public otclientv8
-      uses: EndBug/add-and-commit@v7
-      with:
-        cwd: otclientv8
-        push: true
-        author_name: OTCv8
-        author_email: otclient@otclient.ovh
-        message: "Updated to ${{ env.VERSION }}"
