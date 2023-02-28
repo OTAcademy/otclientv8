@@ -42,5 +42,6 @@ Module
     - game_stats
     - game_shaders
     - game_bot
+	- game_tasks
   @onLoad: init()
   @onUnload: terminate()
