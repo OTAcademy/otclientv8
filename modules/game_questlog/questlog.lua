@@ -6,6 +6,7 @@ settings = {}
 
 local callDelay = 1000 -- each call delay is also increased by random values (0-callDelay/2)
 local dispatcher = {}
+local refreshEvent = nil
 
 function init()
   g_ui.importStyle('questlogwindow')
@@ -62,6 +63,11 @@ function offline()
   -- reset tracker
   trackerWindow.contentsPanel.list:destroyChildren()
   trackerWindow.contentsPanel.list:setHeight(0)
+  
+  if refreshEvent then
+    removeEvent(refreshEvent)
+    refreshEvent = nil
+  end
 end
 
 function online()
@@ -237,7 +243,7 @@ function refreshQuests()
     end
   end
 
-  scheduleEvent(refreshQuests, callDelay)
+  refreshEvent = scheduleEvent(refreshQuests, callDelay)
 end
 
 function refreshTrackerWidgets()
