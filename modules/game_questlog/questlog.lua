@@ -26,7 +26,9 @@ function init()
                     onQuestLine = onGameQuestLine,
                     onGameEnd = offline,
                     onGameStart = online})
-  online()
+  if g_game.isOnline() then
+    online()
+  end
 end
 
 function terminate()
@@ -35,12 +37,19 @@ function terminate()
                        onGameEnd = offline,
                        onGameStart = online})
 
-  offline()
+  if g_game.isOnline() then
+    offline()
+  end
   if questLogButton then
     questLogButton:destroy()
   end
   if questTrackerButton then
     questTrackerButton:destroy()
+  end
+  
+  if refreshEvent then
+    removeEvent(refreshEvent)
+    refreshEvent = nil
   end
 end
 
@@ -162,12 +171,12 @@ function onGameQuestLog(quests)
 end
 
 function onGameQuestLine(questId, questMissions)
-  show(false)
-  local missionList = window.missionlog.missionList
-
   if questId == window.missionlog.currentQuest then
-    missionList:destroyChildren()
+    show(false)
   end
+  
+  local missionList = window.missionlog.missionList
+  missionList:destroyChildren()
   for i,questMission in pairs(questMissions) do
     local name, description = unpack(questMission)
 
@@ -214,7 +223,6 @@ function onTrackOptionChange(checkbox)
     trackerWidget:setVisible(newStatus)
   end
 
-  refreshQuests()
   save()
 end
 
