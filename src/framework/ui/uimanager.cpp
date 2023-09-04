@@ -22,6 +22,7 @@
 
 #include "uimanager.h"
 #include "ui.h"
+#include "uiwidget.h"
 
 #include <framework/otml/otml.h>
 #include <framework/graphics/graphics.h>
@@ -40,6 +41,7 @@ void UIManager::init()
     m_rootWidget->setId("root");
     m_mouseReceiver = m_rootWidget;
     m_keyboardReceiver = m_rootWidget;
+    m_vars.reserve(100);
 }
 
 void UIManager::terminate()
@@ -56,6 +58,7 @@ void UIManager::terminate()
     m_styles.clear();
     m_destroyedWidgets.clear();
     m_checkEvent = nullptr;
+    m_vars.clear();
 }
 
 void UIManager::render(Fw::DrawPane drawPane)
@@ -371,6 +374,15 @@ bool UIManager::importStyleFromString(std::string data)
 void UIManager::importStyleFromOTML(const OTMLNodePtr& styleNode)
 {
     std::string tag = styleNode->tag();
+
+    // parse otui variable
+    if (stdext::starts_with(tag, "$var-")) {
+        std::string var = tag.substr(6);
+        if (!hasOTUIVar(var))
+            addOTUIVar(var, styleNode->rawValue());
+        return;
+    }
+
     std::vector<std::string> split = stdext::split(tag, "<");
     if(split.size() != 2)
         throw OTMLException(styleNode, "not a valid style declaration");

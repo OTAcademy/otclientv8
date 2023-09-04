@@ -24,6 +24,7 @@
 #define OTMLNODE_H
 
 #include "declarations.h"
+#include <framework/ui/uimanager.h>
 
 class OTMLNode : public stdext::shared_object
 {
@@ -73,7 +74,7 @@ public:
     OTMLNodePtr clone();
 
     template<typename T = std::string>
-    T value();
+    T value(bool raw = false);
     template<typename T = std::string>
     T valueAt(const std::string& childTag);
     template<typename T = std::string>
@@ -110,7 +111,7 @@ protected:
 #include "otmlexception.h"
 
 template<>
-inline std::string OTMLNode::value<std::string>() {
+inline std::string OTMLNode::value<std::string>(bool raw) {
     std::string value = m_value;
     if(stdext::starts_with(value, "\"") && stdext::ends_with(value, "\"")) {
         value = value.substr(1, value.length()-2);
@@ -120,13 +121,23 @@ inline std::string OTMLNode::value<std::string>() {
         stdext::replace_all(value, "\\n",  "\n");
         stdext::replace_all(value, "\\'",  "\'");
     }
+    if (!raw) {
+        if (stdext::starts_with(value, "$var-")) {
+            return g_ui.getOTUIVar(value);
+        }
+    }
     return value;
 }
 
 template<typename T>
-T OTMLNode::value() {
+T OTMLNode::value(bool raw) {
     T ret;
-    if(!stdext::cast(m_value, ret))
+    if (stdext::starts_with(m_value, "$var-")) {
+        if (!stdext::cast(g_ui.getOTUIVar(m_value), ret))
+            throw OTMLException(asOTMLNode(), stdext::format("failed to cast var value '%s' (var value '%s') to type '%s'", m_value, g_ui.getOTUIVar(m_value), stdext::demangle_type<T>()));
+        return ret;
+    }
+    if (!stdext::cast(m_value, ret))
         throw OTMLException(asOTMLNode(), stdext::format("failed to cast node value '%s' to type '%s'", m_value, stdext::demangle_type<T>()));
     return ret;
 }

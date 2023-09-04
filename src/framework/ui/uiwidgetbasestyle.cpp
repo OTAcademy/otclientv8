@@ -30,6 +30,7 @@
 #include <framework/graphics/painter.h>
 #include <framework/graphics/texture.h>
 #include <framework/graphics/texturemanager.h>
+#include <framework/ui/uimanager.h>
 
 void UIWidget::initBaseStyle()
 {
@@ -155,10 +156,10 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
         else if(node->tag() == "clipping")
             setClipping(node->value<bool>());
         else if(node->tag() == "border") {
-            auto split = stdext::split(node->value(), " ");
+            auto split = stdext::split(node->value(true), " ");
             if(split.size() == 2) {
-                setBorderWidth(stdext::safe_cast<int>(split[0]));
-                setBorderColor(stdext::safe_cast<Color>(split[1]));
+                setBorderWidth(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0])));
+                setBorderColor(stdext::safe_cast<Color>(g_ui.getOTUIVarSafe(split[1])));
             } else
                 throw OTMLException(node, "border param must have its width followed by its color");
         }
@@ -191,30 +192,30 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
         else if(node->tag() == "margin-left")
             setMarginLeft(node->value<int>());
         else if(node->tag() == "margin") {
-            std::string marginDesc = node->value();
+            std::string marginDesc = node->value(true);
             std::vector<std::string> split = stdext::split(marginDesc, " ");
             if(split.size() == 4) {
-                setMarginTop(stdext::safe_cast<int>(split[0]));
-                setMarginRight(stdext::safe_cast<int>(split[1]));
-                setMarginBottom(stdext::safe_cast<int>(split[2]));
-                setMarginLeft(stdext::safe_cast<int>(split[3]));
+                setMarginTop(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0])));
+                setMarginRight(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[1])));
+                setMarginBottom(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[2])));
+                setMarginLeft(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[3])));
             } else if(split.size() == 3) {
-                int marginTop = stdext::safe_cast<int>(split[0]);
-                int marginHorizontal = stdext::safe_cast<int>(split[1]);
-                int marginBottom = stdext::safe_cast<int>(split[2]);
+                int marginTop = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0]));
+                int marginHorizontal = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[1]));
+                int marginBottom = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[2]));
                 setMarginTop(marginTop);
                 setMarginRight(marginHorizontal);
                 setMarginBottom(marginBottom);
                 setMarginLeft(marginHorizontal);
             } else if(split.size() == 2) {
-                int marginVertical = stdext::safe_cast<int>(split[0]);
-                int marginHorizontal = stdext::safe_cast<int>(split[1]);
+                int marginVertical = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0]));
+                int marginHorizontal = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[1]));
                 setMarginTop(marginVertical);
                 setMarginRight(marginHorizontal);
                 setMarginBottom(marginVertical);
                 setMarginLeft(marginHorizontal);
             } else if(split.size() == 1) {
-                int margin = stdext::safe_cast<int>(split[0]);
+                int margin = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0]));
                 setMarginTop(margin);
                 setMarginRight(margin);
                 setMarginBottom(margin);
@@ -230,30 +231,30 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
         else if(node->tag() == "padding-left")
             setPaddingLeft(node->value<int>());
         else if(node->tag() == "padding") {
-            std::string paddingDesc = node->value();
+            std::string paddingDesc = node->value(true);
             std::vector<std::string> split = stdext::split(paddingDesc, " ");
             if(split.size() == 4) {
-                setPaddingTop(stdext::safe_cast<int>(split[0]));
-                setPaddingRight(stdext::safe_cast<int>(split[1]));
-                setPaddingBottom(stdext::safe_cast<int>(split[2]));
-                setPaddingLeft(stdext::safe_cast<int>(split[3]));
+                setPaddingTop(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0])));
+                setPaddingRight(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[1])));
+                setPaddingBottom(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[2])));
+                setPaddingLeft(stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[3])));
             } else if(split.size() == 3) {
-                int paddingTop = stdext::safe_cast<int>(split[0]);
-                int paddingHorizontal = stdext::safe_cast<int>(split[1]);
-                int paddingBottom = stdext::safe_cast<int>(split[2]);
+                int paddingTop = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0]));
+                int paddingHorizontal = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[1]));
+                int paddingBottom = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[2]));
                 setPaddingTop(paddingTop);
                 setPaddingRight(paddingHorizontal);
                 setPaddingBottom(paddingBottom);
                 setPaddingLeft(paddingHorizontal);
             } else if(split.size() == 2) {
-                int paddingVertical = stdext::safe_cast<int>(split[0]);
-                int paddingHorizontal = stdext::safe_cast<int>(split[1]);
+                int paddingVertical = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0]));
+                int paddingHorizontal = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[1]));
                 setPaddingTop(paddingVertical);
                 setPaddingRight(paddingHorizontal);
                 setPaddingBottom(paddingVertical);
                 setPaddingLeft(paddingHorizontal);
             } else if(split.size() == 1) {
-                int padding = stdext::safe_cast<int>(split[0]);
+                int padding = stdext::safe_cast<int>(g_ui.getOTUIVarSafe(split[0]));
                 setPaddingTop(padding);
                 setPaddingRight(padding);
                 setPaddingBottom(padding);
@@ -315,12 +316,12 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
                 if(node->value() == "none") {
                     removeAnchor(anchoredEdge);
                 } else {
-                    std::vector<std::string> split = stdext::split(node->value(), ".");
+                    std::vector<std::string> split = stdext::split(node->value(true), ".");
                     if(split.size() != 2)
                         throw OTMLException(node, "invalid anchor description");
 
-                    std::string hookedWidgetId = split[0];
-                    Fw::AnchorEdge hookedEdge = Fw::translateAnchorEdge(split[1]);
+                    std::string hookedWidgetId = g_ui.getOTUIVarSafe(split[0]);
+                    Fw::AnchorEdge hookedEdge = Fw::translateAnchorEdge(g_ui.getOTUIVarSafe(split[1]));
 
                     if(anchoredEdge == Fw::AnchorNone)
                         throw OTMLException(node, "invalid anchor edge");

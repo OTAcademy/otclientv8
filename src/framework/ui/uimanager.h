@@ -24,9 +24,10 @@
 #define UIMANAGER_H
 
 #include "declarations.h"
-#include "uiwidget.h"
 #include <framework/core/inputevent.h>
 #include <framework/otml/declarations.h>
+
+class UIWidget;
 
 //@bindsingleton g_ui
 class UIManager
@@ -72,6 +73,36 @@ public:
 
     bool isDrawingDebugBoxes() { return m_drawDebugBoxes; }
 
+    const OTUIVars& getOTUIVars() {
+        return m_vars;
+    }
+    bool hasOTUIVar(const std::string& key) {
+        if (stdext::starts_with(key, "$var-")) {
+            return m_vars.find(key.substr(6)) != m_vars.end();
+        }
+        return m_vars.find(key) != m_vars.end();
+    }
+    std::string getOTUIVar(const std::string& key) {
+        if (stdext::starts_with(key, "$var-")) {
+            return m_vars[key.substr(6)];
+        }
+        return m_vars[key];
+    }
+    std::string getOTUIVarSafe(const std::string& key) {
+        if (!hasOTUIVar(key)) {
+            return key;
+        }
+        if (stdext::starts_with(key, "$var-")) {
+            return m_vars[key.substr(6)];
+        }
+        return m_vars[key];
+    }
+    void addOTUIVar(const std::string& key, const std::string& value) {
+        if (m_vars.find(key) != m_vars.end()) return;
+
+        m_vars.insert(std::make_pair(key, value));
+    }
+
 protected:
     void onWidgetAppear(const UIWidgetPtr& widget);
     void onWidgetDisappear(const UIWidgetPtr& widget);
@@ -89,6 +120,7 @@ private:
     stdext::boolean<false> m_hoverUpdateScheduled;
     stdext::boolean<false> m_drawDebugBoxes;
     std::unordered_map<std::string, OTMLNodePtr> m_styles;
+    OTUIVars m_vars;
     UIWidgetList m_destroyedWidgets;
     ScheduledEventPtr m_checkEvent;
     stdext::timer m_moveTimer;

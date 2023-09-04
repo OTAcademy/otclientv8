@@ -426,6 +426,10 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_ui", "isDrawingDebugBoxes", &UIManager::isDrawingDebugBoxes, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "isMouseGrabbed", &UIManager::isMouseGrabbed, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "isKeyboardGrabbed", &UIManager::isKeyboardGrabbed, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "hasOTUIVar", &UIManager::hasOTUIVar, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "getOTUIVar", &UIManager::getOTUIVar, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "getOTUIVarSafe", &UIManager::getOTUIVarSafe, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "addOTUIVar", &UIManager::addOTUIVar, &g_ui);
 
     // FontManager
     g_lua.registerSingletonClass("g_fonts");

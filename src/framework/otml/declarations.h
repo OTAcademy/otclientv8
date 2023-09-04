@@ -33,5 +33,6 @@ class OTMLEmitter;
 typedef stdext::shared_object_ptr<OTMLNode> OTMLNodePtr;
 typedef stdext::shared_object_ptr<OTMLDocument> OTMLDocumentPtr;
 typedef std::vector<OTMLNodePtr> OTMLNodeList;
+typedef std::unordered_map<std::string, std::string> OTUIVars;
 
 #endif

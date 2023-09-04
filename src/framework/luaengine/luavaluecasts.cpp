@@ -82,7 +82,7 @@ int push_luavalue(const std::string& str)
 
 bool luavalue_cast(int index, std::string& str)
 {
-    str = g_lua.toString(index);
+    str = g_ui.getOTUIVarSafe(g_lua.toString(index));
     return true;
 }
 
@@ -121,7 +121,7 @@ bool luavalue_cast(int index, Color& color)
         color.setAlpha((int)g_lua.popInteger());
         return true;
     } else if(g_lua.isString()) {
-        return stdext::cast(g_lua.toString(index), color);
+        return stdext::cast(g_ui.getOTUIVarSafe(g_lua.toString(index)), color);
     } else if(g_lua.isNil()) {
         color = Color::white;
         return true;
@@ -157,7 +157,7 @@ bool luavalue_cast(int index, Rect& rect)
         rect.setHeight(g_lua.popInteger());
         return true;
     } else if(g_lua.isString()) {
-        return stdext::cast(g_lua.toString(index), rect);
+        return stdext::cast(g_ui.getOTUIVarSafe(g_lua.toString(index)), rect);
     } else if(g_lua.isNil()) {
         rect = Rect();
         return true;
@@ -185,7 +185,7 @@ bool luavalue_cast(int index, Point& point)
         point.y = g_lua.popInteger();
         return true;
     } else if(g_lua.isString()) {
-        return stdext::cast(g_lua.toString(index), point);
+        return stdext::cast(g_ui.getOTUIVarSafe(g_lua.toString(index)), point);
     } else if(g_lua.isNil()) {
         point = Point();
         return true;
@@ -213,7 +213,7 @@ bool luavalue_cast(int index, Size& size)
         size.setHeight(g_lua.popInteger());
         return true;
     } else if(g_lua.isString()) {
-        return stdext::cast(g_lua.toString(index), size);
+        return stdext::cast(g_ui.getOTUIVarSafe(g_lua.toString(index)), size);
     } else if(g_lua.isNil()) {
         size = Size();
         return true;
