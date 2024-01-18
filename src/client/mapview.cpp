@@ -143,6 +143,11 @@ void MapView::drawMapBackground(const Rect& rect, const TilePtr& crosshairTile) 
             if (fading == 0) break;
         }
 
+        if (g_game.getFeature(Otc::GameDrawFloorShadow)) {
+            if (cameraPosition.z >= Otc::UNDERGROUND_FLOOR && cameraPosition.z == z) {
+                g_drawQueue->addFilledRect(srcRect, m_floorShadow);
+            }
+        }
         size_t floorStart = g_drawQueue->size();
         drawFloor(z, cameraPosition, crosshairTile);
 

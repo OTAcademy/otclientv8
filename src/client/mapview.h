@@ -166,6 +166,8 @@ private:
     float m_minimumAmbientLight;
     std::unique_ptr<LightView> m_lightView;
     TexturePtr m_lightTexture;
+
+    Color m_floorShadow = Color(0.0f, 0.0f, 0.0f, 0.5f);
 };
 
 #endif

@@ -35,6 +35,10 @@ OptionPanel
     id: antialiasing
     !text: tr('Antialiasing')
 
+  OptionCheckBox
+    id: floorShadow
+    !text: tr('Floor Shadow')
+
   Label
     margin-top: 12
     id: optimizationLevelLabel

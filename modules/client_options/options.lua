@@ -66,7 +66,8 @@ local defaultOptions = {
 
   profile = 1,
   
-  antialiasing = true
+  antialiasing = true,
+  floorShadow = true
 }
 
 local optionsWindow
@@ -350,6 +351,12 @@ function setOption(key, value, force)
     generalPanel:getChildById('walkCtrlTurnDelayLabel'):setText(tr('Walk delay after ctrl turn: %s ms', value))  
   elseif key == "antialiasing" then
     g_app.setSmooth(value)
+  elseif key == "floorShadow" then
+    if value then
+      g_game.enableFeature(GameDrawFloorShadow)
+    else
+      g_game.disableFeature(GameDrawFloorShadow)
+    end
   end
 
   -- change value for keybind updates
