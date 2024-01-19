@@ -19,9 +19,3 @@ function UIWidget:setMargin(...)
     self:setMarginLeft(params[4])
   end
 end
-
-function UIWidget:onHoverChange(hovered)
-  if self:isDisabled() and not hovered and g_mouse.isCursorChanged() then
-    g_mouse.popCursor("pointer")
-  end
-end

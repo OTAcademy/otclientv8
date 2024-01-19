@@ -1598,6 +1598,11 @@ void UIWidget::onHoverChange(bool hovered)
         else
             g_mouse.popCursor(m_cursor);
     }
+
+    if (isDisabled() && !hovered && g_mouse.isCursorChanged()) {
+        g_mouse.popCursor(m_cursor);
+    }
+
     callLuaField("onHoverChange", hovered);
 }
 
