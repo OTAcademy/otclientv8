@@ -79,6 +79,8 @@ void UIWidget::parseImageStyle(const OTMLNodePtr& styleNode)
             setImageAutoResize(node->value<bool>());
         else if(node->tag() == "image-shader")
             setImageShader(node->value());
+        else if (node->tag() == "image-pixel-test")
+            setPixelTesting(node->value<bool>());
     }
 }
 

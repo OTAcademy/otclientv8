@@ -228,6 +228,19 @@ void Texture::setupPixels(int level, const Size& size, uchar* pixels, int channe
             break;
     }
 
+    // Iterate over all pixels, if its alpha is 0, insert pixel index (linear) into unordered set
+    if (format == GL_RGBA && pixels) {
+        m_transparentPixels.clear();
+        for (int y = 0; y < size.height(); ++y) {
+            for (int x = 0; x < size.width(); ++x) {
+                int pixelIndex = (y * size.width() + x) * 4;
+                if (pixels[pixelIndex + 3] == 0) {
+                    m_transparentPixels.insert(pixelIndex);
+                }
+            }
+        }
+    }
+
     GLenum internalFormat = GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, level, internalFormat, size.width(), size.height(), 0, format, GL_UNSIGNED_BYTE, pixels);
 }

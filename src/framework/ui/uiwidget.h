@@ -72,6 +72,7 @@ protected:
     stdext::boolean<false> m_draggable;
     stdext::boolean<false> m_destroyed;
     stdext::boolean<false> m_clipping;
+    stdext::boolean<false> m_pixelTest;
     UILayoutPtr m_layout;
     UIWidgetPtr m_parent;
     std::string m_parentId;
@@ -141,6 +142,7 @@ public:
     void setAutoFocusPolicy(Fw::AutoFocusPolicy policy);
     void setAutoRepeatDelay(int delay) { m_autoRepeatDelay = delay; }
     void setVirtualOffset(const Point& offset);
+    void setPixelTesting(bool pixelTest);
 
     bool isAnchored();
     bool isChildLocked(const UIWidgetPtr& child);
@@ -254,6 +256,8 @@ public:
     bool isFixedSize() { return m_fixedSize; }
     bool isClipping() { return m_clipping; }
     bool isDestroyed() { return m_destroyed; }
+    bool isPixelTesting() { return m_pixelTest; }
+    bool isPixelTransparent(const Point& mousePos);
 
     bool hasChildren() { return m_children.size() > 0; }
     bool containsMarginPoint(const Point& point) { return getMarginRect().contains(point); }

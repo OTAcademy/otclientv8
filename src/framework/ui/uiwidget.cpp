@@ -1259,13 +1259,16 @@ UIWidgetPtr UIWidget::recursiveGetChildByPos(const Point& childPos, bool wantsPh
     if(!containsPaddingPoint(childPos))
         return nullptr;
 
+    if (isPixelTesting() && isPixelTransparent(childPos))
+        return nullptr;
+
     for(auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         const UIWidgetPtr& child = (*it);
         if(child->isExplicitlyVisible() && child->containsPoint(childPos)) {
             UIWidgetPtr subChild = child->recursiveGetChildByPos(childPos, wantsPhantom);
             if(subChild)
                 return subChild;
-            else if(wantsPhantom || !child->isPhantom())
+            else if(wantsPhantom || !child->isPhantom() && (!child->isPixelTesting() || !child->isPixelTransparent(childPos)))
                 return child;
         }
     }
@@ -1805,8 +1808,12 @@ bool UIWidget::propagateOnMouseEvent(const Point& mousePos, UIWidgetList& widget
 
     widgetList.push_back(static_self_cast<UIWidget>());
 
-    if(!isPhantom())
-        ret = true;
+    if (isPixelTesting() && isPixelTransparent(mousePos))
+        return false;
+
+    if (!isPhantom())
+        return true;
+
     return ret;
 }
 
@@ -1837,4 +1844,25 @@ void UIWidget::setCursor(const std::string& cursor)
 
     m_cursor = cursor;
     m_changeCursorImage = true;
+}
+
+void UIWidget::setPixelTesting(bool pixelTest)
+{
+    if (m_pixelTest == pixelTest)
+        return;
+
+    m_pixelTest = pixelTest;
+}
+
+bool UIWidget::isPixelTransparent(const Point& mousePos)
+{
+    if (!m_imageTexture || m_imageTexture->isEmpty()) {
+        return true;
+    }
+
+    int x = mousePos.x - m_rect.x();
+    int y = mousePos.y - m_rect.y();
+
+    uint32_t index = (y * m_imageTexture->getWidth() + x) * 4;
+    return m_imageTexture->isPixelTransparent(index);
 }

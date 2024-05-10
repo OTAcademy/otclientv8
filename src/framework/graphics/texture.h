@@ -61,6 +61,10 @@ public:
     bool canCache() { return m_canCache; }
     virtual bool isAnimatedTexture() { return false; }
 
+    bool isPixelTransparent(uint32_t index) {
+        return m_transparentPixels.find(index) != m_transparentPixels.end();
+    }
+
 protected:
 
     void uploadPixels(const ImagePtr& image, bool buildMipmaps = false, bool compress = false);
@@ -84,6 +88,8 @@ protected:
     bool m_needsUpdate = false;
     bool m_canCache = true;
     ImagePtr m_image;
+
+    std::unordered_set<uint32_t> m_transparentPixels;
 };
 
 #endif
