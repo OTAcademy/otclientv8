@@ -83,8 +83,8 @@ private:
 };
 
 struct DrawQueueItemOutfit : public DrawQueueItemTexturedRect {
-    DrawQueueItemOutfit(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, int32_t colors, const Color& color, bool doCenter) :
-        DrawQueueItemTexturedRect(rect, texture, src, color), m_offset(offset), m_colors(colors), m_doCenter(doCenter)
+    DrawQueueItemOutfit(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, int32_t colors, const Color& color) :
+        DrawQueueItemTexturedRect(rect, texture, src, color), m_offset(offset), m_colors(colors)
     {};
 
     void draw() override;
@@ -93,12 +93,11 @@ struct DrawQueueItemOutfit : public DrawQueueItemTexturedRect {
 
     Point m_offset;
     int32_t m_colors;
-    bool m_doCenter;
 };
 
 struct DrawQueueItemOutfitWithShader : public DrawQueueItemTexturedRect {
-    DrawQueueItemOutfitWithShader(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, const Point& center, int32_t colors, const std::string& shader, bool doCenter) :
-        DrawQueueItemTexturedRect(rect, texture, src, Color::white), m_offset(offset), m_center(center), m_colors(colors), m_shader(shader), m_doCenter(doCenter)
+    DrawQueueItemOutfitWithShader(const Rect& rect, const TexturePtr& texture, const Rect& src, const Point& offset, const Point& center, int32_t colors, const std::string& shader) :
+        DrawQueueItemTexturedRect(rect, texture, src, Color::white), m_offset(offset), m_center(center), m_colors(colors), m_shader(shader)
     {};
 
     void draw() override;
@@ -113,7 +112,6 @@ struct DrawQueueItemOutfitWithShader : public DrawQueueItemTexturedRect {
     Point m_center;
     int32_t m_colors;
     std::string m_shader;
-    bool m_doCenter;
 };
 
 #endif

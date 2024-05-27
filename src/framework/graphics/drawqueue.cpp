@@ -226,38 +226,20 @@ void DrawQueue::addColoredText(BitmapFontPtr font, const std::string& text, cons
     m_queue.push_back(new DrawQueueItemTextColored(screenCoords.topLeft(), font->getTexture(), hash, colors, shadow));
 }
 
-void DrawQueue::correctOutfit(const Rect& dest, int fromPos, bool oldScaling)
+void DrawQueue::correctOutfit(const Rect& dest, int fromPos, bool oldScaling, bool center)
 {
     std::vector<Rect*> rects;
     if (!oldScaling) {
-        bool center = false;
         int centerX = 0;
         int centerY = 0;
         for (size_t i = fromPos; i < m_queue.size(); ++i) {
-            if (DrawQueueItemOutfit* texture = dynamic_cast<DrawQueueItemOutfit*>(m_queue[i])) {
+            if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i])) {
                 rects.push_back(&texture->m_dest);
-                if (!center) {
-                    center = texture->m_doCenter;
-                }
 
-                if (texture->m_doCenter) {
+                if (center) {
                     centerX = std::max<int>(centerX, texture->m_dest.center().x);
                     centerY = std::max<int>(centerY, texture->m_dest.center().y);
                 }
-            }
-            else if (DrawQueueItemOutfitWithShader* texture = dynamic_cast<DrawQueueItemOutfitWithShader*>(m_queue[i])) {
-                rects.push_back(&texture->m_dest);
-                if (!center) {
-                    center = texture->m_doCenter;
-                }
-
-                if (texture->m_doCenter) {
-                    centerX = std::max<int>(centerX, texture->m_dest.center().x);
-                    centerY = std::max<int>(centerY, texture->m_dest.center().y);
-                }
-            }
-            else if (DrawQueueItemTexturedRect* texture = dynamic_cast<DrawQueueItemTexturedRect*>(m_queue[i])) {
-                rects.push_back(&texture->m_dest);
             }
         }
 

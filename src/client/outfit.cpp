@@ -303,7 +303,7 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
                     continue;
                 if (yPattern == 0)
                     center = outfitParams->dest.center();
-                DrawQueueItemTexturedRect* outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, center, 0, m_shader, m_center);
+                DrawQueueItemTexturedRect* outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, center, 0, m_shader);
                 g_drawQueue->add(outfit);
                 continue;
             }
@@ -318,11 +318,11 @@ void Outfit::draw(Point dest, Otc::Direction direction, uint walkAnimationPhase,
 
         DrawQueueItemTexturedRect* outfit = nullptr;
         if (m_shader.empty())
-            outfit = new DrawQueueItemOutfit(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, colors, outfitParams->color, m_center);
+            outfit = new DrawQueueItemOutfit(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, colors, outfitParams->color);
         else {
             if (yPattern == 0)
                 center = outfitParams->dest.center();
-            outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, center, colors, m_shader, m_center);
+            outfit = new DrawQueueItemOutfitWithShader(outfitParams->dest, outfitParams->texture, outfitParams->src, outfitParams->offset, center, colors, m_shader);
         }
         g_drawQueue->add(outfit);
     }
@@ -383,7 +383,7 @@ void Outfit::draw(const Rect& dest, Otc::Direction direction, uint animationPhas
 {
     int size = g_drawQueue->size();
     draw(Point(0, 0), direction, animationPhase, animate, nullptr, ui);
-    g_drawQueue->correctOutfit(dest, size, oldScaling);
+    g_drawQueue->correctOutfit(dest, size, oldScaling, m_center);
 }
 
 void Outfit::resetClothes()
