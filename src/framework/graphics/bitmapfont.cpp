@@ -338,6 +338,11 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth, std::vec
 
     lineLength += wordLength;
     if (lineLength > maxWidth) { // too long line with this word
+        if (text[lastSeparator] == ' ') { // ignore space if it's first character in new line
+            lastSeparator += 1;
+            lastColorSeparator += 1;
+        }
+
         updateColors(colors, lastColorSeparator, 1);
         outText += '\n';
         lineLength = wordLength;
