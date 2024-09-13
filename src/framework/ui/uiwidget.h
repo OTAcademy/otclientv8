@@ -446,6 +446,7 @@ protected:
     void drawImage(const Rect& screenCoords);
 
     TexturePtr m_imageTexture;
+    std::string m_imageSource;
     Rect m_imageClipRect;
     Rect m_imageRect;
     Color m_imageColor;

@@ -222,6 +222,8 @@ void UIWidget::setImageSource(const std::string& source)
         setSize(size);
     }
 
+    if (m_imageSource != source)
+        m_imageSource = source;
     m_imageMustRecache = true;
 }
 

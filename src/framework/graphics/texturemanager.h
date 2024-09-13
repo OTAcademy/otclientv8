@@ -38,6 +38,7 @@ public:
     void preload(const std::string& fileName) { getTexture(fileName); }
     TexturePtr getTexture(const std::string& fileName);
     TexturePtr loadTexture(std::stringstream& file, const std::string& source);
+    void loadTextureTransparentPixels(const std::string& fileName);
 
 private:
     std::unordered_map<std::string, TexturePtr> m_textures;

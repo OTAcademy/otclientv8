@@ -61,8 +61,12 @@ public:
     bool canCache() { return m_canCache; }
     virtual bool isAnimatedTexture() { return false; }
 
+    void loadTransparentPixels(const ImagePtr& image);
+    bool hasTransparentPixels() const {
+        return m_transparentPixels.size() > 0;
+    }
     bool isPixelTransparent(uint32_t index) {
-        return m_transparentPixels.find(index) != m_transparentPixels.end();
+        return m_transparentPixels[index] == 1;
     }
 
 protected:
@@ -89,7 +93,7 @@ protected:
     bool m_canCache = true;
     ImagePtr m_image;
 
-    std::unordered_set<uint32_t> m_transparentPixels;
+    std::vector<char> m_transparentPixels; // vector of chars is better than vector of bools, silly C++
 };
 
 #endif

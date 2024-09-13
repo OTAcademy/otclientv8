@@ -145,3 +145,39 @@ TexturePtr TextureManager::loadTexture(std::stringstream& file, const std::strin
 
     return texture;
 }
+
+void TextureManager::loadTextureTransparentPixels(const std::string& fileName)
+{
+    TexturePtr texture;
+
+    std::string filePath = g_resources.resolvePath(fileName);
+
+    auto it = m_textures.find(fileName);
+    if (it != m_textures.end()) {
+        texture = it->second;
+    }
+
+    if (!texture) {
+        return;
+    }
+
+    std::string filePathEx = g_resources.guessFilePath(filePath, "png");
+
+    // load texture file data
+    std::stringstream file;
+    g_resources.readFileStream(filePathEx, file);
+
+    apng_data apng;
+    if (load_apng(file, &apng) == 0) {
+        Size imageSize(apng.width, apng.height);
+        ImagePtr image = ImagePtr(new Image(imageSize, apng.bpp, apng.pdata));
+        if (!image) {
+            g_logger.error(stdext::format("Can't load texture: %s", filePath));
+        }
+        else {
+            texture->loadTransparentPixels(image);
+            image = nullptr;
+        }
+        free_apng(&apng);
+    }
+}

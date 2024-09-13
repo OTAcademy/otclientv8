@@ -100,7 +100,6 @@ void Texture::resize(const Size& size)
     update();
 }
 
-
 void Texture::update()
 {
     if (m_id == 0) {
@@ -228,19 +227,43 @@ void Texture::setupPixels(int level, const Size& size, uchar* pixels, int channe
             break;
     }
 
-    // Iterate over all pixels, if its alpha is 0, insert pixel index (linear) into unordered set
-    if (format == GL_RGBA && pixels) {
-        m_transparentPixels.clear();
-        for (int y = 0; y < size.height(); ++y) {
-            for (int x = 0; x < size.width(); ++x) {
-                int pixelIndex = (y * size.width() + x) * 4;
-                if (pixels[pixelIndex + 3] == 0) {
-                    m_transparentPixels.insert(pixelIndex);
+    GLenum internalFormat = GL_RGBA;
+    glTexImage2D(GL_TEXTURE_2D, level, internalFormat, size.width(), size.height(), 0, format, GL_UNSIGNED_BYTE, pixels);
+}
+
+void Texture::loadTransparentPixels(const ImagePtr& image)
+{
+    if (image) {
+        GLenum format = 0;
+        switch (image->getBpp()) {
+        case 4:
+            format = GL_RGBA;
+            break;
+        case 3:
+            format = GL_RGB;
+            break;
+        case 2:
+            format = GL_LUMINANCE_ALPHA;
+            break;
+        case 1:
+            format = GL_LUMINANCE;
+            break;
+        }
+
+        uchar* pixels = image->getPixelData();
+        const Size& size = image->getSize();
+
+        // Iterate over all pixels, if its alpha is 0, set to 1 at linear pixel index
+        if (format == GL_RGBA && pixels) {
+            m_transparentPixels.resize(size.area(), 0);
+            for (int y = 0; y < size.height(); ++y) {
+                for (int x = 0; x < size.width(); ++x) {
+                    int pixelIndex = (y * size.width() + x) * 4;
+                    if (pixels[pixelIndex + 3] == 0) {
+                        m_transparentPixels[pixelIndex / 4] = 1;
+                    }
                 }
             }
         }
     }
-
-    GLenum internalFormat = GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, level, internalFormat, size.width(), size.height(), 0, format, GL_UNSIGNED_BYTE, pixels);
 }
