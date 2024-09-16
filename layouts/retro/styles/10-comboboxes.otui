@@ -15,9 +15,9 @@ ComboBoxPopupScrollMenuButton < UIButton
     color: #dfdfdf88
 
 ComboBoxPopupScrollMenu < UIPopupScrollMenu
-  image-source: /images/ui/combobox_square
-  image-clip: 0 69 91 23
+  image-source: /images/ui/combo_bg
   image-border: 1
+  image-clip: 0 40 98 40
 
 ComboBoxPopupMenuButton < UIButton
   height: 23
@@ -36,30 +36,39 @@ ComboBoxPopupMenuButton < UIButton
     color: #dfdfdf88
 
 ComboBoxPopupMenu < UIPopupMenu
-  image-source: /images/ui/combobox_square
-  image-clip: 0 69 91 23
+  image-source: /images/ui/combo_bg
   image-border: 1
+  image-clip: 0 40 98 40
 
 ComboBox < UIComboBox
   font: verdana-11px-antialised
   color: #dfdfdf
+  opacity: 1.0
   size: 91 23
   text-offset: 5 2
   text-align: left
-  image-source: /images/ui/combobox_square
-  image-border: 3
-  image-border-right: 19
-  image-clip: 0 0 91 23
-
-  $hover !disabled:
-    image-clip: 0 23 91 23
+  image-source: /images/ui/combo_bg
+  image-border: 1
+  image-clip: 0 0 98 40
 
   $on:
-    image-clip: 0 46 91 23
+    image-clip: 0 40 98 40
 
   $disabled:
     color: #dfdfdf88
     opacity: 0.8
+  
+  Panel
+    id: btn
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    image-source: /images/ui/combo_btn
+    image-clip: 0 0 20 20
+    image-border: 1
+
+    $on:
+      image-clip: 0 20 20 20
 
 ComboBoxRoundedPopupScrollMenuButton < UIButton
   height: 23

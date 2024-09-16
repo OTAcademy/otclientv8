@@ -33,6 +33,10 @@ function UIPopupScrollMenu:setScrollbarStep(step)
   self.scrollBar:setStep(step)
 end
 
+function UIPopupScrollMenu:setPixelsScroll(value)
+  self.scrollBar.pixelsScroll = value
+end
+
 function UIPopupScrollMenu:display(pos)
   -- don't display if not options was added
   if self.scrollArea:getChildCount() == 0 then
