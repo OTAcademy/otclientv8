@@ -38,15 +38,16 @@ class Shader;
 class ShaderProgram;
 class PainterShaderProgram;
 
-typedef stdext::shared_object_ptr<Image> ImagePtr;
-typedef stdext::shared_object_ptr<Texture> TexturePtr;
-typedef stdext::shared_object_ptr<AnimatedTexture> AnimatedTexturePtr;
-typedef stdext::shared_object_ptr<BitmapFont> BitmapFontPtr;
-typedef stdext::shared_object_ptr<CachedText> CachedTextPtr;
-typedef stdext::shared_object_ptr<FrameBuffer> FrameBufferPtr;
-typedef stdext::shared_object_ptr<Shader> ShaderPtr;
-typedef stdext::shared_object_ptr<ShaderProgram> ShaderProgramPtr;
-typedef stdext::shared_object_ptr<PainterShaderProgram> PainterShaderProgramPtr;
-typedef std::vector<ShaderPtr> ShaderList;
+using ImagePtr = std::shared_ptr<Image>;
+using TexturePtr = std::shared_ptr<Texture>;
+using AnimatedTexturePtr = std::shared_ptr<AnimatedTexture>;
+using BitmapFontPtr = std::shared_ptr<BitmapFont>;
+using CachedTextPtr = std::shared_ptr<CachedText>;
+using FrameBufferPtr = std::shared_ptr<FrameBuffer>;
+using ShaderPtr = std::shared_ptr<Shader>;
+using ShaderProgramPtr = std::shared_ptr<ShaderProgram>;
+using PainterShaderProgramPtr = std::shared_ptr<PainterShaderProgram>;
+
+using ShaderList = std::vector<ShaderPtr>;
 
 #endif

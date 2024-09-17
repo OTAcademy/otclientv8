@@ -80,8 +80,8 @@ BinaryTreeVec BinaryTree::getChildren() {
     uint8 byte = m_fin->getU8();
     switch (byte) {
       case BINARYTREE_NODE_START: {
-        BinaryTreePtr node(new BinaryTree(m_fin));
-        children.push_back(node);
+        const auto& node = std::make_shared<BinaryTree>(m_fin);
+        children.emplace_back(node);
         node->skipNodes();
         break;
       }

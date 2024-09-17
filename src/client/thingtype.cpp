@@ -320,7 +320,7 @@ void ThingType::unserialize(uint16 clientId, ThingCategory category, const FileS
         m_animationPhases += groupAnimationsPhases;
 
         if(groupAnimationsPhases > 1 && g_game.getFeature(Otc::GameEnhancedAnimations)) {
-            AnimatorPtr animator = AnimatorPtr(new Animator);
+            auto animator = std::make_shared<Animator>();
             animator->unserialize(groupAnimationsPhases, fin);
 
             switch (frameGroupType) {
@@ -407,7 +407,7 @@ void ThingType::exportImage(std::string fileName)
 
     size_t spriteSize = g_sprites.spriteSize();
 
-    ImagePtr image(new Image(Size(spriteSize * m_size.width() * m_layers * m_numPatternX, spriteSize * m_size.height() * m_animationPhases * m_numPatternY * m_numPatternZ)));
+    auto image = std::make_shared<Image>(Size(spriteSize * m_size.width() * m_layers * m_numPatternX, spriteSize * m_size.height() * m_animationPhases * m_numPatternY * m_numPatternZ));
     for (int z = 0; z < m_numPatternZ; ++z) {
         for (int y = 0; y < m_numPatternY; ++y) {
             for (int x = 0; x < m_numPatternX; ++x) {
@@ -456,7 +456,7 @@ void ThingType::replaceSprites(std::map<uint32_t, ImagePtr>& replacements, std::
                                 Point src(spriteSize * (m_size.width() - w - 1 + m_size.width() * x + m_size.width() * m_numPatternX * l),
                                     spriteSize * (m_size.height() - h - 1 + m_size.height() * y + m_size.height() * m_numPatternY * a + m_size.height() * m_numPatternY * m_animationPhases * z));
                                 src = src * 2;
-                                ImagePtr newSprite(new Image(Size(orgSprite->getSize() * 2)));
+                                auto newSprite = std::make_shared<Image>(Size(orgSprite->getSize() * 2));
                                 for (int x = 0; x < newSprite->getSize().width(); ++x) {
                                     for (int y = 0; y < newSprite->getSize().height(); ++y) {
                                         newSprite->setPixel(x, y, image->getPixel(src.x + x, src.y + y));
@@ -741,7 +741,7 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
         if(useCustomImage)
             fullImage = Image::load(m_customImage);
         else
-            fullImage = ImagePtr(new Image(textureSize * spriteSize));
+            fullImage = std::make_shared<Image>(textureSize * spriteSize);
 
         m_texturesFramesRects[animationPhase].resize(indexSize);
         m_texturesFramesOriginRects[animationPhase].resize(indexSize);
@@ -791,7 +791,7 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
                 }
             }
         }
-        animationPhaseTexture = TexturePtr(new Texture(fullImage, true, false, true));
+        animationPhaseTexture = std::make_shared<Texture>(fullImage, true, false, true);
         m_loaded = true;
     }
     return animationPhaseTexture;

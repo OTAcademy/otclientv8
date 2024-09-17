@@ -82,7 +82,7 @@ void FrameBuffer::resize(const Size& size)
     if (m_texture && m_texture->getSize() == size)
         return;
 
-    m_texture = TexturePtr(new Texture(size, false, m_smooth, true));
+    m_texture = std::make_shared<Texture>(size, false, m_smooth, true);
     m_texture->update();
 
 #ifdef WITH_DEPTH_BUFFER

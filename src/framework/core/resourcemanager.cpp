@@ -492,12 +492,12 @@ FileStreamPtr ResourceManager::openFile(const std::string& fileName, bool dontCa
 {
     std::string fullPath = resolvePath(fileName);
     if (isFileEncryptedOrCompressed(fullPath) || !dontCache) {
-        return FileStreamPtr(new FileStream(fullPath, readFileContents(fullPath)));
+        return std::make_shared<FileStream>(fullPath, readFileContents(fullPath));
     }
     PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
     if (!file)
         stdext::throw_exception(stdext::format("unable to open file '%s': %s", fullPath, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-    return FileStreamPtr(new FileStream(fullPath, file, false));
+    return std::make_shared<FileStream>(fullPath, file, false);
 }
 
 FileStreamPtr ResourceManager::appendFile(const std::string& fileName)
@@ -505,7 +505,7 @@ FileStreamPtr ResourceManager::appendFile(const std::string& fileName)
     PHYSFS_File* file = PHYSFS_openAppend(fileName.c_str());
     if(!file)
         stdext::throw_exception(stdext::format("failed to append file '%s': %s", fileName, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-    return FileStreamPtr(new FileStream(fileName, file, true));
+    return std::make_shared<FileStream>(fileName, file, true);
 }
 
 FileStreamPtr ResourceManager::createFile(const std::string& fileName)
@@ -513,7 +513,7 @@ FileStreamPtr ResourceManager::createFile(const std::string& fileName)
     PHYSFS_File* file = PHYSFS_openWrite(fileName.c_str());
     if(!file)
         stdext::throw_exception(stdext::format("failed to create file '%s': %s", fileName, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-    return FileStreamPtr(new FileStream(fileName, file, true));
+    return std::make_shared<FileStream>(fileName, file, true);
 }
 
 bool ResourceManager::deleteFile(const std::string& fileName)

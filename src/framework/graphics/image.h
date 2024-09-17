@@ -26,7 +26,7 @@
 #include "declarations.h"
 #include <framework/util/databuffer.h>
 
-class Image : public stdext::shared_object
+class Image : public std::enable_shared_from_this<Image>
 {
 public:
     Image(const Size& size, int bpp = 4, uint8 *pixels = nullptr);

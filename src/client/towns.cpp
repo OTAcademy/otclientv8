@@ -33,7 +33,7 @@ Town::Town(uint32 tid, const std::string& name, const Position& pos)
 
 TownManager::TownManager()
 {
-    m_nullTown = TownPtr(new Town);
+    m_nullTown = std::make_shared<Town>();
 }
 
 void TownManager::addTown(const TownPtr &town)

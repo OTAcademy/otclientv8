@@ -40,8 +40,8 @@ ThingTypeManager g_things;
 
 void ThingTypeManager::init()
 {
-    m_nullThingType = ThingTypePtr(new ThingType);
-    m_nullItemType = ItemTypePtr(new ItemType);
+    m_nullThingType = std::make_shared<ThingType>();
+    m_nullItemType = std::make_shared<ItemType>();
     m_datSignature = 0;
     m_contentRevision = 0;
     m_otbMinorVersion = 0;
@@ -192,7 +192,7 @@ bool ThingTypeManager::loadDat(std::string file)
             if(category == ThingCategoryItem)
                 firstId = 100;
             for(uint16 id = firstId; id < m_thingTypes[category].size(); ++id) {
-                ThingTypePtr type(new ThingType);
+                auto type = std::make_shared<ThingType>();
                 type->unserialize(id, (ThingCategory)category, fin);
                 m_thingTypes[category][id] = type;
                 if (type->isMarketable()) {
@@ -280,7 +280,7 @@ void ThingTypeManager::loadOtb(const std::string& file)
         m_reverseItemTypes.resize(children.size() + 1, m_nullItemType);
 
         for (const BinaryTreePtr& node : children) {
-            ItemTypePtr itemType(new ItemType);
+            auto itemType = std::make_shared<ItemType>();
             itemType->unserialize(node);
             addItemType(itemType);
 
@@ -366,7 +366,7 @@ void ThingTypeManager::parseItemType(uint16 serverId, TiXmlElement* elem)
 
     if(s) {
         serverId -= d;
-        itemType = ItemTypePtr(new ItemType);
+        itemType = std::make_shared<ItemType>();
         itemType->setServerId(serverId);
         addItemType(itemType);
     } else

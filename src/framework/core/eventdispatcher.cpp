@@ -117,12 +117,12 @@ void EventDispatcher::poll()
 ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
 {
     if(m_disabled)
-        return ScheduledEventPtr(new ScheduledEvent("", nullptr, delay, 1));
+        return std::make_shared<ScheduledEvent>("", nullptr, delay, 1);
 
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     VALIDATE(delay >= 0);
-    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 1, g_app.isOnInputEvent()));
+    auto scheduledEvent = std::make_shared<ScheduledEvent>(function, callback, delay, 1, g_app.isOnInputEvent());
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
 }
@@ -130,12 +130,12 @@ ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, 
 ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
 {
     if(m_disabled)
-        return ScheduledEventPtr(new ScheduledEvent("", nullptr, delay, 0));
+        return std::make_shared<ScheduledEvent>("", nullptr, delay, 0);
 
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     VALIDATE(delay > 0);
-    ScheduledEventPtr scheduledEvent(new ScheduledEvent(function, callback, delay, 0, g_app.isOnInputEvent()));
+    auto scheduledEvent = std::make_shared<ScheduledEvent>(function, callback, delay, 0, g_app.isOnInputEvent());
     m_scheduledEventList.push(scheduledEvent);
     return scheduledEvent;
 }
@@ -143,9 +143,9 @@ ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, con
 EventPtr EventDispatcher::addEventEx(const std::string& function, const std::function<void()>& callback, bool pushFront)
 {
     if(m_disabled)
-        return EventPtr(new Event("", nullptr));
+        return std::make_shared<Event>("", nullptr);
 
-    EventPtr event(new Event(function, callback, g_app.isOnInputEvent()));
+    auto event = std::make_shared<Event>(function, callback, g_app.isOnInputEvent());
 
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 

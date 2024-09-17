@@ -37,7 +37,7 @@ Protocol::Protocol()
     m_sequencedPackets = false;
     m_bigPackets = false;
     m_compression = false;
-    m_inputMessage = InputMessagePtr(new InputMessage);
+    m_inputMessage = std::make_shared<InputMessage>();
     m_packetNumber = 0;
 
     // compression
@@ -71,7 +71,7 @@ void Protocol::connect(const std::string& host, uint16 port)
                                      std::bind(&Protocol::onLocalDisconnected, asProtocol(), std::placeholders::_1));
         return onConnect();
     }
-    m_connection = ConnectionPtr(new Connection);
+    m_connection = std::make_shared<Connection>();
     m_connection->setErrorCallback(std::bind(&Protocol::onError, asProtocol(), std::placeholders::_1));
     m_connection->connect(host, port, std::bind(&Protocol::onConnect, asProtocol()));
 }

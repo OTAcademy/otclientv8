@@ -1472,7 +1472,7 @@ void ProtocolGame::parseMagicEffect(const InputMessagePtr& msg)
                     return;
                 }
 
-                MissilePtr missile = MissilePtr(new Missile());
+                auto missile = std::shared_ptr<Missile>();
                 missile->setId(shotId);
                 missile->setPath(pos, Position(pos.x + offsetX, pos.y + offsetY, pos.z));
                 g_map.addThing(missile, pos);
@@ -1485,7 +1485,7 @@ void ProtocolGame::parseMagicEffect(const InputMessagePtr& msg)
                     return;
                 }
 
-                MissilePtr missile = MissilePtr(new Missile());
+                auto missile = std::shared_ptr<Missile>();
                 missile->setId(shotId);
                 missile->setPath(Position(pos.x + offsetX, pos.y + offsetY, pos.z), pos);
                 g_map.addThing(missile, pos);
@@ -1495,7 +1495,7 @@ void ProtocolGame::parseMagicEffect(const InputMessagePtr& msg)
                     g_logger.traceError(stdext::format("invalid effect id %d", effectId));
                     continue;
                 }
-                EffectPtr effect = EffectPtr(new Effect());
+                auto effect = std::shared_ptr<Effect>();
                 effect->setId(effectId);
                 g_map.addThing(effect, pos);
             }
@@ -1515,7 +1515,7 @@ void ProtocolGame::parseMagicEffect(const InputMessagePtr& msg)
         return;
     }
 
-    EffectPtr effect = EffectPtr(new Effect());
+    auto effect = std::shared_ptr<Effect>();
     effect->setId(effectId);
     g_map.addThing(effect, pos);
 }
@@ -1529,7 +1529,7 @@ void ProtocolGame::parseAnimatedText(const InputMessagePtr& msg)
         font = msg->getString();
     std::string text = msg->getString();
 
-    AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
+    AnimatedTextPtr animatedText = std::shared_ptr<AnimatedText>();
     animatedText->setColor(color);
     animatedText->setText(text);
     if (font.size())
@@ -1553,7 +1553,7 @@ void ProtocolGame::parseDistanceMissile(const InputMessagePtr& msg)
         return;
     }
 
-    MissilePtr missile = MissilePtr(new Missile());
+    MissilePtr missile = std::shared_ptr<Missile>();
     missile->setId(shotId);
     missile->setPath(fromPos, toPos);
     g_map.addThing(missile, fromPos);
@@ -2316,7 +2316,7 @@ void ProtocolGame::parseTextMessage(const InputMessagePtr& msg)
         for (int i = 0; i < 2; ++i) {
             if (value[i] == 0)
                 continue;
-            AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
+            AnimatedTextPtr animatedText = std::shared_ptr<AnimatedText>();
             animatedText->setColor(color[i]);
             animatedText->setText(stdext::to_string(value[i]));
             if (font.size())
@@ -2339,7 +2339,7 @@ void ProtocolGame::parseTextMessage(const InputMessagePtr& msg)
             font = msg->getString();
         text = msg->getString();
 
-        AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
+        AnimatedTextPtr animatedText = std::shared_ptr<AnimatedText>();
         animatedText->setColor(color);
         animatedText->setText(stdext::to_string(value));
         if(font.size())
@@ -2740,7 +2740,7 @@ void ProtocolGame::parseItemInfo(const InputMessagePtr& msg)
     std::vector<std::tuple<ItemPtr, std::string>> list;
     int size = msg->getU8();
     for (int i = 0; i < size; ++i) {
-        ItemPtr item(new Item);
+        auto item = std::shared_ptr<Item>();
         item->setId(msg->getU16());
         item->setCountOrSubType(g_game.getFeature(Otc::GameCountU16) ? msg->getU16() : msg->getU8());
 
@@ -3444,13 +3444,13 @@ CreaturePtr ProtocolGame::getCreature(const InputMessagePtr& msg, int type)
                     if (m_localPlayer->getId() == 0 && name == m_localPlayer->getName())
                         creature = m_localPlayer;
                     else
-                        creature = PlayerPtr(new Player);
+                        creature = std::shared_ptr<Player>();
                 } else if (creatureType == Proto::CreatureTypeMonster)
-                    creature = MonsterPtr(new Monster);
+                    creature = std::shared_ptr<Monster>();
                 else if (creatureType == Proto::CreatureTypeNpc)
-                    creature = NpcPtr(new Npc);
+                    creature = std::shared_ptr<Npc>();
                 else if (creatureType == Proto::CreatureTypeSummonOwn) {
-                    creature = MonsterPtr(new Monster);
+                    creature = std::shared_ptr<Monster>();
                 } else
                     g_logger.traceError("creature type is invalid");
 
@@ -3637,7 +3637,7 @@ StaticTextPtr ProtocolGame::getStaticText(const InputMessagePtr& msg, int id)
     Color color = Color::from8bit(colorByte);
     std::string fontName = msg->getString();
     std::string text = msg->getString();
-    StaticTextPtr staticText = StaticTextPtr(new StaticText);
+    auto staticText = std::shared_ptr<StaticText>();
     staticText->setText(text);
     staticText->setFont(fontName);
     staticText->setColor(color);

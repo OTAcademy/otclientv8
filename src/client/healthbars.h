@@ -26,7 +26,7 @@
 #include "declarations.h"
 #include <framework/graphics/declarations.h>
 
-class HealthBar : public stdext::shared_object
+class HealthBar : public std::enable_shared_from_this<HealthBar>
 {
 public:
     void setPath(const std::string& path) {

@@ -35,12 +35,12 @@ class Server;
 class PacketPlayer;
 class PacketRecorder;
 
-typedef stdext::shared_object_ptr<InputMessage> InputMessagePtr;
-typedef stdext::shared_object_ptr<OutputMessage> OutputMessagePtr;
-typedef stdext::shared_object_ptr<Connection> ConnectionPtr;
-typedef stdext::shared_object_ptr<Protocol> ProtocolPtr;
-typedef stdext::shared_object_ptr<Server> ServerPtr;
-typedef stdext::shared_object_ptr<PacketPlayer> PacketPlayerPtr;
-typedef stdext::shared_object_ptr<PacketRecorder> PacketRecorderPtr;
+using InputMessagePtr = std::shared_ptr<InputMessage>;
+using OutputMessagePtr = std::shared_ptr<OutputMessage>;
+using ConnectionPtr = std::shared_ptr<Connection>;
+using ProtocolPtr = std::shared_ptr<Protocol>;
+using ServerPtr = std::shared_ptr<Server>;
+using PacketPlayerPtr = std::shared_ptr<PacketPlayer>;
+using PacketRecorderPtr = std::shared_ptr<PacketRecorder>;
 
 #endif

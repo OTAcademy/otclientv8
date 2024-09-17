@@ -26,7 +26,7 @@ ConfigManager g_configs;
 
 void ConfigManager::init()
 {
-    m_settings = ConfigPtr(new Config());
+    m_settings = std::make_shared<Config>();
 }
 
 void ConfigManager::terminate()
@@ -79,7 +79,7 @@ ConfigPtr ConfigManager::create(const std::string& file)
 {
     ConfigPtr config = load(file);
     if(!config) {
-        config = ConfigPtr(new Config());
+        config = std::make_shared<Config>();
 
         config->load(file);
         config->save();
@@ -98,7 +98,7 @@ ConfigPtr ConfigManager::load(const std::string& file)
     else {
         ConfigPtr config = get(file);
         if(!config) {
-            config = ConfigPtr(new Config());
+            config = std::make_shared<Config>();
 
             if(config->load(file)) {
                 m_configs.push_back(config);

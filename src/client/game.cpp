@@ -324,7 +324,7 @@ void Game::processTalk(const std::string& name, int level, Otc::MessageMode mode
 void Game::processOpenContainer(int containerId, const ItemPtr& containerItem, const std::string& name, int capacity, bool hasParent, const std::vector<ItemPtr>& items, bool isUnlocked, bool hasPages, int containerSize, int firstIndex)
 {
     ContainerPtr previousContainer = getContainer(containerId);
-    ContainerPtr container = ContainerPtr(new Container(containerId, capacity, name, containerItem, hasParent, isUnlocked, hasPages, containerSize, firstIndex));
+    const auto& container(ContainerPtr(new Container(containerId, capacity, name, containerItem, hasParent, isUnlocked, hasPages, containerSize, firstIndex)));
     m_containers[containerId] = container;
     container->onAddItems(items);
 
@@ -566,12 +566,12 @@ void Game::loginWorld(const std::string& account, const std::string& password, c
     // reset the new game state
     resetGameStates();
 
-    m_localPlayer = LocalPlayerPtr(new LocalPlayer);
+    m_localPlayer = std::make_shared<LocalPlayer>();
     m_localPlayer->setName(characterName);
 
-    m_protocolGame = ProtocolGamePtr(new ProtocolGame);
+    m_protocolGame = std::make_shared<ProtocolGame>();
     if (!recordTo.empty()) {
-        m_protocolGame->setRecorder(PacketRecorderPtr(new PacketRecorder(recordTo)));
+        m_protocolGame->setRecorder(std::make_shared<PacketRecorder>(recordTo));
     }
     m_protocolGame->login(account, password, worldHost, (uint16)worldPort, characterName, authenticatorToken, sessionKey, worldName);
     m_characterName = characterName;
@@ -586,17 +586,17 @@ void Game::playRecord(const std::string& file)
     if (m_protocolVersion == 0)
         stdext::throw_exception("Must set a valid game protocol version before logging.");
 
-    auto packetPlayer = PacketPlayerPtr(new PacketPlayer(file));
+    auto packetPlayer = std::make_shared<PacketPlayer>(file);
     if (!packetPlayer)
         stdext::throw_exception("Invalid record file.");
 
     // reset the new game state
     resetGameStates();
 
-    m_localPlayer = LocalPlayerPtr(new LocalPlayer);
+    m_localPlayer = std::make_shared<LocalPlayer>();
     m_localPlayer->setName("Player");
 
-    m_protocolGame = ProtocolGamePtr(new ProtocolGame);
+    m_protocolGame = std::make_shared<ProtocolGame>();
     m_protocolGame->playRecord(packetPlayer);
     m_characterName = "Player";
     m_worldName = "Record";

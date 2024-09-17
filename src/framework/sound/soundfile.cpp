@@ -44,7 +44,7 @@ SoundFilePtr SoundFile::loadSoundFile(const std::string& filename)
 
     SoundFilePtr soundFile;
     if(strncmp(magic, "OggS", 4) == 0) {
-        OggSoundFilePtr oggSoundFile = OggSoundFilePtr(new OggSoundFile(file));
+        OggSoundFilePtr oggSoundFile = std::make_shared<OggSoundFile>(file);
         if(oggSoundFile->prepareOgg())
             soundFile = oggSoundFile;
     } else

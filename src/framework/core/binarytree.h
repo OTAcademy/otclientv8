@@ -32,7 +32,7 @@ enum {
     BINARYTREE_NODE_END = 0xFF
 };
 
-class BinaryTree : public stdext::shared_object
+class BinaryTree : public std::enable_shared_from_this<BinaryTree>
 {
 public:
     BinaryTree(const FileStreamPtr& fin);
@@ -63,7 +63,7 @@ private:
     uint m_startPos;
 };
 
-class OutputBinaryTree : public stdext::shared_object
+class OutputBinaryTree : public std::enable_shared_from_this<OutputBinaryTree>
 {
 public:
     OutputBinaryTree(const FileStreamPtr& finish);

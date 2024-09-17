@@ -32,7 +32,7 @@ FontManager g_fonts;
 
 FontManager::FontManager()
 {
-    m_defaultFont = BitmapFontPtr(new BitmapFont("emptyfont"));
+    m_defaultFont = std::make_shared<BitmapFont>("emptyfont");
 }
 
 void FontManager::terminate()
@@ -44,7 +44,7 @@ void FontManager::terminate()
 void FontManager::clearFonts()
 {
     m_fonts.clear();
-    m_defaultFont = BitmapFontPtr(new BitmapFont("emptyfont"));
+    m_defaultFont = std::make_shared<BitmapFont>("emptyfont");
 }
 
 void FontManager::importFont(std::string file)
@@ -71,7 +71,7 @@ void FontManager::importFont(std::string file)
             }
         }
 
-        BitmapFontPtr font(new BitmapFont(name));
+        auto font = std::make_shared<BitmapFont>(name);
         font->load(fontNode);
         m_fonts.push_back(font);
 

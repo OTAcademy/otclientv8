@@ -64,10 +64,7 @@ void UISprite::setSpriteId(uint32 id)
         m_sprite = nullptr;
     else {
         ImagePtr image = g_sprites.getSpriteImage(id);
-        if(image)
-            m_sprite = new Texture(image);
-        else
-            m_sprite = nullptr;
+        m_sprite = image ? std::make_shared<Texture>(image) : nullptr;
     }
 }
 

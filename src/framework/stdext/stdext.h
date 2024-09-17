@@ -33,7 +33,6 @@
 #include "string.h"
 #include "time.h"
 #include "boolean.h"
-#include "shared_object.h"
 #include "any.h"
 #include "packed_any.h"
 #include "dynamic_storage.h"

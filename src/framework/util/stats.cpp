@@ -184,11 +184,11 @@ std::string Stats::getWidgetsInfo(int limit, bool pretty)
             unusedWidgets += 1;
             auto it = unusedWidgetsMap.emplace(w->getSource(), std::make_pair(0, 0)).first;
             it->second.first += 1;
-            it->second.second += w->getUseCount();
+            it->second.second += w->shared_from_this().use_count() - 1u;
         }
         auto it = allWidgetsMap.emplace(w->getSource(), std::make_pair(0, 0)).first;
         it->second.first += 1;
-        it->second.second += w->getUseCount();
+        it->second.second += w->shared_from_this().use_count() - 1u;
     }
 
     std::stringstream ret;

@@ -51,7 +51,7 @@ void MinimapBlock::update()
     if(!m_mustUpdate)
         return;
 
-    ImagePtr image(new Image(Size(MMBLOCK_SIZE, MMBLOCK_SIZE)));
+    auto image = std::make_shared<Image>(Size(MMBLOCK_SIZE, MMBLOCK_SIZE));
 
     bool shouldDraw = false;
     for(int x=0;x<MMBLOCK_SIZE;++x) {
@@ -67,7 +67,7 @@ void MinimapBlock::update()
     }
 
     if(shouldDraw) {
-        m_texture = TexturePtr(new Texture(image));
+        m_texture = std::make_shared<Texture>(image);
     } else
         m_texture.reset();
 

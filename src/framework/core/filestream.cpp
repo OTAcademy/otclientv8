@@ -423,7 +423,7 @@ BinaryTreePtr FileStream::getBinaryTree()
     if(byte != BINARYTREE_NODE_START)
         stdext::throw_exception(stdext::format("failed to read node start (getBinaryTree): %d", byte));
 
-    return BinaryTreePtr(new BinaryTree(asFileStream()));
+    return std::make_shared<BinaryTree>(asFileStream());
 }
 
 void FileStream::startNode(uint8 n)

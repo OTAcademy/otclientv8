@@ -51,7 +51,7 @@ void Server::close()
 
 void Server::acceptNext()
 {
-    ConnectionPtr connection = ConnectionPtr(new Connection);
+    ConnectionPtr connection = std::make_shared<Connection>();
     connection->m_connecting = true;
     auto self = static_self_cast<Server>();
     m_acceptor.async_accept(connection->m_socket, [=](const boost::system::error_code& error) {

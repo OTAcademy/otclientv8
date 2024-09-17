@@ -126,7 +126,7 @@ void MapView::drawMapBackground(const Rect& rect, const TilePtr& crosshairTile) 
         if (cameraPosition.z <= Otc::SEA_FLOOR)
             ambientLight = g_map.getLight();
         if (!m_lightTexture || m_lightTexture->getSize() != m_drawDimension)
-            m_lightTexture = TexturePtr(new Texture(m_drawDimension, false, true));
+            m_lightTexture = std::make_shared<Texture>(m_drawDimension, false, true);
         m_lightView = std::make_unique<LightView>(m_lightTexture, m_drawDimension, rect, srcRect, ambientLight.color,
                                                   std::max<int>(m_minimumAmbientLight * 255, ambientLight.intensity));
     }

@@ -867,7 +867,7 @@ void Tile::checkTranslucentLight()
 void Tile::setText(const std::string& text, Color color)
 {
     if (!m_text) {
-        m_text = StaticTextPtr(new StaticText());
+        m_text = std::make_shared<StaticText>();
     }
     m_text->setText(text);
     m_text->setColor(color);
@@ -886,7 +886,7 @@ void Tile::setTimer(int time, Color color)
     }
     m_timer = time + g_clock.millis();
     if (!m_timerText) {
-        m_timerText = StaticTextPtr(new StaticText());
+        m_timerText = std::make_shared<StaticText>();
     }
     m_timerText->setColor(color);
 }
