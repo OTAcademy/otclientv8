@@ -166,7 +166,7 @@ void SoundManager::preload(std::string filename)
     if(!soundFile || soundFile->getSize() > MAX_CACHE_SIZE)
         return;
 
-    SoundBufferPtr buffer = SoundBufferPtr(new SoundBuffer);
+    SoundBufferPtr buffer = std::make_shared<SoundBuffer>();
     if(buffer->fillBuffer(soundFile))
         m_buffers[filename] = buffer;
 }
@@ -203,7 +203,7 @@ SoundChannelPtr SoundManager::getChannel(int channel)
 {
     ensureContext();
     if(!m_channels[channel])
-        m_channels[channel] = SoundChannelPtr(new SoundChannel(channel));
+        m_channels[channel] = std::make_shared<SoundChannel>(channel);
     return m_channels[channel];
 }
 
@@ -226,17 +226,17 @@ SoundSourcePtr SoundManager::createSoundSource(const std::string& filename)
     try {
         auto it = m_buffers.find(filename);
         if(it != m_buffers.end()) {
-            source = SoundSourcePtr(new SoundSource);
+            source = std::make_shared<SoundSource>();
             source->setBuffer(it->second);
         } else {
 #if defined __linux && !defined OPENGL_ES
             // due to OpenAL implementation bug, stereo buffers are always downmixed to mono on linux systems
             // this is hack to work around the issue
             // solution taken from http://opensource.creative.com/pipermail/openal/2007-April/010355.html
-            CombinedSoundSourcePtr combinedSource(new CombinedSoundSource);
+            auto combinedSource = std::make_shared<CombinedSoundSource>();
             StreamSoundSourcePtr streamSource;
 
-            streamSource = StreamSoundSourcePtr(new StreamSoundSource);
+            streamSource = std::make_shared<StreamSoundSource>();
             streamSource->downMix(StreamSoundSource::DownMixLeft);
             streamSource->setRelative(true);
             streamSource->setPosition(Point(-128, 0));
@@ -251,7 +251,7 @@ SoundSourcePtr SoundManager::createSoundSource(const std::string& filename)
                 }
             });
 
-            streamSource = StreamSoundSourcePtr(new StreamSoundSource);
+            streamSource = std::make_shared<StreamSoundSource>();
             streamSource->downMix(StreamSoundSource::DownMixRight);
             streamSource->setRelative(true);
             streamSource->setPosition(Point(128,0));
@@ -267,7 +267,7 @@ SoundSourcePtr SoundManager::createSoundSource(const std::string& filename)
 
             source = combinedSource;
 #else
-            StreamSoundSourcePtr streamSource(new StreamSoundSource);
+            auto streamSource = std::make_shared<StreamSoundSource>();
             m_streamFiles[streamSource] = g_asyncDispatcher.schedule([=]() -> SoundFilePtr {
                 try {
                     return SoundFile::loadSoundFile(filename);

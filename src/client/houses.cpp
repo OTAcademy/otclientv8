@@ -151,8 +151,10 @@ void HouseManager::load(const std::string& fileName)
 
             uint32 houseId = elem->readType<uint32>("houseid");
             HousePtr house = getHouse(houseId);
-            if(!house)
-                house = HousePtr(new House(houseId)), addHouse(house);
+            if(!house) {
+                house = std::make_shared<House>(houseId);
+                addHouse(house);
+            }
 
             house->load(elem);
         }

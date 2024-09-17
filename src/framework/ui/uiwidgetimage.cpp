@@ -189,7 +189,7 @@ void UIWidget::drawImage(const Rect& screenCoords)
 
 void UIWidget::setQRCode(const std::string& code, int border)
 {
-    m_imageTexture = TexturePtr(new Texture(Image::fromQRCode(code, border)));
+    m_imageTexture = std::make_shared<Texture>(Image::fromQRCode(code, border));
     m_imageTexture->setCanCache(false);
 
     if (m_imageTexture && (!m_rect.isValid() || m_imageAutoResize)) {

@@ -127,17 +127,17 @@ TexturePtr TextureManager::loadTexture(std::stringstream& file, const std::strin
                 int frameDelay = apng.frames_delay[i];
 
                 framesDelay.push_back(frameDelay);
-                frames.push_back(ImagePtr(new Image(imageSize, apng.bpp, frameData)));
+                frames.emplace_back(std::make_shared<Image>(imageSize, apng.bpp, frameData));
             }
-            AnimatedTexturePtr animatedTexture = new AnimatedTexture(imageSize, frames, framesDelay);
+            auto animatedTexture = std::make_shared<AnimatedTexture>(imageSize, frames, framesDelay);
             m_animatedTextures.push_back(animatedTexture);
             texture = animatedTexture;
         } else {
-            ImagePtr image = ImagePtr(new Image(imageSize, apng.bpp, apng.pdata));
+            auto image = std::make_shared<Image>(imageSize, apng.bpp, apng.pdata);
             if (!image) {
                 g_logger.error(stdext::format("Can't load texture: %s", source));
             } else {
-                texture = TexturePtr(new Texture(image));
+                texture = std::make_shared<Texture>(image);
             }
         }
         free_apng(&apng);
@@ -170,7 +170,7 @@ void TextureManager::loadTextureTransparentPixels(const std::string& fileName)
     apng_data apng;
     if (load_apng(file, &apng) == 0) {
         Size imageSize(apng.width, apng.height);
-        ImagePtr image = ImagePtr(new Image(imageSize, apng.bpp, apng.pdata));
+        auto image = std::make_shared<Image>(imageSize, apng.bpp, apng.pdata);
         if (!image) {
             g_logger.error(stdext::format("Can't load texture: %s", filePath));
         }

@@ -26,7 +26,7 @@
 #include "declarations.h"
 #include "texture.h"
 
-class FrameBuffer : public stdext::shared_object
+class FrameBuffer : public std::enable_shared_from_this<FrameBuffer>
 {
 public:
     FrameBuffer(bool withDepth = false);

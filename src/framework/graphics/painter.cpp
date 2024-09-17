@@ -483,7 +483,7 @@ void Painter::drawCoords(CoordsBuffer& coordsBuffer, DrawMode drawMode, ColorArr
 #ifdef WITH_DEPTH_BUFFER
     m_drawProgram->setDepth(m_depth);
 #endif
-    if (m_drawProgram != m_drawOutfitLayersProgram) {
+    if (m_drawProgram != m_drawOutfitLayersProgram.get()) {
         m_drawProgram->setColor(m_color);
     } else {
         m_drawProgram->setMatrixColor(m_matrixColor);

@@ -30,9 +30,9 @@ class OTMLDocument;
 class OTMLParser;
 class OTMLEmitter;
 
-typedef stdext::shared_object_ptr<OTMLNode> OTMLNodePtr;
-typedef stdext::shared_object_ptr<OTMLDocument> OTMLDocumentPtr;
-typedef std::vector<OTMLNodePtr> OTMLNodeList;
-typedef std::unordered_map<std::string, std::string> OTUIVars;
+using OTMLNodePtr = std::shared_ptr<OTMLNode>;
+using OTMLDocumentPtr = std::shared_ptr<OTMLDocument>;
+using OTMLNodeList = std::vector<OTMLNodePtr>;
+using OTUIVars = std::unordered_map<std::string, std::string>;
 
 #endif

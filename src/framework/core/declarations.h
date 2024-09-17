@@ -36,14 +36,14 @@ class FileStream;
 class BinaryTree;
 class OutputBinaryTree;
 
-typedef stdext::shared_object_ptr<Module> ModulePtr;
-typedef stdext::shared_object_ptr<Config> ConfigPtr;
-typedef stdext::shared_object_ptr<Event> EventPtr;
-typedef stdext::shared_object_ptr<ScheduledEvent> ScheduledEventPtr;
-typedef stdext::shared_object_ptr<FileStream> FileStreamPtr;
-typedef stdext::shared_object_ptr<BinaryTree> BinaryTreePtr;
-typedef stdext::shared_object_ptr<OutputBinaryTree> OutputBinaryTreePtr;
+using ModulePtr = std::shared_ptr<Module>;
+using ConfigPtr = std::shared_ptr<Config>;
+using EventPtr = std::shared_ptr<Event>;
+using ScheduledEventPtr = std::shared_ptr<ScheduledEvent>;
+using FileStreamPtr = std::shared_ptr<FileStream>;
+using BinaryTreePtr = std::shared_ptr<BinaryTree>;
+using OutputBinaryTreePtr = std::shared_ptr<OutputBinaryTree>;
 
-typedef std::vector<BinaryTreePtr> BinaryTreeVec;
+using BinaryTreeVec = std::vector<BinaryTreePtr>;
 
 #endif

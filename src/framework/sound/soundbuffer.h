@@ -29,7 +29,7 @@
 
 #include <framework/util/databuffer.h>
 
-class SoundBuffer : public stdext::shared_object
+class SoundBuffer : public std::enable_shared_from_this<SoundBuffer>
 {
 public:
     SoundBuffer();

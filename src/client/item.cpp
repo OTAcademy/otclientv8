@@ -53,7 +53,7 @@ Item::Item() :
 
 ItemPtr Item::create(int id, int countOrSubtype)
 {
-    ItemPtr item(new Item);
+    auto item = std::make_shared<Item>();
     item->setId(id);
     item->setCountOrSubType(countOrSubtype);
     return item;
@@ -61,7 +61,7 @@ ItemPtr Item::create(int id, int countOrSubtype)
 
 ItemPtr Item::createFromOtb(int id)
 {
-    ItemPtr item(new Item);
+    auto item = std::make_shared<Item>();
     item->setOtbId(id);
     return item;
 }
@@ -297,7 +297,7 @@ bool Item::isGround()
 
 ItemPtr Item::clone()
 {
-    ItemPtr item = ItemPtr(new Item);
+    auto item = std::make_shared<Item>();
     *(item.get()) = *this;
     return item;
 }

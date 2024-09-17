@@ -41,7 +41,7 @@ enum AnimationDirection : uint8
     AnimDirBackward = 1
 };
 
-class Animator : public stdext::shared_object
+class Animator : public std::enable_shared_from_this<Animator>
 {
 public:
     Animator();

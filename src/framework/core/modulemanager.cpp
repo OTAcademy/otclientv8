@@ -85,7 +85,7 @@ ModulePtr ModuleManager::discoverModule(const std::string& moduleFile)
         bool push = false;
         module = getModule(name);
         if(!module) {
-            module = ModulePtr(new Module(name));
+            module = std::make_shared<Module>(name);
             push = true;
         }
         module->discover(moduleNode);

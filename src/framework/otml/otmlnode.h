@@ -26,7 +26,7 @@
 #include "declarations.h"
 #include <framework/ui/uimanager.h>
 
-class OTMLNode : public stdext::shared_object
+class OTMLNode : public std::enable_shared_from_this<OTMLNode>
 {
 public:
     virtual ~OTMLNode() { }
@@ -93,7 +93,7 @@ public:
 
     virtual std::string emit();
 
-    OTMLNodePtr asOTMLNode() { return static_self_cast<OTMLNode>(); }
+    OTMLNodePtr asOTMLNode() { return shared_from_this(); }
 
 protected:
     OTMLNode() : m_unique(false), m_null(false) { }

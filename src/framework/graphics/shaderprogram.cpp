@@ -45,7 +45,7 @@ ShaderProgram::~ShaderProgram()
 
 PainterShaderProgramPtr ShaderProgram::create(const std::string& name, const std::string& vertexShader, const std::string& fragmentShader, bool colorMatrix)
 {
-    PainterShaderProgramPtr program(new PainterShaderProgram(name));
+    auto program = std::make_shared<PainterShaderProgram>(name);
     if (!program) {
         g_logger.error(stdext::format("Cant creatre shader: %s", program->getName()));
         return nullptr;
@@ -75,7 +75,7 @@ bool ShaderProgram::addShader(const ShaderPtr& shader) {
 }
 
 bool ShaderProgram::addShaderFromSourceCode(Shader::ShaderType shaderType, const std::string& sourceCode) {
-    ShaderPtr shader(new Shader(shaderType));
+    auto shader = std::make_shared<Shader>(shaderType);
     if(!shader->compileSourceCode(sourceCode)) {
         g_logger.error(stdext::format("failed to compile shader: %s\n%s", getName(), shader->log()));
         return false;
@@ -84,7 +84,7 @@ bool ShaderProgram::addShaderFromSourceCode(Shader::ShaderType shaderType, const
 }
 
 bool ShaderProgram::addShaderFromSourceFile(Shader::ShaderType shaderType, const std::string& sourceFile) {
-    ShaderPtr shader(new Shader(shaderType));
+    auto shader = std::make_shared<Shader>(shaderType);
     if(!shader->compileSourceFile(sourceFile)) {
         g_logger.error(stdext::format("failed to compile shader %s (%s): %s", getName(), sourceFile, shader->log()));
         return false;

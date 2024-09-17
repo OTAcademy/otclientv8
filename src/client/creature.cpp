@@ -1021,7 +1021,7 @@ ThingType* Creature::rawGetThingType()
 void Creature::setText(const std::string& text, const Color& color)
 {
     if (!m_text) {
-        m_text = StaticTextPtr(new StaticText());
+        m_text = std::make_shared<StaticText>();
     }
     m_text->setText(text);
     m_text->setColor(color);

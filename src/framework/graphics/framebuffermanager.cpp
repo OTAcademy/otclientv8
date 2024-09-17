@@ -27,9 +27,9 @@ FrameBufferManager g_framebuffers;
 
 void FrameBufferManager::init()
 {
-    m_temporaryFramebuffer = FrameBufferPtr(new FrameBuffer());
+    m_temporaryFramebuffer = std::make_shared<FrameBuffer>();
     m_temporaryFramebuffer->setSmooth(true);
-    m_drawQueueTemporaryFramebuffer = FrameBufferPtr(new FrameBuffer());
+    m_drawQueueTemporaryFramebuffer = std::make_shared<FrameBuffer>();
     m_drawQueueTemporaryFramebuffer->setSmooth(true);
 }
 
@@ -42,7 +42,7 @@ void FrameBufferManager::terminate()
 
 FrameBufferPtr FrameBufferManager::createFrameBuffer(bool withDepth)
 {
-    FrameBufferPtr fbo = FrameBufferPtr(new FrameBuffer(withDepth));
+    FrameBufferPtr fbo = std::make_shared<FrameBuffer>(withDepth);
     m_framebuffers.push_back(fbo);
     return fbo;
 }

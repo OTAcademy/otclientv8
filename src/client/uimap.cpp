@@ -33,7 +33,7 @@
 UIMap::UIMap()
 {
     m_draggable = true;
-    m_mapView = MapViewPtr(new MapView);
+    m_mapView = std::make_shared<MapView>();
     m_zoom = m_mapView->getVisibleDimension().height();
     m_keepAspectRatio = true;
     m_limitVisibleRange = false;

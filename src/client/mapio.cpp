@@ -116,7 +116,7 @@ void Map::loadOtbm(const std::string& fileName)
                         uint32 hId = nodeTile->getU32();
                         TilePtr tile = getOrCreateTile(pos);
                         if(!(house = g_houses.getHouse(hId))) {
-                            house = HousePtr(new House(hId));
+                            house = std::make_shared<House>(hId);
                             g_houses.addHouse(house);
                         }
                         house->setTile(tile);
@@ -199,7 +199,7 @@ void Map::loadOtbm(const std::string& fileName)
                     townCoords.z = nodeTown->getU8();
 
                     if(!(town = g_towns.getTown(townId)))
-                        g_towns.addTown(TownPtr(new Town(townId, townName, townCoords)));
+                        g_towns.addTown(std::make_shared<Town>(townId, townName, townCoords));
                 }
                 g_towns.sort();
             } else if(mapDataType == OTBM_WAYPOINTS && headerVersion > 1) {
@@ -270,7 +270,7 @@ void Map::saveOtbm(const std::string& fileName)
             houseFile = houseFile.substr(sep_pos + 1);
 
         fin->addU32(0); // file version
-        OutputBinaryTreePtr root(new OutputBinaryTree(fin));
+        auto root = std::make_shared<OutputBinaryTree>(fin);
         {
             root->addU32(version);
 

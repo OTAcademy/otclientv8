@@ -37,18 +37,18 @@ class UIAnchor;
 class UIAnchorGroup;
 class UIAnchorLayout;
 
-typedef stdext::shared_object_ptr<UIWidget> UIWidgetPtr;
-typedef stdext::shared_object_ptr<UITextEdit> UITextEditPtr;
-typedef stdext::shared_object_ptr<UILayout> UILayoutPtr;
-typedef stdext::shared_object_ptr<UIBoxLayout> UIBoxLayoutPtr;
-typedef stdext::shared_object_ptr<UIHorizontalLayout> UIHorizontalLayoutPtr;
-typedef stdext::shared_object_ptr<UIVerticalLayout> UIVerticalLayoutPtr;
-typedef stdext::shared_object_ptr<UIGridLayout> UIGridLayoutPtr;
-typedef stdext::shared_object_ptr<UIAnchor> UIAnchorPtr;
-typedef stdext::shared_object_ptr<UIAnchorGroup> UIAnchorGroupPtr;
-typedef stdext::shared_object_ptr<UIAnchorLayout> UIAnchorLayoutPtr;
+using UIWidgetPtr = std::shared_ptr<UIWidget>;
+using UITextEditPtr = std::shared_ptr<UITextEdit>;
+using UILayoutPtr = std::shared_ptr<UILayout>;
+using UIBoxLayoutPtr = std::shared_ptr<UIBoxLayout>;
+using UIHorizontalLayoutPtr = std::shared_ptr<UIHorizontalLayout>;
+using UIVerticalLayoutPtr = std::shared_ptr<UIVerticalLayout>;
+using UIGridLayoutPtr = std::shared_ptr<UIGridLayout>;
+using UIAnchorPtr = std::shared_ptr<UIAnchor>;
+using UIAnchorGroupPtr = std::shared_ptr<UIAnchorGroup>;
+using UIAnchorLayoutPtr = std::shared_ptr<UIAnchorLayout>;
 
-typedef std::deque<UIWidgetPtr> UIWidgetList;
-typedef std::vector<UIAnchorPtr> UIAnchorList;
+using UIWidgetList = std::deque<UIWidgetPtr>;
+using UIAnchorList = std::vector<UIAnchorPtr>;
 
 #endif

@@ -402,7 +402,7 @@ ImagePtr SpriteManager::getSpriteImageCasual(int id)
 
             bool hasAlpha = (buffer[1] == 1);
 
-            ImagePtr image(new Image(Size(m_spriteSize, m_spriteSize)));
+            auto image = std::make_shared<Image>(Size(m_spriteSize, m_spriteSize));
             uint8* pixels = image->getPixelData();
             int writePos = 0;
 
@@ -451,7 +451,7 @@ ImagePtr SpriteManager::getSpriteImageCasual(int id)
 
         uint16 pixelDataSize = m_spritesFile->getU16();
 
-        ImagePtr image(new Image(Size(m_spriteSize, m_spriteSize)));
+        auto image = std::make_shared<Image>(Size(m_spriteSize, m_spriteSize));
 
         uint8* pixels = image->getPixelData();
         int writePos = 0;

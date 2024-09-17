@@ -25,7 +25,7 @@
 
 #include "declarations.h"
 
-class Texture : public stdext::shared_object
+class Texture : public std::enable_shared_from_this<Texture>
 {
     static uint uniqueId;
 public:

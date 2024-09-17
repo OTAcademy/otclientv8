@@ -29,7 +29,7 @@
 #include <framework/otml/declarations.h>
 #include <framework/graphics/coordsbuffer.h>
 
-class BitmapFont : public stdext::shared_object
+class BitmapFont : public std::enable_shared_from_this<BitmapFont>
 {
 public:
     BitmapFont(const std::string& name) : m_name(name) {

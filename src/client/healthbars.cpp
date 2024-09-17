@@ -41,7 +41,7 @@ void HealthBars::terminate()
 }
 
 void HealthBars::addHealthBackground(const std::string& path, int offsetX, int offsetY, int barOffsetX, int barOffsetY, int height) {
-    HealthBarPtr bar(new HealthBar);
+    auto bar = std::make_shared<HealthBar>();
     bar->setPath(path);
     bar->setTexture(path);
     bar->setOffset(offsetX, offsetY);
@@ -51,7 +51,7 @@ void HealthBars::addHealthBackground(const std::string& path, int offsetX, int o
 }
 
 void HealthBars::addManaBackground(const std::string& path, int offsetX, int offsetY, int barOffsetX, int barOffsetY, int height) {
-    HealthBarPtr bar(new HealthBar);
+    auto bar = std::make_shared<HealthBar>();
     bar->setPath(path);
     bar->setTexture(path);
     bar->setOffset(offsetX, offsetY);

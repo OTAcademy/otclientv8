@@ -58,7 +58,7 @@ ImagePtr Image::loadPNG(const std::string& file)
     ImagePtr image;
     apng_data apng;
     if(load_apng(fin, &apng) == 0) {
-        image = ImagePtr(new Image(Size(apng.width, apng.height), apng.bpp, apng.pdata));
+        image = std::make_shared<Image>(Size(apng.width, apng.height), apng.bpp, apng.pdata);
         free_apng(&apng);
     }
     return image;
@@ -71,7 +71,7 @@ ImagePtr Image::loadPNG(const void* data, uint32_t size)
     ImagePtr image;
     apng_data apng;
     if (load_apng(fin, &apng) == 0) {
-        image = ImagePtr(new Image(Size(apng.width, apng.height), apng.bpp, apng.pdata));
+        image = std::make_shared<Image>(Size(apng.width, apng.height), apng.bpp, apng.pdata);
         free_apng(&apng);
     }
     return image;
@@ -135,7 +135,7 @@ ImagePtr Image::upscale()
 {
     VALIDATE(m_bpp == 4);
 
-    ImagePtr newImage(new Image(m_size * 2));
+    auto newImage = std::make_shared<Image>(m_size * 2);
 
     uint8* otherPixels = newImage->getPixelData();
 
@@ -296,7 +296,7 @@ ImagePtr Image::fromQRCode(const std::string& code, int border)
     if (!ok)
         return nullptr;
     int size = qrcodegen_getSize(qrcode);
-    ImagePtr image(new Image(Size(size + border * 2, size + border * 2)));
+    auto image = std::make_shared<Image>(Size(size + border * 2, size + border * 2));
     for (int x = 0; x < size + border * 2; ++x) {
         for (int y = 0; y < size + border * 2; ++y) {
             image->setPixel(x, y, qrcodegen_getModule(qrcode, x - border, y - border) ? Color::black : Color::white);

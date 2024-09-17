@@ -176,7 +176,7 @@ void UIWidget::addChild(const UIWidgetPtr& child)
 
     // create default layout
     if(!m_layout)
-        m_layout = UIAnchorLayoutPtr(new UIAnchorLayout(static_self_cast<UIWidget>()));
+        m_layout = std::make_shared<UIAnchorLayout>(static_self_cast<UIWidget>());
 
     // add to layout and updates it
     m_layout->addWidget(child);
@@ -242,7 +242,7 @@ void UIWidget::insertChild(int index, const UIWidgetPtr& child)
 
     // create default layout if needed
     if(!m_layout)
-        m_layout = UIAnchorLayoutPtr(new UIAnchorLayout(static_self_cast<UIWidget>()));
+        m_layout = std::make_shared<UIAnchorLayout>(static_self_cast<UIWidget>());
 
     // add to layout and updates it
     m_layout->addWidget(child);

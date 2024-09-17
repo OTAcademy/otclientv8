@@ -25,7 +25,7 @@
 
 #include "declarations.h"
 
-class Shader : public stdext::shared_object
+class Shader : public std::enable_shared_from_this<Shader>
 {
 public:
     enum ShaderType {

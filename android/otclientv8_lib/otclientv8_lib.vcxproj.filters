@@ -814,9 +814,6 @@
     <ClInclude Include="..\..\src\framework\stdext\packed_storage.h">
       <Filter>framework\stdext</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\framework\stdext\shared_object.h">
-      <Filter>framework\stdext</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\framework\stdext\stdext.h">
       <Filter>framework\stdext</Filter>
     </ClInclude>
