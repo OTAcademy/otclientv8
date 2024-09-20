@@ -155,7 +155,27 @@ void MapView::drawMapBackground(const Rect& rect, const TilePtr& crosshairTile) 
             g_drawQueue->setOpacity(floorStart, fading);
     }
 
-} 
+    if(!m_shader.empty() && isFollowingCreature()) {
+        g_drawQueue->setShader(m_shader);
+
+        Point walkOffset = transformPositionTo2D(getCameraPosition(), m_shaderPosition);
+        walkOffset.y = -walkOffset.y;
+
+        g_drawQueue->setWalkOffset(
+            PointF(
+                (walkOffset.x / static_cast<float>(m_optimizedSize.width())),
+                (walkOffset.y / static_cast<float>(m_optimizedSize.height()))
+            )
+        );
+    }
+}
+
+void MapView::setShader(const std::string& shader)
+{
+    m_shader = shader;
+    if (!m_shader.empty())
+        m_shaderPosition = getCameraPosition();
+}
 
 void MapView::drawFloor(short floor, const Position& cameraPosition, const TilePtr& crosshairTile)
 {

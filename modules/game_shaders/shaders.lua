@@ -6,6 +6,9 @@ function init()
 
   g_shaders.createShader("map_rainbow", "/shaders/map_rainbow_vertex", "/shaders/map_rainbow_fragment")
   g_shaders.addTexture("map_rainbow", "/images/shaders/rainbow.png")
+  
+  g_shaders.createShader("map_snow", "/shaders/map_snow_vertex", "/shaders/map_snow_fragment")
+  g_shaders.addTexture("map_snow", "/images/shaders/snow.png")
 
   -- use modules.game_interface.gameMapPanel:setShader("map_rainbow") to set shader
 
