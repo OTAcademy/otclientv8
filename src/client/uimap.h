@@ -91,11 +91,14 @@ public:
 
     void setShader(const std::string& shader)
     {
-        m_shader = shader;
+        if(m_mapView)
+            m_mapView->setShader(shader);
     }
     std::string getShader()
     {
-        return m_shader;
+        if(m_mapView)
+            return m_mapView->getShader();
+        return "";
     }
 
 protected:
@@ -115,7 +118,6 @@ private:
     bool m_limitVisibleRange;
     int m_maxZoomIn;
     int m_maxZoomOut;
-    std::string m_shader;
 };
 
 #endif

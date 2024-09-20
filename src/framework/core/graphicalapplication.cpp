@@ -286,6 +286,11 @@ void GraphicalApplication::run()
                 PainterShaderProgramPtr shader = nullptr;
                 if (!toDrawMapQueue->getShader().empty()) {
                     shader = g_shaders.getShader(toDrawMapQueue->getShader());
+                    
+                    if(shader) {
+                        auto walkOffset = toDrawMapQueue->getWalkOffset();
+                        shader->updateWalkOffset(walkOffset);
+                    }
                 }
                 if (shader) {
                     g_painter->setShaderProgram(shader);

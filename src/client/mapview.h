@@ -113,8 +113,11 @@ public:
     void setFloorFading(int value) { m_floorFading = value; }
     void setCrosshair(const std::string& file);
 
-    //void setShader(const PainterShaderProgramPtr& shader, float fadein, float fadeout);
-    //PainterShaderProgramPtr getShader() { return m_shader; }
+    void setShader(const std::string& shader);
+    std::string getShader()
+    {
+        return m_shader;
+    }
 
     Position getPosition(const Point& point, const Size& mapSize);
 
@@ -155,6 +158,9 @@ private:
     stdext::boolean<true> m_drawManaBar;
     bool m_drawPlayerBars = true;
     stdext::boolean<true> m_smooth;
+
+    std::string m_shader;
+    Position m_shaderPosition;
 
     stdext::timer m_fadingFloorTimers[Otc::MAX_Z + 1];
 

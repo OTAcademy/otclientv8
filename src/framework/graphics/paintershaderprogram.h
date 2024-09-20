@@ -53,7 +53,8 @@ protected:
 
         RESOLUTION_UNIFORM = 13,
         OFFSET_UNIFORM = 14,
-        CENTER_UNIFORM = 15
+        CENTER_UNIFORM = 15,
+        MAP_WALKOFFSET_UNIFORM = 16
     };
 
     friend class Painter;
@@ -75,6 +76,7 @@ public:
     void setOffset(const Point& offset);
     void setCenter(const Point& center);
     void updateTime();
+    void updateWalkOffset(const PointF& offset);
 
     void addMultiTexture(const std::string& file);
     void bindMultiTextures();
@@ -95,6 +97,7 @@ private:
     Matrix3 m_textureMatrix;
     Size m_resolution;
     Point m_offset;
+    PointF m_walkOffset;
     Point m_center;
     float m_time;
     std::vector<TexturePtr> m_multiTextures;

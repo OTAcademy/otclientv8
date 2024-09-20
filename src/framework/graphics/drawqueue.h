@@ -327,6 +327,16 @@ public:
         return m_shader;
     }
 
+    void setWalkOffset(const PointF& offset)
+    {
+        m_walkOffset = offset;
+    }
+
+    const PointF& getWalkOffset()
+    {
+        return m_walkOffset;
+    }
+
 private:
     std::vector<DrawQueueItem*> m_queue;
     std::vector<DrawQueueCondition*> m_conditions;
@@ -336,6 +346,7 @@ private:
     bool m_useFrameBuffer = false;
     float m_scaling = 1.f;
     std::string m_shader;
+    PointF m_walkOffset;
 
     friend struct DrawQueueConditionMark;
 };

@@ -58,6 +58,8 @@ void PainterShaderProgram::setupUniforms()
     bindUniformLocation(OFFSET_UNIFORM, "u_Offset");
     bindUniformLocation(CENTER_UNIFORM, "u_Center");
 
+    bindUniformLocation(MAP_WALKOFFSET_UNIFORM, "u_WalkOffset");
+
     // VALUES
     setUniformValue(TRANSFORM_MATRIX_UNIFORM, m_transformMatrix);
     setUniformValue(PROJECTION_MATRIX_UNIFORM, m_projectionMatrix);
@@ -80,6 +82,7 @@ void PainterShaderProgram::setupUniforms()
     setUniformValue(RESOLUTION_UNIFORM, (float)m_resolution.width(), (float)m_resolution.height());
     setUniformValue(OFFSET_UNIFORM, (float)m_offset.x, (float)m_offset.y);
     setUniformValue(CENTER_UNIFORM, (float)m_center.x, (float)m_center.y);
+    setUniformValue(MAP_WALKOFFSET_UNIFORM, (float)m_walkOffset.x, (float)m_walkOffset.y);
 }
 
 bool PainterShaderProgram::link()
@@ -200,6 +203,17 @@ void PainterShaderProgram::updateTime()
     bind();
     setUniformValue(TIME_UNIFORM, time);
     m_time = time;
+}
+
+void PainterShaderProgram::updateWalkOffset(const PointF& offset)
+{
+    if (m_walkOffset == offset)
+        return;
+
+    m_walkOffset = offset;
+
+    bind();
+    setUniformValue(MAP_WALKOFFSET_UNIFORM, m_walkOffset.x, m_walkOffset.y);
 }
 
 void PainterShaderProgram::addMultiTexture(const std::string& file)
