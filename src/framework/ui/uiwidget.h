@@ -313,6 +313,7 @@ protected:
     Rect m_iconClipRect;
     std::string m_iconPath;
     Fw::AlignmentFlag m_iconAlign;
+    stdext::boolean<true> m_iconSmooth;
     EdgeGroup<Color> m_borderColor;
     EdgeGroup<int> m_borderWidth;
     EdgeGroup<int> m_margin;
@@ -350,6 +351,7 @@ public:
     void setIconRect(const Rect& rect) { m_iconRect = rect; }
     void setIconClip(const Rect& rect) { m_iconClipRect = rect; }
     void setIconAlign(Fw::AlignmentFlag align) { m_iconAlign = align; }
+    void setIconSmooth(bool smooth) { m_iconSmooth = smooth; }
     void setBorderWidth(int width) { m_borderWidth.set(width); updateLayout(); }
     void setBorderWidthTop(int width) { m_borderWidth.top = width; }
     void setBorderWidthRight(int width) { m_borderWidth.right = width; }

@@ -127,6 +127,8 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
             setIconClip(node->value<Rect>());
         else if(node->tag() == "icon-align")
             setIconAlign(Fw::translateAlignment(node->value()));
+        else if (node->tag() == "icon-smooth")
+            setIconSmooth(node->value<bool>());
         else if(node->tag() == "opacity")
             setOpacity(node->value<float>());
         else if (node->tag() == "rotation")
@@ -381,6 +383,7 @@ void UIWidget::drawBorder(const Rect& screenCoords)
 void UIWidget::drawIcon(const Rect& screenCoords)
 {
     if(m_icon) {
+        m_icon->setSmooth(m_iconSmooth);
         Rect drawRect;
         if(m_iconRect.isValid()) {
             drawRect = screenCoords;
