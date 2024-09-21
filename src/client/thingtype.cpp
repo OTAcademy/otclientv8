@@ -611,8 +611,7 @@ std::shared_ptr<DrawOutfitParams> ThingType::drawOutfit(const Point& dest, int m
     Point offset = textureOffset - textureOffset2;
     offset += textureRect2.topLeft() - textureRect.topLeft();
 
-    return std::shared_ptr< DrawOutfitParams>(new DrawOutfitParams
-                           { screenRect, texture, textureRect, offset, color});
+    return std::make_shared<DrawOutfitParams>(DrawOutfitParams{ screenRect, texture, textureRect, offset, color });
 }
 
 Rect ThingType::getDrawSize(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase)

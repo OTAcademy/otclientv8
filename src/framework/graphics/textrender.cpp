@@ -60,7 +60,7 @@ uint64_t TextRender::addText(BitmapFontPtr font, const std::string& text, const 
     m_mutex[index].lock();
     auto it = m_cache[index].find(hash);
     if (it == m_cache[index].end()) {
-        m_cache[index][hash] = std::shared_ptr<TextRenderCache>(new TextRenderCache{ font, text, size, align, font->getTexture(), CoordsBuffer(), g_clock.millis() });
+        m_cache[index][hash] = std::make_shared<TextRenderCache>(TextRenderCache{ font, text, size, align, font->getTexture(), CoordsBuffer(), g_clock.millis() });
     }
     m_mutex[index].unlock();
     return hash;

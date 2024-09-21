@@ -171,7 +171,6 @@ bool ResourceManager::setupWriteDir(const std::string& product, const std::strin
 
 bool ResourceManager::setup()
 {
-    std::shared_ptr<std::vector<uint8_t>> data = nullptr;
 #ifdef ANDROID
     PHYSFS_File* file = PHYSFS_openRead("data.zip");
     if (file) {
