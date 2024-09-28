@@ -1,0 +1,68 @@
+OptionsTabBarVertical < UITabBar
+  width: 130
+  ScrollablePanel
+    id: buttonsPanel
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: scrollBar.left
+    anchors.bottom: parent.bottom
+    image-source: /images/options/2pixel-up-frame-borderimage-dark
+    image-border: 2
+    vertical-scrollbar: scrollBar
+    margin-right: 1
+    padding: 10
+    layout: verticalBox
+
+  VerticalScrollBar
+    id: scrollBar
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    step: 16
+    pixels-scroll: true
+    $!on:
+      width: 0
+
+OptionsTabBarVerticalPanel < Panel
+
+OptionsTabBarVerticalButton < UIButton
+  height: 20
+  icon-align: left
+  icon-offset-x: 5
+  text-offset: 0 2
+  image-source: /images/options/2pixel-up-frame-borderimage
+  image-border: 2
+  padding: 10
+  border-width: 1
+  border-color-top: #000000
+  border-color-left: #000000
+  border-color-bottom: #ffffff44
+  border-color-right: #ffffff44
+  font: cipsoftFont
+  
+  $checked:
+    image-source: /images/options/2pixel-up-frame-borderimage-upside-down
+    border-color-bottom: #ffffff11
+    border-color-right: #ffffff11
+
+  UIWidget
+    id: arrow
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    image-source: /images/options/icon-downarrow
+    size: 9 6
+    
+    $on:
+      image-source: /images/options/icon-right-arrow
+      size: 6 9
+
+OptionsTabContent < Panel
+  id: optionsTabContent
+  anchors.top: optionsTabBar.top
+  anchors.left: optionsTabBar.right
+  anchors.right: parent.right
+  anchors.bottom: optionsTabBar.bottom
+  margin-left: 10
+  image-source: /images/options/2pixel-up-frame-borderimage
+  image-border: 2
+  padding: 5

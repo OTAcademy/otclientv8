@@ -1,0 +1,44 @@
+OptionPanel
+  OptionCheckBox
+    id: showPing
+    !text: tr('Show connection ping')
+    !tooltip: tr('Display connection speed to the server (milliseconds)')
+
+  OptionCheckBox
+    id: displayNames
+    !text: tr('Display creature names')
+
+  OptionCheckBox
+    id: displayHealth
+    !text: tr('Display creature health bars')
+
+  OptionCheckBox
+    id: displayHealthOnTop
+    !text: tr('Display creature health bars above texts')
+    $mobile:
+      visible: false
+
+  OptionCheckBox
+    id: hidePlayerBars
+    !text: tr('Show player health bar')
+
+  OptionCheckBox
+    id: displayMana
+    !text: tr('Show player mana bar')
+    $mobile:
+      visible: false
+
+  OptionCheckBox
+    id: topBar
+    !text: tr('Show customizable top status bar')
+
+  OptionCheckBox
+    id: topHealtManaBar
+    !text: tr('Show player top health and mana bar')
+
+  OptionCheckBox
+    id: showHealthManaCircle
+    !text: tr('Show health and mana circle')
+    $mobile:
+      visible: false
+  

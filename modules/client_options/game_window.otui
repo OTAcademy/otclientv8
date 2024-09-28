@@ -1,0 +1,58 @@
+OptionPanel
+
+  OptionCheckBox
+    id: displayText
+    !text: tr('Display text messages')
+
+  OptionCheckBox
+    id: classicView
+    !text: tr('Classic view')
+    margin-top: 5
+    
+    $mobile:
+      visible: false
+
+  OptionCheckBox
+    id: cacheMap
+    !text: tr('Cache map (for non-classic view)')
+
+    $mobile:
+      visible: false
+
+  OptionCheckBox
+    id: highlightThingsUnderCursor
+    !text: tr('Highlight things under cursor')
+
+  Label
+    margin-top: 3
+    id: crosshairLabel
+    !text: tr("Crosshair")
+    
+  ComboBox
+    id: crosshair
+    margin-top: 3
+    margin-right: 2
+    margin-left: 2
+    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onSetup: |
+      self:addOption("None")
+      self:addOption("Default")
+      self:addOption("Full")
+
+  Label
+    id: floorFadingLabel
+    margin-top: 6
+    @onSetup: |
+      local value = modules.client_options.getOption('floorFading')
+      self:setText(tr('Floor fading: %s ms', value))
+
+  OptionScrollbar
+    id: floorFading
+    margin-top: 3
+    minimum: 0
+    maximum: 2000
+
+  Label
+    id: floorFadingLabel2
+    margin-top: 6
+    !text: (tr('Floor fading doesn\'t work with enabled light'))

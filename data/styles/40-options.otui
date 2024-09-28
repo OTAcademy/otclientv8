@@ -1,0 +1,60 @@
+OptionsTabBarVertical < UITabBar
+  width: 130
+  ScrollablePanel
+    id: buttonsPanel
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: scrollBar.left
+    anchors.bottom: parent.bottom
+    image-source: /images/ui/menubox
+    image-border: 3
+    vertical-scrollbar: scrollBar
+    margin-right: 1
+    padding: 10
+    layout: verticalBox
+
+  VerticalScrollBar
+    id: scrollBar
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    step: 16
+    pixels-scroll: true
+    $!on:
+      width: 0
+
+OptionsTabBarVerticalPanel < Panel
+
+OptionsTabBarVerticalButton < Button
+  height: 20
+  icon-align: left
+  icon-offset-x: 5
+  text-offset: 0 2
+  padding: 10
+  font: cipsoftFont
+  color: white
+
+  $checked:
+    image-clip: 0 46 22 23
+
+  UIWidget
+    id: arrow
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    image-source: /images/options/icon-downarrow
+    size: 9 6
+    
+    $on:
+      image-source: /images/options/icon-right-arrow
+      size: 6 9
+
+OptionsTabContent < Panel
+  id: optionsTabContent
+  anchors.top: optionsTabBar.top
+  anchors.left: optionsTabBar.right
+  anchors.right: parent.right
+  anchors.bottom: optionsTabBar.bottom
+  margin-left: 10
+  image-source: /images/ui/menubox
+  image-border: 3
+  padding: 5

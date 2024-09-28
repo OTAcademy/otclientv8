@@ -1,4 +1,18 @@
+
+
 OptionPanel
+
+  Panel
+    height: 30
+
+    Button
+      id: changeLocale
+      !text: tr('Change language')
+      @onClick: modules.client_locales.createWindow()
+      anchors.left: parent.left
+      anchors.top: parent.top
+      width: 150
+
   Label
     width: 130
     id: layoutLabel
@@ -21,54 +35,6 @@ OptionPanel
           self:addOption(file:gsub("^%l", string.upper))
         end
       end
-
-  OptionCheckBox
-    id: classicView
-    !text: tr('Classic view')
-    margin-top: 5
-    
-    $mobile:
-      visible: false
-
-  OptionCheckBox
-    id: cacheMap
-    !text: tr('Cache map (for non-classic view)')
-
-    $mobile:
-      visible: false
-    
-  OptionCheckBox
-    id: showPing
-    !text: tr('Show connection ping')
-    !tooltip: tr('Display connection speed to the server (milliseconds)')
-
-  OptionCheckBox
-    id: displayNames
-    !text: tr('Display creature names')
-
-  OptionCheckBox
-    id: displayHealth
-    !text: tr('Display creature health bars')
-
-  OptionCheckBox
-    id: displayHealthOnTop
-    !text: tr('Display creature health bars above texts')
-    $mobile:
-      visible: false
-
-  OptionCheckBox
-    id: hidePlayerBars
-    !text: tr('Show player health bar')
-
-  OptionCheckBox
-    id: displayMana
-    !text: tr('Show player mana bar')
-    $mobile:
-      visible: false
-
-  OptionCheckBox
-    id: highlightThingsUnderCursor
-    !text: tr('Highlight things under cursor')
 
   Panel
     height: 40
@@ -142,36 +108,95 @@ OptionPanel
         self:addOption("3rd right panel")
         self:addOption("4th right panel")
 
-  Label
-    margin-top: 3
-    id: crosshairLabel
-    !text: tr("Crosshair")
-    
-  ComboBox
-    id: crosshair
-    margin-top: 3
-    margin-right: 2
-    margin-left: 2
-    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
-    @onSetup: |
-      self:addOption("None")
-      self:addOption("Default")
-      self:addOption("Full")
+  FlatPanel
+    margin-top: 5
+    padding: 5
+    layout:
+      type: verticalBox
+      fit-children: true
+      spacing: 8
 
-  Label
-    id: floorFadingLabel
-    margin-top: 6
-    @onSetup: |
-      local value = modules.client_options.getOption('floorFading')
-      self:setText(tr('Floor fading: %s ms', value))
+    Panel
+      height: 14
+      layout:
+        type: horizontalBox
+      
+      Label
+        font: verdana-11px-monochrome
+        text: Show Bottom Action Bars:
+        width: 155
 
-  OptionScrollbar
-    id: floorFading
-    margin-top: 3
-    minimum: 0
-    maximum: 2000
+      OptionSimpleCheckBox
+        id: actionbar1
+        !text: tr('Bar 1')
+        margin-top: 2
 
-  Label
-    id: floorFadingLabel2
-    margin-top: 6
-    !text: (tr('Floor fading doesn\'t work with enabled light'))
+      OptionSimpleCheckBox
+        id: actionbar2
+        !text: tr('Bar 2')
+        margin-top: 2
+        margin-left: 10
+
+      OptionSimpleCheckBox
+        id: actionbar3
+        !text: tr('Bar 3')
+        margin-top: 2
+        margin-left: 10
+
+    Panel
+      height: 14
+      layout:
+        type: horizontalBox
+
+      $mobile:
+        visible: false
+      
+      Label
+        font: verdana-11px-monochrome
+        text: Show Left Action Bars:
+        width: 155
+
+      OptionSimpleCheckBox
+        id: actionbar4
+        !text: tr('Bar 1')
+        margin-top: 2
+
+      OptionSimpleCheckBox
+        id: actionbar5
+        !text: tr('Bar 2')
+        margin-top: 2
+        margin-left: 10
+
+      OptionSimpleCheckBox
+        id: actionbar6
+        !text: tr('Bar 3')
+        margin-left: 10
+
+    Panel
+      height: 14
+      layout:
+        type: horizontalBox
+      
+      $mobile:
+        visible: false
+      
+      Label
+        font: verdana-11px-monochrome
+        text: Show Right Action Bars:
+        width: 155
+      
+      OptionSimpleCheckBox
+        id: actionbar7
+        !text: tr('Bar 1')
+        margin-top: 2
+
+      OptionSimpleCheckBox
+        id: actionbar8
+        !text: tr('Bar 2')
+        margin-left: 10
+
+      OptionSimpleCheckBox
+        id: actionbar9
+        !text: tr('Bar 3')
+        margin-top: 2
+        margin-left: 10

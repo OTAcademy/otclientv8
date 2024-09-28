@@ -1,0 +1,23 @@
+OptionPanel
+  Label
+    text: Client user features profile
+
+  ComboBox
+    id: profile
+    margin-top: 3
+    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onSetup: |
+      self:addOption("1")
+      self:addOption("2")
+      self:addOption("3")
+      self:addOption("4")
+      self:addOption("5")
+      self:addOption("6")
+      self:addOption("7")
+      self:addOption("8")
+      self:addOption("9")
+      self:addOption("10")
+
+  OptionCheckBox
+    id: actionbarLock
+    !text: tr('Disable action bar hotkeys when chat mode is on')
