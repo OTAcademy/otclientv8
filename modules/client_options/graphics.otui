@@ -21,10 +21,6 @@ OptionPanel
     id: antialiasing
     !text: tr('Antialiasing')
 
-  OptionCheckBox
-    id: floorShadow
-    !text: tr('Floor Shadow')
-
   Label
     margin-top: 12
     id: optimizationLevelLabel
@@ -35,7 +31,7 @@ OptionPanel
     margin-top: 3
     margin-right: 2
     margin-left: 2
-    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onOptionChange: modules.client_options.presetOption(self, self:getId(), self.currentIndex)
     @onSetup: |
       self:addOption("Automatic")
       self:addOption("None")

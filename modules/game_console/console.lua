@@ -139,22 +139,67 @@ function init()
     return true
   end
 
+  Keybind.new("Chat Channel", "Close Current Channel", "Ctrl+E", "")
+  Keybind.new("Chat Channel", "Next Channel", "Tab", "")
+  Keybind.new("Chat Channel", "Previous Channel", "Shift+Tab", "")
+  Keybind.new("Chat Channel", "Open Channel List", "Ctrl+O", "")
+  Keybind.new("Chat Channel", "Open Help Channel", "Ctrl+H", "")
+  Keybind.new("Chat", "Send current chat line", "Enter", "")
+
+  if g_game.getClientVersion() < 862 then
+    Keybind.new("Dialogs", "Open Rule Violation", "Ctrl+R", "")
+  end
+
+  local gameRootPanel = modules.game_interface.getRootPanel()
+  Keybind.bind("Chat Channel", "Close Current Channel", {
+    {
+      type = KEY_DOWN,
+      callback = removeCurrentTab,
+    }
+  }, gameRootPanel)
+
+  Keybind.bind("Chat Channel", "Next Channel", {
+    {
+      type = KEY_PRESS,
+      callback = function() consoleTabBar:selectNextTab() end,
+    }
+  }, consolePanel)
+
+  Keybind.bind("Chat Channel", "Previous Channel", {
+    {
+      type = KEY_PRESS,
+      callback = function() consoleTabBar:selectPrevTab() end,
+    }
+  }, consolePanel)
+
+  Keybind.bind("Chat Channel", "Open Channel List", {
+    {
+      type = KEY_DOWN,
+      callback = g_game.requestChannels,
+    }
+  }, gameRootPanel)
+
+  Keybind.bind("Chat Channel", "Open Help Channel", {
+    {
+      type = KEY_DOWN,
+      callback = openHelp,
+    }
+  }, consolePanel)
+
+  Keybind.bind("Chat", "Send current chat line", {
+    {
+      type = KEY_DOWN,
+      callback = sendCurrentMessage,
+    }
+  }, consolePanel)
+
   g_keyboard.bindKeyPress('Shift+Up', function() navigateMessageHistory(1) end, consolePanel)
   g_keyboard.bindKeyPress('Shift+Down', function() navigateMessageHistory(-1) end, consolePanel)
-  g_keyboard.bindKeyPress('Tab', function() consoleTabBar:selectNextTab() end, consolePanel)
-  g_keyboard.bindKeyPress('Shift+Tab', function() consoleTabBar:selectPrevTab() end, consolePanel)
-  g_keyboard.bindKeyDown('Enter', sendCurrentMessage, consolePanel)
   g_keyboard.bindKeyPress('Ctrl+A', function() consoleTextEdit:clearText() end, consolePanel)
 
   -- apply buttom functions after loaded
   consoleTabBar:setNavigation(consolePanel:getChildById('prevChannelButton'), consolePanel:getChildById('nextChannelButton'))
   consoleTabBar.onTabChange = onTabChange
-
-  -- tibia like hotkeys
-  local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.bindKeyDown('Ctrl+O', g_game.requestChannels, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+E', removeCurrentTab, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+H', openHelp, gameRootPanel)
 
   consoleToggleChat = consolePanel:getChildById('toggleChat')
   load()
@@ -193,13 +238,28 @@ function toggleChat()
   end
 end
 
+function temporaryChatOn()
+  modules.game_walking.unbindTurnKeys()
+  Keybind.setChatMode(CHAT_MODE.ON)
+  modules.game_walking.bindTurnKeys()
+  enableChat(true)
+end
+
+function temporaryChatOff()
+  modules.game_walking.unbindTurnKeys()
+  Keybind.setChatMode(CHAT_MODE.OFF)
+  modules.game_walking.bindTurnKeys()
+
+  local gameRootPanel = modules.game_interface.getRootPanel()
+  g_keyboard.unbindKeyDown("Enter", temporaryChatOff, gameRootPanel)
+  g_keyboard.unbindKeyDown("Escape", temporaryChatOff, gameRootPanel)
+  disableChat(true)
+end
+
 function enableChat(temporarily)
   if g_app.isMobile() then return end
-  if consoleToggleChat:isChecked() then
-    return consoleToggleChat:setChecked(false)
-  end
   if not temporarily then
-    modules.client_options.setOption("wsadWalking", false)
+    modules.client_options.setOption("chatMode", CHAT_MODE.ON)
   end
 
   consoleTextEdit:setVisible(true)
@@ -207,17 +267,11 @@ function enableChat(temporarily)
   consoleTextEdit:focus()
 
   local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.unbindKeyDown("Enter", gameRootPanel)
-  
+  g_keyboard.unbindKeyDown("Enter", temporaryChatOn, gameRootPanel)
+
   if temporarily then
-    local quickFunc = function()
-      if not g_game.isOnline() then return end
-      g_keyboard.unbindKeyDown("Enter", gameRootPanel)
-      g_keyboard.unbindKeyDown("Escape", gameRootPanel)
-      disableChat(temporarily)
-    end
-    g_keyboard.bindKeyDown("Enter", quickFunc, gameRootPanel)
-    g_keyboard.bindKeyDown("Escape", quickFunc, gameRootPanel)  
+    g_keyboard.bindKeyDown("Enter", temporaryChatOff, gameRootPanel)
+    g_keyboard.bindKeyDown("Escape", temporaryChatOff, gameRootPanel)
   end
 
   modules.game_walking.disableWSAD()
@@ -227,26 +281,15 @@ end
 
 function disableChat(temporarily)
   if g_app.isMobile() then return end
-  if not consoleToggleChat:isChecked() then
-    return consoleToggleChat:setChecked(true)
-  end
   if not temporarily then
-    modules.client_options.setOption("wsadWalking", true)
+    modules.client_options.setOption("chatMode", CHAT_MODE.OFF)
   end
 
   consoleTextEdit:setVisible(false)
   consoleTextEdit:setText("")
 
-  local quickFunc = function()
-    if not g_game.isOnline() then return end
-    if consoleToggleChat:isChecked() then
-      consoleToggleChat:setChecked(false)
-    end
-    enableChat(true)
-  end
-  
   local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.bindKeyDown("Enter", quickFunc, gameRootPanel)
+  g_keyboard.bindKeyDown("Enter", temporaryChatOn, gameRootPanel)
 
   modules.game_walking.enableWSAD()
 
@@ -277,10 +320,12 @@ function terminate()
 
   if g_game.isOnline() then clear() end
 
-  local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.unbindKeyDown('Ctrl+O', gameRootPanel)
-  g_keyboard.unbindKeyDown('Ctrl+E', gameRootPanel)
-  g_keyboard.unbindKeyDown('Ctrl+H', gameRootPanel)
+  Keybind.delete("Chat Channel", "Close Current Channel")
+  Keybind.delete("Chat Channel", "Next Channel")
+  Keybind.delete("Chat Channel", "Previous Channel")
+  Keybind.delete("Chat Channel", "Open Channel List")
+  Keybind.delete("Chat Channel", "Open Help Channel")
+  Keybind.delete("Chat", "Send current chat line")
 
   saveCommunicationSettings()
 
@@ -383,6 +428,11 @@ function clear()
     channelsWindow:destroy()
     channelsWindow = nil
   end
+
+  local gameRootPanel = modules.game_interface.getRootPanel()
+  g_keyboard.unbindKeyDown("Enter", temporaryChatOn, gameRootPanel)
+  g_keyboard.unbindKeyDown("Enter", temporaryChatOff, gameRootPanel)
+  g_keyboard.unbindKeyDown("Escape", temporaryChatOff, gameRootPanel)
 end
 
 function switchMode(newView)
@@ -1477,7 +1527,12 @@ function online()
   
   if g_game.getClientVersion() < 862 then
     local gameRootPanel = modules.game_interface.getRootPanel()
-    g_keyboard.bindKeyDown('Ctrl+R', openPlayerReportRuleViolationWindow, gameRootPanel)
+    Keybind.bind("Dialogs", "Open Rule Violation", {
+      {
+        type = KEY_DOWN,
+        callback = openPlayerReportRuleViolationWindow,
+      }
+    }, gameRootPanel)
   end
   -- open last channels
   local lastChannelsOpen = g_settings.getNode('lastChannelsOpen')
@@ -1501,8 +1556,7 @@ end
 
 function offline()
   if g_game.getClientVersion() < 862 then
-    local gameRootPanel = modules.game_interface.getRootPanel()
-    g_keyboard.unbindKeyDown('Ctrl+R', gameRootPanel)
+    Keybind.delete("Dialogs", "Open Rule Violation")
   end
   clear()
 end

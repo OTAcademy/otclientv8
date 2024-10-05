@@ -3,6 +3,11 @@ function init()
     onGameStart = online,
     onGameEnd = offline
   })
+
+  if g_game.getFeature(GamePlayerMounts) then
+    Keybind.new("Movement", "Mount/dismount", "Ctrl+R", "")
+  end
+
   if g_game.isOnline() then online() end
 end
 
@@ -16,13 +21,18 @@ end
 
 function online()
   if g_game.getFeature(GamePlayerMounts) then
-    g_keyboard.bindKeyDown('Ctrl+R', toggleMount)
+    Keybind.bind("Movement", "Mount/dismount", {
+      {
+        type = KEY_DOWN,
+        callback = toggleMount,
+      }
+    })
   end
 end
 
 function offline()
   if g_game.getFeature(GamePlayerMounts) then
-    g_keyboard.unbindKeyDown('Ctrl+R')
+    Keybind.delete("Movement", "Mount/dismount")
   end
 end
 

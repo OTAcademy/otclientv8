@@ -1,0 +1,52 @@
+MainWindow
+  width: 275
+  !text: tr("Assign Text")
+  layout:
+    type: verticalBox
+    spacing: 5
+    fit-children: true
+  
+  Label
+    !text: tr("Text:")
+    font: verdana-11px-monochrome
+    color: #c0c0c0
+  
+  TextEdit
+    id: field
+    height: 16
+    padding: 1 4
+    font: verdana-11px-monochrome
+    color: #c0c0c0
+  
+  OptionCheckBox
+    id: auto
+    !text: tr('Send automatically')
+    checked: true
+  
+  HorizontalSeparator
+    margin-top: 5
+
+  Panel
+    id: buttons
+    margin-top: 5
+    height: 20
+    layout:
+      type: horizontalBox
+      align-right: true
+      spacing: -5
+    
+    SmallButton
+      id: ok
+      width: 40
+      !text: tr("Ok")
+    
+    SmallButton
+      id: apply
+      width: 45
+      !text: tr("Apply")
+    
+    SmallButton
+      id: cancel
+      width: 45
+      !text: tr("Cancel")
+

@@ -1,91 +1,40 @@
-OptionCheckBox < FlatPanel
+OptionContainer < FlatPanel
   height: 22
   padding: 3
-  @onTextChange: addEvent(function() self.checkBox:setText(self:getText()) self:setText("", true) end)
 
-  $!first:
-    margin-top: 2
+OptionCheckBox < OptionContainer
+  @onTextChange: addEvent(function() self.checkBox:setText(self:getText()) self:setText("", true) end)
+  @onCheckChange: addEvent(function() if self:isChecked() ~= self.checkBox:isChecked() then self.checkBox:setChecked(self:isChecked()) end end)
   
   CheckBox
     id: checkBox
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
     text-horizontal-auto-resize: true
-    @onCheckChange: modules.client_options.setOption(self:getParent():getId(), self:isChecked())
+    color: #c0c0c0
+    @onCheckChange: self:getParent():setChecked(self:isChecked()) modules.client_options.presetOption(self, self:getParent():getId(), self:isChecked())
 
 OptionSimpleCheckBox < CheckBox
   text-horizontal-auto-resize: true
   font: verdana-11px-monochrome
-  @onCheckChange: modules.client_options.setOption(self:getId(), self:isChecked())
+  color: #c0c0c0
+  @onCheckChange: modules.client_options.presetOption(self, self:getId(), self:isChecked())
 
 OptionScrollbar < HorizontalScrollBar
   step: 1
-  @onValueChange: modules.client_options.setOption(self:getId(), self:getValue())
+  @onValueChange: modules.client_options.presetOption(self, self:getId(), self:getValue())
 
 OptionPanel < Panel
   layout:
     type: verticalBox
-
-OptionsButton < UIButton
-  font: cipsoftFont
-  size: 43 20
-  text-offset: 0 2
-  image-source: /images/ui/button
-  image-clip: 0 0 22 23
-  image-border: 3
-  padding: 5 10 5 10
-  opacity: 1.0
-  change-cursor-image: true
-  cursor: pointer
-
-  $hover !disabled:
-    image-clip: 0 23 22 23
-
-  $pressed:
-    image-clip: 0 46 22 23
-
-  $disabled:
-    opacity: 0.8
-    change-cursor-image: false
-
-OptionsCheckbox < FlatPanel
-  anchors.left: parent.left
-  anchors.right: parent.right
-  height: 22
-  padding: 5
-
-  UICheckBox
-    anchors.fill: parent
-    font: verdana-11px-monochrome
-    text-align: left
-    text-offset: 18 -1
-    color: #c0c0c0
-    image-rect: 0 0 12 12
-    image-source: /images/ui/checkbox
-    change-cursor-image: true
-    cursor: pointer
-    text: Show Advanced Options
-
-    $hover !disabled:
-      color: #ffffff
-
-    $!checked:
-      image-clip: 0 0 12 12
-
-    $checked:
-      image-clip: 0 12 12 12
-
-    $disabled:
-      color: #c0c0c088
-      opacity: 0.8
-      change-cursor-image: false
+    spacing: 5
 
 MainWindow
   id: optionsWindow
   !text: tr('Options')
-  size: 680 490
+  size: 685 530
   $mobile:
-    size: 680 490
+    size: 685 530
 
   @onEnter: modules.client_options.hide()
   @onEscape: modules.client_options.hide()
@@ -94,7 +43,7 @@ MainWindow
     id: optionsTabBar
     anchors.top: parent.top
     anchors.left: parent.left
-    height: 400
+    height: 440
 
   OptionsTabContent
   
@@ -105,11 +54,28 @@ MainWindow
     anchors.right: parent.right
     margin-top: 12
 
-  OptionsButton
-    !text: tr('Ok')
+  SmallButton
+    !text: tr('Cancel')
     anchors.top: separator.bottom
     anchors.right: parent.right
+    width: 45
     margin-top: 12
-    @onClick: |
-      g_settings.save()
-      modules.client_options.hide()
+    @onClick: modules.client_options.cancelButton()
+
+  SmallButton
+    !text: tr('Apply')
+    anchors.top: separator.bottom
+    anchors.right: prev.left
+    width: 45
+    margin-top: 12
+    margin-right: 5
+    @onClick: modules.client_options.applyButton()
+
+  SmallButton
+    !text: tr('Ok')
+    anchors.top: separator.bottom
+    anchors.right: prev.left
+    width: 45
+    margin-top: 12
+    margin-right: 5
+    @onClick: modules.client_options.okButton()

@@ -1,40 +1,35 @@
 
 
 OptionPanel
-
-  Panel
-    height: 30
-
-    Button
-      id: changeLocale
-      !text: tr('Change language')
-      @onClick: modules.client_locales.createWindow()
-      anchors.left: parent.left
-      anchors.top: parent.top
-      width: 150
-
-  Label
-    width: 130
-    id: layoutLabel
-    !text: tr("Layout (change requries client restart)")
-    $mobile:
-      visible: false
   
-  ComboBox
-    id: layout
-    margin-top: 3
-    margin-right: 2
-    margin-left: 2
-    $mobile:
-      visible: false
-    @onOptionChange: modules.client_options.setOption(self:getId(), self:getCurrentOption().text)
-    @onSetup: |
-      self:addOption("Default")
-      for _, file in ipairs(g_resources.listDirectoryFiles("/layouts", false, true)) do
-        if g_resources.directoryExists("/layouts/" .. file) then
-          self:addOption(file:gsub("^%l", string.upper))
+  OptionContainer
+    height: 30
+    padding: 5
+    layout:
+      type: horizontalBox
+      spacing: 5
+
+    Label
+      margin-top: 7
+      color: #c0c0c0
+      font: verdana-11px-monochrome
+      !text: tr("Layout (requries client restart)")
+      $mobile:
+        visible: false
+
+    ComboBox
+      id: layout
+      width: 200
+      $mobile:
+        visible: false
+      @onOptionChange: modules.client_options.presetOption(self, self:getId(), self:getCurrentOption().text)
+      @onSetup: |
+        self:addOption("Default")
+        for _, file in ipairs(g_resources.listDirectoryFiles("/layouts", false, true)) do
+          if g_resources.directoryExists("/layouts/" .. file) then
+            self:addOption(file:gsub("^%l", string.upper))
+          end
         end
-      end
 
   Panel
     height: 40
@@ -69,7 +64,7 @@ OptionPanel
       anchors.top: leftPanelsLabel.bottom
       margin-top: 3
       margin-right: 20
-      @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+      @onOptionChange: modules.client_options.presetOption(self, self:getId(), self.currentIndex)
       @onSetup: |
         self:addOption("0")
         self:addOption("1")
@@ -84,7 +79,7 @@ OptionPanel
       anchors.top: rightPanelsLabel.bottom
       margin-top: 3
       margin-right: 20
-      @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+      @onOptionChange: modules.client_options.presetOption(self, self:getId(), self.currentIndex)
       @onSetup: |
         self:addOption("1")
         self:addOption("2")
@@ -97,7 +92,7 @@ OptionPanel
       anchors.right: backpackPanelLabel.right
       anchors.top: backpackPanelLabel.bottom
       margin-top: 3
-      @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+      @onOptionChange: modules.client_options.presetOption(self, self:getId(), self.currentIndex)
       @onSetup: |
         self:addOption("1st left panel")
         self:addOption("2nd left panel")
@@ -123,7 +118,7 @@ OptionPanel
       
       Label
         font: verdana-11px-monochrome
-        text: Show Bottom Action Bars:
+        !text: tr("Show Bottom Action Bars:")
         width: 155
 
       OptionSimpleCheckBox
@@ -153,7 +148,7 @@ OptionPanel
       
       Label
         font: verdana-11px-monochrome
-        text: Show Left Action Bars:
+        !text: tr("Show Left Action Bars:")
         width: 155
 
       OptionSimpleCheckBox
@@ -182,7 +177,7 @@ OptionPanel
       
       Label
         font: verdana-11px-monochrome
-        text: Show Right Action Bars:
+        !text: tr("Show Right Action Bars:")
         width: 155
       
       OptionSimpleCheckBox
@@ -200,3 +195,15 @@ OptionPanel
         !text: tr('Bar 3')
         margin-top: 2
         margin-left: 10
+
+  Panel
+    height: 30
+    margin-top: 5
+
+    Button
+      id: changeLocale
+      !text: tr('Change language')
+      @onClick: modules.client_locales.createWindow()
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 150

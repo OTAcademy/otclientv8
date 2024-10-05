@@ -1,0 +1,121 @@
+HotkeySpellAction < Panel
+  height: 32
+  image-size: 32 32
+  font: verdana-11px-monochrome
+  color: #c0c0c0
+  text-align: left
+  text-offset: 35 0
+  background: alpha
+  icon-source: /images/options/ditherpattern
+  icon-color: alpha
+  icon-align: left
+  icon-clip: 0 0 32 32
+  @onSetup: self:setImageSource(SpelllistSettings['Default'].iconFile)
+
+  $focus:
+    background: #ffffff22
+    color: #f4f4f4
+  
+  $disabled:
+    icon-color: #ffffff
+
+MainWindow
+  width: 275
+  !text: tr("Assign Spell")
+  layout:
+    type: verticalBox
+    spacing: 5
+    fit-children: true
+  @onSetup: |
+    g_keyboard.bindKeyPress('Up', function() self.spells.list:focusPreviousChild(KeyboardFocusReason) end, self)
+    g_keyboard.bindKeyPress('Down', function() self.spells.list:focusNextChild(KeyboardFocusReason) end, self) 
+  
+  HotkeySpellAction
+    id: selectedSpell
+    focusable: false
+
+  HorizontalSeparator
+    margin-top: 5
+  
+  Panel
+    id: spells
+    height: 120
+    margin-top: 5
+    image-source: /images/options/1pixel-down-frame
+    image-border: 1
+    background: #404040
+
+    UIScrollArea
+      id: list
+      anchors.fill: parent
+      margin: 1
+      auto-focus: none
+      vertical-scrollbar: scrollBar
+      layout:
+        type: verticalBox
+        spacing: 2
+
+    VerticalScrollBar
+      id: scrollBar
+      anchors.top: list.top
+      anchors.right: list.right
+      anchors.bottom: list.bottom
+      pixels-scroll: true
+      step: 102
+  
+  OptionCheckBox
+    id: learnt
+    !text: tr('Only show learnt spells')
+    checked: true
+  
+  Panel
+    id: parameter
+    height: 16
+
+    Label
+      id: label
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: parent.left
+      font: verdana-11px-monochrome
+      color: #c0c0c0
+      !text: tr("Parameter:")
+      enabled: false
+
+    TextEdit
+      id: field
+      anchors.top: parent.top
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      anchors.left: prev.right
+      margin-left: 5
+      padding: 1 4
+      font: verdana-11px-monochrome
+      color: #c0c0c0
+      enabled: false
+
+  HorizontalSeparator
+    margin-top: 5
+
+  Panel
+    id: buttons
+    margin-top: 5
+    height: 20
+    layout:
+      type: horizontalBox
+      align-right: true
+      spacing: -5
+    
+    SmallButton
+      id: ok
+      width: 40
+      !text: tr("Ok")
+    
+    SmallButton
+      id: apply
+      width: 45
+      !text: tr("Apply")
+    
+    SmallButton
+      id: cancel
+      width: 45
+      !text: tr("Cancel")

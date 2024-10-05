@@ -101,7 +101,6 @@ function UIComboBox:addOption(text, data)
   if not self.menuHeightForced then
     self.menuHeight = math.min(100, 25 * #self.options)
   end
-  self.menuScroll = self.menuHeight >= 100
   local index = #self.options
   if index == 1 then self:setCurrentOption(text) end
   return index
@@ -141,9 +140,7 @@ function UIComboBox:onMousePress(mousePos, mouseButton)
   menu:display({ x = self:getX(), y = self:getY() + self:getHeight() })
   connect(menu, { onDestroy = function() self:setOn(false) if self.btn then self.btn:setOn(false) end end })
   self:setOn(true)
-  if self.btn then
-    self.btn:setOn(true)
-  end
+  if self.btn then self.btn:setOn(true) end
   return true
 end
 
@@ -196,4 +193,8 @@ end
 
 function UIComboBox:canMouseScroll()
   return self.mouseScroll
+end
+
+function UIComboBox:getCurrentIndex()
+  return self.currentIndex
 end

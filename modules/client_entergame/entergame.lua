@@ -347,8 +347,14 @@ function EnterGame.init()
   enterGame:getChildById('accountPasswordTextEdit'):setText(password)
   enterGame:getChildById('accountNameTextEdit'):setText(account)
   rememberPasswordBox:setChecked(#account > 0)
-    
-  g_keyboard.bindKeyDown('Ctrl+G', EnterGame.openWindow)
+
+  Keybind.new("Misc.", "Change Character", "Ctrl+G", "")
+  Keybind.bind("Misc.", "Change Character", {
+    {
+      type = KEY_DOWN,
+      callback = EnterGame.openWindow,
+    }
+  })
 
   if g_game.isOnline() then
     return EnterGame.hide()
@@ -361,7 +367,8 @@ end
 
 function EnterGame.terminate()
   if not enterGame then return end
-  g_keyboard.unbindKeyDown('Ctrl+G')
+
+  Keybind.delete("Misc.", "Change Character")
 
   if logpass then
     logpass:destroy()

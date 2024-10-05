@@ -790,7 +790,7 @@ const TexturePtr& ThingType::getTexture(int animationPhase)
                 }
             }
         }
-        animationPhaseTexture = std::make_shared<Texture>(fullImage, true, false, true);
+        animationPhaseTexture = std::make_shared<Texture>(fullImage, true, false, false);
         m_loaded = true;
     }
     return animationPhaseTexture;

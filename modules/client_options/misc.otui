@@ -5,7 +5,7 @@ OptionPanel
   ComboBox
     id: profile
     margin-top: 3
-    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onOptionChange: modules.client_options.presetOption(self, self:getId(), self.currentIndex)
     @onSetup: |
       self:addOption("1")
       self:addOption("2")

@@ -3,7 +3,7 @@ PopupMenuButton < UIButton
   size: 0 21
   text-offset: 4 2
   text-align: left
-  font: verdana-11px-antialised
+  font: verdana-11px-rounded
 
   color: white
   background-color: alpha
@@ -14,10 +14,10 @@ PopupMenuButton < UIButton
     image-clip: 0 40 20 20
 
   $disabled:
-    color: #555555
+    color: #777777
 
 PopupMenuShortcutLabel < Label
-  font: verdana-11px-antialised
+  font: verdana-11px-rounded
   text-align: right
   anchors.fill: parent
   margin-right: 2
@@ -45,7 +45,7 @@ PopupScrollMenuButton < UIButton
   size: 0 21
   text-offset: 4 0
   text-align: left
-  font: verdana-11px-antialised
+  font: verdana-11px-rounded
 
   color: #aaaaaa
   background-color: alpha
@@ -56,10 +56,10 @@ PopupScrollMenuButton < UIButton
     image-clip: 0 40 20 20
 
   $disabled:
-    color: #555555
+    color: #777777
 
 PopupScrollMenuShortcutLabel < Label
-  font: verdana-11px-antialised
+  font: verdana-11px-rounded
   text-align: right
   anchors.fill: parent
   margin-right: 2

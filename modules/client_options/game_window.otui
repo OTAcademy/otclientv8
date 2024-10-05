@@ -7,7 +7,6 @@ OptionPanel
   OptionCheckBox
     id: classicView
     !text: tr('Classic view')
-    margin-top: 5
     
     $mobile:
       visible: false
@@ -23,17 +22,19 @@ OptionPanel
     id: highlightThingsUnderCursor
     !text: tr('Highlight things under cursor')
 
+  OptionCheckBox
+    id: floorShadow
+    !text: tr('Floor Shadow')
+
   Label
-    margin-top: 3
     id: crosshairLabel
     !text: tr("Crosshair")
     
   ComboBox
     id: crosshair
-    margin-top: 3
     margin-right: 2
     margin-left: 2
-    @onOptionChange: modules.client_options.setOption(self:getId(), self.currentIndex)
+    @onOptionChange: modules.client_options.presetOption(self, self:getId(), self.currentIndex)
     @onSetup: |
       self:addOption("None")
       self:addOption("Default")
@@ -41,18 +42,15 @@ OptionPanel
 
   Label
     id: floorFadingLabel
-    margin-top: 6
     @onSetup: |
       local value = modules.client_options.getOption('floorFading')
       self:setText(tr('Floor fading: %s ms', value))
 
   OptionScrollbar
     id: floorFading
-    margin-top: 3
     minimum: 0
     maximum: 2000
 
   Label
     id: floorFadingLabel2
-    margin-top: 6
     !text: (tr('Floor fading doesn\'t work with enabled light'))

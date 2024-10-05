@@ -15,9 +15,10 @@ lastStop = 0
 lastManualWalk = 0
 autoFinishNextServerWalk = 0
 turnKeys = {}
+local loaded = false
 
 function init()
-  connect(g_game, { onTeleport = onTeleport })
+  connect(g_game, { onGameStart = onGameStart, onTeleport = onTeleport })
   
   connect(LocalPlayer, {
     onPositionChange = onPositionChange,
@@ -27,11 +28,84 @@ function init()
   })
 
   modules.game_interface.getRootPanel().onFocusChange = stopSmartWalk
-  bindKeys()
+
+  Keybind.new("Movement", "Go " .. DirectionString[North],
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = "W"
+    },
+    {
+      [CHAT_MODE.ON] = "Numpad8",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+  Keybind.new("Movement", "Go " .. DirectionString[East],
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = "D"
+    },
+    {
+      [CHAT_MODE.ON] = "Numpad6",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+  Keybind.new("Movement", "Go " .. DirectionString[South],
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = "S"
+    },
+    {
+      [CHAT_MODE.ON] = "Numpad2",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+  Keybind.new("Movement", "Go " .. DirectionString[West],
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = "A"
+    },
+    {
+      [CHAT_MODE.ON] = "Numpad4",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+
+  Keybind.new("Movement", "Go " .. DirectionString[NorthEast],
+    {
+      [CHAT_MODE.ON] = "Numpad9",
+      [CHAT_MODE.OFF] = "E"
+    },
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+  Keybind.new("Movement", "Go " .. DirectionString[SouthEast],
+    {
+      [CHAT_MODE.ON] = "Numpad3",
+      [CHAT_MODE.OFF] = "C"
+    },
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+  Keybind.new("Movement", "Go " .. DirectionString[SouthWest],
+    {
+      [CHAT_MODE.ON] = "Numpad1",
+      [CHAT_MODE.OFF] = "Z"
+    },
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = ""
+    }, true)
+  Keybind.new("Movement", "Go " .. DirectionString[NorthWest],
+    {
+      [CHAT_MODE.ON] = "Numpad7",
+      [CHAT_MODE.OFF] = "Q"
+    },
+    {
+      [CHAT_MODE.ON] = "",
+      [CHAT_MODE.OFF] = ""
+    }, true)
 end
 
 function terminate()
-  disconnect(g_game, { onTeleport = onTeleport })
+  disconnect(g_game, { onGameStart = onGameStart, onTeleport = onTeleport })
   
   disconnect(LocalPlayer, {
     onPositionChange = onPositionChange,
@@ -42,116 +116,122 @@ function terminate()
   stopSmartWalk()
   unbindKeys()
   disableWSAD()
+  
+  loaded = false
+end
+
+function onGameStart()
+  if not loaded then
+    bindKeys()
+    loaded = true
+  end
 end
 
 function bindKeys()
-  bindWalkKey('Up', North)
-  bindWalkKey('Right', East)
-  bindWalkKey('Down', South)
-  bindWalkKey('Left', West)
-  bindWalkKey('Numpad8', North)
-  bindWalkKey('Numpad9', NorthEast)
-  bindWalkKey('Numpad6', East)
-  bindWalkKey('Numpad3', SouthEast)
-  bindWalkKey('Numpad2', South)
-  bindWalkKey('Numpad1', SouthWest)
-  bindWalkKey('Numpad4', West)
-  bindWalkKey('Numpad7', NorthWest)
+  bindDefaultWalkKey("Up", North)
+  bindDefaultWalkKey("Right", East)
+  bindDefaultWalkKey("Down", South)
+  bindDefaultWalkKey("Left", West)
 
-  bindTurnKey('Ctrl+Up', North)
-  bindTurnKey('Ctrl+Right', East)
-  bindTurnKey('Ctrl+Down', South)
-  bindTurnKey('Ctrl+Left', West)
-  bindTurnKey('Ctrl+Numpad8', North)
-  bindTurnKey('Ctrl+Numpad6', East)
-  bindTurnKey('Ctrl+Numpad2', South)
-  bindTurnKey('Ctrl+Numpad4', West)
+  bindTurnKeys()
+
+  for dir = North, NorthWest do
+    bindWalkKey(dir)
+  end
 end
 
 function unbindKeys()
-  unbindWalkKey('Up', North)
-  unbindWalkKey('Right', East)
-  unbindWalkKey('Down', South)
-  unbindWalkKey('Left', West)
-  unbindWalkKey('Numpad8', North)
-  unbindWalkKey('Numpad9', NorthEast)
-  unbindWalkKey('Numpad6', East)
-  unbindWalkKey('Numpad3', SouthEast)
-  unbindWalkKey('Numpad2', South)
-  unbindWalkKey('Numpad1', SouthWest)
-  unbindWalkKey('Numpad4', West)
-  unbindWalkKey('Numpad7', NorthWest)
+  unbindDefaultWalkKey("Up")
+  unbindDefaultWalkKey("Right")
+  unbindDefaultWalkKey("Down")
+  unbindDefaultWalkKey("Left")
 
-  unbindTurnKey('Ctrl+Up', North)
-  unbindTurnKey('Ctrl+Right', East)
-  unbindTurnKey('Ctrl+Down', South)
-  unbindTurnKey('Ctrl+Left', West)
-  unbindTurnKey('Ctrl+Numpad8', North)
-  unbindTurnKey('Ctrl+Numpad6', East)
-  unbindTurnKey('Ctrl+Numpad2', South)
-  unbindTurnKey('Ctrl+Numpad4', West)
+  unbindTurnKeys()
+
+  for dir = North, NorthWest do
+    unbindWalkKey(dir)
+  end
 end
 
 function enableWSAD()
   if wsadWalking then
     return
   end
-  wsadWalking = true  
+  wsadWalking = true
   local player = g_game.getLocalPlayer()
   if player then
-    player:lockWalk(100) -- 100 ms walk lock for all directions    
+    player:lockWalk(100) -- 100 ms walk lock for all directions
   end
-
-  bindWalkKey("W", North)
-  bindWalkKey("D", East)
-  bindWalkKey("S", South)
-  bindWalkKey("A", West)
-
-  bindTurnKey("Ctrl+W", North)
-  bindTurnKey("Ctrl+D", East)
-  bindTurnKey("Ctrl+S", South)
-  bindTurnKey("Ctrl+A", West)
-
-  bindWalkKey("E", NorthEast)
-  bindWalkKey("Q", NorthWest)
-  bindWalkKey("C", SouthEast)
-  bindWalkKey("Z", SouthWest)
 end
 
 function disableWSAD()
   if not wsadWalking then
     return
   end
+
   wsadWalking = false
-
-  unbindWalkKey("W")
-  unbindWalkKey("D")
-  unbindWalkKey("S")
-  unbindWalkKey("A")
-
-  unbindTurnKey("Ctrl+W")
-  unbindTurnKey("Ctrl+D")
-  unbindTurnKey("Ctrl+S")
-  unbindTurnKey("Ctrl+A")
-
-  unbindWalkKey("E")
-  unbindWalkKey("Q")
-  unbindWalkKey("C")
-  unbindWalkKey("Z")
 end
 
-function bindWalkKey(key, dir)
+function bindDefaultWalkKey(key, dir)
   local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.bindKeyDown(key, function() changeWalkDir(dir) end, gameRootPanel, true)
-  g_keyboard.bindKeyUp(key, function() changeWalkDir(dir, true) end, gameRootPanel, true)
-  g_keyboard.bindKeyPress(key, function(c, k, ticks) smartWalk(dir, ticks) end, gameRootPanel)
+  g_keyboard.bindKeyDown(
+    key,
+    function()
+      changeWalkDir(dir)
+    end,
+    gameRootPanel,
+    true
+  )
+  g_keyboard.bindKeyUp(
+    key,
+    function()
+      changeWalkDir(dir, true)
+    end,
+    gameRootPanel,
+    true
+  )
+  g_keyboard.bindKeyPress(
+    key,
+    function(c, k, ticks)
+      smartWalk(dir, ticks)
+    end,
+    gameRootPanel
+  )
+
+  bindTurnKey("Ctrl+" .. key, dir)
 end
 
-function unbindWalkKey(key)
+function unbindDefaultWalkKey(key)
   local gameRootPanel = modules.game_interface.getRootPanel()
   g_keyboard.unbindKeyDown(key, gameRootPanel)
   g_keyboard.unbindKeyUp(key, gameRootPanel)
   g_keyboard.unbindKeyPress(key, gameRootPanel)
+
+  unbindTurnKey("Ctrl+" .. key)
+end
+
+function bindWalkKey(dir)
+  local gameRootPanel = modules.game_interface.getRootPanel()
+  Keybind.bind("Movement", "Go " .. DirectionString[dir], {
+    {
+      type = KEY_DOWN,
+      callback = function() changeWalkDir(dir) end,
+      alone = true
+    },
+    {
+      type = KEY_UP,
+      callback = function() changeWalkDir(dir, true) end,
+      alone = true
+    },
+    {
+      type = KEY_PRESS,
+      callback = function(c, k, ticks) smartWalk(dir, ticks) end
+    }
+  }, gameRootPanel)
+end
+
+function unbindWalkKey(dir)
+  Keybind.unbind("Movement", "Go " .. DirectionString[dir])
 end
 
 function bindTurnKey(key, dir)
@@ -159,7 +239,10 @@ function bindTurnKey(key, dir)
   local gameRootPanel = modules.game_interface.getRootPanel()
   g_keyboard.bindKeyDown(key, function() turn(dir, false) end, gameRootPanel)
   g_keyboard.bindKeyPress(key, function() turn(dir, true) end, gameRootPanel)
-  g_keyboard.bindKeyUp(key, function() local player = g_game.getLocalPlayer() if player then player:lockWalk(200) end end, gameRootPanel)
+  g_keyboard.bindKeyUp(key, function()
+    local player = g_game.getLocalPlayer()
+    if player then player:lockWalk(200) end
+  end, gameRootPanel)
 end
 
 function unbindTurnKey(key)
@@ -168,6 +251,30 @@ function unbindTurnKey(key)
   g_keyboard.unbindKeyDown(key, gameRootPanel)
   g_keyboard.unbindKeyPress(key, gameRootPanel)
   g_keyboard.unbindKeyUp(key, gameRootPanel)
+end
+
+function bindTurnKeys()
+  for dir = North, West do
+    local keys = Keybind.getKeybindKeys("Movement", "Go " .. DirectionString[dir])
+    if keys.primary and keys.primary:len() > 0 then
+      bindTurnKey("Ctrl+" .. keys.primary, dir)
+    end
+    if keys.secondary and keys.secondary:len() > 0 then
+      bindTurnKey("Ctrl+" .. keys.secondary, dir)
+    end
+  end
+end
+
+function unbindTurnKeys()
+  for dir = North, West do
+    local keys = Keybind.getKeybindKeys("Movement", "Go " .. DirectionString[dir])
+    if keys.primary and keys.primary:len() > 0 then
+      unbindTurnKey("Ctrl+" .. keys.primary)
+    end
+    if keys.secondary and keys.secondary:len() > 0 then
+      unbindTurnKey("Ctrl+" .. keys.secondary)
+    end
+  end
 end
 
 function stopSmartWalk()

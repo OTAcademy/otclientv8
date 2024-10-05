@@ -43,13 +43,22 @@ end
 
 -- public functions
 function init()
-  connect(g_game, { onGameStart = online,
-                    onGameEnd = offline,
-                    onPingBack = updatePing })
+  connect(g_game, {
+    onGameStart = online,
+    onGameEnd = offline,
+    onPingBack = updatePing
+  })
 
-  topMenu = g_ui.createWidget('TopMenu', g_ui.getRootWidget())  
-  g_keyboard.bindKeyDown('Ctrl+Shift+T', toggle)
-  
+  topMenu = g_ui.createWidget('TopMenu', g_ui.getRootWidget())
+
+  Keybind.new("UI", "Toggle Top Menu", "Ctrl+Shift+T", "")
+  Keybind.bind("UI", "Toggle Top Menu", {
+    {
+      type = KEY_DOWN,
+      callback = toggle,
+    }
+  })
+
   if g_game.isOnline() then
     scheduleEvent(online, 10)
   end
@@ -64,8 +73,9 @@ function terminate()
                        onPingBack = updatePing })
   removeEvent(fpsUpdateEvent)
   removeEvent(statusUpdateEvent)
-  
-  g_keyboard.unbindKeyDown('Ctrl+Shift+T')
+
+  Keybind.delete("UI", "Toggle Top Menu")
+
   topMenu:destroy()
 end
 

@@ -90,7 +90,13 @@ function init()
   g_window.setTitle(g_app.getName())
   g_window.setIcon('/images/clienticon')
 
-  g_keyboard.bindKeyDown('Ctrl+Shift+R', reloadScripts)
+  Keybind.new("Misc.", "Reload Scripts", "Ctrl+Shift+R", "")
+  Keybind.bind("Misc.", "Reload Scripts", {
+    {
+      type = KEY_DOWN,
+      callback = reloadScripts,
+    }
+  })
 
   -- generate machine uuid, this is a security measure for storing passwords
   if not g_crypt.setMachineUUID(g_settings.get('uuid')) then
@@ -100,10 +106,17 @@ function init()
 end
 
 function terminate()
-  disconnect(g_app, { onRun = startup,
-                      onExit = exit })
-  disconnect(g_game, { onGameStart = onGameStart,
-                       onGameEnd = onGameEnd })
+  disconnect(g_app, {
+    onRun = startup,
+    onExit = exit
+  })
+  disconnect(g_game, {
+    onGameStart = onGameStart,
+    onGameEnd = onGameEnd
+  })
+
+  Keybind.delete("Misc.", "Reload Scripts")
+
   -- save window configs
   g_settings.set('window-size', g_window.getUnmaximizedSize())
   g_settings.set('window-pos', g_window.getUnmaximizedPos())

@@ -112,6 +112,7 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_sprites", "isLoaded", &SpriteManager::isLoaded, &g_sprites);
     g_lua.bindSingletonFunction("g_sprites", "getSprSignature", &SpriteManager::getSignature, &g_sprites);
     g_lua.bindSingletonFunction("g_sprites", "getSpritesCount", &SpriteManager::getSpritesCount, &g_sprites);
+    g_lua.bindSingletonFunction("g_sprites", "spriteSize", &SpriteManager::spriteSize, &g_sprites);
 
     g_lua.registerSingletonClass("g_map");
     g_lua.bindSingletonFunction("g_map", "isLookPossible", &Map::isLookPossible, &g_map);
@@ -585,7 +586,6 @@ void Client::registerLuaFunctions()
     g_lua.registerClass<ThingType>();
     g_lua.bindClassStaticFunction<ThingType>("create", []{ return std::make_shared<ThingType>(); });
     g_lua.bindClassMemberFunction<ThingType>("getId", &ThingType::getId);
-    g_lua.bindClassMemberFunction<ThingType>("getClothSlot", &ThingType::getClothSlot);
     g_lua.bindClassMemberFunction<ThingType>("getCategory", &ThingType::getCategory);
     g_lua.bindClassMemberFunction<ThingType>("getSize", &ThingType::getSize);
     g_lua.bindClassMemberFunction<ThingType>("getWidth", &ThingType::getWidth);

@@ -20,7 +20,14 @@ function init()
   battleButton = modules.client_topmenu.addRightGameToggleButton('battleButton', tr('Battle') .. ' (Ctrl+B)', '/images/topbuttons/battle', toggle, false, 2)
   battleButton:setOn(true)
   battleWindow = g_ui.loadUI('battle', modules.game_interface.getRightPanel())
-  g_keyboard.bindKeyDown('Ctrl+B', toggle)
+
+  Keybind.new("Windows", "Toggle battle list", "Ctrl+B", "")
+  Keybind.bind("Windows", "Toggle battle list", {
+    {
+      type = KEY_DOWN,
+      callback = toggle,
+    }
+  })
 
   -- this disables scrollbar auto hiding
   local scrollbar = battleWindow:getChildById('miniwindowScrollBar')
@@ -90,8 +97,9 @@ function terminate()
   end
   
   battleButtons = {}
-  
-  g_keyboard.unbindKeyDown('Ctrl+B')
+
+  Keybind.delete("Windows", "Toggle battle list")
+
   battleButton:destroy()
   battleWindow:destroy()
   mouseWidget:destroy()

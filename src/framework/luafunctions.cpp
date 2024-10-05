@@ -279,6 +279,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Config>("getNodeSize", &Config::getNodeSize);
     g_lua.bindClassMemberFunction<Config>("mergeNode", &Config::mergeNode);
     g_lua.bindClassMemberFunction<Config>("getFileName", &Config::getFileName);
+    g_lua.bindClassMemberFunction<Config>("clear", &Config::clear);
 
     // Module
     g_lua.registerClass<Module>();

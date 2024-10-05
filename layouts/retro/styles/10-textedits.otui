@@ -12,7 +12,7 @@ TextEdit < UITextEdit
   change-cursor-image: true
   $disabled:
     color: #27272788
-    opacity: 0.5
+    opacity: 0.8
     change-cursor-image: false
 
 PasswordTextEdit < TextEdit

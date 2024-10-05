@@ -19,12 +19,87 @@ function init()
   minimapWidget = minimapWindow:recursiveGetChildById('minimap')
 
   local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.bindKeyPress('Alt+Left', function() minimapWidget:move(1,0) end, gameRootPanel)
-  g_keyboard.bindKeyPress('Alt+Right', function() minimapWidget:move(-1,0) end, gameRootPanel)
-  g_keyboard.bindKeyPress('Alt+Up', function() minimapWidget:move(0,1) end, gameRootPanel)
-  g_keyboard.bindKeyPress('Alt+Down', function() minimapWidget:move(0,-1) end, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+M', toggle)
-  g_keyboard.bindKeyDown('Ctrl+Shift+M', toggleFullMap)
+
+  Keybind.new("Windows", "Toggle Minimap", "Ctrl+M", "")
+  Keybind.new("UI", "Toggle Full Map", "Ctrl+Shift+M", "")
+
+  Keybind.new("Minimap", "Center", "", "")
+  Keybind.new("Minimap", "One Floor Down", "Alt+PageDown", "")
+  Keybind.new("Minimap", "One Floor Up", "Alt+PageUp", "")
+  Keybind.new("Minimap", "Scroll East", "Alt+Right", "")
+  Keybind.new("Minimap", "Scroll North", "Alt+Up", "")
+  Keybind.new("Minimap", "Scroll South", "Alt+Down", "")
+  Keybind.new("Minimap", "Scroll West", "Alt+Left", "")
+  Keybind.new("Minimap", "Zoom In", "Alt+End", "")
+  Keybind.new("Minimap", "Zoom Out", "Alt+Home", "")
+
+  Keybind.bind("Windows", "Toggle Minimap", {
+    {
+      type = KEY_DOWN,
+      callback = toggle,
+    }
+  })
+  Keybind.bind("UI", "Toggle Full Map", {
+    {
+      type = KEY_DOWN,
+      callback = toggleFullMap,
+    }
+  })
+
+  Keybind.bind("Minimap", "Center", {
+    {
+      type = KEY_DOWN,
+      callback = reset,
+    }
+  })
+  Keybind.bind("Minimap", "One Floor Down", {
+    {
+      type = KEY_DOWN,
+      callback = floorDown,
+    }
+  })
+  Keybind.bind("Minimap", "One Floor Up", {
+    {
+      type = KEY_DOWN,
+      callback = floorUp,
+    }
+  })
+  Keybind.bind("Minimap", "Scroll East", {
+    {
+      type = KEY_PRESS,
+      callback = function() minimapWidget:move(-1, 0) end,
+    }
+  }, gameRootPanel)
+  Keybind.bind("Minimap", "Scroll North", {
+    {
+      type = KEY_PRESS,
+      callback = function() minimapWidget:move(0, 1) end,
+    }
+  }, gameRootPanel)
+  Keybind.bind("Minimap", "Scroll South", {
+    {
+      type = KEY_PRESS,
+      callback = function() minimapWidget:move(0, -1) end,
+    }
+  }, gameRootPanel)
+  Keybind.bind("Minimap", "Scroll West", {
+    {
+      type = KEY_PRESS,
+      callback = function() minimapWidget:move(1, 0) end,
+    }
+  }, gameRootPanel)
+  Keybind.bind("Minimap", "Zoom In", {
+    {
+      type = KEY_DOWN,
+      callback = zoomIn,
+    }
+  })
+  Keybind.bind("Minimap", "Zoom Out", {
+    {
+      type = KEY_DOWN,
+      callback = zoomOut,
+    }
+  })
 
   minimapWindow:setup()
 
@@ -56,13 +131,18 @@ function terminate()
     onPositionChange = updateCameraPosition
   })
 
-  local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.unbindKeyPress('Alt+Left', gameRootPanel)
-  g_keyboard.unbindKeyPress('Alt+Right', gameRootPanel)
-  g_keyboard.unbindKeyPress('Alt+Up', gameRootPanel)
-  g_keyboard.unbindKeyPress('Alt+Down', gameRootPanel)
-  g_keyboard.unbindKeyDown('Ctrl+M')
-  g_keyboard.unbindKeyDown('Ctrl+Shift+M')
+  Keybind.delete("Windows", "Toggle Minimap")
+  Keybind.delete("UI", "Toggle Full Map")
+
+  Keybind.delete("Minimap", "Center")
+  Keybind.delete("Minimap", "One Floor Down")
+  Keybind.delete("Minimap", "One Floor Up")
+  Keybind.delete("Minimap", "Scroll East")
+  Keybind.delete("Minimap", "Scroll North")
+  Keybind.delete("Minimap", "Scroll South")
+  Keybind.delete("Minimap", "Scroll West")
+  Keybind.delete("Minimap", "Zoom In")
+  Keybind.delete("Minimap", "Zoom Out")
 
   minimapWindow:destroy()
   if minimapButton then
@@ -161,4 +241,24 @@ function toggleFullMap()
   oldPos = minimapWidget:getCameraPosition()
   minimapWidget:setZoom(zoom)
   minimapWidget:setCameraPosition(pos)
+end
+
+function center()
+  minimapWidget:reset()
+end
+
+function floorDown()
+  minimapWidget:floorDown(1)
+end
+
+function floorUp()
+  minimapWidget:floorUp(1)
+end
+
+function zoomIn()
+  minimapWidget:zoomIn()
+end
+
+function zoomOut()
+  minimapWidget:zoomOut()
 end

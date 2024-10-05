@@ -10,7 +10,7 @@ OptionsTabBarVertical < UITabBar
     image-border: 2
     vertical-scrollbar: scrollBar
     margin-right: 1
-    padding: 10
+    padding: 7
     layout: verticalBox
 
   VerticalScrollBar
@@ -32,7 +32,7 @@ OptionsTabBarVerticalButton < UIButton
   text-offset: 0 2
   image-source: /images/options/2pixel-up-frame-borderimage
   image-border: 2
-  padding: 10
+  padding: 7
   border-width: 1
   border-color-top: #000000
   border-color-left: #000000
@@ -62,7 +62,30 @@ OptionsTabContent < Panel
   anchors.left: optionsTabBar.right
   anchors.right: parent.right
   anchors.bottom: optionsTabBar.bottom
-  margin-left: 10
+  margin-left: 5
   image-source: /images/options/2pixel-up-frame-borderimage
   image-border: 2
-  padding: 5
+  padding: 7
+
+SmallButton < UIButton
+  size: 106 20
+  font: cipsoftFont
+  text-offset: 0 2
+  image-source: /images/ui/button
+  image-clip: 0 0 22 23
+  image-border: 3
+  padding: 5 10 5 10
+  change-cursor-image: true
+  cursor: pointer
+  color: #ffffff
+
+  $hover !disabled:
+    image-clip: 0 23 22 23
+
+  $pressed:
+    image-clip: 0 46 22 23
+    text-offset: 1 2
+
+  $disabled:
+    color: #ffffff88
+    change-cursor-image: false

@@ -1,0 +1,92 @@
+MainWindow
+  size: 275 190
+  !text: tr("Assign Object")
+  layout:
+    type: verticalBox
+    spacing: 5
+    fit-children: true
+  
+  Panel
+    id: panel
+    size: 192 86
+    layout:
+      type: horizontalBox
+      spacing: 5
+
+    UIItem
+      id: item
+      width: 86
+      padding: 11
+      image-source: /images/ui/panel_flat
+      image-border: 1
+      virtual: true
+      phantom: true
+      item-id: 268
+    
+    Panel
+      id: actions
+      width: 110
+      layout:
+        type: verticalBox
+        spacing: 6
+      
+      RadioBox
+        id: yourself
+        !text: tr("Use on yourself")
+      
+      RadioBox
+        id: target
+        !text: tr("Use on target")
+      
+      RadioBox
+        id: crosshair
+        !text: tr("With crosshair")
+      
+      RadioBox
+        id: equip
+        !text: tr("Equip/unequip")
+        enabled: false
+      
+      RadioBox
+        id: use
+        !text: tr("Use")
+        enabled: false
+  
+  Panel
+    id: selectObject
+    height: 20
+
+    SmallButton
+      id: button
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 86
+      !text: tr("Select Object")
+  
+  HorizontalSeparator
+    margin-top: 5
+
+  Panel
+    id: buttons
+    margin-top: 5
+    height: 20
+    layout:
+      type: horizontalBox
+      align-right: true
+      spacing: -5
+    
+    SmallButton
+      id: ok
+      width: 40
+      !text: tr("Ok")
+    
+    SmallButton
+      id: apply
+      width: 45
+      !text: tr("Apply")
+    
+    SmallButton
+      id: cancel
+      width: 45
+      !text: tr("Cancel")
+  

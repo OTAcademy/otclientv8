@@ -18,6 +18,8 @@ limitedZoom = false
 hookedMenuOptions = {}
 lastDirTime = g_clock.millis()
 
+local lastStopAction = 0
+
 function init()
   g_ui.importStyle('styles/countwindow')
 
@@ -79,21 +81,54 @@ end
 function bindKeys()
   gameRootPanel:setAutoRepeatDelay(10)
 
-  local lastAction = 0
-  g_keyboard.bindKeyPress('Escape', function() 
-    if lastAction + 50 > g_clock.millis() then return end 
-    lastAction = g_clock.millis()
-    g_game.cancelAttackAndFollow() 
+  Keybind.new("Movement", "Stop All Actions", "Esc", "", true)
+  Keybind.new("Misc", "Logout", "Ctrl+L", "Ctrl+Q")
+  Keybind.new("UI", "Clear All Texts", "Ctrl+W", "")
+
+  Keybind.bind("Movement", "Stop All Actions", {
+    {
+      type = KEY_PRESS,
+      callback = function()
+        if lastStopAction + 50 > g_clock.millis() then return end
+        lastStopAction = g_clock.millis()
+        g_game.cancelAttackAndFollow()
+      end,
+    }
+  }, gameRootPanel)
+
+  Keybind.bind("Misc", "Logout", {
+    {
+      type = KEY_PRESS,
+      callback = function() tryLogout(false) end,
+    }
+  }, gameRootPanel)
+
+  Keybind.bind("UI", "Clear All Texts", {
+    {
+      type = KEY_DOWN,
+      callback = function()
+        g_map.cleanTexts()
+        modules.game_textmessage.clearMessages()
+      end,
+    }
+  }, gameRootPanel)
+
+  g_keyboard.bindKeyPress('Ctrl+=', function()
+    if g_game.getFeature(GameNoDebug) then return end
+    gameMapPanel:zoomIn()
   end, gameRootPanel)
-  g_keyboard.bindKeyPress('Ctrl+=', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomIn() end, gameRootPanel)
-  g_keyboard.bindKeyPress('Ctrl+-', function() if g_game.getFeature(GameNoDebug) then return end gameMapPanel:zoomOut() end, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+Q', function() tryLogout(false) end, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+L', function() tryLogout(false) end, gameRootPanel)
-  g_keyboard.bindKeyDown('Ctrl+W', function() g_map.cleanTexts() modules.game_textmessage.clearMessages() end, gameRootPanel)
+  g_keyboard.bindKeyPress('Ctrl+-', function()
+    if g_game.getFeature(GameNoDebug) then return end
+    gameMapPanel:zoomOut()
+  end, gameRootPanel)
 end
 
 function terminate()
   hide()
+
+  Keybind.delete("Movement", "Stop All Actions")
+  Keybind.delete("Misc", "Logout")
+  Keybind.delete("UI", "Clear All Texts")
 
   hookedMenuOptions = {}
   markThing = nil

@@ -12,11 +12,18 @@ function init()
 
   bugTextEdit = bugReportWindow:getChildById('bugTextEdit')
 
-  g_keyboard.bindKeyDown(HOTKEY, show, modules.game_interface.getRootPanel())
+  Keybind.new("Dialogs", "Open Bugreport", HOTKEY, "")
+  Keybind.bind("Dialogs", "Open Bugreport", {
+    {
+      type = KEY_DOWN,
+      callback = show,
+    }
+  }, modules.game_interface.getRootPanel())
 end
 
 function terminate()
-  g_keyboard.unbindKeyDown(HOTKEY, modules.game_interface.getRootPanel())
+  Keybind.delete("Dialogs", "Open Bugreport")
+
   bugReportWindow:destroy()
 end
 

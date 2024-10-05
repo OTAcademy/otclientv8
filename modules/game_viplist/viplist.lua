@@ -5,13 +5,20 @@ editVipWindow = nil
 vipInfo = {}
 
 function init()
-  connect(g_game, { onGameStart = refresh,
-                    onGameEnd = clear,
-                    onAddVip = onAddVip,
-                    onVipStateChange = onVipStateChange })
+  connect(g_game, {
+    onGameStart = refresh,
+    onGameEnd = clear,
+    onAddVip = onAddVip,
+    onVipStateChange = onVipStateChange
+  })
 
-
-  g_keyboard.bindKeyDown('Ctrl+P', toggle)
+  Keybind.new("Windows", "Toggle VIP list", "Ctrl+P", "")
+  Keybind.bind("Windows", "Toggle VIP list", {
+    {
+      type = KEY_DOWN,
+      callback = toggle,
+    }
+  })
 
   vipButton = modules.client_topmenu.addRightGameToggleButton('vipListButton', tr('VIP List') .. ' (Ctrl+P)', '/images/topbuttons/viplist', toggle, false, 3)
   vipButton:setOn(true)
@@ -25,11 +32,14 @@ function init()
 end
 
 function terminate()
-  g_keyboard.unbindKeyDown('Ctrl+P')
-  disconnect(g_game, { onGameStart = refresh,
-                       onGameEnd = clear,
-                       onAddVip = onAddVip,
-                       onVipStateChange = onVipStateChange })
+  Keybind.delete("Windows", "Toggle VIP list")
+
+  disconnect(g_game, {
+    onGameStart = refresh,
+    onGameEnd = clear,
+    onAddVip = onAddVip,
+    onVipStateChange = onVipStateChange
+  })
 
   if not g_game.getFeature(GameAdditionalVipInfo) then
     saveVipInfo()

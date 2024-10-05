@@ -17,6 +17,7 @@ Module
     dofile 'globals'
     dofile 'config'
     dofile 'settings'
+    dofile 'keybind'
     dofile 'keyboard'
     dofile 'mouse'
     dofile 'net'
@@ -32,3 +33,7 @@ Module
     dofile 'json'
     dofile 'http'
     dofile 'test'
+    
+    Keybind.init()
+  
+  @onUnload: Keybind.terminate()

@@ -29,7 +29,6 @@ OptionPanel
 
   Label
     id: hotkeyDelayLabel
-    margin-top: 10
     !tooltip: tr('Give you some time to make a turn while walking if you press many keys simultaneously')
     @onSetup: |
       local value = modules.client_options.getOption('hotkeyDelay')
@@ -37,13 +36,11 @@ OptionPanel
 
   OptionScrollbar
     id: hotkeyDelay
-    margin-top: 3
     minimum: 5
     maximum: 50
 
   Label
     id: walkFirstStepDelayLabel
-    margin-top: 10
     @onSetup: |
       local value = modules.client_options.getOption('walkFirstStepDelay')
       self:setText(tr('Walk delay after first step: %s ms', value))
@@ -53,7 +50,6 @@ OptionPanel
 
   OptionScrollbar
     id: walkFirstStepDelay
-    margin-top: 3
     minimum: 50
     maximum: 300
 
@@ -62,7 +58,6 @@ OptionPanel
 
   Label
     id: walkTurnDelayLabel
-    margin-top: 10
     @onSetup: |
       local value = modules.client_options.getOption('walkTurnDelay')
       self:setText(tr('Walk delay after turn: %s ms', value))
@@ -72,7 +67,6 @@ OptionPanel
 
   OptionScrollbar
     id: walkTurnDelay
-    margin-top: 3
     minimum: 0
     maximum: 300
 
@@ -81,7 +75,6 @@ OptionPanel
 
   Label
     id: walkCtrlTurnDelayLabel
-    margin-top: 10
     $mobile:
       visible: false
     @onSetup: |
@@ -90,7 +83,6 @@ OptionPanel
 
   OptionScrollbar
     id: walkCtrlTurnDelay
-    margin-top: 3
     minimum: 0
     maximum: 300    
     $mobile:
@@ -98,7 +90,6 @@ OptionPanel
 
   Label
     id: walkStairsDelayLabel
-    margin-top: 10
     @onSetup: |
       local value = modules.client_options.getOption('walkStairsDelay')
       self:setText(tr('Walk delay after floor change: %s ms', value))
@@ -107,7 +98,6 @@ OptionPanel
 
   OptionScrollbar
     id: walkStairsDelay
-    margin-top: 3
     minimum: 0
     maximum: 300
     $mobile:
@@ -115,7 +105,6 @@ OptionPanel
 
   Label
     id: walkTeleportDelayLabel
-    margin-top: 10
     @onSetup: |
       local value = modules.client_options.getOption('walkTeleportDelay')
       self:setText(tr('Walk delay after teleport: %s ms', value))
@@ -124,7 +113,6 @@ OptionPanel
 
   OptionScrollbar
     id: walkTeleportDelay
-    margin-top: 3
     minimum: 0
     maximum: 300
     $mobile:

@@ -26,7 +26,6 @@ Button < UIButton
 TabButton < UIButton
   size: 22 23
   image-source: /images/ui/tabbutton_rounded
-  image-color: #dfdfdf
   image-clip: 0 0 22 23
   image-border: 3
   text-offset: 0 1
@@ -89,17 +88,17 @@ PreviousButton < UIButton
 AddButton < UIButton
   size: 20 20
   image-source: /images/ui/icon_add
-  image-color: #dfdfdfff
+  image-color: #ffffffff
   text-offset: 0 1
   change-cursor-image: true
   cursor: pointer
 
   $hover !disabled:
-    image-color: #dfdfdf99
+    image-color: #ffffff99
 
   $pressed:
-    image-color: #dfdfdf44
+    image-color: #ffffff44
 
   $disabled:
-    image-color: #dfdfdf55
+    image-color: #ffffff55
     change-cursor-image: false

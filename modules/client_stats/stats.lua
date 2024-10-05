@@ -30,8 +30,14 @@ function init()
   statsWindow = g_ui.displayUI('stats')
   statsWindow:hide()
 
-  g_keyboard.bindKeyDown('Ctrl+Alt+D', toggle)
-    
+  Keybind.new("Debug", "Toggle Stats", "Ctrl+Alt+D", "")
+  Keybind.bind("Debug", "Toggle Stats", {
+    {
+      type = KEY_DOWN,
+      callback = toggle,
+    }
+  })
+
   luaStats = statsWindow:recursiveGetChildById('luaStats')
   luaCallback = statsWindow:recursiveGetChildById('luaCallback')
   mainStats = statsWindow:recursiveGetChildById('mainStats')
@@ -57,8 +63,8 @@ function terminate()
   statsWindow:destroy()
   statsButton:destroy()
 
-  g_keyboard.unbindKeyDown('Ctrl+Alt+D')
-  
+  Keybind.delete("Debug", "Toggle Stats")
+
   removeEvent(updateEvent)
   removeEvent(monitorEvent)
 end

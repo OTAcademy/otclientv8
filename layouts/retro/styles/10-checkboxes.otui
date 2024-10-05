@@ -1,9 +1,8 @@
 CheckBox < UICheckBox
   size: 12 12
   text-align: left
-  text-offset: 18 -1
-  color: #dfdfdf
-  image-color: #dfdfdfff
+  text-offset: 16 -1
+  color: #c0c0c0
   image-rect: 0 0 12 12
   image-source: /images/ui/checkbox
   change-cursor-image: true
@@ -19,9 +18,7 @@ CheckBox < UICheckBox
     image-clip: 0 12 12 12
 
   $disabled:
-    image-color: #dfdfdf88
-    color: #dfdfdf88
-    opacity: 0.8
+    color: #707070
     change-cursor-image: false
 
 ColorBox < UICheckBox
@@ -64,3 +61,7 @@ ButtonBox < UICheckBox
 
 ButtonBoxRounded < ButtonBox
   image-source: /images/ui/button_rounded
+
+RadioBox < CheckBox
+  font: verdana-11px-monochrome
+  image-source: /images/ui/checkbox_round
