@@ -42,7 +42,7 @@ function UITabBar:addTab(text, panel, icon)
   panel.isTab = true
   tab.tabPanel = panel
   tab.tabBar = self
-  tab:setId('tab')
+  tab:setId('tab' .. #self.tabs + 1)
   tab:setText(text)
   tab:setWidth(tab:getTextSize().width + tab:getPaddingLeft() + tab:getPaddingRight())
   tab.onClick = onTabClick

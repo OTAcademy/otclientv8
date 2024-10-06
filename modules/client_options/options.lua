@@ -152,10 +152,18 @@ function init()
   chatModeGroup:selectWidget(keybindsPanel.chatMode.on)
 
   keybindsButton = optionsTabBar:addTab(tr("Keybinds"), keybindsPanel)
-  keybindsButton.arrow:hide()
-
   hotkeysButton = optionsTabBar:addTab(tr("Hotkeys"), keybindsPanel)
-  hotkeysButton.arrow:hide()
+
+  addSubTab(controlsButton, keybindsButton, false, function()
+    keybindsPanel.search.field:clearText()
+    keybindsPanel.buttons.newAction:hide()
+    updateKeybinds()
+  end)
+  addSubTab(controlsButton, hotkeysButton, false, function()
+    keybindsPanel.search.field:clearText()
+    keybindsPanel.buttons.newAction:hide()
+    updateHotkeys()
+  end)
 
   assignObjectWindow = g_ui.displayUI("action_object")
   assignObjectWindow.selectObject.button.onClick = showMouseGrabber
@@ -223,18 +231,16 @@ function init()
 
   hudPanel = g_ui.loadUI("hud")
   hudButton = optionsTabBar:addTab(tr("HUD"), hudPanel)
-  hudButton.arrow:hide()
-  hudButton:hide()
 
   consolePanel = g_ui.loadUI("console")
   consoleButton = optionsTabBar:addTab(tr("Console"), consolePanel)
-  consoleButton.arrow:hide()
-  consoleButton:hide()
 
   gameWindowPanel = g_ui.loadUI("game_window")
   gameWindowButton = optionsTabBar:addTab(tr("Game Window"), gameWindowPanel)
-  gameWindowButton.arrow:hide()
-  gameWindowButton:hide()
+
+  addSubTab(interfaceButton, hudButton, true)
+  addSubTab(interfaceButton, consoleButton, true)
+  addSubTab(interfaceButton, gameWindowButton, true)
 
   graphicsPanel = g_ui.loadUI("graphics")
   optionsTabBar:addTab(tr("Graphics"), graphicsPanel, "/images/options/icon-graphics"):setMarginTop(10)
@@ -249,8 +255,8 @@ function init()
   if not g_game.getFeature(GameNoDebug) and not g_app.isMobile() then
     debugPanel = g_ui.loadUI("debug")
     debugButton = optionsTabBar:addTab(tr("Debug"), debugPanel)
-    debugButton.arrow:hide()
-    debugButton:hide()
+
+    addSubTab(miscButton, debugButton, true)
 
     for _, v in ipairs(g_extras.getAll()) do
       local extrasButton = g_ui.createWidget("OptionCheckBox")
@@ -427,92 +433,50 @@ function hide()
   optionsWindow:hide()
 end
 
--- this could have been more modular, not a priority
+function addSubTab(parent, subTab, hidden, callback)
+  if not parent.subTabs then
+    parent.subTabs = {}
+  end
+
+  parent.subTabs[subTab:getId()] = subTab
+  subTab.subParent = parent
+  subTab.arrow:hide()
+  if hidden then
+    subTab:hide()
+  end
+  subTab.tabCallback = callback
+end
+
 function onTabChange(tabBar, tab)
   tab.arrow:setOn(true)
 
-  controlsButton.arrow:show()
-  if tab == keybindsButton then
-    keybindsPanel.search.field:clearText()
-    controlsButton.arrow:hide()
-    hotkeysButton.arrow:hide()
-    keybindsButton.arrow:show()
-
-    keybindsPanel.buttons.newAction:hide()
-
-    updateKeybinds()
-
-    keybindsButton:show()
-  elseif tab == hotkeysButton then
-    keybindsPanel.search.field:clearText()
-    controlsButton.arrow:hide()
-    keybindsButton.arrow:hide()
-    hotkeysButton.arrow:show()
-
-    keybindsPanel.buttons.newAction:show()
-
-    updateHotkeys()
-
-    hotkeysButton:show()
-  elseif tab.tabPanel == controlsPanel then
-    hotkeysButton.arrow:hide()
-    hotkeysButton:show()
-    keybindsButton.arrow:hide()
-    keybindsButton:show()
-  else
-    keybindsButton:hide()
-    keybindsButton.arrow:hide()
-    hotkeysButton:hide()
-    hotkeysButton.arrow:hide()
+  for _, t in ipairs(tabBar:getTabs()) do
+    if t.subParent then
+      if tab.tabPanel ~= t.tabPanel and tab.subParent ~= t.subParent then
+        t:hide()
+      end
+      t.arrow:hide()
+    elseif t.subTabs then
+      t.arrow:show()
+    end
   end
 
-  interfaceButton.arrow:show()
-  if tab == hudButton then
-    interfaceButton.arrow:hide()
-    consoleButton.arrow:hide()
-    gameWindowButton.arrow:hide()
-    hudButton.arrow:show()
-    hudButton:show()
-  elseif tab == consoleButton then
-    interfaceButton.arrow:hide()
-    hudButton.arrow:hide()
-    gameWindowButton.arrow:hide()
-    consoleButton.arrow:show()
-    consoleButton:show()
-  elseif tab == gameWindowButton then
-    interfaceButton.arrow:hide()
-    hudButton.arrow:hide()
-    consoleButton.arrow:hide()
-    gameWindowButton.arrow:show()
-    gameWindowButton:show()
-  elseif tab.tabPanel == interfacePanel then
-    consoleButton.arrow:hide()
-    consoleButton:show()
-    hudButton.arrow:hide()
-    hudButton:show()
-    gameWindowButton.arrow:hide()
-    gameWindowButton:show()
-  else
-    consoleButton:hide()
-    consoleButton.arrow:hide()
-    hudButton:hide()
-    hudButton.arrow:hide()
-    gameWindowButton:hide()
-    gameWindowButton.arrow:hide()
-  end
+  if tab.subParent then
+    tab.subParent.arrow:hide()
+    for _, subTab in pairs(tab.subParent.subTabs) do
+      subTab.arrow:hide()
+    end
+    tab:show()
+    tab.arrow:show()
 
-  if not g_game.getFeature(GameNoDebug) and not g_app.isMobile() then
-    miscButton.arrow:show()
-    if tab == debugButton then
-      miscButton.arrow:hide()
-      debugButton.arrow:show()
-      debugButton:show()
-    elseif tab.tabPanel == miscPanel then
-      debugButton.arrow:hide()
-      debugButton:show()
-    else
-      debugButton:hide()
-      debugButton.arrow:hide()
+    if tab.tabCallback then
+      tab.tabCallback()
+    end
+  elseif tab.subTabs then
+    tab.arrow:show()
+    for _, subTab in pairs(tab.subTabs) do
+      subTab:show()
+      subTab.arrow:hide()
     end
   end
 
@@ -752,14 +716,6 @@ end
 
 function getOption(key)
   return options[key]
-end
-
-function addTab(name, panel, icon)
-  optionsTabBar:addTab(name, panel, icon)
-end
-
-function addButton(name, func, icon)
-  optionsTabBar:addButton(name, func, icon)
 end
 
 function applyChangedOptions()
