@@ -81,7 +81,7 @@ bool UIHorizontalLayout::internalUpdate()
             changed = true;
 
         gap = (m_alignRight) ? -widget->getMarginLeft() : (widget->getWidth() + widget->getMarginRight());
-        gap += m_spacing;
+        gap += m_alignRight ? -abs(m_spacing) : m_spacing;
         pos.x += gap;
         preferredWidth += gap;
     }
