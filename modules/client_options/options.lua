@@ -77,6 +77,8 @@ local ActionEdit = {
   ASSIGN = 2
 }
 
+local actionNameLimit = 39
+
 local changedOptions = {}
 local changedKeybinds = {}
 local changedHotkeys = {}
@@ -174,7 +176,7 @@ function init()
   end)
   addSubTab(controlsButton, hotkeysButton, false, function()
     keybindsPanel.search.field:clearText()
-    keybindsPanel.buttons.newAction:hide()
+    keybindsPanel.buttons.newAction:show()
     updateHotkeys()
   end)
 
@@ -1618,9 +1620,19 @@ function preAddHotkey(action, data)
 end
 
 function addKeybind(category, action, primary, secondary)
+  local rawText = string.format("%s: %s", category, action)
+  local text = string.format("[color=#ffffff]%s:[/color] %s", category, action)
+  local tooltip = nil
+
+  if rawText:len() > actionNameLimit then
+    tooltip = rawText
+    -- 15 and 8 are length of color codes
+    text = text:sub(1, actionNameLimit + 15 + 8) .. "..."
+  end
+
   local row = keybindsPanel.tablePanel.keybinds:addRow({
     {
-      coloredText = { text = string.format("[color=#ffffff]%s:[/color] %s", category, action), color = "#c0c0c0" },
+      coloredText = { text = text, color = "#c0c0c0" },
       width = 286
     },
     { style = "VerticalSeparator" },
@@ -1639,6 +1651,10 @@ function addKeybind(category, action, primary, secondary)
 
   row.category = category
   row.action = action
+
+  if tooltip then
+    row:setTooltip(tooltip)
+  end
 
   row:getChildByIndex(3).edit.onClick = editKeybindPrimary
   row:getChildByIndex(5).edit.onClick = editKeybindSecondary
@@ -1778,56 +1794,48 @@ function addHotkey(hotkeyId, action, data, primary, secondary)
 
     updateHotkeyItem(row.actionColumn.item, data.itemId, data.itemSubType)
   elseif action == HOTKEY_ACTION.TEXT then
-    row = keybindsPanel.tablePanel.keybinds:addRow({
-      {
-        style = "EditableKeybindsTableColumn",
-        text = data.text,
-        color = "#c0c0c0",
-        width = 286
-      },
-      { style = "VerticalSeparator" },
-      {
-        style = "EditableKeybindsTableColumn",
-        text = primary,
-        color = "#c0c0c0",
-        width = 100
-      },
-      { style = "VerticalSeparator" },
-      {
-        style = "EditableKeybindsTableColumn",
-        text = secondary,
-        color = "#c0c0c0",
-        width = 100
-      },
-    })
-  elseif action == HOTKEY_ACTION.TEXT_AUTO then
-    row = keybindsPanel.tablePanel.keybinds:addRow({
-      {
-        style = "EditableKeybindsTableColumn",
-        text = data.text,
-        color = "#ffffff",
-        width = 286
-      },
-      { style = "VerticalSeparator" },
-      {
-        style = "EditableKeybindsTableColumn",
-        text = primary,
-        color = "#ffffff",
-        width = 100
-      },
-      { style = "VerticalSeparator" },
-      {
-        style = "EditableKeybindsTableColumn",
-        text = secondary,
-        color = "#ffffff",
-        width = 100
-      },
-    })
-  elseif action == HOTKEY_ACTION.SPELL then
-    local text = data.words
-    if data.parameter then
-      text = text .. " " .. data.parameter
+    local text = data.text
+    local tooltip = nil
+
+    if text:len() > actionNameLimit then
+      tooltip = text
+      text = text:sub(1, actionNameLimit) .. "..."
     end
+    row = keybindsPanel.tablePanel.keybinds:addRow({
+      {
+        style = "EditableKeybindsTableColumn",
+        text = text,
+        color = "#c0c0c0",
+        width = 286
+      },
+      { style = "VerticalSeparator" },
+      {
+        style = "EditableKeybindsTableColumn",
+        text = primary,
+        color = "#c0c0c0",
+        width = 100
+      },
+      { style = "VerticalSeparator" },
+      {
+        style = "EditableKeybindsTableColumn",
+        text = secondary,
+        color = "#c0c0c0",
+        width = 100
+      },
+    })
+
+    if tooltip then
+      row:setTooltip(tooltip)
+    end
+  elseif action == HOTKEY_ACTION.TEXT_AUTO then
+    local text = data.text
+    local tooltip = nil
+
+    if text:len() > actionNameLimit then
+      tooltip = text
+      text = text:sub(1, actionNameLimit) .. "..."
+    end
+
     row = keybindsPanel.tablePanel.keybinds:addRow({
       {
         style = "EditableKeybindsTableColumn",
@@ -1850,6 +1858,49 @@ function addHotkey(hotkeyId, action, data, primary, secondary)
         width = 100
       },
     })
+
+    if tooltip then
+      row:setTooltip(tooltip)
+    end
+  elseif action == HOTKEY_ACTION.SPELL then
+    local text = data.words
+    if data.parameter then
+      text = text .. " " .. data.parameter
+    end
+
+    local tooltip = nil
+
+    if text:len() > actionNameLimit then
+      tooltip = text
+      text = text:sub(1, actionNameLimit) .. "..."
+    end
+
+    row = keybindsPanel.tablePanel.keybinds:addRow({
+      {
+        style = "EditableKeybindsTableColumn",
+        text = text,
+        color = "#ffffff",
+        width = 286
+      },
+      { style = "VerticalSeparator" },
+      {
+        style = "EditableKeybindsTableColumn",
+        text = primary,
+        color = "#ffffff",
+        width = 100
+      },
+      { style = "VerticalSeparator" },
+      {
+        style = "EditableKeybindsTableColumn",
+        text = secondary,
+        color = "#ffffff",
+        width = 100
+      },
+    })
+
+    if tooltip then
+      row:setTooltip(tooltip)
+    end
   end
 
   if row then
