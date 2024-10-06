@@ -141,6 +141,19 @@ function init()
     }
   })
 
+  Keybind.new("Dialogs", "Open Options - Custom Hotkeys", "Ctrl+K", "")
+  Keybind.bind("Dialogs", "Open Options - Custom Hotkeys", {
+    {
+      type = KEY_DOWN,
+      callback = function()
+        if not optionsWindow:isVisible() then
+          optionsTabBar:selectTab(hotkeysButton)
+          show()
+        end
+      end,
+    }
+  })
+
   controlsPanel = g_ui.loadUI("controls")
   controlsButton = optionsTabBar:addTab(tr("Controls"), controlsPanel, "/images/options/icon-controls")
 
@@ -288,6 +301,7 @@ function terminate()
 
   Keybind.delete("UI", "Toggle Fullscreen")
   Keybind.delete("UI", "Show/hide Creature Names and Bars")
+  Keybind.new("Dialogs", "Open Options - Custom Hotkeys")
 
   if optionsWindow then
     optionsWindow:destroy()

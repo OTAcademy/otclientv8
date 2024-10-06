@@ -7,7 +7,6 @@ Module
   scripts: [ widgets/uigamemap, gameinterface ]
   load-later:
     - game_buttons
-    - game_hotkeys
     - game_questlog
     - game_textmessage
     - game_console
