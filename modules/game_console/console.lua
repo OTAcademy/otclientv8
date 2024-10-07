@@ -13,8 +13,8 @@ SpeakTypesSettings = {
   channelWhite = { speakType = MessageModes.ChannelManagement, color = '#FFFFFF' },
   channelRed = { speakType = MessageModes.GamemasterChannel, color = '#F55E5E' },
   channelOrange = { speakType = MessageModes.ChannelHighlight, color = '#F6A731' },
-  monsterSay = { speakType = MessageModes.MonsterSay, color = '#FE6500', hideInConsole = true},
-  monsterYell = { speakType = MessageModes.MonsterYell, color = '#FE6500', hideInConsole = true},
+  monsterSay = { speakType = MessageModes.MonsterSay, color = '#FE6500', hideInConsole = true },
+  monsterYell = { speakType = MessageModes.MonsterYell, color = '#FE6500', hideInConsole = true },
   rvrAnswerFrom = { speakType = MessageModes.RVRAnswer, color = '#FE6500' },
   rvrAnswerTo = { speakType = MessageModes.RVRAnswer, color = '#FE6500' },
   rvrContinue = { speakType = MessageModes.RVRContinue, color = '#FFFF00' },
@@ -118,14 +118,14 @@ function init()
   consoleTabBar = consolePanel:getChildById('consoleTabBar')
   consoleTabBar:setContentWidget(consoleContentPanel)
   channels = {}
-    
+
   consolePanel.onDragEnter = onDragEnter
   consolePanel.onDragLeave = onDragLeave
   consolePanel.onDragMove = onDragMove
   consoleTabBar.onDragEnter = onDragEnter
   consoleTabBar.onDragLeave = onDragLeave
   consoleTabBar.onDragMove = onDragMove
-  
+
   consolePanel.onKeyPress = function(self, keyCode, keyboardModifiers)
     if not (keyboardModifiers == KeyboardCtrlModifier and keyCode == KeyC) then return false end
 
@@ -144,7 +144,12 @@ function init()
   Keybind.new("Chat Channel", "Previous Channel", "Shift+Tab", "")
   Keybind.new("Chat Channel", "Open Channel List", "Ctrl+O", "")
   Keybind.new("Chat Channel", "Open Help Channel", "Ctrl+H", "")
-  Keybind.new("Chat", "Send current chat line", "Enter", "")
+  Keybind.new("Chat", "Send current chat line", { [CHAT_MODE.ON] = "Enter", [CHAT_MODE.OFF] = "" }, "")
+
+  Keybind.new("Chat Mode", "Toggle", "Ctrl+Enter", "")
+  Keybind.new("Chat Mode", "Set Off", "", "")
+  Keybind.new("Chat Mode", "Set On", "", "")
+  Keybind.new("Chat Mode", "Set On Temporarily", { [CHAT_MODE.ON] = "", [CHAT_MODE.OFF] = "Enter" }, "")
 
   if g_game.getClientVersion() < 862 then
     Keybind.new("Dialogs", "Open Rule Violation", "Ctrl+R", "")
@@ -193,6 +198,27 @@ function init()
     }
   }, consolePanel)
 
+  Keybind.bind("Chat Mode", "Toggle", {
+    {
+      type = KEY_DOWN,
+      callback = function() consoleToggleChat:setChecked(not consoleToggleChat:isChecked()) end
+    }
+  }, gameRootPanel)
+
+  Keybind.bind("Chat Mode", "Set Off", {
+    {
+      type = KEY_DOWN,
+      callback = function() consoleToggleChat:setChecked(true) end
+    }
+  }, gameRootPanel)
+
+  Keybind.bind("Chat Mode", "Set On", {
+    {
+      type = KEY_DOWN,
+      callback = function() consoleToggleChat:setChecked(false) end
+    }
+  }, gameRootPanel)
+
   g_keyboard.bindKeyPress('Shift+Up', function() navigateMessageHistory(1) end, consolePanel)
   g_keyboard.bindKeyPress('Shift+Down', function() navigateMessageHistory(-1) end, consolePanel)
   g_keyboard.bindKeyPress('Ctrl+A', function() consoleTextEdit:clearText() end, consolePanel)
@@ -210,7 +236,7 @@ function init()
 end
 
 function clearSelection(consoleBuffer)
-  for _,label in pairs(consoleBuffer:getChildren()) do
+  for _, label in pairs(consoleBuffer:getChildren()) do
     label:clearSelection()
   end
   consoleBuffer.selectionText = nil
@@ -221,7 +247,7 @@ function selectAll(consoleBuffer)
   clearSelection(consoleBuffer)
   if consoleBuffer:getChildCount() > 0 then
     local text = {}
-    for _,label in pairs(consoleBuffer:getChildren()) do
+    for _, label in pairs(consoleBuffer:getChildren()) do
       label:selectAll()
       table.insert(text, label:getSelection())
     end
@@ -240,8 +266,14 @@ end
 
 function temporaryChatOn()
   modules.game_walking.unbindTurnKeys()
+  Keybind.unbind("Chat Mode", "Set On Temporarily")
   Keybind.setChatMode(CHAT_MODE.ON)
   modules.game_walking.bindTurnKeys()
+
+  Keybind.unbind("Chat Mode", "Toggle")
+  Keybind.unbind("Chat Mode", "Set Off")
+  Keybind.unbind("Chat Mode", "Set On")
+
   enableChat(true)
 end
 
@@ -250,17 +282,13 @@ function temporaryChatOff()
   Keybind.setChatMode(CHAT_MODE.OFF)
   modules.game_walking.bindTurnKeys()
 
-  local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.unbindKeyDown("Enter", temporaryChatOff, gameRootPanel)
-  g_keyboard.unbindKeyDown("Escape", temporaryChatOff, gameRootPanel)
+  g_keyboard.unbindKeyDown("Enter", temporaryChatOff, modules.game_interface.getRootPanel())
+
   disableChat(true)
 end
 
 function enableChat(temporarily)
   if g_app.isMobile() then return end
-  if not temporarily then
-    modules.client_options.setOption("chatMode", CHAT_MODE.ON)
-  end
 
   consoleTextEdit:setVisible(true)
   consoleTextEdit:setText("")
@@ -271,12 +299,14 @@ function enableChat(temporarily)
 
   if temporarily then
     g_keyboard.bindKeyDown("Enter", temporaryChatOff, gameRootPanel)
-    g_keyboard.bindKeyDown("Escape", temporaryChatOff, gameRootPanel)
+  else
+    modules.client_options.setOption("chatMode", CHAT_MODE.ON)
   end
 
   modules.game_walking.disableWSAD()
 
-  consoleToggleChat:setTooltip(tr("Disable chat mode, allow to walk using ASDW"))
+  consoleToggleChat:setTooltip(tr("Set Chat Mode Off"))
+  consoleToggleChat:setText(tr("Chat Mode On"))
 end
 
 function disableChat(temporarily)
@@ -289,11 +319,17 @@ function disableChat(temporarily)
   consoleTextEdit:setText("")
 
   local gameRootPanel = modules.game_interface.getRootPanel()
-  g_keyboard.bindKeyDown("Enter", temporaryChatOn, gameRootPanel)
+  Keybind.bind("Chat Mode", "Set On Temporarily", {
+    {
+      type = KEY_DOWN,
+      callback = temporaryChatOn
+    }
+  }, gameRootPanel)
 
   modules.game_walking.enableWSAD()
 
-  consoleToggleChat:setTooltip(tr("Enable chat mode"))
+  consoleToggleChat:setTooltip(tr("Set Chat Mode On"))
+  consoleToggleChat:setText(tr("Chat Mode Off"))
 end
 
 function isChatEnabled()
@@ -437,9 +473,9 @@ end
 
 function switchMode(newView)
   if newView then
-    consolePanel:setImageColor('#ffffff88')  
+    consolePanel:setImageColor('#ffffff88')
   else
-    consolePanel:setImageColor('white')  
+    consolePanel:setImageColor('white')
   end
   --consolePanel:setDraggable(floating)
   --consoleTabBar:setDraggable(floating)
@@ -491,7 +527,7 @@ function openPlayerReportRuleViolationWindow()
     g_game.talkChannel(MessageModes.RVRChannel, 0, text)
     violationReportTab = addTab(tr('Report Rule') .. '...', true)
     addTabText(tr('Please wait patiently for a gamemaster to reply') .. '.', SpeakTypesSettings.privateRed, violationReportTab)
-    addTabText(applyMessagePrefixies(g_game.getCharacterName(), 0, text),  SpeakTypesSettings.say, violationReportTab, g_game.getCharacterName())
+    addTabText(applyMessagePrefixies(g_game.getCharacterName(), 0, text), SpeakTypesSettings.say, violationReportTab, g_game.getCharacterName())
     violationReportTab.locked = true
     violationWindow:destroy()
     violationWindow = nil
@@ -612,21 +648,232 @@ function addText(text, speaktype, tabName, creatureName)
 end
 
 -- Contains letter width for font "verdana-11px-antialised" as console is based on it
-local letterWidth = {  -- New line (10) and Space (32) have width 1 because they are printed and not replaced with spacer
-  [10] = 1, [32] = 1, [33] = 3, [34] = 6, [35] = 8, [36] = 7, [37] = 13, [38] = 9, [39] = 3, [40] = 5, [41] = 5, [42] = 6, [43] = 8, [44] = 4, [45] = 5, [46] = 3, [47] = 8,
-  [48] = 7, [49] = 6, [50] = 7, [51] = 7, [52] = 7, [53] = 7, [54] = 7, [55] = 7, [56] = 7, [57] = 7, [58] = 3, [59] = 4, [60] = 8, [61] = 8, [62] = 8, [63] = 6,
-  [64] = 10, [65] = 9, [66] = 7, [67] = 7, [68] = 8, [69] = 7, [70] = 7, [71] = 8, [72] = 8, [73] = 5, [74] = 5, [75] = 7, [76] = 7, [77] = 9, [78] = 8, [79] = 8,
-  [80] = 7, [81] = 8, [82] = 8, [83] = 7, [84] = 8, [85] = 8, [86] = 8, [87] = 12, [88] = 8, [89] = 8, [90] = 7, [91] = 5, [92] = 8, [93] = 5, [94] = 9, [95] = 8,
-  [96] = 5, [97] = 7, [98] = 7, [99] = 6, [100] = 7, [101] = 7, [102] = 5, [103] = 7, [104] = 7, [105] = 3, [106] = 4, [107] = 7, [108] = 3, [109] = 11, [110] = 7,
-  [111] = 7, [112] = 7, [113] = 7, [114] = 6, [115] = 6, [116] = 5, [117] = 7, [118] = 8, [119] = 10, [120] = 8, [121] = 8, [122] = 6, [123] = 7, [124] = 4, [125] = 7, [126] = 8,
-  [127] = 1, [128] = 7, [129] = 6, [130] = 3, [131] = 7, [132] = 6, [133] = 11, [134] = 7, [135] = 7, [136] = 7, [137] = 13, [138] = 7, [139] = 4, [140] = 11, [141] = 6, [142] = 6,
-  [143] = 6, [144] = 6, [145] = 4, [146] = 3, [147] = 7, [148] = 6, [149] = 6, [150] = 7, [151] = 10, [152] = 7, [153] = 10, [154] = 6, [155] = 5, [156] = 11, [157] = 6, [158] = 6,
-  [159] = 8, [160] = 4, [161] = 3, [162] = 7, [163] = 7, [164] = 7, [165] = 8, [166] = 4, [167] = 7, [168] = 6, [169] = 10, [170] = 6, [171] = 8, [172] = 8, [173] = 16, [174] = 10,
-  [175] = 8, [176] = 5, [177] = 8, [178] = 5, [179] = 5, [180] = 6, [181] = 7, [182] = 7, [183] = 3, [184] = 5, [185] = 6, [186] = 6, [187] = 8, [188] = 12, [189] = 12, [190] = 12,
-  [191] = 6, [192] = 9, [193] = 9, [194] = 9, [195] = 9, [196] = 9, [197] = 9, [198] = 11, [199] = 7, [200] = 7, [201] = 7, [202] = 7, [203] = 7, [204] = 5, [205] = 5, [206] = 6,
-  [207] = 5, [208] = 8, [209] = 8, [210] = 8, [211] = 8, [212] = 8, [213] = 8, [214] = 8, [215] = 8, [216] = 8, [217] = 8, [218] = 8, [219] = 8, [220] = 8, [221] = 8, [222] = 7,
-  [223] = 7, [224] = 7, [225] = 7, [226] = 7, [227] = 7, [228] = 7, [229] = 7, [230] = 11, [231] = 6, [232] = 7, [233] = 7, [234] = 7, [235] = 7, [236] = 3, [237] = 4, [238] = 4,
-  [239] = 4, [240] = 7, [241] = 7, [242] = 7, [243] = 7, [244] = 7, [245] = 7, [246] = 7, [247] = 9, [248] = 7, [249] = 7, [250] = 7, [251] = 7, [252] = 7, [253] = 8, [254] = 7, [255] = 8
+local letterWidth = { -- New line (10) and Space (32) have width 1 because they are printed and not replaced with spacer
+  [10] = 1,
+  [32] = 1,
+  [33] = 3,
+  [34] = 6,
+  [35] = 8,
+  [36] = 7,
+  [37] = 13,
+  [38] = 9,
+  [39] = 3,
+  [40] = 5,
+  [41] = 5,
+  [42] = 6,
+  [43] = 8,
+  [44] = 4,
+  [45] = 5,
+  [46] = 3,
+  [47] = 8,
+  [48] = 7,
+  [49] = 6,
+  [50] = 7,
+  [51] = 7,
+  [52] = 7,
+  [53] = 7,
+  [54] = 7,
+  [55] = 7,
+  [56] = 7,
+  [57] = 7,
+  [58] = 3,
+  [59] = 4,
+  [60] = 8,
+  [61] = 8,
+  [62] = 8,
+  [63] = 6,
+  [64] = 10,
+  [65] = 9,
+  [66] = 7,
+  [67] = 7,
+  [68] = 8,
+  [69] = 7,
+  [70] = 7,
+  [71] = 8,
+  [72] = 8,
+  [73] = 5,
+  [74] = 5,
+  [75] = 7,
+  [76] = 7,
+  [77] = 9,
+  [78] = 8,
+  [79] = 8,
+  [80] = 7,
+  [81] = 8,
+  [82] = 8,
+  [83] = 7,
+  [84] = 8,
+  [85] = 8,
+  [86] = 8,
+  [87] = 12,
+  [88] = 8,
+  [89] = 8,
+  [90] = 7,
+  [91] = 5,
+  [92] = 8,
+  [93] = 5,
+  [94] = 9,
+  [95] = 8,
+  [96] = 5,
+  [97] = 7,
+  [98] = 7,
+  [99] = 6,
+  [100] = 7,
+  [101] = 7,
+  [102] = 5,
+  [103] = 7,
+  [104] = 7,
+  [105] = 3,
+  [106] = 4,
+  [107] = 7,
+  [108] = 3,
+  [109] = 11,
+  [110] = 7,
+  [111] = 7,
+  [112] = 7,
+  [113] = 7,
+  [114] = 6,
+  [115] = 6,
+  [116] = 5,
+  [117] = 7,
+  [118] = 8,
+  [119] = 10,
+  [120] = 8,
+  [121] = 8,
+  [122] = 6,
+  [123] = 7,
+  [124] = 4,
+  [125] = 7,
+  [126] = 8,
+  [127] = 1,
+  [128] = 7,
+  [129] = 6,
+  [130] = 3,
+  [131] = 7,
+  [132] = 6,
+  [133] = 11,
+  [134] = 7,
+  [135] = 7,
+  [136] = 7,
+  [137] = 13,
+  [138] = 7,
+  [139] = 4,
+  [140] = 11,
+  [141] = 6,
+  [142] = 6,
+  [143] = 6,
+  [144] = 6,
+  [145] = 4,
+  [146] = 3,
+  [147] = 7,
+  [148] = 6,
+  [149] = 6,
+  [150] = 7,
+  [151] = 10,
+  [152] = 7,
+  [153] = 10,
+  [154] = 6,
+  [155] = 5,
+  [156] = 11,
+  [157] = 6,
+  [158] = 6,
+  [159] = 8,
+  [160] = 4,
+  [161] = 3,
+  [162] = 7,
+  [163] = 7,
+  [164] = 7,
+  [165] = 8,
+  [166] = 4,
+  [167] = 7,
+  [168] = 6,
+  [169] = 10,
+  [170] = 6,
+  [171] = 8,
+  [172] = 8,
+  [173] = 16,
+  [174] = 10,
+  [175] = 8,
+  [176] = 5,
+  [177] = 8,
+  [178] = 5,
+  [179] = 5,
+  [180] = 6,
+  [181] = 7,
+  [182] = 7,
+  [183] = 3,
+  [184] = 5,
+  [185] = 6,
+  [186] = 6,
+  [187] = 8,
+  [188] = 12,
+  [189] = 12,
+  [190] = 12,
+  [191] = 6,
+  [192] = 9,
+  [193] = 9,
+  [194] = 9,
+  [195] = 9,
+  [196] = 9,
+  [197] = 9,
+  [198] = 11,
+  [199] = 7,
+  [200] = 7,
+  [201] = 7,
+  [202] = 7,
+  [203] = 7,
+  [204] = 5,
+  [205] = 5,
+  [206] = 6,
+  [207] = 5,
+  [208] = 8,
+  [209] = 8,
+  [210] = 8,
+  [211] = 8,
+  [212] = 8,
+  [213] = 8,
+  [214] = 8,
+  [215] = 8,
+  [216] = 8,
+  [217] = 8,
+  [218] = 8,
+  [219] = 8,
+  [220] = 8,
+  [221] = 8,
+  [222] = 7,
+  [223] = 7,
+  [224] = 7,
+  [225] = 7,
+  [226] = 7,
+  [227] = 7,
+  [228] = 7,
+  [229] = 7,
+  [230] = 11,
+  [231] = 6,
+  [232] = 7,
+  [233] = 7,
+  [234] = 7,
+  [235] = 7,
+  [236] = 3,
+  [237] = 4,
+  [238] = 4,
+  [239] = 4,
+  [240] = 7,
+  [241] = 7,
+  [242] = 7,
+  [243] = 7,
+  [244] = 7,
+  [245] = 7,
+  [246] = 7,
+  [247] = 9,
+  [248] = 7,
+  [249] = 7,
+  [250] = 7,
+  [251] = 7,
+  [252] = 7,
+  [253] = 8,
+  [254] = 7,
+  [255] = 8
 }
 
 -- Return information about start, end in the string and the highlighted words
@@ -634,18 +881,18 @@ function getHighlightedText(text)
   local tmpData = {}
 
   repeat
-    local tmp = {string.find(text, "{([^}]+)}", tmpData[#tmpData-1])}
+    local tmp = { string.find(text, "{([^}]+)}", tmpData[#tmpData - 1]) }
     for _, v in pairs(tmp) do
       table.insert(tmpData, v)
     end
-  until not(string.find(text, "{([^}]+)}", tmpData[#tmpData-1]))
+  until not (string.find(text, "{([^}]+)}", tmpData[#tmpData - 1]))
 
   return tmpData
 end
 
 function getNewHighlightedText(text, color, highlightColor)
   local tmpData = {}
-  
+
   for i, part in ipairs(text:split("{")) do
     if i == 1 then
       table.insert(tmpData, part)
@@ -794,7 +1041,7 @@ end
 function removeTabLabelByName(tab, name)
   local panel = consoleTabBar:getTabPanel(tab)
   local consoleBuffer = panel:getChildById('consoleBuffer')
-  for _,label in pairs(consoleBuffer:getChildren()) do
+  for _, label in pairs(consoleBuffer:getChildren()) do
     if label.name == name then
       label:destroy()
     end
@@ -820,7 +1067,7 @@ function processChannelTabMenu(tab, mousePos, mouseButton)
       local panel = consoleTabBar:getTabPanel(tab)
       local consoleBuffer = panel:getChildById('consoleBuffer')
       local lines = {}
-      for _,label in pairs(consoleBuffer:getChildren()) do
+      for _, label in pairs(consoleBuffer:getChildren()) do
         table.insert(lines, label:getText())
       end
 
@@ -848,9 +1095,9 @@ function processMessageMenu(mousePos, mouseButton, creatureName, text, label, ta
     menu:setGameMenu(true)
     if creatureName and #creatureName > 0 then
       if creatureName ~= g_game.getCharacterName() then
-        menu:addOption(tr('Message to ' .. creatureName), function () g_game.openPrivateChannel(creatureName) end)
+        menu:addOption(tr('Message to ' .. creatureName), function() g_game.openPrivateChannel(creatureName) end)
         if not g_game.getLocalPlayer():hasVip(creatureName) then
-          menu:addOption(tr('Add to VIP list'), function () g_game.addVip(creatureName) end)
+          menu:addOption(tr('Add to VIP list'), function() g_game.addVip(creatureName) end)
         end
         if modules.game_console.getOwnPrivateTab() then
           menu:addSeparator()
@@ -869,7 +1116,7 @@ function processMessageMenu(mousePos, mouseButton, creatureName, text, label, ta
         menu:addSeparator()
       end
 
-      menu:addOption(tr('Copy name'), function () g_window.setClipboardText(creatureName) end)
+      menu:addOption(tr('Copy name'), function() g_window.setClipboardText(creatureName) end)
     end
     local selection = tab.tabPanel:getChildById('consoleBuffer').selectionText
     if selection and #selection > 0 then
@@ -910,7 +1157,7 @@ function sendMessage(message, tab)
   local tab = tab or getCurrentTab()
   if not tab then return end
 
-  for k,func in pairs(filters) do
+  for k, func in pairs(filters) do
     if func(message) then
       return true
     end
@@ -939,7 +1186,7 @@ function sendMessage(message, tab)
     message = chatCommandMessage
   end
 
-   -- player used whisper
+  -- player used whisper
   chatCommandMessage = message:match("^%#[w|W] (.*)")
   if chatCommandMessage ~= nil then
     chatCommandSayMode = 'whisper'
@@ -975,14 +1222,14 @@ function sendMessage(message, tab)
     if chatCommandInitial == chatCommandEnd then
       chatCommandPrivateRepeat = false
       if chatCommandInitial == "*" then
-        setTextEditText('*'.. chatCommandPrivate .. '* ')
+        setTextEditText('*' .. chatCommandPrivate .. '* ')
       end
       message = chatCommandMessage:trim()
       chatCommandPrivateReady = true
     end
   end
 
-  message = message:gsub("^(%s*)(.*)","%2") -- remove space characters from message init
+  message = message:gsub("^(%s*)(.*)", "%2") -- remove space characters from message init
   if #message == 0 then return end
 
   -- add new command to history
@@ -1116,8 +1363,7 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
   local localPlayer = g_game.getLocalPlayer()
   if name ~= g_game.getCharacterName()
       and isUsingIgnoreList()
-        and not(isUsingWhiteList()) or (isUsingWhiteList() and not(isWhitelisted(name)) and not(isAllowingVIPs() and localPlayer:hasVip(name))) then
-
+      and not (isUsingWhiteList()) or (isUsingWhiteList() and not (isWhitelisted(name)) and not (isAllowingVIPs() and localPlayer:hasVip(name))) then
     if mode == MessageModes.Yell and isIgnoringYelling() then
       return
     elseif speaktype.private and isIgnoringPrivate() and not isNpcMode then
@@ -1132,9 +1378,9 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
   end
 
   if (mode == MessageModes.Say or mode == MessageModes.Whisper or mode == MessageModes.Yell or
-      mode == MessageModes.Spell or mode == MessageModes.MonsterSay or mode == MessageModes.MonsterYell or
-      mode == MessageModes.NpcFrom or mode == MessageModes.BarkLow or mode == MessageModes.BarkLoud or
-      mode == MessageModes.NpcFromStartBlock) and creaturePos then
+        mode == MessageModes.Spell or mode == MessageModes.MonsterSay or mode == MessageModes.MonsterYell or
+        mode == MessageModes.NpcFrom or mode == MessageModes.BarkLow or mode == MessageModes.BarkLoud or
+        mode == MessageModes.NpcFromStartBlock) and creaturePos then
     local staticText = StaticText.create()
     -- Remove curly braces from screen message
     local staticMessage = message
@@ -1281,7 +1527,7 @@ function onChannelList(channelList)
   g_keyboard.bindKeyPress('Down', function() channelListPanel:focusNextChild(KeyboardFocusReason) end, channelsWindow)
   g_keyboard.bindKeyPress('Up', function() channelListPanel:focusPreviousChild(KeyboardFocusReason) end, channelsWindow)
 
-  for k,v in pairs(channelList) do
+  for k, v in pairs(channelList) do
     local channelId = v[1]
     local channelName = v[2]
 
@@ -1357,6 +1603,7 @@ end
 function isUsingWhiteList()
   return communicationSettings.useWhiteList
 end
+
 function isIgnored(name)
   return table.find(communicationSettings.ignoredPlayers, name, true)
 end
@@ -1436,39 +1683,39 @@ function onClickIgnoreButton()
   local addIgnoreName = communicationWindow:getChildById('ignoreNameEdit')
   local addIgnoreButton = communicationWindow:getChildById('buttonIgnoreAdd')
   local addIgnoreFunction = function()
-      local newEntry = addIgnoreName:getText()
-      if newEntry == '' then return end
-      if table.find(getIgnoredPlayers(), newEntry) then return end
-      if table.find(newlyIgnoredPlayers, newEntry) then return end
-      local label = g_ui.createWidget('IgnoreListLabel', ignoreListPanel)
-      label:setText(newEntry)
-      table.insert(newlyIgnoredPlayers, newEntry)
-      addIgnoreName:setText('')
-    end
+    local newEntry = addIgnoreName:getText()
+    if newEntry == '' then return end
+    if table.find(getIgnoredPlayers(), newEntry) then return end
+    if table.find(newlyIgnoredPlayers, newEntry) then return end
+    local label = g_ui.createWidget('IgnoreListLabel', ignoreListPanel)
+    label:setText(newEntry)
+    table.insert(newlyIgnoredPlayers, newEntry)
+    addIgnoreName:setText('')
+  end
   addIgnoreButton.onClick = addIgnoreFunction
 
   local newlyWhitelistedPlayers = {}
   local addWhitelistName = communicationWindow:getChildById('whitelistNameEdit')
   local addWhitelistButton = communicationWindow:getChildById('buttonWhitelistAdd')
   local addWhitelistFunction = function()
-      local newEntry = addWhitelistName:getText()
-      if newEntry == '' then return end
-      if table.find(getWhitelistedPlayers(), newEntry) then return end
-      if table.find(newlyWhitelistedPlayers, newEntry) then return end
-      local label = g_ui.createWidget('WhiteListLabel', whiteListPanel)
-      label:setText(newEntry)
-      table.insert(newlyWhitelistedPlayers, newEntry)
-      addWhitelistName:setText('')
-    end
+    local newEntry = addWhitelistName:getText()
+    if newEntry == '' then return end
+    if table.find(getWhitelistedPlayers(), newEntry) then return end
+    if table.find(newlyWhitelistedPlayers, newEntry) then return end
+    local label = g_ui.createWidget('WhiteListLabel', whiteListPanel)
+    label:setText(newEntry)
+    table.insert(newlyWhitelistedPlayers, newEntry)
+    addWhitelistName:setText('')
+  end
   addWhitelistButton.onClick = addWhitelistFunction
 
   communicationWindow.onEnter = function()
-      if addWhitelistName:isFocused() then
-        addWhitelistFunction()
-      elseif addIgnoreName:isFocused() then
-        addIgnoreFunction()
-      end
+    if addWhitelistName:isFocused() then
+      addWhitelistFunction()
+    elseif addIgnoreName:isFocused() then
+      addIgnoreFunction()
     end
+  end
 
   local ignorePrivateMessageBox = communicationWindow:getChildById('checkboxIgnorePrivateMessages')
   ignorePrivateMessageBox:setChecked(communicationSettings.privateMessages)
@@ -1479,28 +1726,28 @@ function onClickIgnoreButton()
 
   local saveButton = communicationWindow:recursiveGetChildById('buttonSave')
   saveButton.onClick = function()
-      communicationSettings.ignoredPlayers = {}
-      for i = 1, ignoreListPanel:getChildCount() do
-        addIgnoredPlayer(ignoreListPanel:getChildByIndex(i):getText())
-      end
-
-      communicationSettings.whitelistedPlayers = {}
-      for i = 1, whiteListPanel:getChildCount() do
-        addWhitelistedPlayer(whiteListPanel:getChildByIndex(i):getText())
-      end
-
-      communicationSettings.useIgnoreList = useIgnoreListBox:isChecked()
-      communicationSettings.useWhiteList = useWhiteListBox:isChecked()
-      communicationSettings.yelling = ignoreYellingBox:isChecked()
-      communicationSettings.privateMessages = ignorePrivateMessageBox:isChecked()
-      communicationSettings.allowVIPs = allowVIPsBox:isChecked()
-      communicationWindow:destroy()
+    communicationSettings.ignoredPlayers = {}
+    for i = 1, ignoreListPanel:getChildCount() do
+      addIgnoredPlayer(ignoreListPanel:getChildByIndex(i):getText())
     end
+
+    communicationSettings.whitelistedPlayers = {}
+    for i = 1, whiteListPanel:getChildCount() do
+      addWhitelistedPlayer(whiteListPanel:getChildByIndex(i):getText())
+    end
+
+    communicationSettings.useIgnoreList = useIgnoreListBox:isChecked()
+    communicationSettings.useWhiteList = useWhiteListBox:isChecked()
+    communicationSettings.yelling = ignoreYellingBox:isChecked()
+    communicationSettings.privateMessages = ignorePrivateMessageBox:isChecked()
+    communicationSettings.allowVIPs = allowVIPsBox:isChecked()
+    communicationWindow:destroy()
+  end
 
   local cancelButton = communicationWindow:recursiveGetChildById('buttonCancel')
   cancelButton.onClick = function()
-      communicationWindow:destroy()
-    end
+    communicationWindow:destroy()
+  end
 
   local ignoredPlayers = getIgnoredPlayers()
   for i = 1, #ignoredPlayers do
@@ -1524,7 +1771,7 @@ function online()
     local tab = addTab("NPCs", false)
     tab.npcChat = true
   end
-  
+
   if g_game.getClientVersion() < 862 then
     local gameRootPanel = modules.game_interface.getRootPanel()
     Keybind.bind("Dialogs", "Open Rule Violation", {
