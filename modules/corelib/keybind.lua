@@ -134,12 +134,20 @@ function Keybind.new(category, action, primary, secondary, alone)
   end
 
   local keys = {}
-  if type(primary) == "string" and type(secondary) == "string" then
-    keys[CHAT_MODE.ON] = { primary = primary, secondary = secondary }
-    keys[CHAT_MODE.OFF] = { primary = primary, secondary = secondary }
+  if type(primary) == "string" then
+    keys[CHAT_MODE.ON] = { primary = primary }
+    keys[CHAT_MODE.OFF] = { primary = primary }
   else
-    keys[CHAT_MODE.ON] = { primary = primary[CHAT_MODE.ON], secondary = secondary[CHAT_MODE.ON] }
-    keys[CHAT_MODE.OFF] = { primary = primary[CHAT_MODE.OFF], secondary = secondary[CHAT_MODE.OFF] }
+    keys[CHAT_MODE.ON] = { primary = primary[CHAT_MODE.ON] }
+    keys[CHAT_MODE.OFF] = { primary = primary[CHAT_MODE.OFF] }
+  end
+
+  if type(secondary) == "string" then
+    keys[CHAT_MODE.ON].secondary = secondary
+    keys[CHAT_MODE.OFF].secondary = secondary
+  else
+    keys[CHAT_MODE.ON].secondary = secondary[CHAT_MODE.ON]
+    keys[CHAT_MODE.OFF].secondary = secondary[CHAT_MODE.OFF]
   end
 
   keys[CHAT_MODE.ON].primary = retranslateKeyComboDesc(keys[CHAT_MODE.ON].primary)
