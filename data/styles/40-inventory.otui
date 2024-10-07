@@ -292,7 +292,7 @@ InventoryWindow < MiniWindow
 
         InventoryButton
           !text: tr('Hotkeys')
-          @onClick: modules.game_hotkeys.toggle()
+          @onClick: modules.client_options.showHotkeys()
 
         InventoryButton
           !text: tr('Logout')

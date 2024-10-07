@@ -147,12 +147,7 @@ function init()
   Keybind.bind("Dialogs", "Open Options - Custom Hotkeys", {
     {
       type = KEY_DOWN,
-      callback = function()
-        if not optionsWindow:isVisible() then
-          optionsTabBar:selectTab(hotkeysButton)
-          show()
-        end
-      end,
+      callback = showHotkeys,
     }
   })
 
@@ -205,6 +200,8 @@ function init()
   assignSpellWindow = g_ui.displayUI("action_spell")
   assignSpellWindow.onEnter = assignSpell
   assignSpellWindow.onEscape = cancelActionAssignment
+  assignSpellWindow.availableSpellsOnly.onCheckChange = filterAssignSpell
+  assignSpellWindow.search.field.onTextChange = filterAssignSpell
   assignSpellWindow.buttons.ok.onClick = assignSpell
   assignSpellWindow.buttons.apply.onClick = function() assignSpell() end
   assignSpellWindow.buttons.cancel.onClick = cancelActionAssignment
@@ -418,6 +415,8 @@ function setup()
     end
   end
 
+  assignSpellWindow.availableSpellsOnly:setChecked(false)
+
   if g_game.isOnline() then
     online()
   end
@@ -447,6 +446,13 @@ end
 
 function hide()
   optionsWindow:hide()
+end
+
+function showHotkeys()
+  if not optionsWindow:isVisible() then
+    optionsTabBar:selectTab(hotkeysButton)
+    show()
+  end
 end
 
 function addSubTab(parent, subTab, hidden, callback)
@@ -839,6 +845,10 @@ function online()
       end
     end
   end
+
+  addEvent(function()
+    assignSpellWindow.availableSpellsOnly:setChecked(true)
+  end)
 end
 
 function offline()
@@ -1335,7 +1345,11 @@ end
 
 function openAssignSpell(position, actionEdit, row)
   if actionEdit and actionEdit == ActionEdit.EDIT then
-    assignSpellWindow.spells.list:focusChild(assignSpellWindow.spells.list[row.actionData.words])
+    local selectedSpell = assignSpellWindow.spells.list[row.actionData.words]
+    if not selectedSpell:isVisible() then
+      assignSpellWindow.availableSpellsOnly.checkBox:setChecked(false)
+    end
+    assignSpellWindow.spells.list:focusChild(selectedSpell)
   end
 
   assignSpellWindow.actionEdit = actionEdit
@@ -2150,4 +2164,69 @@ function getChatMode()
   end
 
   return CHAT_MODE.OFF
+end
+
+function filterAssignSpell()
+  local availableOnly = assignSpellWindow.availableSpellsOnly:isChecked()
+  local searchText = assignSpellWindow.search.field:getText():trim():lower()
+  local filterByText = searchText:len() > 0
+
+  local player = g_game.getLocalPlayer()
+  local isPremium = false
+  local level = 0
+  local vocation = 0
+  local focusedSpell = assignSpellWindow.spells.list:getFocusedChild()
+  local spells = assignSpellWindow.spells.list:getChildren()
+
+  if player then
+    isPremium = player:isPremium()
+    level = player:getLevel()
+    vocation = VocationClientToServer[player:getVocation()]
+  end
+
+  for _, spellWidget in ipairs(spells) do
+    local spell = SpellInfo["Default"][spellWidget.spellName]
+    local enabled = true
+    local filtered = false
+
+    if spell.premium then
+      enabled = isPremium
+    end
+
+    if enabled then
+      enabled = spell.level <= level
+    end
+
+    if enabled then
+      if table.contains(spell.vocations, vocation) then
+        enabled = true
+      end
+    end
+
+    if filterByText then
+      filtered = spellWidget:getText():lower():find(searchText)
+    end
+
+    if availableOnly then
+      if filterByText then
+        spellWidget:setVisible(filtered and enabled)
+      else
+        spellWidget:setVisible(enabled)
+      end
+      spellWidget:setOn(true)
+    else
+      if filterByText then
+        spellWidget:setVisible(filtered)
+      else
+        spellWidget:setVisible(true)
+      end
+      spellWidget:setOn(enabled)
+    end
+  end
+
+  if focusedSpell:isVisible() then
+    assignSpellWindow.spells.list:ensureChildVisible(focusedSpell)
+  else
+    assignSpellWindow.spells.list:focusNextChild(MouseFocusReason, true)
+  end
 end

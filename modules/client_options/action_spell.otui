@@ -16,7 +16,7 @@ HotkeySpellAction < Panel
     background: #ffffff22
     color: #f4f4f4
   
-  $disabled:
+  $!on:
     icon-color: #ffffff
 
 MainWindow
@@ -33,6 +33,7 @@ MainWindow
   HotkeySpellAction
     id: selectedSpell
     focusable: false
+    on: true
 
   HorizontalSeparator
     margin-top: 5
@@ -63,10 +64,43 @@ MainWindow
       pixels-scroll: true
       step: 102
   
-  OptionCheckBox
-    id: learnt
-    !text: tr('Only show learnt spells')
+  OptionContainer
+    id: availableSpellsOnly
     checked: true
+    @onCheckChange: addEvent(function() if self:isChecked() ~= self.checkBox:isChecked() then self.checkBox:setChecked(self:isChecked()) end end)
+  
+    CheckBox
+      id: checkBox
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Only show available spells')
+      text-horizontal-auto-resize: true
+      color: #c0c0c0
+      @onCheckChange: self:getParent():setChecked(self:isChecked())
+  
+  Panel
+    id: search
+    height: 16
+
+    Label
+      id: label
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: parent.left
+      width: 66
+      font: verdana-11px-monochrome
+      color: #c0c0c0
+      !text: tr("Search:")
+
+    TextEdit
+      id: field
+      anchors.top: parent.top
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      anchors.left: prev.right
+      margin-left: 5
+      padding: 1 4
+      font: verdana-11px-monochrome
+      color: #c0c0c0
   
   Panel
     id: parameter
