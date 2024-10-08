@@ -227,13 +227,26 @@ function Keybind.delete(category, action)
 
   Keybind.unbind(category, action)
 
-  Keybind.defaultKeys[CHAT_MODE.ON][keybind.keys[CHAT_MODE.ON].primary] = nil
-  if keybind.keys[CHAT_MODE.ON].secondary then
-    Keybind.defaultKeys[CHAT_MODE.ON][keybind.keys[CHAT_MODE.ON].secondary] = nil
+  local keysOn = keybind.keys[CHAT_MODE.ON]
+  local keysOff = keybind.keys[CHAT_MODE.OFF]
+
+  local primaryOn = keysOn.primary
+  local primaryOff = keysOff.primary
+  local secondaryOn = keysOn.secondary
+  local secondaryOff = keysOff.secondary
+
+  if primaryOn and primaryOn:len() > 0 then
+    Keybind.defaultKeys[CHAT_MODE.ON][primaryOn] = nil
   end
-  Keybind.defaultKeys[CHAT_MODE.OFF][keybind.keys[CHAT_MODE.OFF].primary] = nil
-  if keybind.keys[CHAT_MODE.ON].secondary then
-    Keybind.defaultKeys[CHAT_MODE.OFF][keybind.keys[CHAT_MODE.OFF].secondary] = nil
+  if secondaryOn and secondaryOn:len() > 0 then
+    Keybind.defaultKeys[CHAT_MODE.ON][secondaryOn] = nil
+  end
+
+  if primaryOff and primaryOff:len() > 0 then
+    Keybind.defaultKeys[CHAT_MODE.OFF][primaryOff] = nil
+  end
+  if secondaryOff and secondaryOff:len() > 0 then
+    Keybind.defaultKeys[CHAT_MODE.OFF][secondaryOff] = nil
   end
 
   Keybind.defaultKeybinds[index] = nil
