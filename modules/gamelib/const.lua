@@ -414,4 +414,40 @@ ChannelEvent = {
   Exclude = 3,
 }
 
+VocationsServer = {
+  None = 0,
+  Sorcerer = 1,
+  Druid = 2,
+  Paladin = 3,
+  Knight = 4,
+  MasterSorcerer = 5,
+  ElderDruid = 6,
+  RoyalPaladin = 7,
+  EliteKnight = 8
+}
+
+VocationsClient = {
+  None = 0,
+  Knight = 1,
+  Paladin = 2,
+  Sorcerer = 3,
+  Druid = 4,
+  EliteKnight = 11,
+  RoyalPaladin = 12,
+  MasterSorcerer = 13,
+  ElderDruid = 14
+}
+
+VocationClientToServer = {
+  [VocationsClient.None] = VocationsServer.None,
+  [VocationsClient.Knight] = VocationsServer.Knight,
+  [VocationsClient.Paladin] = VocationsServer.Paladin,
+  [VocationsClient.Sorcerer] = VocationsServer.Sorcerer,
+  [VocationsClient.Druid] = VocationsServer.Druid,
+  [VocationsClient.EliteKnight] = VocationsServer.EliteKnight,
+  [VocationsClient.RoyalPaladin] = VocationsServer.RoyalPaladin,
+  [VocationsClient.MasterSorcerer] = VocationsServer.MasterSorcerer,
+  [VocationsClient.ElderDruid] = VocationsServer.ElderDruid
+}
+
 -- @}
