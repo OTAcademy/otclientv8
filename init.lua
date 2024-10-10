@@ -10,7 +10,7 @@ Services = {
   stats = "",
   crash = "http://otclient.ovh/api/crash.php",
   feedback = "http://otclient.ovh/api/feedback.php",
-  status = "http://otclient.ovh/api/status.php"
+  status = ""
 }
 
 -- Servers accept http login url, websocket login url or ip:port:version
