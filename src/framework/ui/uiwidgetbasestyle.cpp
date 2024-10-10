@@ -339,6 +339,15 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
             setCursor(node->value());
         else if (node->tag() == "change-cursor-image")
             setChangeCursorImage(node->value<bool>());
+        else if (node->tag() == "events") {
+            auto split = stdext::split(node->value(true), " ");
+            for (const auto& event : split) {
+                auto it = eventMap.find(event);
+                if (it != eventMap.end()) {
+                    setEventListener(it->second);
+                }
+            }
+        }
     }
 }
 

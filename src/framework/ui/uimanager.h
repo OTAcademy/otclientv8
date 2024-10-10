@@ -43,6 +43,7 @@ public:
     void updatePressedWidget(const Fw::MouseButton button, const UIWidgetPtr& newPressedWidget, const Point& clickedPos = Point(), bool fireClicks = true);
     bool updateDraggingWidget(const UIWidgetPtr& draggingWidget, const Point& clickedPos = Point());
     void updateHoveredWidget(bool now = false);
+    void updateHoveredText(bool now = false);
 
     void clearStyles();
     bool importStyle(std::string file);
@@ -116,8 +117,10 @@ private:
     UIWidgetPtr m_keyboardReceiver;
     UIWidgetPtr m_draggingWidget;
     UIWidgetPtr m_hoveredWidget;
+    std::string m_hoveredText;
     UIWidgetPtr m_pressedWidget[Fw::MouseButtonLast + 1] = { nullptr };
     stdext::boolean<false> m_hoverUpdateScheduled;
+    stdext::boolean<false> m_hoverTextUpdateScheduled;
     stdext::boolean<false> m_drawDebugBoxes;
     std::unordered_map<std::string, OTMLNodePtr> m_styles;
     OTUIVars m_vars;

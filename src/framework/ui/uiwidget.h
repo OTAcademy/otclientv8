@@ -33,6 +33,16 @@
 #include <framework/graphics/coordsbuffer.h>
 #include <framework/core/timer.h>
 
+enum WidgetEvents : int {
+    EVENT_TEXT_CLICK = 1,
+    EVENT_TEXT_HOVER = 2
+};
+
+const std::unordered_map<std::string, WidgetEvents> eventMap = {
+    {"text-click", EVENT_TEXT_CLICK},
+    {"text-hover", EVENT_TEXT_HOVER}
+};
+
 template<typename T = int>
 struct EdgeGroup {
     EdgeGroup() { top = right = bottom = left = T(0); }
@@ -84,6 +94,7 @@ protected:
     Timer m_clickTimer;
     Fw::FocusReason m_lastFocusReason;
     Fw::AutoFocusPolicy m_autoFocusPolicy;
+    int m_events = 0;
 
 public:
     void addChild(const UIWidgetPtr& child);
@@ -143,6 +154,8 @@ public:
     void setAutoRepeatDelay(int delay) { m_autoRepeatDelay = delay; }
     void setVirtualOffset(const Point& offset);
     void setPixelTesting(bool pixelTest);
+    void setEventListener(WidgetEvents event);
+    void removeEventListener(WidgetEvents event);
 
     bool isAnchored();
     bool isChildLocked(const UIWidgetPtr& child);
@@ -164,6 +177,7 @@ public:
     UIWidgetList recursiveGetChildrenByPos(const Point& childPos);
     UIWidgetList recursiveGetChildrenByMarginPos(const Point& childPos);
     UIWidgetPtr backwardsGetWidgetById(const std::string& id);
+    bool hasEventListener(WidgetEvents event) { return (m_events & event) != 0; }
 
 private:
     stdext::boolean<false> m_updateEventScheduled;
@@ -211,6 +225,7 @@ protected:
     virtual bool onMouseWheel(const Point& mousePos, Fw::MouseWheelDirection direction);
     virtual bool onClick(const Point& mousePos);
     virtual bool onDoubleClick(const Point& mousePos);
+    virtual void onTextHoverChange(const std::string& text, bool hovered);
 
     friend class UILayout;
 
@@ -514,6 +529,7 @@ private:
 
 protected:
     virtual void updateText();
+    virtual void updateRectToWord();
     void drawText(const Rect& screenCoords);
 
     virtual void onTextChange(const std::string& text, const std::string& oldText);
@@ -531,6 +547,8 @@ protected:
     std::vector<std::pair<int, Color>> m_textColors;
     std::vector<std::pair<int, Color>> m_drawTextColors;
     stdext::boolean<false> m_shadow;
+
+    std::vector<std::pair<Rect, std::string>> m_rectToWord;
 
 public:
     void resizeToText() { setSize(getTextSize()); }
@@ -555,6 +573,7 @@ public:
     bool getTextWrap() { return m_textWrap; }
     std::string getFont() { return m_font->getName(); }
     Size getTextSize() { return m_font->calculateTextRectSize(m_drawText); }
+    std::string getTextByPos(const Point& mousePos);
 };
 
 #endif

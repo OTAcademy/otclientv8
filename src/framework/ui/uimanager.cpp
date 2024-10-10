@@ -59,6 +59,7 @@ void UIManager::terminate()
     m_destroyedWidgets.clear();
     m_checkEvent = nullptr;
     m_vars.clear();
+    m_hoveredText.clear();
 }
 
 void UIManager::render(Fw::DrawPane drawPane)
@@ -154,6 +155,7 @@ void UIManager::inputEvent(const InputEvent& event)
 
             // mouse move can change hovered widgets
             updateHoveredWidget(true);
+            updateHoveredText(true);
 
             // first fire dragging move
             if(m_draggingWidget) {
@@ -249,11 +251,9 @@ void UIManager::updateHoveredWidget(bool now)
 
         m_hoverUpdateScheduled = false;
         UIWidgetPtr hoveredWidget;
-        //if(!g_window.isMouseButtonPressed(Fw::MouseLeftButton) && !g_window.isMouseButtonPressed(Fw::MouseRightButton)) {
-            hoveredWidget = m_rootWidget->recursiveGetChildByPos(g_window.getMousePosition(), false);
-            if(hoveredWidget && !hoveredWidget->isEnabled())
-                hoveredWidget = nullptr;
-        //}
+        hoveredWidget = m_rootWidget->recursiveGetChildByPos(g_window.getMousePosition(), false);
+        if(hoveredWidget && !hoveredWidget->isEnabled())
+            hoveredWidget = nullptr;
 
         if(hoveredWidget != m_hoveredWidget) {
             UIWidgetPtr oldHovered = m_hoveredWidget;
@@ -261,6 +261,11 @@ void UIManager::updateHoveredWidget(bool now)
             if(oldHovered) {
                 oldHovered->updateState(Fw::HoverState);
                 oldHovered->onHoverChange(false);
+
+                if (oldHovered->hasEventListener(EVENT_TEXT_HOVER) && m_hoveredText.length() > 0) {
+                    oldHovered->onTextHoverChange(m_hoveredText, false);
+                    m_hoveredText.clear();
+                }
             }
             if(hoveredWidget) {
                 hoveredWidget->updateState(Fw::HoverState);
@@ -277,16 +282,55 @@ void UIManager::updateHoveredWidget(bool now)
     }
 }
 
+void UIManager::updateHoveredText(bool now)
+{
+    if(m_hoverTextUpdateScheduled && !now || !m_hoveredWidget)
+        return;
+
+    auto func = [this] {
+        if(!m_rootWidget || !m_hoveredWidget)
+            return;
+
+        m_hoverTextUpdateScheduled = false;
+
+        if (m_hoveredWidget->hasEventListener(EVENT_TEXT_HOVER)) {
+            std::string hoveredText = m_hoveredWidget->getTextByPos(g_window.getMousePosition());
+
+            if (hoveredText != m_hoveredText) {
+                std::string oldHovered = m_hoveredText;
+                m_hoveredText = hoveredText;
+
+                if (oldHovered.length() > 0)
+                    m_hoveredWidget->onTextHoverChange(oldHovered, false);
+
+                if (m_hoveredText.length() > 0)
+                    m_hoveredWidget->onTextHoverChange(m_hoveredText, true);
+            }
+        }
+    };
+
+    if(now)
+        func();
+    else {
+        m_hoverTextUpdateScheduled = true;
+        g_dispatcher.addEvent(func);
+    }
+}
+
 void UIManager::onWidgetAppear(const UIWidgetPtr& widget)
 {
-    if(widget->containsPoint(g_window.getMousePosition()))
+    if (widget->containsPoint(g_window.getMousePosition())) {
         updateHoveredWidget();
+        updateHoveredText();
+    }
 }
 
 void UIManager::onWidgetDisappear(const UIWidgetPtr& widget)
 {
-    if(widget->containsPoint(g_window.getMousePosition()))
+    if (widget->containsPoint(g_window.getMousePosition())) {
         updateHoveredWidget();
+        updateHoveredText();
+    }
 }
 
 void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
@@ -300,8 +344,10 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
     if(m_mouseReceiver == widget)
         resetMouseReceiver();
 
-    if(m_hoveredWidget == widget)
+    if (m_hoveredWidget == widget) {
         updateHoveredWidget();
+        updateHoveredText();
+    }
 
     for (int i = 0; i <= Fw::MouseButtonLast + 1; ++i) {
         if (m_pressedWidget[i] == widget) {

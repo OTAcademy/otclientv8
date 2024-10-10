@@ -325,3 +325,6 @@ SoundChannels = {
   Effect = 3,
   Bot = 4
 }
+
+EVENT_TEXT_CLICK = 1
+EVENT_TEXT_HOVER = 2

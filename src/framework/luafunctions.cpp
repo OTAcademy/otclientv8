@@ -725,6 +725,10 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("setShadow", &UIWidget::setShadow);
     g_lua.bindClassMemberFunction<UIWidget>("setCursor", &UIWidget::setCursor);
     g_lua.bindClassMemberFunction<UIWidget>("setChangeCursorImage", &UIWidget::setChangeCursorImage);
+    g_lua.bindClassMemberFunction<UIWidget>("getTextByPos", &UIWidget::getTextByPos);
+    g_lua.bindClassMemberFunction<UIWidget>("setEventListener", &UIWidget::setEventListener);
+    g_lua.bindClassMemberFunction<UIWidget>("removeEventListener", &UIWidget::removeEventListener);
+    g_lua.bindClassMemberFunction<UIWidget>("hasEventListener", &UIWidget::hasEventListener);
 
     // UILayout
     g_lua.registerClass<UILayout>();
