@@ -913,6 +913,25 @@ function getNewHighlightedText(text, color, highlightColor)
   return tmpData
 end
 
+function onConsoleTextClicked(widget, text)
+  if widget.keywords and widget.keywords[text] then
+    local npcTab = consoleTabBar:getTab("NPCs")
+    if npcTab then
+      sendMessage(text, npcTab)
+    end
+  end
+end
+
+function onConsoleTextHovered(widget, text, hovered)
+  if widget.keywords and widget.keywords[text] then
+    if hovered then
+      g_mouse.pushCursor("pointer")
+    else
+      g_mouse.popCursor("pointer")
+    end
+  end
+end
+
 function addTabText(text, speaktype, tab, creatureName)
   if not tab or tab.locked or not text or #text == 0 then return end
 
@@ -941,6 +960,19 @@ function addTabText(text, speaktype, tab, creatureName)
     local highlightData = getNewHighlightedText(text, speaktype.color, "#1f9ffe")
     if #highlightData > 2 then
       label:setColoredText(highlightData)
+      label.keywords = {}
+      for i = 1, #highlightData, 2 do
+        if highlightData[i + 1] == "#1f9ffe" then
+          label.keywords[highlightData[i]] = true
+          
+          -- only for NPCs
+          if not label:hasEventListener(EVENT_TEXT_CLICK) and not label:hasEventListener(EVENT_TEXT_HOVER) then
+            label:setEventListener(EVENT_TEXT_CLICK)
+            label:setEventListener(EVENT_TEXT_HOVER)
+            connect(label, { onTextClick = onConsoleTextClicked, onTextHoverChange = onTextHoverChange })
+          end
+        end
+      end
     end
   end
 
