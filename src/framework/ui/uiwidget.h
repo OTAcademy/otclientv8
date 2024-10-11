@@ -529,7 +529,9 @@ private:
 
 protected:
     virtual void updateText();
-    virtual void updateRectToWord();
+    void cacheRectToWord();
+    void updateRectToWord(const std::vector<Rect>& glypsCoords);
+    bool isCharacterValid(char character);
     void drawText(const Rect& screenCoords);
 
     virtual void onTextChange(const std::string& text, const std::string& oldText);

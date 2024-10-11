@@ -94,7 +94,7 @@ void UIWidget::drawText(const Rect& screenCoords)
         m_textCachedScreenCoords = coords;
 
         if (hasEventListener(EVENT_TEXT_CLICK) || hasEventListener(EVENT_TEXT_HOVER))
-            updateRectToWord();
+            cacheRectToWord();
     }
 
     if (!m_drawTextColors.empty()) {

@@ -96,7 +96,6 @@ public:
 
 protected:
     void updateText();
-    void updateRectToWord();
 
     virtual void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
     virtual void onGeometryChange(const Rect& oldRect, const Rect& newRect);

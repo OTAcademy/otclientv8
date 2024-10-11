@@ -1902,7 +1902,7 @@ void UIWidget::setEventListener(WidgetEvents event)
     m_events |= event;
 
     if ((event == EVENT_TEXT_CLICK || event == EVENT_TEXT_HOVER) && m_rectToWord.empty())
-        updateRectToWord();
+        cacheRectToWord();
 }
 
 void UIWidget::removeEventListener(WidgetEvents event)
@@ -1916,7 +1916,7 @@ void UIWidget::removeEventListener(WidgetEvents event)
         m_rectToWord.clear();
 }
 
-void UIWidget::updateRectToWord()
+void UIWidget::cacheRectToWord()
 {
     if (m_rect.isEmpty())
         return;
@@ -1924,7 +1924,7 @@ void UIWidget::updateRectToWord()
     auto& text = m_drawText;
     int textLength = text.length();
 
-    std::vector<Rect> m_glyphsCoords;
+    std::vector<Rect> glyphsCoords;
 
     // map glyphs positions
     Size textBoxSize;
@@ -1945,8 +1945,8 @@ void UIWidget::updateRectToWord()
     }
 
     // resize just on demand
-    if (textLength != (int)m_glyphsCoords.size()) {
-        m_glyphsCoords.resize(textLength);
+    if (textLength != (int)glyphsCoords.size()) {
+        glyphsCoords.resize(textLength);
     }
 
     Rect textScreenCoords = m_rect;
@@ -1957,7 +1957,7 @@ void UIWidget::updateRectToWord()
 
     for (int i = 0; i < textLength; ++i) {
         glyph = (uchar)text[i];
-        m_glyphsCoords[i].clear();
+        glyphsCoords[i].clear();
 
         // skip invalid glyphs
         if (glyph < 32)
@@ -2006,8 +2006,16 @@ void UIWidget::updateRectToWord()
         }
 
         // render glyph
-        m_glyphsCoords[i] = glyphScreenCoords;
+        glyphsCoords[i] = glyphScreenCoords;
     }
+
+    updateRectToWord(glyphsCoords);
+}
+
+void UIWidget::updateRectToWord(const std::vector<Rect>& glypsCoords)
+{
+    auto& text = m_drawText;
+    int textLength = text.length();
 
     m_rectToWord.clear();
     Rect wordRect;
@@ -2016,11 +2024,11 @@ void UIWidget::updateRectToWord()
 
     for (int i = 0; i < textLength; ++i) {
         char character = text[i];
-        if (m_glyphsCoords[i].isValid() || character == '\n') {
-            if (character == ' ' || character == '\n' || i == m_drawText.length() - 1) {
+        if (glypsCoords[i].isValid() || character == '\n') {
+            if (isCharacterValid(character) || i == m_drawText.length() - 1) {
                 if (inWord) {
-                    if (i == m_drawText.length() - 1 && character != ' ' && character != '\n') {
-                        wordRect.expand(0, m_glyphsCoords[i].width(), 0, 0);
+                    if (i == m_drawText.length() - 1 && !isCharacterValid(character)) {
+                        wordRect.expand(0, glypsCoords[i].width(), 0, 0);
                         word += character;
                     }
 
@@ -2031,23 +2039,43 @@ void UIWidget::updateRectToWord()
                     inWord = false;
                     word.clear();
                 }
-                else if (i == m_drawText.length() - 1 && character != ' ' && character != '\n') {
-                    wordRect = m_glyphsCoords[i];
+                else if (i == m_drawText.length() - 1 && !isCharacterValid(character)) {
+                    wordRect = glypsCoords[i];
                     word += character;
                     m_rectToWord.push_back({ wordRect, word });
                 }
             }
             else {
                 if (!inWord) {
-                    wordRect = m_glyphsCoords[i];
+                    wordRect = glypsCoords[i];
                     inWord = true;
                 }
                 else {
-                    wordRect.expand(0, m_glyphsCoords[i].width(), 0, 0);
+                    wordRect.expand(0, glypsCoords[i].width(), 0, 0);
                 }
                 word += character;
             }
         }
     }
+}
 
+bool UIWidget::isCharacterValid(char character)
+{
+    switch (character) {
+        case ' ':
+        case '\n':
+        case ',':
+        case '.':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+        case ';':
+        case ':':
+        case '=':
+        case '+':
+            return true;
+        default:
+            return false;
+    }
 }

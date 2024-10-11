@@ -349,7 +349,7 @@ void UITextEdit::update(bool focusCursor)
         m_glyphsTexCoords[i] = glyphTextureCoords;
     }
 
-    updateRectToWord();
+    updateRectToWord(m_glyphsCoords);
 
     if(fireAreaUpdate)
         onTextAreaUpdate(m_textVirtualOffset, m_textVirtualSize, m_textTotalSize);
@@ -957,50 +957,4 @@ void UITextEdit::onTextAreaUpdate(const Point& offset, const Size& visibleSize, 
 void UITextEdit::setPlaceholderFont(const std::string& fontName)
 {
     m_placeholderFont = g_fonts.getFont(fontName);
-}
-
-void UITextEdit::updateRectToWord()
-{
-    int textLength = m_drawText.length();
-
-    m_rectToWord.clear();
-    Rect wordRect;
-    std::string word;
-    bool inWord = false;
-
-    for (int i = 0; i < textLength; ++i) {
-        char character = m_drawText[i];
-        if (m_glyphsCoords[i].isValid() || character == '\n') {
-            if (character == ' ' || character == '\n' || i == m_drawText.length() - 1) {
-                if (inWord) {
-                    if (i == m_drawText.length() - 1 && character != ' ' && character != '\n') {
-                        wordRect.expand(0, m_glyphsCoords[i].width(), 0, 0);
-                        word += character;
-                    }
-
-                    if (!word.empty()) {
-                        m_rectToWord.push_back({ wordRect, word });
-                    }
-
-                    inWord = false;
-                    word.clear();
-                }
-                else if (i == m_drawText.length() - 1 && character != ' ' && character != '\n') {
-                    wordRect = m_glyphsCoords[i];
-                    word += character;
-                    m_rectToWord.push_back({ wordRect, word });
-                }
-            }
-            else {
-                if (!inWord) {
-                    wordRect = m_glyphsCoords[i];
-                    inWord = true;
-                }
-                else {
-                    wordRect.expand(0, m_glyphsCoords[i].width(), 0, 0);
-                }
-                word += character;
-            }
-        }
-    }
 }
