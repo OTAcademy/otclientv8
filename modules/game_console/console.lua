@@ -917,7 +917,7 @@ function onConsoleTextClicked(widget, text)
   if widget.keywords and widget.keywords[text] then
     local npcTab = consoleTabBar:getTab("NPCs")
     if npcTab then
-      sendMessage(text, npcTab)
+      sendMessage(widget.keywords[text], npcTab)
     end
   end
 end
@@ -963,7 +963,14 @@ function addTabText(text, speaktype, tab, creatureName)
       label.keywords = {}
       for i = 1, #highlightData, 2 do
         if highlightData[i + 1] == "#1f9ffe" then
-          label.keywords[highlightData[i]] = true
+          if highlightData[i]:find(" ") then
+            local split = highlightData[i]:split(" ")
+            for _, splitPart in ipairs(split) do
+              label.keywords[splitPart] = highlightData[i]
+            end
+          else
+            label.keywords[highlightData[i]] = highlightData[i]
+          end
           
           -- only for NPCs
           if not label:hasEventListener(EVENT_TEXT_CLICK) and not label:hasEventListener(EVENT_TEXT_HOVER) then
