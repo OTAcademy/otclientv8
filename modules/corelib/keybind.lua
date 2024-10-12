@@ -738,7 +738,7 @@ function Keybind.removeAllHotkeys(chatMode)
 
   Keybind.hotkeys[chatMode][Keybind.currentPreset] = {}
 
-  Keybind.configs.hotkeys[Keybind.currentPreset]:clear()
+  Keybind.configs.hotkeys[Keybind.currentPreset]:remove(chatMode)
   Keybind.configs.hotkeys[Keybind.currentPreset]:save()
 end
 
@@ -760,7 +760,12 @@ function Keybind.getHotkeyKeys(hotkeyId, preset, chatMode)
     return keys
   end
 
-  return Keybind.configs.hotkeys[preset]:getNode(chatMode)[tostring(hotkeyId)] or keys
+  local config = Keybind.configs.hotkeys[preset]:getNode(chatMode)
+  if not config then
+    return keys
+  end
+
+  return config[tostring(hotkeyId)] or keys
 end
 
 function Keybind.hotkeyCallback(hotkeyId, chatMode)
