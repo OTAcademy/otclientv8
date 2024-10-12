@@ -1220,7 +1220,7 @@ function resetActions()
     changedOptions["resetKeybinds"] = { value = keybindsPanel.presets.list:getCurrentOption().text }
     updateKeybinds()
   elseif optionsTabBar.currentTab == hotkeysButton then
-    changedOptions["resetHotkeys"] = { value = keybindsPanel.presets.list:getCurrentOption().text }
+    changedOptions["resetHotkeys"] = { value = keybindsPanel.presets.list:getCurrentOption().text, chatMode = getChatMode() }
     keybindsPanel.tablePanel.keybinds:clearData()
   end
 end
@@ -1626,7 +1626,12 @@ end
 
 function preAddHotkey(action, data)
   local preset = keybindsPanel.presets.list:getCurrentOption().text
-  local hotkeyId = (Keybind.hotkeys[preset] and #Keybind.hotkeys[preset] or 0) + #changedHotkeys + 1
+  local chatMode = getChatMode()
+  local hotkeyId = #changedHotkeys + 1
+
+  if Keybind.hotkeys[chatMode] and Keybind.hotkeys[chatMode][preset] then
+    hotkeyId = hotkeyId + #Keybind.hotkeys[chatMode][preset]
+  end
 
   table.insert(changedHotkeys, { hotkeyId = hotkeyId, action = action, data = data, new = true })
 
