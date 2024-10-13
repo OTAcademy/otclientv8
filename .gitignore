@@ -54,6 +54,10 @@ vc16/DirectX/
 vc16/OpenGL/
 vc16/Debug/
 vc16/Debug_lib/
+vc16/otclient/DirectX/
+vc16/otclient/OpenGL/
+vc16/otclient/Debug/
+vc16/otclient/Debug_lib/
 /*.lib
 *.exp
 *.zip
