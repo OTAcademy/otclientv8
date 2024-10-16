@@ -2074,6 +2074,14 @@ bool UIWidget::isCharacterValid(char character)
         case ':':
         case '=':
         case '+':
+        case '!':
+        case '?':
+        case '/':
+        case '\\':
+        case '<':
+        case '>':
+        case '_':
+        case '#':
             return true;
         default:
             return false;
