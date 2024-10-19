@@ -94,7 +94,6 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
         if(glyphsMustRecache) {
             m_glyphsTextCoordsBuffer.clear();
             for (int i = 0; i < textLength; ++i) {
-                char c = m_drawText[i];
                 if (m_glyphsCoords[i].isValid())
                     m_glyphsTextCoordsBuffer.addRect(m_glyphsCoords[i], m_glyphsTexCoords[i]);
             }
