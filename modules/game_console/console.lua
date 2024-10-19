@@ -976,7 +976,7 @@ function addTabText(text, speaktype, tab, creatureName)
           if not label:hasEventListener(EVENT_TEXT_CLICK) and not label:hasEventListener(EVENT_TEXT_HOVER) then
             label:setEventListener(EVENT_TEXT_CLICK)
             label:setEventListener(EVENT_TEXT_HOVER)
-            connect(label, { onTextClick = onConsoleTextClicked, onTextHoverChange = onTextHoverChange })
+            connect(label, { onTextClick = onConsoleTextClicked, onTextHoverChange = onConsoleTextHovered })
           end
         end
       end
