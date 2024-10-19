@@ -27,9 +27,10 @@
 #include <client/spritemanager.h>
 
 UIGrid::UIGrid() :
-    m_gridSize(0, 0),
+    m_cellSize(0, 0),
     m_gridWidth(1),
-    m_gridColor(Color::white)
+    m_gridColor(Color::white),
+    m_needsUpdate(false)
 { }
 
 void UIGrid::drawSelf(Fw::DrawPane drawPane)
@@ -46,27 +47,12 @@ void UIGrid::drawSelf(Fw::DrawPane drawPane)
 
     drawImage(m_rect);
 
-    if (!m_gridSize.isEmpty() && m_gridSize.isValid()) {
-        int numRows = m_rect.height() / m_gridSize.height();
-        int numCols = m_rect.width() / m_gridSize.width();
+    if (m_needsUpdate) {
+        updateGrid();
+    }
 
-        for (int i = 0; i <= numRows; ++i) {
-            int y = (m_rect.topLeft().y + i * m_gridSize.height()) + m_gridWidth;
-            std::vector<Point> points = {
-                Point(m_rect.topLeft().x, y),
-                Point(m_rect.topLeft().x + m_rect.width(), y)
-            };
-            g_drawQueue->addLine(points, m_gridWidth, m_gridColor);
-        }
-
-        for (int i = 0; i <= numCols; ++i) {
-            int x = (m_rect.topLeft().x + i * m_gridSize.width()) + m_gridWidth;
-            std::vector<Point> points = {
-                Point(x, m_rect.topLeft().y),
-                Point(x, m_rect.topLeft().y + m_rect.height())
-            };
-            g_drawQueue->addLine(points, m_gridWidth, m_gridColor);
-        }
+    for (const auto& points : m_points) {
+        g_drawQueue->addLine(points, m_gridWidth, m_gridColor);
     }
 
     drawBorder(m_rect);
@@ -79,11 +65,73 @@ void UIGrid::onStyleApply(const std::string& styleName, const OTMLNodePtr& style
     UIWidget::onStyleApply(styleName, styleNode);
 
     for(const OTMLNodePtr& node : styleNode->children()) {
-        if (node->tag() == "grid-size")
-            m_gridSize = node->value<Size>();
+        if (node->tag() == "cell-size")
+            setCellSize(node->value<Size>());
         else if (node->tag() == "grid-width")
-            m_gridWidth = node->value<int>();
+            setGridWidth(node->value<int>());
         else if (node->tag() == "grid-color")
-            m_gridColor = node->value<Color>();
+            setGridColor(node->value<Color>());
+    }
+}
+
+void UIGrid::onGeometryChange(const Rect& oldRect, const Rect& newRect)
+{
+    UIWidget::onGeometryChange(oldRect, newRect);
+    m_needsUpdate = true;
+}
+
+void UIGrid::onLayoutUpdate()
+{
+    UIWidget::onLayoutUpdate();
+    m_needsUpdate = true;
+}
+
+void UIGrid::onVisibilityChange(bool visible)
+{
+    UIWidget::onVisibilityChange(visible);
+    m_needsUpdate = visible;
+}
+
+void UIGrid::setCellSize(const Size& size)
+{
+    m_cellSize = size;
+    m_needsUpdate = true;
+}
+
+void UIGrid::setGridWidth(int width)
+{
+    m_gridWidth = width;
+    m_needsUpdate = true;
+}
+
+void UIGrid::updateGrid()
+{
+    m_points.clear();
+
+    if (!m_rect.isEmpty() && m_rect.isValid()) {
+        if (!m_cellSize.isEmpty() && m_cellSize.isValid()) {
+            int numRows = m_rect.height() / m_cellSize.height();
+            int numCols = m_rect.width() / m_cellSize.width();
+
+            for (int i = 0; i <= numRows; ++i) {
+                int y = (m_rect.topLeft().y + i * m_cellSize.height()) + m_gridWidth;
+                std::vector<Point> points = {
+                    Point(m_rect.topLeft().x, y),
+                    Point(m_rect.topLeft().x + m_rect.width(), y)
+                };
+                m_points.push_back(points);
+            }
+
+            for (int i = 0; i <= numCols; ++i) {
+                int x = (m_rect.topLeft().x + i * m_cellSize.width()) + m_gridWidth;
+                std::vector<Point> points = {
+                    Point(x, m_rect.topLeft().y),
+                    Point(x, m_rect.topLeft().y + m_rect.height())
+                };
+                m_points.push_back(points);
+            }
+
+            m_needsUpdate = false;
+        }
     }
 }

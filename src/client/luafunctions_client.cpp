@@ -975,8 +975,8 @@ void Client::registerLuaFunctions()
 
     g_lua.registerClass<UIGrid, UIWidget>();
     g_lua.bindClassStaticFunction<UIGrid>("create", [] { return std::make_shared<UIGrid>(); });
-    g_lua.bindClassMemberFunction<UIGrid>("setGridSize", &UIGrid::setGridSize);
-    g_lua.bindClassMemberFunction<UIGrid>("getGridSize", &UIGrid::getGridSize);
+    g_lua.bindClassMemberFunction<UIGrid>("setCellSize", &UIGrid::setCellSize);
+    g_lua.bindClassMemberFunction<UIGrid>("getCellSize", &UIGrid::getCellSize);
     g_lua.bindClassMemberFunction<UIGrid>("setGridWidth", &UIGrid::setGridWidth);
     g_lua.bindClassMemberFunction<UIGrid>("getGridWidth", &UIGrid::getGridWidth);
     g_lua.bindClassMemberFunction<UIGrid>("setGridColor", &UIGrid::setGridColor);

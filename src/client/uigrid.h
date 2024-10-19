@@ -32,10 +32,10 @@ public:
     UIGrid();
     void drawSelf(Fw::DrawPane drawPane);
 
-    void setGridSize(const Size& size) { m_gridSize = size; }
-    Size getGridSize() { return m_gridSize; }
+    void setCellSize(const Size& size);
+    Size getCellSize() { return m_cellSize; }
 
-    void setGridWidth(int width) { m_gridWidth = width; }
+    void setGridWidth(int width);
     int getGridWidth() { return m_gridWidth; }
 
     void setGridColor(const Color& color) { m_gridColor = color; }
@@ -43,11 +43,19 @@ public:
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
+    void onGeometryChange(const Rect& oldRect, const Rect& newRect);
+    void onLayoutUpdate();
+    void onVisibilityChange(bool visible);
+
+    void updateGrid();
 
 private:
-    Size m_gridSize;
+    Size m_cellSize;
     int m_gridWidth;
     Color m_gridColor;
+
+    bool m_needsUpdate;
+    std::vector<std::vector<Point>> m_points;
 };
 
 #endif
