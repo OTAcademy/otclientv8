@@ -50,6 +50,7 @@
 #include "uisprite.h"
 #include "outfit.h"
 #include "healthbars.h"
+#include "uigrid.h"
 
 #include <framework/luaengine/luainterface.h>
 
@@ -971,6 +972,15 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIGraph>("setCapacity", &UIGraph::setCapacity);
     g_lua.bindClassMemberFunction<UIGraph>("setTitle", &UIGraph::setTitle);
     g_lua.bindClassMemberFunction<UIGraph>("setShowLabels", &UIGraph::setShowLabels);
+
+    g_lua.registerClass<UIGrid, UIWidget>();
+    g_lua.bindClassStaticFunction<UIGrid>("create", [] { return std::make_shared<UIGrid>(); });
+    g_lua.bindClassMemberFunction<UIGrid>("setGridSize", &UIGrid::setGridSize);
+    g_lua.bindClassMemberFunction<UIGrid>("getGridSize", &UIGrid::getGridSize);
+    g_lua.bindClassMemberFunction<UIGrid>("setGridWidth", &UIGrid::setGridWidth);
+    g_lua.bindClassMemberFunction<UIGrid>("getGridWidth", &UIGrid::getGridWidth);
+    g_lua.bindClassMemberFunction<UIGrid>("setGridColor", &UIGrid::setGridColor);
+    g_lua.bindClassMemberFunction<UIGrid>("getGridColor", &UIGrid::getGridColor);
 
     g_lua.registerClass<UIMapAnchorLayout, UIAnchorLayout>();
 }
