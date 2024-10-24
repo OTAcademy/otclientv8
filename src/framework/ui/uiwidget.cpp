@@ -1345,6 +1345,7 @@ bool UIWidget::setState(Fw::WidgetState state, bool on)
         m_states &= ~state;
 
     if(oldStates != m_states) {
+        callLuaField("onStateChange", state, on);
         updateStyle();
         return true;
     }
