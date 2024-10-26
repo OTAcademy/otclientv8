@@ -788,6 +788,14 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIAnchorLayout>("centerIn", &UIAnchorLayout::centerIn);
     g_lua.bindClassMemberFunction<UIAnchorLayout>("fill", &UIAnchorLayout::fill);
 
+    g_lua.registerClass<UIFlexBox, UILayout>();
+    g_lua.bindClassStaticFunction<UIFlexBox>("create", [](UIWidgetPtr parent) { return std::make_shared<UIFlexBox>(parent); });
+    g_lua.bindClassMemberFunction<UIFlexBox>("setFlexDirection", &UIFlexBox::setFlexDirection);
+    g_lua.bindClassMemberFunction<UIFlexBox>("getFlexDirection", &UIFlexBox::getFlexDirection);
+    g_lua.bindClassMemberFunction<UIFlexBox>("setSpacing", &UIFlexBox::setSpacing);
+    g_lua.bindClassMemberFunction<UIFlexBox>("getSpacing", &UIFlexBox::getSpacing);
+    g_lua.bindClassMemberFunction<UIFlexBox>("isUIFlexBox", &UIFlexBox::isUIFlexBox);
+
     // UITextEdit
     g_lua.registerClass<UITextEdit, UIWidget>();
     g_lua.bindClassStaticFunction<UITextEdit>("create", []{ return std::make_shared<UITextEdit>(); } );

@@ -53,6 +53,7 @@ public:
     virtual bool isUIHorizontalLayout() { return false; }
     virtual bool isUIVerticalLayout() { return false; }
     virtual bool isUIGridLayout() { return false; }
+    virtual bool isUIFlexBox() { return false; }
 
 protected:
     virtual bool internalUpdate() { return false; }

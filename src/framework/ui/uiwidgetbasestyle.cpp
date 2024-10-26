@@ -25,6 +25,7 @@
 #include "uiverticallayout.h"
 #include "uigridlayout.h"
 #include "uianchorlayout.h"
+#include "uiflexbox.h"
 #include "uitranslator.h"
 
 #include <framework/graphics/painter.h>
@@ -281,6 +282,8 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
                     layout = std::make_shared<UIGridLayout>(static_self_cast<UIWidget>());
                 else if(layoutType == "anchor")
                     layout = std::make_shared<UIAnchorLayout>(static_self_cast<UIWidget>());
+                else if(layoutType == "flex")
+                    layout = std::make_shared<UIFlexBox>(static_self_cast<UIWidget>());
                 else
                     throw OTMLException(node, "cannot determine layout type");
                 setLayout(layout);
