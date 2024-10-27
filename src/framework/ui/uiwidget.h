@@ -499,6 +499,7 @@ public:
     void setImageBorder(int border) { m_imageBorder.set(border); configureBorderImage(); }
     void setImageShader(const std::string& str) { m_shader = str; }
 
+    std::string getImageSource() { return m_imageSource; }
     Rect getImageClip() { return m_imageClipRect; }
     int getImageOffsetX() { return m_imageRect.x(); }
     int getImageOffsetY() { return m_imageRect.y(); }
