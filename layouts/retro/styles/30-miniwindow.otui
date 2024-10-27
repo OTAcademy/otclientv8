@@ -197,9 +197,6 @@ HeadlessMiniWindow < UIMiniWindow
     margin-bottom: 3
     pixels-scroll: true
 
-    $!on:
-      width: 0
-
   ResizeBorder
     id: bottomResizeBorder
     anchors.bottom: parent.bottom
