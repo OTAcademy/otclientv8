@@ -30,17 +30,24 @@ void UIWidget::initText()
 {
     m_font = g_fonts.getDefaultFont();
     m_textAlign = Fw::AlignCenter;
+    m_textOverflow = 0;
 }
 
 void UIWidget::updateText()
 {
     if (m_textWrap && m_rect.isValid()) {
-        m_drawTextColors = m_textColors;
-        m_drawText = m_font->wrapText(m_text, getWidth() - m_textOffset.x, &m_drawTextColors);
+        if (m_textOverflow > 0 && m_text.length() > m_textOverflow)
+            m_drawText = m_font->wrapText(m_text.substr(0, m_textOverflow - 3) + "...", getWidth() - m_textOffset.x, &m_drawTextColors);
+        else
+            m_drawText = m_font->wrapText(m_text, getWidth() - m_textOffset.x, &m_drawTextColors);
     } else {
-        m_drawText = m_text;
-        m_drawTextColors = m_textColors;
+        if (m_textOverflow > 0 && m_text.length() > m_textOverflow)
+            m_drawText = m_text.substr(0, m_textOverflow - 3) + "...";
+        else
+            m_drawText = m_text;
     }
+
+    m_drawTextColors = m_textColors;
 
     // update rect size
     if(!m_rect.isValid() || m_textHorizontalAutoResize || m_textVerticalAutoResize) {
@@ -80,6 +87,8 @@ void UIWidget::parseTextStyle(const OTMLNodePtr& styleNode)
             setFont(node->value());
         else if (node->tag() == "shadow")
             setShadow(node->value<bool>());
+        else if (node->tag() == "text-overflow")
+            setTextOverflow(node->value<uint16>());
     }
 }
 

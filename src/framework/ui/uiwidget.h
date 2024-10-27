@@ -549,6 +549,7 @@ protected:
     std::vector<std::pair<int, Color>> m_textColors;
     std::vector<std::pair<int, Color>> m_drawTextColors;
     stdext::boolean<false> m_shadow;
+    uint16 m_textOverflow;
 
     std::vector<std::pair<Rect, std::string>> m_rectToWord;
 
@@ -567,6 +568,7 @@ public:
     void setTextOnlyUpperCase(bool textOnlyUpperCase) { m_textOnlyUpperCase = textOnlyUpperCase; setText(m_text); }
     void setFont(const std::string& fontName);
     void setShadow(bool shadow) { m_shadow = shadow; }
+    void setTextOverflow(uint16 overflow) { m_textOverflow = overflow; updateText(); }
 
     std::string getText() { return m_text; }
     std::string getDrawText() { return m_drawText; }
