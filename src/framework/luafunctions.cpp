@@ -686,6 +686,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("setImageBorderLeft", &UIWidget::setImageBorderLeft);
     g_lua.bindClassMemberFunction<UIWidget>("setImageBorder", &UIWidget::setImageBorder);
     g_lua.bindClassMemberFunction<UIWidget>("setPixelTesting", &UIWidget::setPixelTesting);
+    g_lua.bindClassMemberFunction<UIWidget>("getImageSource", &UIWidget::getImageSource);
     g_lua.bindClassMemberFunction<UIWidget>("getImageClip", &UIWidget::getImageClip);
     g_lua.bindClassMemberFunction<UIWidget>("getImageOffsetX", &UIWidget::getImageOffsetX);
     g_lua.bindClassMemberFunction<UIWidget>("getImageOffsetY", &UIWidget::getImageOffsetY);
