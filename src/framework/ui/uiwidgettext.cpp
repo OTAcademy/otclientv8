@@ -30,19 +30,20 @@ void UIWidget::initText()
 {
     m_font = g_fonts.getDefaultFont();
     m_textAlign = Fw::AlignCenter;
-    m_textOverflow = 0;
+    m_textOverflowLength = 0;
+    m_textOverflowCharacter = "...";
 }
 
 void UIWidget::updateText()
 {
     if (m_textWrap && m_rect.isValid()) {
-        if (m_textOverflow > 0 && m_text.length() > m_textOverflow)
-            m_drawText = m_font->wrapText(m_text.substr(0, m_textOverflow - 3) + "...", getWidth() - m_textOffset.x, &m_drawTextColors);
+        if (m_textOverflowLength > 0 && m_text.length() > m_textOverflowLength)
+            m_drawText = m_font->wrapText(m_text.substr(0, m_textOverflowLength - m_textOverflowCharacter.length()) + m_textOverflowCharacter, getWidth() - m_textOffset.x, &m_drawTextColors);
         else
             m_drawText = m_font->wrapText(m_text, getWidth() - m_textOffset.x, &m_drawTextColors);
     } else {
-        if (m_textOverflow > 0 && m_text.length() > m_textOverflow)
-            m_drawText = m_text.substr(0, m_textOverflow - 3) + "...";
+        if (m_textOverflowLength > 0 && m_text.length() > m_textOverflowLength)
+            m_drawText = m_text.substr(0, m_textOverflowLength - m_textOverflowCharacter.length()) + m_textOverflowCharacter;
         else
             m_drawText = m_text;
     }
@@ -87,8 +88,19 @@ void UIWidget::parseTextStyle(const OTMLNodePtr& styleNode)
             setFont(node->value());
         else if (node->tag() == "shadow")
             setShadow(node->value<bool>());
-        else if (node->tag() == "text-overflow")
-            setTextOverflow(node->value<uint16>());
+        else if (node->tag() == "text-overflow") {
+            auto split = stdext::split(node->value(true), " ");
+            if (split.size() == 2) {
+                setTextOverflowLength(stdext::safe_cast<uint16>(g_ui.getOTUIVarSafe(split[0])));
+                setTextOverflowCharacter(g_ui.getOTUIVarSafe(split[1]));
+            }
+            else
+                throw OTMLException(node, "text-overflow param must have its length followed by its character (eg. \"13 ...\")");
+        }
+        else if (node->tag() == "text-overflow-length")
+            setTextOverflowLength(node->value<uint16>());
+        else if (node->tag() == "text-overflow-character")
+            setTextOverflowCharacter(node->value<>());
     }
 }
 
