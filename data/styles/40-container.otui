@@ -5,7 +5,7 @@ PageButton < Button
 
 ContainerWindow < MiniWindow
   height: 150
-  text-overflow: 12
+  text-overflow: 18
   &save: true
   &containerWindow: true
 
