@@ -30,7 +30,8 @@ ScrollBarValueLabel < Label
 
 VerticalScrollBar < UIScrollBar
   orientation: vertical
-  size: 12 96
+  width: 12
+  height: 96
   image-source: /images/ui/scrollbar
   image-clip: 50 0 12 96
   image-border-left: 1
@@ -69,7 +70,8 @@ VerticalScrollBar < UIScrollBar
 
 HorizontalScrollBar < UIScrollBar
   orientation: horizontal
-  size: 96 12
+  width: 96
+  height: 12
   image-source: /images/ui/scrollbar
   image-clip: 0 96 96 12
   image-border-top: 1
