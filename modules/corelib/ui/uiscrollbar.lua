@@ -28,10 +28,13 @@ local function calcValues(self)
     proportion = math.min(math.max(self.step, 1), range)/range
   end
 
-  local px = math.max(proportion * pxrange, math.min(30, self:getHeight() - 24))
-  if g_app.isMobile() then
-    px = math.max(proportion * pxrange, math.min(30, self:getHeight() - 24))  
+  local minSize = 0
+  if self.orientation == 'vertical' then
+    minSize = math.min(30, self:getHeight() - 24)
+  else
+    minSize = math.min(30, self:getWidth() - 24)
   end
+  local px = math.max(proportion * pxrange, minSize)
   px = px - px % 2 + 1
 
   local offset = 0
