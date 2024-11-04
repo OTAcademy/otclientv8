@@ -300,6 +300,7 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth, std::vec
                 lastSeparator = i + 1;
                 lastColorSeparator = c;
             } else { // space
+                outText += ' ';
                 wordLength = m_glyphsSize[glyph].width() + m_glyphSpacing.width(); // space
                 lastSeparator = i;
                 lastColorSeparator = c;
@@ -328,7 +329,7 @@ std::string BitmapFont::wrapText(const std::string& text, int maxWidth, std::vec
             outText += '-'; // word continuation
             outText += '\n'; // new line
 
-            wordLength = m_glyphsSize[glyph].width() + m_glyphSpacing.width();
+            wordLength = m_glyphsSize[glyph].width() + m_glyphsSize['-'].width() + m_glyphSpacing.width();
             lineLength = 0;
             lastSeparator = i;
             lastColorSeparator = c;

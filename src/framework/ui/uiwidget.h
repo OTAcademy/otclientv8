@@ -581,6 +581,10 @@ public:
     std::string getFont() { return m_font->getName(); }
     Size getTextSize() { return m_font->calculateTextRectSize(m_drawText); }
     std::string getTextByPos(const Point& mousePos);
+
+    // Basing on bitmapfont module text wrapping
+    unsigned getDrawTextPosForTextPos(unsigned text_pos);
+    unsigned getTextPosForDrawTextPos(unsigned dtp);
 };
 
 #endif

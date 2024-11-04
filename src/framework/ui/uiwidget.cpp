@@ -2088,3 +2088,37 @@ bool UIWidget::isCharacterValid(char character)
             return false;
     }
 }
+
+unsigned UIWidget::getDrawTextPosForTextPos(unsigned tp)
+{
+    unsigned text_pos = 0;
+    unsigned draw_text_pos = 0;
+
+    for (text_pos = 0; text_pos <= tp; text_pos++) {
+        while (draw_text_pos < m_drawText.length() &&
+            m_text[text_pos] != m_drawText[draw_text_pos] && (m_text[text_pos] != ' ' || (m_drawText[draw_text_pos] != '-' && m_drawText[draw_text_pos] != '\n'))) {
+            draw_text_pos++;
+        }
+        if (text_pos == tp) {
+            return draw_text_pos;
+        }
+        draw_text_pos++;
+    }
+}
+
+unsigned UIWidget::getTextPosForDrawTextPos(unsigned dtp)
+{
+    unsigned text_pos = 0;
+    unsigned draw_text_pos = 0;
+
+    for (text_pos = 0; text_pos < m_text.length() && draw_text_pos < m_drawText.length(); text_pos++) {
+        while (draw_text_pos < m_drawText.length() &&
+            m_text[text_pos] != m_drawText[draw_text_pos] && (m_text[text_pos] != ' ' || (m_drawText[draw_text_pos] != '-' && m_drawText[draw_text_pos] != '\n'))) {
+            draw_text_pos++;
+        }
+        if (draw_text_pos == dtp) {
+            return text_pos;
+        }
+        draw_text_pos++;
+    }
+}
