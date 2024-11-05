@@ -51,14 +51,14 @@ public:
 
     void setPhase(int phase);
     int getPhase();
-    int getPhaseAt(Timer& timer, int lastPhase = 0);
+    int getPhaseAt(Timer& timer, uint32_t randomSeed, int lastPhase = 0);
 
     int getStartPhase();
     int getAnimationPhases() { return m_animationPhases; }
     bool isAsync() { return m_async; }
     bool isComplete() { return m_isComplete; }
 
-    ticks_t getTotalDuration();
+    ticks_t getTotalDuration(uint32_t randomSeed);
 
     void resetAnimation();
 
