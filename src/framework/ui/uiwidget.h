@@ -396,6 +396,7 @@ public:
     void setRotation(float degrees) { m_rotation = degrees; }
     void setChangeCursorImage(bool enable) { m_changeCursorImage = enable; }
     void setCursor(const std::string& cursor);
+    void updatePercentSize(const Size& size);
 
     int getX() { return m_rect.x(); }
     int getY() { return m_rect.y(); }

@@ -2120,3 +2120,20 @@ void UIWidget::setHeight(int height, bool percentage)
 
     resize(getWidth(), height);
 }
+
+void UIWidget::updatePercentSize(const Size& size)
+{
+    auto percentSize = getPercentSize();
+    int width = getWidth();
+    int height = getHeight();
+
+    if (percentSize.width() > 0) {
+        width = static_cast<int>(size.width() * (percentSize.width() / 100.0));
+    }
+    if (percentSize.height() > 0) {
+        height = static_cast<int>(size.height() * (percentSize.height() / 100.0));
+    }
+
+    setWidth(width);
+    setHeight(height);
+}

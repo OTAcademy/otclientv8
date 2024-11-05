@@ -56,18 +56,7 @@ bool UIHorizontalLayout::internalUpdate()
             continue;
 
         if (widget->isSizePercantage()) {
-            auto percentSize = widget->getPercentSize();
-            int width = widget->getWidth();
-            int height = widget->getHeight();
-            if (percentSize.width() > 0) {
-                width = static_cast<int>(paddingRect.width() * (percentSize.width() / 100.0));
-            }
-            if (percentSize.height() > 0) {
-                height = static_cast<int>(paddingRect.height() * (percentSize.height() / 100.0));
-            }
-
-            widget->setWidth(width);
-            widget->setHeight(height);
+            widget->updatePercentSize(paddingRect.size());
         }
 
         Size size = widget->getSize();
