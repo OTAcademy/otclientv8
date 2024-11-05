@@ -72,6 +72,7 @@ protected:
     std::string m_id;
     std::string m_source;
     Rect m_rect;
+    Size m_percentSize;
     Point m_virtualOffset;
     stdext::boolean<true> m_autoDraw;
     stdext::boolean<true> m_enabled;
@@ -342,8 +343,8 @@ protected:
 public:
     void setX(int x) { move(x, getY()); }
     void setY(int y) { move(getX(), y); }
-    void setWidth(int width) { resize(width, getHeight()); }
-    void setHeight(int height) { resize(getWidth(), height); }
+    void setWidth(int width, bool percentage = false);
+    void setHeight(int height, bool percentage = false);
     void setSize(const Size& size) { resize(size.width(), size.height()); }
     void setPosition(const Point& pos) { move(pos.x, pos.y); }
     void setColor(const Color& color) { m_color = color; }
@@ -402,7 +403,9 @@ public:
     int getWidth() { return m_rect.width(); }
     int getHeight() { return m_rect.height(); }
     Size getSize() { return m_rect.size(); }
+    Size getPercentSize() { return m_percentSize; }
     Rect getRect() { return m_rect; }
+    bool isSizePercantage() { return !m_percentSize.isNull(); }
     Color getColor() { return m_color; }
     Color getBackgroundColor() { return m_backgroundColor; }
     int getBackgroundOffsetX() { return m_backgroundRect.x(); }

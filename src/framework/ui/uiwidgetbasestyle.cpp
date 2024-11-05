@@ -80,10 +80,10 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
             setY(node->value<int>());
         else if(node->tag() == "pos")
             setPosition(node->value<Point>());
-        else if(node->tag() == "width")
-            setWidth(node->value<int>());
-        else if(node->tag() == "height")
-            setHeight(node->value<int>());
+        else if (node->tag() == "width")
+            setWidth(node->value<int>(), node->value().find('%') != std::string::npos);
+        else if (node->tag() == "height")
+            setHeight(node->value<int>(), node->value().find('%') != std::string::npos);
         else if(node->tag() == "rect")
             setRect(node->value<Rect>());
         else if(node->tag() == "background")
@@ -152,8 +152,20 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
             setAutoFocusPolicy(Fw::translateAutoFocusPolicy(node->value()));
         else if(node->tag() == "phantom")
             setPhantom(node->value<bool>());
-        else if(node->tag() == "size")
-            setSize(node->value<Size>());
+        else if (node->tag() == "size") {
+            // I know, setSize(node->value<Size>()) is better but this is a negligible and necessary change
+            auto split = stdext::split(node->value(true), " ");
+            if (split.size() == 2) {
+                int width, height;
+                if (stdext::cast(split[0], width)) {
+                    setWidth(width, split[0].find('%') != std::string::npos);
+                }
+
+                if (stdext::cast(split[1], height)) {
+                    setHeight(height, split[1].find('%') != std::string::npos);
+                }
+            }
+        }
         else if(node->tag() == "fixed-size")
             setFixedSize(node->value<bool>());
         else if(node->tag() == "clipping")

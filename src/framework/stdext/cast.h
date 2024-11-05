@@ -81,7 +81,7 @@ inline bool cast(const std::string& in, char& c) {
 // special cast from string to long
 template<>
 inline bool cast(const std::string& in, long& l) {
-    if(in.find_first_not_of("-0123456789") != std::string::npos)
+    if(in.find_first_not_of("-0123456789%") != std::string::npos)
         return false;
     std::size_t t = in.find_last_of('-');
     if(t != std::string::npos && t != 0)

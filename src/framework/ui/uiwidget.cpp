@@ -2088,3 +2088,35 @@ bool UIWidget::isCharacterValid(char character)
             return false;
     }
 }
+
+void UIWidget::setWidth(int width, bool percentage)
+{
+    if (width == getWidth())
+        return;
+
+    if (percentage) {
+        if (UIWidgetPtr parent = getParent()) {
+            Rect rect = parent->getPaddingRect();
+            m_percentSize.setWidth(width);
+            width = static_cast<int>(rect.width() * (width / 100.0));
+        }
+    }
+
+    resize(width, getHeight()); 
+}
+
+void UIWidget::setHeight(int height, bool percentage)
+{
+    if (height == getHeight())
+        return;
+
+    if (percentage) {
+        if (UIWidgetPtr parent = getParent()) {
+            auto rect = parent->getPaddingRect();
+            m_percentSize.setHeight(height);
+            height = static_cast<int>(rect.height() * (height / 100.0));
+        }
+    }
+
+    resize(getWidth(), height);
+}

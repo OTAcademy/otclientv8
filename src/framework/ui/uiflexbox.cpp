@@ -52,6 +52,21 @@ bool UIFlexBox::internalUpdate()
         if (!widget->isExplicitlyVisible())
             continue;
 
+        if (widget->isSizePercantage()) {
+            auto percentSize = widget->getPercentSize();
+            int width = widget->getWidth();
+            int height = widget->getHeight();
+            if (percentSize.width() > 0) {
+                width = static_cast<int>(clippingRect.width() * (percentSize.width() / 100.0));
+            }
+            if (percentSize.height() > 0) {
+                height = static_cast<int>(clippingRect.height() * (percentSize.height() / 100.0));
+            }
+
+            widget->setWidth(width);
+            widget->setHeight(height);
+        }
+
         Size childSize = widget->getSize();
         Rect destRect;
 
