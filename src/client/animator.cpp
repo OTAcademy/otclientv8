@@ -125,14 +125,21 @@ int Animator::getPhase()
     return m_phase;
 }
 
-int Animator::getPhaseAt(Timer& timer, int lastPhase)
+static uint32 getRandomVal(uint32_t seed, int iterations)
 {
-    static int rand_val = 6;
+    for (int i = 0; i < iterations; i++) {
+        seed = seed * 17 + 3;
+    }
+    return seed;
+}
+
+int Animator::getPhaseAt(Timer& timer, uint32_t randomSeed, int lastPhase)
+{
     ticks_t time = timer.ticksElapsed();
     for (int i = lastPhase; i < m_animationPhases; ++i) {
         int phaseDuration = m_phaseDurations[i].second == 0 ? 
-            m_phaseDurations[i].first : m_phaseDurations[i].first + rand_val % (m_phaseDurations[i].second);
-        rand_val = rand_val * 7 + 11;
+            m_phaseDurations[i].first : m_phaseDurations[i].first + getRandomVal(randomSeed, i) % (m_phaseDurations[i].second);
+
         if (time < phaseDuration) {
             timer.restart();
             timer.adjust(-time);
@@ -233,11 +240,14 @@ void Animator::calculateSynchronous()
     m_lastPhaseTicks = ticks;
 }
 
-ticks_t Animator::getTotalDuration()
+ticks_t Animator::getTotalDuration(uint32_t randomSeed)
 {
     ticks_t time = 0;
+    int i = 0;
     for (const auto &pair: m_phaseDurations) {
-        time += pair.first + pair.second;
+        int phaseDuration = pair.second == 0 ? 
+            pair.first : pair.first + getRandomVal(randomSeed, i++) % (pair.second);
+        time += phaseDuration;
     }
 
     return time;

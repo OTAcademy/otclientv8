@@ -54,6 +54,7 @@ private:
     uint16 m_id;
     Timer m_animationTimer;
     int m_animationPhase = 0;
+    uint32 m_randomSeed;
 };
 
 #endif
