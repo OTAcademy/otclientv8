@@ -86,20 +86,23 @@ void Tile::drawBottom(const Point& dest, LightView* lightView)
 
     // common items, reverse order
     int redrawPreviousTopW = 0, redrawPreviousTopH = 0;
+    bool stopDrawing = false;
     for (auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
         const ThingPtr& thing = *it;
+        if (thing->isLyingCorpse()) {
+            redrawPreviousTopW = std::max<int>(thing->getWidth() - 1, redrawPreviousTopW);
+            redrawPreviousTopH = std::max<int>(thing->getHeight() - 1, redrawPreviousTopH);
+        }
         if (thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
-            break;
+            stopDrawing = true;
+
+        if (stopDrawing)
+            continue;
         if (thing->isHidden())
             continue;
 
         thing->draw(dest - m_drawElevation * g_sprites.getOffsetFactor() , true, lightView);
         m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
-
-        if (thing->isLyingCorpse()) {
-            redrawPreviousTopW = std::max<int>(thing->getWidth() - 1, redrawPreviousTopW);
-            redrawPreviousTopH = std::max<int>(thing->getHeight() - 1, redrawPreviousTopH);
-        }
     }
 
     if (!g_game.getFeature(Otc::GameMapIgnoreCorpseCorrection)) {
