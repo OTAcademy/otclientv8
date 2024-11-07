@@ -37,6 +37,8 @@
 
 #include <framework/util/stats.h>
 
+#include <unistd.h>
+
 Minimap g_minimap;
 
 void MinimapBlock::clean()
@@ -383,6 +385,7 @@ void Minimap::saveOtmm(const std::string& fileName)
 
 #ifndef ANDROID
         std::string tmpFileName = fileName;
+        tmpFileName += "." + std::to_string(getpid());
         tmpFileName += ".tmp";
         FileStreamPtr fin = g_resources.createFile(tmpFileName);
 #else
