@@ -453,6 +453,8 @@ if(FRAMEWORK_GRAPHICS)
         ${CMAKE_CURRENT_LIST_DIR}/ui/uianchorlayout.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiboxlayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uiboxlayout.h
+        ${CMAKE_CURRENT_LIST_DIR}/ui/uiflexbox.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/ui/uiflexbox.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uigridlayout.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ui/uigridlayout.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/uihorizontallayout.cpp

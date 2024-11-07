@@ -28,7 +28,9 @@ on linux you need:
 - boost >=1.67 and libzip-dev, physfs >= 3
 - gcc >=9
 
-Then just run mkdir build && cd build && cmake .. && make -j8
+Then just run mkdir build && cd build && cmake .. -DUSE_STATIC_LIBS=OFF && make -j8
+
+NOTICE: project comes with USE_STATIC_LIBS=ON set while libzip-dev is supplied with dynamic library only, so for linux build it is required to override USE_STATIC_LIBS to OFF
 
 ### Android
 

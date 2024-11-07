@@ -83,6 +83,8 @@ set(client_SOURCES ${client_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/uiitem.h
     ${CMAKE_CURRENT_LIST_DIR}/uigraph.cpp
     ${CMAKE_CURRENT_LIST_DIR}/uigraph.h
+    ${CMAKE_CURRENT_LIST_DIR}/uigrid.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/uigrid.h
     ${CMAKE_CURRENT_LIST_DIR}/uimap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/uimap.h
     ${CMAKE_CURRENT_LIST_DIR}/uiminimap.cpp
