@@ -73,6 +73,7 @@ protected:
     std::string m_source;
     Rect m_rect;
     Size m_percentSize;
+    Size m_sizeOffset;
     Point m_virtualOffset;
     stdext::boolean<true> m_autoDraw;
     stdext::boolean<true> m_enabled;
@@ -346,6 +347,9 @@ public:
     void setWidth(int width, bool percentage = false);
     void setHeight(int height, bool percentage = false);
     void setSize(const Size& size) { resize(size.width(), size.height()); }
+    void setWidthOffset(int offset) { m_sizeOffset.setWidth(offset); updateLayout(); }
+    void setHeightOffset(int offset) { m_sizeOffset.setHeight(offset); updateLayout(); }
+    void setSizeOffset(const Size& size) { m_sizeOffset = size; updateLayout(); }
     void setPosition(const Point& pos) { move(pos.x, pos.y); }
     void setColor(const Color& color) { m_color = color; }
     void setBackgroundColor(const Color& color) { m_backgroundColor = color; }
@@ -404,6 +408,9 @@ public:
     int getWidth() { return m_rect.width(); }
     int getHeight() { return m_rect.height(); }
     Size getSize() { return m_rect.size(); }
+    int getWidthOffset() { return m_sizeOffset.width(); }
+    int getHeightOffset() { return m_sizeOffset.height(); }
+    Size getSizeOffset() { return m_sizeOffset; }
     Size getPercentSize() { return m_percentSize; }
     Rect getRect() { return m_rect; }
     bool isSizePercantage() { return !m_percentSize.isNull(); }

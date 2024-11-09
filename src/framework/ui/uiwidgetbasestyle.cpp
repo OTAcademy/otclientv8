@@ -42,6 +42,7 @@ void UIWidget::initBaseStyle()
     m_opacity = 1.0f;
     m_rotation = 0.0f;
     m_iconAlign = Fw::AlignNone;
+    m_sizeOffset = Size(0, 0);
 
     // generate an unique id, this is need because anchored layouts find widgets by id
     static unsigned long id = 1;
@@ -166,6 +167,12 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
                 }
             }
         }
+        else if(node->tag() == "width-offset")
+            setWidthOffset(node->value<int>());
+        else if(node->tag() == "height-offset")
+            setHeightOffset(node->value<int>());
+        else if(node->tag() == "size-offset")
+            setSizeOffset(node->value<Size>());
         else if(node->tag() == "fixed-size")
             setFixedSize(node->value<bool>());
         else if(node->tag() == "clipping")

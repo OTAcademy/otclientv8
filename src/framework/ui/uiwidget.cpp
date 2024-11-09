@@ -2134,6 +2134,6 @@ void UIWidget::updatePercentSize(const Size& size)
         height = static_cast<int>(size.height() * (percentSize.height() / 100.0));
     }
 
-    setWidth(width);
-    setHeight(height);
+    setWidth(width - m_sizeOffset.width());
+    setHeight(height - m_sizeOffset.height());
 }

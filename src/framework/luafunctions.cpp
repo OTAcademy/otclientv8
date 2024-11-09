@@ -572,6 +572,9 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("setWidth", &UIWidget::setWidth);
     g_lua.bindClassMemberFunction<UIWidget>("setHeight", &UIWidget::setHeight);
     g_lua.bindClassMemberFunction<UIWidget>("setSize", &UIWidget::setSize);
+    g_lua.bindClassMemberFunction<UIWidget>("setWidthOffset", &UIWidget::setWidthOffset);
+    g_lua.bindClassMemberFunction<UIWidget>("setHeightOffset", &UIWidget::setHeightOffset);
+    g_lua.bindClassMemberFunction<UIWidget>("setSizeOffset", &UIWidget::setSizeOffset);
     g_lua.bindClassMemberFunction<UIWidget>("setPosition", &UIWidget::setPosition);
     g_lua.bindClassMemberFunction<UIWidget>("setColor", &UIWidget::setColor);
     g_lua.bindClassMemberFunction<UIWidget>("setBackgroundColor", &UIWidget::setBackgroundColor);
@@ -625,6 +628,9 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("getWidth", &UIWidget::getWidth);
     g_lua.bindClassMemberFunction<UIWidget>("getHeight", &UIWidget::getHeight);
     g_lua.bindClassMemberFunction<UIWidget>("getSize", &UIWidget::getSize);
+    g_lua.bindClassMemberFunction<UIWidget>("getWidthOffset", &UIWidget::getWidthOffset);
+    g_lua.bindClassMemberFunction<UIWidget>("getHeightOffset", &UIWidget::getHeightOffset);
+    g_lua.bindClassMemberFunction<UIWidget>("getSizeOffset", &UIWidget::getSizeOffset);
     g_lua.bindClassMemberFunction<UIWidget>("getRect", &UIWidget::getRect);
     g_lua.bindClassMemberFunction<UIWidget>("getColor", &UIWidget::getColor);
     g_lua.bindClassMemberFunction<UIWidget>("getBackgroundColor", &UIWidget::getBackgroundColor);
