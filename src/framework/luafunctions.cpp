@@ -803,6 +803,10 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIFlexBox>("getFlexDirection", &UIFlexBox::getFlexDirection);
     g_lua.bindClassMemberFunction<UIFlexBox>("setSpacing", &UIFlexBox::setSpacing);
     g_lua.bindClassMemberFunction<UIFlexBox>("getSpacing", &UIFlexBox::getSpacing);
+    g_lua.bindClassMemberFunction<UIFlexBox>("setAutoSpacing", &UIFlexBox::setAutoSpacing);
+    g_lua.bindClassMemberFunction<UIFlexBox>("getAutoSpacing", &UIFlexBox::getAutoSpacing);
+    g_lua.bindClassMemberFunction<UIFlexBox>("setAlignItems", &UIFlexBox::setAlignItems);
+    g_lua.bindClassMemberFunction<UIFlexBox>("getAlignItems", &UIFlexBox::getAlignItems);
     g_lua.bindClassMemberFunction<UIFlexBox>("isUIFlexBox", &UIFlexBox::isUIFlexBox);
 
     // UITextEdit

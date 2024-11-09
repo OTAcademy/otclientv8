@@ -328,3 +328,14 @@ SoundChannels = {
 
 EVENT_TEXT_CLICK = 1
 EVENT_TEXT_HOVER = 2
+
+FlexDirection = {
+  ROW = 0,
+  COLUMN = 1
+}
+
+AlignItems = {
+  START = 0,
+  STRETCH = 1,
+  CENTER = 2
+}
