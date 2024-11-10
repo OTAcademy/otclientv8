@@ -128,8 +128,12 @@ void UITextEdit::drawSelf(Fw::DrawPane drawPane)
         if(elapsed <= delay) {
             Rect cursorRect;
             // when cursor is at 0
-            if(m_cursorPos == 0)
-                cursorRect = Rect(m_rect.left()+m_padding.left, m_rect.top()+m_padding.top, 1, m_font->getGlyphHeight());
+            if (m_cursorPos == 0) {
+                if ((m_textAlign & Fw::AlignRight) && m_text.length() > 0)
+                    cursorRect = Rect(m_glyphsCoords[0].left(), m_glyphsCoords[0].top(), 1, m_font->getGlyphHeight());
+                else
+                    cursorRect = Rect(m_rect.left() + m_padding.left, m_rect.top() + m_padding.top, 1, m_font->getGlyphHeight());
+            }
             else
                 cursorRect = Rect(m_glyphsCoords[m_cursorPos-1].right(), m_glyphsCoords[m_cursorPos-1].top(), 1, m_font->getGlyphHeight());
 
@@ -360,9 +364,7 @@ void UITextEdit::setCursorPos(int pos)
         pos = m_text.length();
 
     if(pos != m_cursorPos) {
-        if(pos < 0)
-            m_cursorPos = 0;
-        else if((uint)pos >= m_text.length())
+        if ((uint)pos >= m_text.length())
             m_cursorPos = m_text.length();
         else
             m_cursorPos = pos;
