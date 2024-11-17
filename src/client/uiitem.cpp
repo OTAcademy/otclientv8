@@ -30,6 +30,8 @@
 UIItem::UIItem()
 {
     m_draggable = true;
+    m_color = Color(231, 231, 231);
+    m_itemColor = Color::white;
 }
 
 void UIItem::drawSelf(Fw::DrawPane drawPane)
@@ -52,15 +54,15 @@ void UIItem::drawSelf(Fw::DrawPane drawPane)
         if(exactSize == 0)
             return;
 
-        m_item->setColor(m_color);
+        m_item->setColor(m_itemColor);
         m_item->draw(drawRect);
 
         if(m_font && m_showCount && (m_item->isStackable() || m_item->isChargeable()) && m_item->getCountOrSubType() > 1) {
-            g_drawQueue->addText(m_font, m_countText, Rect(drawRect.topLeft(), drawRect.bottomRight() - Point(3, 0)), Fw::AlignBottomRight, Color(231, 231, 231));
+            g_drawQueue->addText(m_font, m_countText, Rect(drawRect.topLeft(), drawRect.bottomRight() - Point(3, 0)), Fw::AlignBottomRight, m_color);
         }
 
         if (m_showId) {
-            g_drawQueue->addText(m_font, std::to_string(m_item->getServerId()), drawRect, Fw::AlignBottomRight, Color(231, 231, 231));
+            g_drawQueue->addText(m_font, std::to_string(m_item->getServerId()), drawRect, Fw::AlignBottomRight, m_color);
         }
     }
 
@@ -95,6 +97,7 @@ void UIItem::setItemCount(int count)
         cacheCountText();
     }
 }
+
 void UIItem::setItemSubType(int subType)
 {
     if (m_item) {
@@ -140,6 +143,8 @@ void UIItem::onStyleApply(const std::string& styleName, const OTMLNodePtr& style
             m_showId = node->value<bool>();
         else if(node->tag() == "shader")
             setItemShader(node->value());
+        else if(node->tag() == "item-color")
+            setItemColor(node->value<Color>());
     }
 }
 

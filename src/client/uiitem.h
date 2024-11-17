@@ -42,6 +42,7 @@ public:
     void clearItem() { setItemId(0); }
     void setShowCount(bool value) { m_showCount = value; }
     void setItemShader(const std::string& str);
+    void setItemColor(const Color& color) { m_itemColor = color; }
 
     int getItemId() { return m_item ? m_item->getId() : 0; }
     int getItemCount() { return m_item ? m_item->getCount() : 0; }
@@ -56,6 +57,7 @@ protected:
     void cacheCountText();
 
     ItemPtr m_item;
+    Color m_itemColor;
     stdext::boolean<false> m_virtual;
     stdext::boolean<true> m_itemVisible;
     stdext::boolean<false> m_showId;
