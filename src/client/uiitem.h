@@ -41,6 +41,7 @@ public:
     void setVirtual(bool virt) { m_virtual = virt; }
     void clearItem() { setItemId(0); }
     void setShowCount(bool value) { m_showCount = value; }
+    void setShowCountAlways(bool value) { m_showCountAlways = value; }
     void setItemShader(const std::string& str);
     void setItemColor(const Color& color) { m_itemColor = color; }
 
@@ -62,6 +63,7 @@ protected:
     stdext::boolean<true> m_itemVisible;
     stdext::boolean<false> m_showId;
     stdext::boolean<true> m_showCount;
+    stdext::boolean<false> m_showCountAlways;
     std::string m_shader;
     std::string m_countText;
 };

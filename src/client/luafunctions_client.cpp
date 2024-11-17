@@ -848,6 +848,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIItem>("setItem", &UIItem::setItem);
     g_lua.bindClassMemberFunction<UIItem>("setVirtual", &UIItem::setVirtual);
     g_lua.bindClassMemberFunction<UIItem>("setShowCount", &UIItem::setShowCount);
+    g_lua.bindClassMemberFunction<UIItem>("setShowCountAlways", &UIItem::setShowCountAlways);
     g_lua.bindClassMemberFunction<UIItem>("setItemShader", &UIItem::setItemShader);
     g_lua.bindClassMemberFunction<UIItem>("setItemColor", &UIItem::setItemColor);
     g_lua.bindClassMemberFunction<UIItem>("clearItem", &UIItem::clearItem);
