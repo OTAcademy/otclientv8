@@ -56,6 +56,7 @@ bool UIFlexBox::internalUpdate()
     Point topLeft = clippingRect.topLeft();
 
     int availableSpace = m_flexDirection == FlexDirection::ROW ? clippingRect.width() : clippingRect.height();
+    availableSpace += std::max<int>(0, parentWidget->getChildCount() - 1) * m_spacing;
     int totalWidgetSize = 0;
     int visibleWidgetCount = 0;
 
