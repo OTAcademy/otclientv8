@@ -533,6 +533,12 @@ UIWidgetPtr UIManager::loadUI(std::string file, const UIWidgetPtr& parent)
         UIWidgetPtr widget;
         for(const OTMLNodePtr& node : doc->children()) {
             std::string tag = node->tag();
+            // parse otui variable
+            if (stdext::starts_with(tag, "$var-")) {
+                std::string var = tag.substr(6);
+                addOTUIVar(var, node->rawValue());
+                continue;
+            }
 
             // import styles in these files too
             if(tag.find("<") != std::string::npos)
