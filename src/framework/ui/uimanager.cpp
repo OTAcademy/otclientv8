@@ -424,8 +424,7 @@ void UIManager::importStyleFromOTML(const OTMLNodePtr& styleNode)
     // parse otui variable
     if (stdext::starts_with(tag, "$var-")) {
         std::string var = tag.substr(6);
-        if (!hasOTUIVar(var))
-            addOTUIVar(var, styleNode->rawValue());
+        addOTUIVar(var, styleNode->rawValue());
         return;
     }
 

@@ -99,9 +99,7 @@ public:
         return m_vars[key];
     }
     void addOTUIVar(const std::string& key, const std::string& value) {
-        if (m_vars.find(key) != m_vars.end()) return;
-
-        m_vars.insert(std::make_pair(key, value));
+        m_vars.insert_or_assign(key, value);
     }
 
 protected:
