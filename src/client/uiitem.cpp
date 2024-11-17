@@ -56,11 +56,11 @@ void UIItem::drawSelf(Fw::DrawPane drawPane)
         m_item->draw(drawRect);
 
         if(m_font && m_showCount && (m_item->isStackable() || m_item->isChargeable()) && m_item->getCountOrSubType() > 1) {
-            g_drawQueue->addText(m_font, m_countText, Rect(m_rect.topLeft(), m_rect.bottomRight() - Point(3, 0)), Fw::AlignBottomRight, Color(231, 231, 231));
+            g_drawQueue->addText(m_font, m_countText, Rect(drawRect.topLeft(), drawRect.bottomRight() - Point(3, 0)), Fw::AlignBottomRight, Color(231, 231, 231));
         }
 
         if (m_showId) {
-            g_drawQueue->addText(m_font, std::to_string(m_item->getServerId()), m_rect, Fw::AlignBottomRight, Color(231, 231, 231));
+            g_drawQueue->addText(m_font, std::to_string(m_item->getServerId()), drawRect, Fw::AlignBottomRight, Color(231, 231, 231));
         }
     }
 
