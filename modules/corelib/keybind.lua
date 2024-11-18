@@ -230,10 +230,10 @@ function Keybind.delete(category, action)
   local keysOn = keybind.keys[CHAT_MODE.ON]
   local keysOff = keybind.keys[CHAT_MODE.OFF]
 
-  local primaryOn = keysOn.primary
-  local primaryOff = keysOff.primary
-  local secondaryOn = keysOn.secondary
-  local secondaryOff = keysOff.secondary
+  local primaryOn = keysOn.primary and tostring(keysOn.primary) or nil
+  local primaryOff = keysOff.primary and tostring(keysOff.primary) or nil
+  local secondaryOn = keysOn.secondary and tostring(keysOn.secondary) or nil
+  local secondaryOff = keysOff.secondary and tostring(keysOff.secondary) or nil
 
   if primaryOn and primaryOn:len() > 0 then
     Keybind.defaultKeys[CHAT_MODE.ON][primaryOn] = nil
@@ -267,25 +267,43 @@ function Keybind.bind(category, action, callbacks, widget)
 
   for _, callback in ipairs(keybind.callbacks) do
     if callback.type == KEY_UP then
-      if keys.primary and keys.primary:len() > 0 then
-        g_keyboard.bindKeyUp(keys.primary, callback.callback, keybind.widget, callback.alone)
+      if keys.primary then
+        keys.primary = tostring(keys.primary)
+        if keys.primary:len() > 0 then
+          g_keyboard.bindKeyUp(keys.primary, callback.callback, keybind.widget, callback.alone)
+        end
       end
-      if keys.secondary and keys.secondary:len() > 0 then
-        g_keyboard.bindKeyUp(keys.secondary, callback.callback, keybind.widget, callback.alone)
+      if keys.secondary then
+        keys.secondary = tostring(keys.secondary)
+        if keys.secondary:len() > 0 then
+          g_keyboard.bindKeyUp(keys.secondary, callback.callback, keybind.widget, callback.alone)
+        end
       end
     elseif callback.type == KEY_DOWN then
-      if keys.primary and keys.primary:len() > 0 then
-        g_keyboard.bindKeyDown(keys.primary, callback.callback, keybind.widget, callback.alone)
+      if keys.primary then
+        keys.primary = tostring(keys.primary)
+        if keys.primary:len() > 0 then
+          g_keyboard.bindKeyDown(keys.primary, callback.callback, keybind.widget, callback.alone)
+        end
       end
-      if keys.secondary and keys.secondary:len() > 0 then
-        g_keyboard.bindKeyDown(keys.secondary, callback.callback, keybind.widget, callback.alone)
+      if keys.secondary then
+        keys.secondary = tostring(keys.secondary)
+        if keys.secondary:len() > 0 then
+          g_keyboard.bindKeyDown(keys.secondary, callback.callback, keybind.widget, callback.alone)
+        end
       end
     elseif callback.type == KEY_PRESS then
-      if keys.primary and keys.primary:len() > 0 then
-        g_keyboard.bindKeyPress(keys.primary, callback.callback, keybind.widget)
+      if keys.primary then
+        keys.primary = tostring(keys.primary)
+        if keys.primary:len() > 0 then
+          g_keyboard.bindKeyPress(keys.primary, callback.callback, keybind.widget)
+        end
       end
-      if keys.secondary and keys.secondary:len() > 0 then
-        g_keyboard.bindKeyPress(keys.secondary, callback.callback, keybind.widget)
+      if keys.secondary then
+        keys.secondary = tostring(keys.secondary)
+        if keys.secondary:len() > 0 then
+          g_keyboard.bindKeyPress(keys.secondary, callback.callback, keybind.widget)
+        end
       end
     end
   end
@@ -303,25 +321,43 @@ function Keybind.unbind(category, action)
 
   for _, callback in ipairs(keybind.callbacks) do
     if callback.type == KEY_UP then
-      if keys.primary and keys.primary:len() > 0 then
-        g_keyboard.unbindKeyUp(keys.primary, callback.callback, keybind.widget)
+      if keys.primary then
+        keys.primary = tostring(keys.primary)
+        if keys.primary:len() > 0 then
+          g_keyboard.unbindKeyUp(keys.primary, callback.callback, keybind.widget)
+        end
       end
-      if keys.secondary and keys.secondary:len() > 0 then
-        g_keyboard.unbindKeyUp(keys.secondary, callback.callback, keybind.widget)
+      if keys.secondary then
+        keys.secondary = tostring(keys.secondary)
+        if keys.secondary:len() > 0 then
+          g_keyboard.unbindKeyUp(keys.secondary, callback.callback, keybind.widget)
+        end
       end
     elseif callback.type == KEY_DOWN then
-      if keys.primary and keys.primary:len() > 0 then
-        g_keyboard.unbindKeyDown(keys.primary, callback.callback, keybind.widget)
+      if keys.primary then
+        keys.primary = tostring(keys.primary)
+        if keys.primary:len() > 0 then
+          g_keyboard.unbindKeyDown(keys.primary, callback.callback, keybind.widget)
+        end
       end
-      if keys.secondary and keys.secondary:len() > 0 then
-        g_keyboard.unbindKeyDown(keys.secondary, callback.callback, keybind.widget)
+      if keys.secondary then
+        keys.secondary = tostring(keys.secondary)
+        if keys.secondary:len() > 0 then
+          g_keyboard.unbindKeyDown(keys.secondary, callback.callback, keybind.widget)
+        end
       end
     elseif callback.type == KEY_PRESS then
-      if keys.primary and keys.primary:len() > 0 then
-        g_keyboard.unbindKeyPress(keys.primary, callback.callback, keybind.widget)
+      if keys.primary then
+        keys.primary = tostring(keys.primary)
+        if keys.primary:len() > 0 then
+          g_keyboard.unbindKeyPress(keys.primary, callback.callback, keybind.widget)
+        end
       end
-      if keys.secondary and keys.secondary:len() > 0 then
-        g_keyboard.unbindKeyPress(keys.secondary, callback.callback, keybind.widget)
+      if keys.secondary then
+        keys.secondary = tostring(keys.secondary)
+        if keys.secondary:len() > 0 then
+          g_keyboard.unbindKeyPress(keys.secondary, callback.callback, keybind.widget)
+        end
       end
     end
   end
@@ -889,18 +925,25 @@ function Keybind.bindHotkey(hotkeyId, chatMode)
 
   hotkey.callback = function() Keybind.hotkeyCallback(hotkeyId, chatMode) end
 
-  if keys.primary and keys.primary:len() > 0 then
-    if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
-      g_keyboard.bindKeyDown(keys.primary, hotkey.callback, gameRootPanel)
-    else
-      g_keyboard.bindKeyPress(keys.primary, hotkey.callback, gameRootPanel)
+  if keys.primary then
+    keys.primary = tostring(keys.primary)
+    if keys.primary:len() > 0 then
+      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+        g_keyboard.bindKeyDown(keys.primary, hotkey.callback, gameRootPanel)
+      else
+        g_keyboard.bindKeyPress(keys.primary, hotkey.callback, gameRootPanel)
+      end
     end
   end
-  if keys.secondary and keys.secondary:len() > 0 then
-    if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
-      g_keyboard.bindKeyDown(keys.secondary, hotkey.callback, gameRootPanel)
-    else
-      g_keyboard.bindKeyPress(keys.secondary, hotkey.callback, gameRootPanel)
+
+  if keys.secondary then
+    keys.secondary = tostring(keys.secondary)
+    if keys.secondary:len() > 0 then
+      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+        g_keyboard.bindKeyDown(keys.secondary, hotkey.callback, gameRootPanel)
+      else
+        g_keyboard.bindKeyPress(keys.secondary, hotkey.callback, gameRootPanel)
+      end
     end
   end
 end
@@ -924,18 +967,25 @@ function Keybind.unbindHotkey(hotkeyId, chatMode)
   local gameRootPanel = modules.game_interface.getRootPanel()
   local action = hotkey.action
 
-  if keys.primary and keys.primary:len() > 0 then
-    if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
-      g_keyboard.unbindKeyDown(keys.primary, hotkey.callback, gameRootPanel)
-    else
-      g_keyboard.unbindKeyPress(keys.primary, hotkey.callback, gameRootPanel)
+  if keys.primary then
+    keys.primary = tostring(keys.primary)
+    if keys.primary:len() > 0 then
+      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+        g_keyboard.unbindKeyDown(keys.primary, hotkey.callback, gameRootPanel)
+      else
+        g_keyboard.unbindKeyPress(keys.primary, hotkey.callback, gameRootPanel)
+      end
     end
   end
-  if keys.secondary and keys.secondary:len() > 0 then
-    if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
-      g_keyboard.unbindKeyDown(keys.secondary, hotkey.callback, gameRootPanel)
-    else
-      g_keyboard.unbindKeyPress(keys.secondary, hotkey.callback, gameRootPanel)
+
+  if keys.secondary then
+    keys.secondary = tostring(keys.secondary)
+    if keys.secondary:len() > 0 then
+      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+        g_keyboard.unbindKeyDown(keys.secondary, hotkey.callback, gameRootPanel)
+      else
+        g_keyboard.unbindKeyPress(keys.secondary, hotkey.callback, gameRootPanel)
+      end
     end
   end
 end
