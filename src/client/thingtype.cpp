@@ -563,19 +563,16 @@ DrawQueueItem* ThingType::draw(const Rect& dest, int layer, int xPattern, int yP
     if (!size.isValid())
         return nullptr;
 
-    float scaleX = (float)dest.width() / size.width();
-    float scaleY = (float)dest.height() / size.height();
-    Size finalDrawSize = textureRect.size();
-    if (scaleX < 1) {
-        textureOffset.x = 0;
-        finalDrawSize.setWidth(dest.width());
-    }
-    if (scaleY < 1) {
-        textureOffset.y = 0;
-        finalDrawSize.setHeight(dest.height());
+    // size correction for some too big items
+    if ((m_size.width() > 1 || m_size.height() > 1) &&
+        textureRect.width() <= g_sprites.spriteSize() && textureRect.height() <= g_sprites.spriteSize()) {
+        size = Size(g_sprites.spriteSize(), g_sprites.spriteSize());
+        textureOffset = Point((g_sprites.spriteSize() - textureRect.width()) / m_size.width(),
+                              (g_sprites.spriteSize() - textureRect.height()) / m_size.height());
     }
 
-    return g_drawQueue->addTexturedRect(Rect(dest.topLeft() + textureOffset, finalDrawSize), texture, textureRect, color);
+    float scale = std::min<float>((float)dest.width() / size.width(), (float)dest.height() / size.height());
+    return g_drawQueue->addTexturedRect(Rect(dest.topLeft() + (textureOffset * scale), textureRect.size() * scale), texture, textureRect, color);
 }
 
 std::shared_ptr<DrawOutfitParams> ThingType::drawOutfit(const Point& dest, int maskLayer, int xPattern, int yPattern, int zPattern, int animationPhase, Color color, LightView* lightView)
