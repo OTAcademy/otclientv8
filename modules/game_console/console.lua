@@ -914,21 +914,17 @@ function getNewHighlightedText(text, color, highlightColor)
 end
 
 function onConsoleTextClicked(widget, text)
-  if widget.keywords and widget.keywords[text] then
-    local npcTab = consoleTabBar:getTab("NPCs")
-    if npcTab then
-      sendMessage(widget.keywords[text], npcTab)
-    end
+  local npcTab = consoleTabBar:getTab("NPCs")
+  if npcTab then
+    sendMessage(text, npcTab)
   end
 end
 
 function onConsoleTextHovered(widget, text, hovered)
-  if widget.keywords and widget.keywords[text] then
-    if hovered then
-      g_mouse.pushCursor("pointer")
-    else
-      g_mouse.popCursor("pointer")
-    end
+  if hovered then
+    g_mouse.pushCursor("pointer")
+  else
+    g_mouse.popCursor("pointer")
   end
 end
 
@@ -959,26 +955,18 @@ function addTabText(text, speaktype, tab, creatureName)
   if speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
     local highlightData = getNewHighlightedText(text, speaktype.color, "#1f9ffe")
     if #highlightData > 2 then
-      label:setColoredText(highlightData)
-      label.keywords = {}
       for i = 1, #highlightData, 2 do
         if highlightData[i + 1] == "#1f9ffe" then
-          if highlightData[i]:find(" ") then
-            local split = highlightData[i]:split(" ")
-            for _, splitPart in ipairs(split) do
-              label.keywords[splitPart] = highlightData[i]
-            end
-          else
-            label.keywords[highlightData[i]] = highlightData[i]
-          end
-          
-          -- only for NPCs
-          if not label:hasEventListener(EVENT_TEXT_CLICK) and not label:hasEventListener(EVENT_TEXT_HOVER) then
-            label:setEventListener(EVENT_TEXT_CLICK)
-            label:setEventListener(EVENT_TEXT_HOVER)
-            connect(label, { onTextClick = onConsoleTextClicked, onTextHoverChange = onConsoleTextHovered })
-          end
+          highlightData[i] = string.format("[text-event]%s[/text-event]", highlightData[i])
         end
+      end
+      label:setColoredText(highlightData)
+          
+      -- only for NPCs
+      if not label:hasEventListener(EVENT_TEXT_CLICK) and not label:hasEventListener(EVENT_TEXT_HOVER) then
+        label:setEventListener(EVENT_TEXT_CLICK)
+        label:setEventListener(EVENT_TEXT_HOVER)
+        connect(label, { onTextClick = onConsoleTextClicked, onTextHoverChange = onConsoleTextHovered })
       end
     end
   end
