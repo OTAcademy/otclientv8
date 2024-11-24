@@ -41,6 +41,8 @@ void UIWidget::updateText()
         processCodeTags();
 
     if (m_textWrap && m_rect.isValid()) {
+        m_drawTextColors = m_textColors;
+
         if (m_textOverflowLength > 0 && m_text.length() > m_textOverflowLength)
             m_drawText = m_font->wrapText(m_text.substr(0, m_textOverflowLength - m_textOverflowCharacter.length()) + m_textOverflowCharacter, getWidth() - m_textOffset.x, &m_drawTextColors);
         else
@@ -50,9 +52,9 @@ void UIWidget::updateText()
             m_drawText = m_text.substr(0, m_textOverflowLength - m_textOverflowCharacter.length()) + m_textOverflowCharacter;
         else
             m_drawText = m_text;
-    }
 
-    m_drawTextColors = m_textColors;
+        m_drawTextColors = m_textColors;
+    }
 
     // update rect size
     if(!m_rect.isValid() || m_textHorizontalAutoResize || m_textVerticalAutoResize) {
@@ -179,13 +181,15 @@ void UIWidget::setColoredText(const std::vector<std::string>& texts, bool dontFi
         std::smatch match;
         std::regex_search(texts[i], match, regex);
 
-        for (size_t j = 0; j < texts[i].size(); ++j) {
-            if ((uint8)texts[i][j] >= 32)
+        for (auto& c : texts[i]) {
+            if ((uint8)c >= 32)
                 p += 1;
         }
+
         if (match.size() > 0) {
             p -= 25;
         }
+
         m_textColors.push_back(std::make_pair(p, c));
     }
 
@@ -253,7 +257,7 @@ void UIWidget::updateRectToWord(const std::vector<Rect>& glypsCoords)
     bool inNewLine = false;
 
     for (const auto& textEvent : m_textEvents) {
-        for (int i = textEvent.startPos; i < textEvent.endPos; ++i) {
+        for (size_t i = textEvent.startPos; i < textEvent.endPos; ++i) {
             if (m_drawText[i] == '\n') {
                 m_rectToWord.push_back({ wordRect, textEvent.word });
                 buildTextUnderline(wordRect, m_textUnderline);
