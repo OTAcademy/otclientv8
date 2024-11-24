@@ -43,6 +43,12 @@ const std::unordered_map<std::string, WidgetEvents> eventMap = {
     {"text-hover", EVENT_TEXT_HOVER}
 };
 
+struct TextEvent {
+    std::string word;
+    size_t startPos;
+    size_t endPos;
+};
+
 template<typename T = int>
 struct EdgeGroup {
     EdgeGroup() { top = right = bottom = left = T(0); }
@@ -541,9 +547,9 @@ private:
 
 protected:
     virtual void updateText();
+    void processCodeTags();
     void cacheRectToWord();
     void updateRectToWord(const std::vector<Rect>& glypsCoords);
-    bool isCharacterValid(char character);
     void drawText(const Rect& screenCoords);
 
     virtual void onTextChange(const std::string& text, const std::string& oldText);
@@ -564,7 +570,9 @@ protected:
     uint16 m_textOverflowLength;
     std::string m_textOverflowCharacter;
 
+    std::vector<TextEvent> m_textEvents;
     std::vector<std::pair<Rect, std::string>> m_rectToWord;
+    CoordsBuffer m_textUnderline;
 
 public:
     void resizeToText() { setSize(getTextSize()); }
