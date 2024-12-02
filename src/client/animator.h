@@ -41,6 +41,8 @@ enum AnimationDirection : uint8
     AnimDirBackward = 1
 };
 
+using PhaseDurations = std::vector<std::pair<int, int>>;
+
 class Animator : public std::enable_shared_from_this<Animator>
 {
 public:
@@ -48,6 +50,7 @@ public:
 
     void unserialize(int animationPhases, const FileStreamPtr& fin);
     void serialize(const FileStreamPtr& fin);
+    void copy(const AnimatorPtr& other);
 
     void setPhase(int phase);
     int getPhase();
@@ -72,7 +75,7 @@ private:
     int m_startPhase;
     int m_loopCount;
     bool m_async;
-    std::vector< std::pair<int, int> > m_phaseDurations;
+    std::shared_ptr<PhaseDurations> m_phaseDurations;
 
     int m_currentDuration;
     AnimationDirection m_currentDirection;

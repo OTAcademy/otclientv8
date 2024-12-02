@@ -164,6 +164,9 @@ public:
         return m_customAttribs.get<uint64>(key);
     }
 
+    AnimatorPtr getAnimator() override { return m_animator; }
+    AnimatorPtr getIdleAnimator() override { return m_idleAnimator; }
+
 private:
     uint16 m_clientId;
     uint16 m_serverId;
@@ -174,6 +177,9 @@ private:
     bool m_async;
     std::string m_tooltip;
     std::string m_shader;
+
+    AnimatorPtr m_animator;
+    AnimatorPtr m_idleAnimator;
 
     uint32 m_quickLootFlags;
     uint8 m_phase;

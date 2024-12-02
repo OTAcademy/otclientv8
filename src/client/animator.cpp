@@ -40,6 +40,7 @@ Animator::Animator()
     m_lastPhaseTicks = 0;
     m_isComplete = false;
     m_phase = 0;
+    m_phaseDurations = std::make_shared<PhaseDurations>();
 }
 
 void Animator::unserialize(int animationPhases, const FileStreamPtr& fin)
@@ -52,12 +53,12 @@ void Animator::unserialize(int animationPhases, const FileStreamPtr& fin)
     for(int i = 0; i < m_animationPhases; ++i) {
         int minimum = fin->getU32();
         int maximum = fin->getU32();
-        m_phaseDurations.push_back(std::make_pair(minimum, std::max(0, maximum - minimum)));
+        m_phaseDurations->push_back(std::make_pair(minimum, std::max(0, maximum - minimum)));
     }
 
     m_phase = getStartPhase();
 
-    VALIDATE(m_animationPhases == (int)m_phaseDurations.size());
+    VALIDATE(m_animationPhases == (int)m_phaseDurations->size());
     VALIDATE(m_startPhase >= -1 && m_startPhase < m_animationPhases);
 }
 
@@ -67,10 +68,20 @@ void Animator::serialize(const FileStreamPtr& fin)
     fin->add32(m_loopCount);
     fin->add8(m_startPhase);
 
-    for(auto& phase : m_phaseDurations) {
+    for(auto& phase : *m_phaseDurations) {
         fin->addU32(phase.first);
         fin->addU32(phase.first + phase.second);
     }
+}
+
+void Animator::copy(const AnimatorPtr& other)
+{
+    m_animationPhases = other->m_animationPhases;
+    m_async = other->m_async;
+    m_loopCount = other->m_loopCount;
+    m_startPhase = other->m_startPhase;
+    m_phaseDurations = other->m_phaseDurations;
+    m_phase = getStartPhase();
 }
 
 void Animator::setPhase(int phase)
@@ -137,8 +148,8 @@ int Animator::getPhaseAt(Timer& timer, uint32_t randomSeed, int lastPhase)
 {
     ticks_t time = timer.ticksElapsed();
     for (int i = lastPhase; i < m_animationPhases; ++i) {
-        int phaseDuration = m_phaseDurations[i].second == 0 ? 
-            m_phaseDurations[i].first : m_phaseDurations[i].first + getRandomVal(randomSeed, i) % (m_phaseDurations[i].second);
+        auto& phase = (*m_phaseDurations)[i];
+        int phaseDuration = phase.second == 0 ? phase.first : phase.first + getRandomVal(randomSeed, i) % (phase.second);
 
         if (time < phaseDuration) {
             timer.restart();
@@ -210,9 +221,9 @@ int Animator::getLoopPhase()
 
 int Animator::getPhaseDuration(int phase)
 {
-    VALIDATE(phase < (int)m_phaseDurations.size());
+    VALIDATE(phase < (int)m_phaseDurations->size());
 
-    auto& data = m_phaseDurations.at(phase);
+    auto& data = m_phaseDurations->at(phase);
     if (data.second == 0) return data.first;
     int min = data.first;
     int max = min + data.second;
@@ -244,7 +255,7 @@ ticks_t Animator::getTotalDuration(uint32_t randomSeed)
 {
     ticks_t time = 0;
     int i = 0;
-    for (const auto &pair: m_phaseDurations) {
+    for (const auto &pair: *m_phaseDurations) {
         int phaseDuration = pair.second == 0 ? 
             pair.first : pair.first + getRandomVal(randomSeed, i++) % (pair.second);
         time += phaseDuration;

@@ -49,6 +49,8 @@ Item::Item() :
     m_phase(0),
     m_lastPhase(0)
 {
+    m_animator = std::make_shared<Animator>();
+    m_idleAnimator = std::make_shared<Animator>();
 }
 
 ItemPtr Item::create(int id, int countOrSubtype)
@@ -128,6 +130,15 @@ void Item::setId(uint32 id)
         id = 0;
     m_serverId = g_things.findItemTypeByClientId(id)->getServerId();
     m_clientId = id;
+
+    if (auto thingType = rawGetThingType()) {
+        if (auto animator = thingType->getAnimator()) {
+            m_animator->copy(animator);
+        }
+
+        if (auto animator = thingType->getIdleAnimator())
+            m_idleAnimator->copy(animator);
+    }
 }
 
 void Item::setOtbId(uint16 id)
@@ -141,6 +152,15 @@ void Item::setOtbId(uint16 id)
     if(!g_things.isValidDatId(id, ThingCategoryItem))
         id = 0;
     m_clientId = id;
+
+    if (auto thingType = rawGetThingType()) {
+        if (auto animator = thingType->getAnimator()) {
+            m_animator->copy(animator);
+        }
+
+        if (auto animator = thingType->getIdleAnimator())
+            m_idleAnimator->copy(animator);
+    }
 }
 
 bool Item::isValid()
