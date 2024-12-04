@@ -15,10 +15,12 @@ public:
     void setLineWidth(int width)
     {
         m_width = width;
+        m_needsUpdate = true;
     }
     void setCapacity(int capacity)
     {
         m_capacity = capacity;
+        m_needsUpdate = true;
     }
     void setTitle(const std::string& title)
     {
@@ -31,8 +33,19 @@ public:
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
+    void onGeometryChange(const Rect& oldRect, const Rect& newRect);
+    void onLayoutUpdate();
+    void onVisibilityChange(bool visible);
+
+    void updateGraph();
 
 private:
+    bool m_needsUpdate;
+    std::vector<Point> m_points;
+    std::string m_minValue;
+    std::string m_maxValue;
+    std::string m_lastValue;
+
     std::string m_title;
     size_t m_capacity = 100;
     size_t m_ignores = 0;
