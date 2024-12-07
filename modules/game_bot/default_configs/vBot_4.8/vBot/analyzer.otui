@@ -229,6 +229,8 @@ AnalyzerLootItem < UIItem
 AnalyzerGraph < UIGraph
   height: 140
   capacity: 400
+  line-width: 1
+  color: red
   margin-top: 5
   margin-left: 5
   margin-right: 5

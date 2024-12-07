@@ -970,7 +970,6 @@ void Client::registerLuaFunctions()
     g_lua.bindClassStaticFunction<UIGraph>("create", [] { return std::make_shared<UIGraph>(); });
     g_lua.bindClassMemberFunction<UIGraph>("clear", &UIGraph::clear);
     g_lua.bindClassMemberFunction<UIGraph>("createGraph", &UIGraph::createGraph);
-    g_lua.bindClassMemberFunction<UIGraph>("getGraphsCount", &UIGraph::getGraphsCount);
     g_lua.bindClassMemberFunction<UIGraph>("addValue", &UIGraph::addValue);
     g_lua.bindClassMemberFunction<UIGraph>("setCapacity", &UIGraph::setCapacity);
     g_lua.bindClassMemberFunction<UIGraph>("setTitle", &UIGraph::setTitle);
