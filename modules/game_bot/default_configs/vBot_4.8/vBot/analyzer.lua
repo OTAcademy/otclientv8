@@ -138,7 +138,7 @@ local drawGraph = function(graph, value)
         graph:setLineWidth(1, 1)
         graph:setLineColor(1, "#FF0000")
     end
-    graph:addValue(value)
+    graph:addValue(1, value)
 end
 
 local toggleAnalyzer = function(window)
