@@ -4,6 +4,26 @@
 #include "declarations.h"
 #include <framework/ui/uiwidget.h>
 
+struct Graph {
+    std::vector<Point> points;
+    std::deque<int> values;
+    Point infoLine[2];
+    Rect originalInfoRect;
+    Rect infoRect;
+    Rect infoRectBg;
+    Rect infoRectIcon;
+    Rect infoIndicator;
+    Rect infoIndicatorBg;
+    std::string infoValue;
+    std::string infoText;
+    Color infoLineColor;
+    Color infoTextBg;
+    Color lineColor;
+    int width;
+    int infoIndex;
+    bool visible;
+};
+
 class UIGraph : public UIWidget {
 public:
     UIGraph();
@@ -11,25 +31,23 @@ public:
     void drawSelf(Fw::DrawPane drawPane);
 
     void clear();
-    void addValue(int value, bool ignoreSmallValues = false);
-    void setLineWidth(int width)
-    {
-        m_width = width;
-        m_needsUpdate = true;
-    }
-    void setCapacity(int capacity)
-    {
+    size_t createGraph();
+    void addValue(size_t index, int value, bool ignoreSmallValues = false);
+
+    void setCapacity(int capacity) {
         m_capacity = capacity;
         m_needsUpdate = true;
     }
-    void setTitle(const std::string& title)
-    {
-        m_title = title;
-    }
-    void setShowLabels(bool value)
-    {
-        m_showLabes = value;
-    }
+    void setTitle(const std::string& title) { m_title = title; }
+    void setShowLabels(bool value) { m_showLabes = value; }
+    void setShowInfo(bool value) { m_showInfo = value; }
+
+    void setLineWidth(size_t index, int width);
+    void setLineColor(size_t index, const Color& color);
+    void setInfoText(size_t index, const std::string& text);
+    void setInfoLineColor(size_t index, const Color& color);
+    void setTextBackground(size_t index, const Color& color);
+    void setGraphVisible(size_t index, bool visible);
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);
@@ -37,21 +55,25 @@ protected:
     void onLayoutUpdate();
     void onVisibilityChange(bool visible);
 
-    void updateGraph();
+    void cacheGraphs();
+    void updateGraph(Graph& graph, bool& updated);
+    void updateInfoBoxes();
 
 private:
+    // cache
     bool m_needsUpdate;
-    std::vector<Point> m_points;
     std::string m_minValue;
     std::string m_maxValue;
     std::string m_lastValue;
 
     std::string m_title;
-    size_t m_capacity = 100;
-    size_t m_ignores = 0;
-    int m_width = 1;
-    bool m_showLabes = true;
-    std::deque<int> m_values;
+    bool m_showLabes;
+    bool m_showInfo;
+
+    size_t m_capacity;
+    size_t m_ignores;
+
+    std::vector<Graph> m_graphs;
 };
 
 #endif
