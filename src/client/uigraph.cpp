@@ -232,6 +232,9 @@ void UIGraph::cacheGraphs()
 			float minValue = 0.0f;
 			float maxValue = 0.0f;
 			for (auto& graph : m_graphs) {
+				if (graph.values.empty())
+					continue;
+
 				graph.points.clear();
 
 				auto [minValueIter, maxValueIter] = std::minmax_element(graph.values.begin(), graph.values.end());
@@ -263,6 +266,9 @@ void UIGraph::cacheGraphs()
 
 void UIGraph::updateGraph(Graph& graph, bool& updated)
 {
+	if (graph.values.empty())
+		return;
+
 	auto dest = getPaddingRect();
 	auto mousePos = g_window.getMousePosition();
 	float graphWidth = static_cast<float>(dest.width());
