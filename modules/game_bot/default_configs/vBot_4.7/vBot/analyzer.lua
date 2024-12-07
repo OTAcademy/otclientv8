@@ -119,6 +119,11 @@ local toggle = function()
 end
 
 local drawGraph = function(graph, value)
+    if graph:getGraphsCount() == 0 then
+        graph:createGraph()
+        graph:setLineWidth(1, 1)
+        graph:setLineColor(1, "#FF0000")
+    end
     graph:addValue(value)
 end
 
