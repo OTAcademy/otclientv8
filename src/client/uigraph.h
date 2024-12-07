@@ -32,6 +32,7 @@ public:
 
     void clear();
     size_t createGraph();
+    size_t getGraphsCount() { return m_graphs.size(); }
     void addValue(size_t index, int value, bool ignoreSmallValues = false);
 
     void setCapacity(int capacity) {
