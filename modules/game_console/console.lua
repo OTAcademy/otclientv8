@@ -151,10 +151,6 @@ function init()
   Keybind.new("Chat Mode", "Set On", "", "")
   Keybind.new("Chat Mode", "Set On Temporarily", { [CHAT_MODE.ON] = "", [CHAT_MODE.OFF] = "Enter" }, "")
 
-  if g_game.getClientVersion() < 862 then
-    Keybind.new("Dialogs", "Open Rule Violation", "Ctrl+R", "")
-  end
-
   local gameRootPanel = modules.game_interface.getRootPanel()
   Keybind.bind("Chat Channel", "Close Current Channel", {
     {
@@ -1800,6 +1796,7 @@ function online()
   end
 
   if g_game.getClientVersion() < 862 then
+    Keybind.new("Dialogs", "Open Rule Violation", "Ctrl+R", "")
     local gameRootPanel = modules.game_interface.getRootPanel()
     Keybind.bind("Dialogs", "Open Rule Violation", {
       {
