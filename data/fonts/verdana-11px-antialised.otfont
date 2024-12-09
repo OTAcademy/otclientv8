@@ -5,3 +5,4 @@ Font
   glyph-size: 16 16
   space-width: 4
   default: true
+  underline-offset: 2

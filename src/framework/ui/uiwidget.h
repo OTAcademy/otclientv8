@@ -551,6 +551,7 @@ protected:
     void cacheRectToWord();
     void updateRectToWord(const std::vector<Rect>& glypsCoords);
     void drawText(const Rect& screenCoords);
+    void buildTextUnderline(Rect& wordRect, CoordsBuffer& textUnderlineCoords);
 
     virtual void onTextChange(const std::string& text, const std::string& oldText);
     virtual void onFontChange(const std::string& font);

@@ -4,3 +4,4 @@ Font
   height: 12
   glyph-size: 13 13
   space-width: 3
+  underline-offset: 4

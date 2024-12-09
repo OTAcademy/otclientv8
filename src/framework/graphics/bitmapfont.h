@@ -67,6 +67,7 @@ public:
     const TexturePtr& getTexture() { return m_texture; }
     int getYOffset() { return m_yOffset; }
     Size getGlyphSpacing() { return m_glyphSpacing; }
+    int getUnderlineOffset() { return m_underlineOffset; }
 
 private:
     /// Calculates each font character by inspecting font bitmap
@@ -78,6 +79,7 @@ private:
     int m_firstGlyph;
     int m_yOffset;
     int m_id;
+    int m_underlineOffset;
     Size m_glyphSpacing;
     TexturePtr m_texture;
     Rect m_glyphsTextureCoords[256];

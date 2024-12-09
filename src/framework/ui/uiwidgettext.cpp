@@ -235,16 +235,20 @@ void UIWidget::processCodeTags() {
     m_text += tempText;
 }
 
-static void buildTextUnderline(Rect& wordRect, CoordsBuffer& textUnderlineCoords) {
+void UIWidget::buildTextUnderline(Rect& wordRect, CoordsBuffer& textUnderlineCoords) {
+    static const int dotSize = 2;
+    static const int dotSpacing = 2;
+
     int currentX = wordRect.x();
-    int y = wordRect.y() + wordRect.height() - 2;
+    int y = wordRect.y() + wordRect.height() - m_font->getUnderlineOffset();
     while (currentX < wordRect.x() + wordRect.width()) {
-        textUnderlineCoords.addRect(Rect(currentX, y, 2, 2));
-        currentX += 4;
+        textUnderlineCoords.addRect(Rect(currentX, y, dotSize, dotSize));
+        currentX += dotSize + dotSpacing;
     }
 
-    if (currentX < wordRect.width()) {
-        textUnderlineCoords.addRect(Rect(currentX, y, std::min<int>(2, wordRect.width() - currentX), 2));
+    int underLineWidth = currentX - wordRect.x() - dotSpacing;
+    if (underLineWidth < wordRect.width()) {
+        textUnderlineCoords.addRect(Rect(currentX, y, std::min<int>(dotSize, wordRect.width() - underLineWidth), dotSize));
     }
 }
 

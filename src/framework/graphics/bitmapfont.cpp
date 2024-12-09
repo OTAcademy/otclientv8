@@ -39,6 +39,7 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     m_yOffset = fontNode->valueAt("y-offset", 0);
     m_firstGlyph = fontNode->valueAt("first-glyph", 32);
     m_glyphSpacing = fontNode->valueAt("spacing", Size(0,0));
+    m_underlineOffset = fontNode->valueAt("underline-offset", 0);
     int spaceWidth = fontNode->valueAt("space-width", glyphSize.width());
 
     if(OTMLNodePtr node = fontNode->get("fixed-glyph-width")) {
