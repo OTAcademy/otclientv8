@@ -72,6 +72,8 @@ bool luavalue_cast(int index, Outfit& outfit)
         outfit.setId(g_lua.popInteger());
         g_lua.getField("auxType", index);
         outfit.setAuxId(g_lua.popInteger());
+        if (outfit.getAuxId() > 0)
+            outfit.setCategory(ThingCategoryItem);
         if(g_game.getFeature(Otc::GamePlayerAddons)) {
             g_lua.getField("addons", index);
             outfit.setAddons(g_lua.popInteger());
