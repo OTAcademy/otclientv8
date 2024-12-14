@@ -32,6 +32,7 @@ ticks_t millis();
 ticks_t micros();
 void millisleep(size_t ms);
 void microsleep(size_t us);
+ticks_t unixtimeMs();
 
 struct timer {
 public:

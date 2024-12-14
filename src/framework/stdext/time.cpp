@@ -45,11 +45,16 @@ ticks_t micros() {
 void millisleep(size_t ms)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-};
+}
 
 void microsleep(size_t us)
 {
     std::this_thread::sleep_for(std::chrono::microseconds(us));
-};
+}
+
+ticks_t unixtimeMs()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
 
 }

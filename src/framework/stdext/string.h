@@ -74,6 +74,8 @@ template<typename T> std::vector<T> split(const std::string& str, const std::str
     return results;
 }
 
+std::string secondsToDuration(uint32 totalSeconds);
+
 }
 
 #endif
