@@ -3628,6 +3628,16 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id, bool hasDescri
         }
     }
 
+    if (g_game.getFeature(Otc::GameDisplayItemDuration)) {
+        uint8_t hasDuration = msg->getU8();
+        if (hasDuration) {
+            uint64_t duration = msg->getU64();
+            bool stopTime = msg->getU8() == 1;
+            item->setDurationTime(duration);
+            item->setDurationIsPaused(stopTime);
+        }
+    }
+
     return item;
 }
 

@@ -66,6 +66,11 @@ protected:
     stdext::boolean<false> m_showCountAlways;
     std::string m_shader;
     std::string m_countText;
+
+    ticks_t m_lastDecayUpdate;
+    std::string m_decayText;
+    Color m_decayColor;
+    Color m_decayPausedColor;
 };
 
 #endif

@@ -47,7 +47,10 @@ Item::Item() :
     m_async(true),
     m_quickLootFlags(0),
     m_phase(0),
-    m_lastPhase(0)
+    m_lastPhase(0),
+    m_durationTime(0),
+    m_durationTimePaused(0),
+    m_durationIsPaused(false)
 {
     m_animator = std::make_shared<Animator>();
     m_idleAnimator = std::make_shared<Animator>();

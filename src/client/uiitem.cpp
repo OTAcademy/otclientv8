@@ -32,6 +32,9 @@ UIItem::UIItem()
     m_draggable = true;
     m_color = Color(231, 231, 231);
     m_itemColor = Color::white;
+    m_lastDecayUpdate = 0;
+    m_decayColor = Color(127, 255, 212);
+    m_decayPausedColor = Color(222, 109, 109);
 }
 
 void UIItem::drawSelf(Fw::DrawPane drawPane)
@@ -64,6 +67,18 @@ void UIItem::drawSelf(Fw::DrawPane drawPane)
         if (m_showId) {
             g_drawQueue->addText(m_font, std::to_string(m_item->getServerId()), drawRect, Fw::AlignBottomRight, m_color);
         }
+
+        if (g_game.getFeature(Otc::GameDisplayItemDuration)) {
+            if (m_item->getDurationTime() > 0) {
+                auto isPaused = m_item->isDurationPaused();
+                if (m_lastDecayUpdate + 1000 < stdext::millis()) {
+                    uint64 duration = m_item->getDurationTime() - (isPaused ? m_item->getDurationTimePaused() : stdext::unixtimeMs());
+                    m_decayText = stdext::secondsToDuration(duration / 1000);
+                    m_lastDecayUpdate = stdext::millis();
+                }
+                g_drawQueue->addText(m_font, m_decayText, drawRect, Fw::AlignBottomRight, isPaused ? m_decayPausedColor : m_decayColor);
+            }
+        }
     }
 
     drawBorder(m_rect);
@@ -85,6 +100,8 @@ void UIItem::setItemId(int id)
 
     if (m_item)
         m_item->setShader(m_shader);
+
+    m_lastDecayUpdate = 0;
 
     callLuaField("onItemChange");
 }
@@ -111,6 +128,9 @@ void UIItem::setItem(const ItemPtr& item)
     m_item = item;
     if (m_item) {
         m_item->setShader(m_shader);
+
+        m_lastDecayUpdate = 0;
+
         cacheCountText();
         callLuaField("onItemChange");
     }

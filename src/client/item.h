@@ -94,6 +94,13 @@ public:
     void setTooltip(const std::string& str) { m_tooltip = str; }
     void setQuickLootFlags(uint32 flags) { m_quickLootFlags = flags; }
     void setShader(const std::string& str) { m_shader = str; }
+    void setDurationTime(uint64 value) { m_durationTime = value; }
+    void setDurationIsPaused(bool value) {
+        m_durationIsPaused = value;
+        if (m_durationIsPaused) {
+            m_durationTimePaused = stdext::unixtimeMs();
+        }
+    }
 
     int getCountOrSubType() { return m_countOrSubType; }
     int getSubType();
@@ -106,6 +113,9 @@ public:
     std::string getTooltip() { return m_tooltip; }
     uint32 getQuickLootFlags() { return m_quickLootFlags; }
     std::string getShader() { return m_shader; }
+    uint64 getDurationTime() { return m_durationTime; }
+    uint64 getDurationTimePaused() { return m_durationTimePaused; }
+    bool isDurationPaused() const { return m_durationIsPaused; }
 
     void unserializeItem(const BinaryTreePtr& in);
     void serializeItem(const OutputBinaryTreePtr& out);
@@ -184,6 +194,10 @@ private:
     uint32 m_quickLootFlags;
     uint8 m_phase;
     ticks_t m_lastPhase;
+
+    uint64 m_durationTime;
+    uint64 m_durationTimePaused;
+    bool m_durationIsPaused;
 
     stdext::packed_storage<uint16> m_customAttribs;
 };
