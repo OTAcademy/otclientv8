@@ -299,6 +299,7 @@
     <ClInclude Include="..\..\src\client\towns.h" />
     <ClInclude Include="..\..\src\client\uicreature.h" />
     <ClInclude Include="..\..\src\client\uigraph.h" />
+    <ClInclude Include="..\..\src\client\uigrid.h" />
     <ClInclude Include="..\..\src\client\uiitem.h" />
     <ClInclude Include="..\..\src\client\uimap.h" />
     <ClInclude Include="..\..\src\client\uimapanchorlayout.h" />
@@ -426,6 +427,7 @@
     <ClInclude Include="..\..\src\framework\ui\ui.h" />
     <ClInclude Include="..\..\src\framework\ui\uianchorlayout.h" />
     <ClInclude Include="..\..\src\framework\ui\uiboxlayout.h" />
+    <ClInclude Include="..\..\src\framework\ui\uiflexbox.h" />
     <ClInclude Include="..\..\src\framework\ui\uigridlayout.h" />
     <ClInclude Include="..\..\src\framework\ui\uihorizontallayout.h" />
     <ClInclude Include="..\..\src\framework\ui\uilayout.h" />
@@ -488,6 +490,7 @@
     <ClCompile Include="..\..\src\client\towns.cpp" />
     <ClCompile Include="..\..\src\client\uicreature.cpp" />
     <ClCompile Include="..\..\src\client\uigraph.cpp" />
+    <ClCompile Include="..\..\src\client\uigrid.cpp" />
     <ClCompile Include="..\..\src\client\uiitem.cpp" />
     <ClCompile Include="..\..\src\client\uimap.cpp" />
     <ClCompile Include="..\..\src\client\uimapanchorlayout.cpp" />
@@ -578,6 +581,7 @@
     <ClCompile Include="..\..\src\framework\stdext\uri.cpp" />
     <ClCompile Include="..\..\src\framework\ui\uianchorlayout.cpp" />
     <ClCompile Include="..\..\src\framework\ui\uiboxlayout.cpp" />
+    <ClCompile Include="..\..\src\framework\ui\uiflexbox.cpp" />
     <ClCompile Include="..\..\src\framework\ui\uigridlayout.cpp" />
     <ClCompile Include="..\..\src\framework\ui\uihorizontallayout.cpp" />
     <ClCompile Include="..\..\src\framework\ui\uilayout.cpp" />

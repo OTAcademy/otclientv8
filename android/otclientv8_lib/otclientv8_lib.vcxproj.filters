@@ -449,6 +449,12 @@
     <ClCompile Include="..\..\src\framework\util\pngunpacker.cpp">
       <Filter>framework\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\client\uigrid.cpp">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\framework\ui\uiflexbox.cpp">
+      <Filter>framework\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\animatedtext.h">
@@ -1014,6 +1020,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\framework\util\pngunpacker.h">
       <Filter>framework\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\client\uigrid.h">
+      <Filter>client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framework\ui\uiflexbox.h">
+      <Filter>framework\ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
