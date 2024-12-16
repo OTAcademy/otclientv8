@@ -543,6 +543,10 @@ function Keybind.setPrimaryActionKey(category, action, preset, keyCombo, chatMod
   if keybind.callbacks then
     Keybind.unbind(category, action)
   end
+  
+  if not keys[chatMode] then
+    keys[chatMode] = { primary = keyCombo, secondary = keybind.keys[tonumber(chatMode)].secondary }
+  end
 
   keys[chatMode].primary = keyCombo
 
@@ -574,6 +578,10 @@ function Keybind.setSecondaryActionKey(category, action, preset, keyCombo, chatM
 
   if keybind.callbacks then
     Keybind.unbind(category, action)
+  end
+  
+  if not keys[chatMode] then
+    keys[chatMode] = { primary = keybind.keys[tonumber(chatMode)].primary, secondary = keyCombo }
   end
 
   keys[chatMode].secondary = keyCombo
