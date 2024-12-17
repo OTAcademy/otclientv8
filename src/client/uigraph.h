@@ -48,6 +48,7 @@ public:
     void setInfoLineColor(size_t index, const Color& color);
     void setTextBackground(size_t index, const Color& color);
     void setGraphVisible(size_t index, bool visible);
+    size_t getGraphsCount() { return m_graphs.size(); }
 
 protected:
     void onStyleApply(const std::string& styleName, const OTMLNodePtr& styleNode);

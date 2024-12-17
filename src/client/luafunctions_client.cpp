@@ -980,6 +980,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIGraph>("setInfoLineColor", &UIGraph::setInfoLineColor);
     g_lua.bindClassMemberFunction<UIGraph>("setTextBackground", &UIGraph::setTextBackground);
     g_lua.bindClassMemberFunction<UIGraph>("setGraphVisible", &UIGraph::setGraphVisible);
+    g_lua.bindClassMemberFunction<UIGraph>("getGraphsCount", &UIGraph::getGraphsCount);
 
     g_lua.registerClass<UIGrid, UIWidget>();
     g_lua.bindClassStaticFunction<UIGrid>("create", [] { return std::make_shared<UIGrid>(); });
