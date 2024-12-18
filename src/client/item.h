@@ -114,7 +114,7 @@ public:
     uint32 getQuickLootFlags() { return m_quickLootFlags; }
     std::string getShader() { return m_shader; }
     uint64 getDurationTime() { return m_durationTime; }
-    uint64 getDurationTimePaused() { return m_durationTimePaused; }
+    ticks_t getDurationTimePaused() { return m_durationTimePaused; }
     bool isDurationPaused() const { return m_durationIsPaused; }
 
     void unserializeItem(const BinaryTreePtr& in);
@@ -196,7 +196,7 @@ private:
     ticks_t m_lastPhase;
 
     uint64 m_durationTime;
-    uint64 m_durationTimePaused;
+    ticks_t m_durationTimePaused;
     bool m_durationIsPaused;
 
     stdext::packed_storage<uint16> m_customAttribs;
