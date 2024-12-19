@@ -110,23 +110,24 @@ void UIGrid::updateGrid()
 
     if (!m_rect.isEmpty() && m_rect.isValid()) {
         if (!m_cellSize.isEmpty() && m_cellSize.isValid()) {
-            int numRows = m_rect.height() / m_cellSize.height();
-            int numCols = m_rect.width() / m_cellSize.width();
+            auto dest = getPaddingRect();
+            int numRows = dest.height() / m_cellSize.height();
+            int numCols = dest.width() / m_cellSize.width();
 
-            for (int i = 0; i <= numRows; ++i) {
-                int y = (m_rect.topLeft().y + i * m_cellSize.height()) + m_gridWidth;
+            for (int i = 1; i <= numRows; ++i) {
+                int y = (dest.topLeft().y + i * m_cellSize.height());
                 std::vector<Point> points = {
-                    Point(m_rect.topLeft().x, y),
-                    Point(m_rect.topLeft().x + m_rect.width(), y)
+                    Point(dest.topLeft().x, y),
+                    Point(dest.topLeft().x + dest.width(), y)
                 };
                 m_points.push_back(points);
             }
 
-            for (int i = 0; i <= numCols; ++i) {
-                int x = (m_rect.topLeft().x + i * m_cellSize.width()) + m_gridWidth;
+            for (int i = 1; i <= numCols; ++i) {
+                int x = (dest.topLeft().x + i * m_cellSize.width());
                 std::vector<Point> points = {
-                    Point(x, m_rect.topLeft().y),
-                    Point(x, m_rect.topLeft().y + m_rect.height())
+                    Point(x, dest.topLeft().y),
+                    Point(x, dest.topLeft().y + dest.height())
                 };
                 m_points.push_back(points);
             }
