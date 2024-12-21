@@ -52,8 +52,10 @@ Item::Item() :
     m_durationTimePaused(0),
     m_durationIsPaused(false)
 {
-    m_animator = std::make_shared<Animator>();
-    m_idleAnimator = std::make_shared<Animator>();
+    if (g_game.getFeature(Otc::GameEnhancedAnimations)) {
+        m_animator = std::make_shared<Animator>();
+        m_idleAnimator = std::make_shared<Animator>();
+    }
 }
 
 ItemPtr Item::create(int id, int countOrSubtype)
@@ -134,13 +136,15 @@ void Item::setId(uint32 id)
     m_serverId = g_things.findItemTypeByClientId(id)->getServerId();
     m_clientId = id;
 
-    if (auto thingType = rawGetThingType()) {
-        if (auto animator = thingType->getAnimator()) {
-            m_animator->copy(animator);
-        }
+    if (g_game.getFeature(Otc::GameEnhancedAnimations)) {
+        if (auto thingType = rawGetThingType()) {
+            if (auto animator = thingType->getAnimator()) {
+                m_animator->copy(animator);
+            }
 
-        if (auto animator = thingType->getIdleAnimator())
-            m_idleAnimator->copy(animator);
+            if (auto animator = thingType->getIdleAnimator())
+                m_idleAnimator->copy(animator);
+        }
     }
 }
 
@@ -156,13 +160,15 @@ void Item::setOtbId(uint16 id)
         id = 0;
     m_clientId = id;
 
-    if (auto thingType = rawGetThingType()) {
-        if (auto animator = thingType->getAnimator()) {
-            m_animator->copy(animator);
-        }
+    if (g_game.getFeature(Otc::GameEnhancedAnimations)) {
+        if (auto thingType = rawGetThingType()) {
+            if (auto animator = thingType->getAnimator()) {
+                m_animator->copy(animator);
+            }
 
-        if (auto animator = thingType->getIdleAnimator())
-            m_idleAnimator->copy(animator);
+            if (auto animator = thingType->getIdleAnimator())
+                m_idleAnimator->copy(animator);
+        }
     }
 }
 
