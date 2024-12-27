@@ -603,9 +603,9 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     menu:addSeparator()
     local useThingId = useThing:getId()
     if useThing:getSubType() > 1 then
-      menu:addOption("ID: " .. useThingId .. " SubType: " .. g_game..setClipboardText(useThingId), function() end)    
+      menu:addOption("ID: " .. useThingId .. " SubType: " .. useThing:getSubType(), function() g_window.setClipboardText(useThingId) end)
     else
-      menu:addOption("ID: " .. useThingId, function() g_game.setClipboardText(useThingId) end)
+      menu:addOption("ID: " .. useThingId, function() g_window.setClipboardText(useThingId) end)
     end
   end
 
