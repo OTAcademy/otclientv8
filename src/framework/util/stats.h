@@ -7,6 +7,7 @@
 #include <atomic>
 #include <mutex>
 #include <chrono>
+#include <string>
 #include <unordered_map>
 #include <set>
 
