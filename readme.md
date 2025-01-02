@@ -12,15 +12,22 @@ Use Visual Studio 2022, select backend (OpenGL, DirectX), platform (x86, x64) an
 
 ### Linux
 
-on linux you need:
+If you have **minimal** step by step guide for different distro, please feel free to add it below for others!
 
-- vcpkg from commit `389e18e8380daab3884e7dc0710ad7f4a264def6`
-- boost >=1.67 and libzip-dev, physfs >= 3
-- gcc >=9
+### Ubuntu 22.04
 
-Then just run mkdir build && cd build && cmake .. -DUSE_STATIC_LIBS=OFF && make -j8
-
-NOTICE: project comes with USE_STATIC_LIBS=ON set while libzip-dev is supplied with dynamic library only, so for linux build it is required to override USE_STATIC_LIBS to OFF
+```
+sudo apt update
+sudo apt install git curl build-essential cmake gcc g++ pkg-config autoconf libtool libglew-dev -y
+cd ~
+git clone https://github.com/microsoft/vcpkg.git
+cd vcpkg && ./bootstrap-vcpkg.sh && cd ..
+git clone https://github.com/OTAcademy/otclientv8.git
+cd otclientv8 && mkdir build && cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake .. && make -j$(nproc)
+cp otclient ../otclient && cd ..
+./otclient
+```
 
 ### Android
 

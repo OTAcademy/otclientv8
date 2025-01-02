@@ -19,17 +19,11 @@
         "libzip",
         "openssl",
         "openal-soft",
-        {
-            "name": "luajit",
-            "platform": "!android"
-        },
+        "glew",
+        "luajit",
         {
             "name": "opengl",
             "platform": "windows | linux"
-        },
-        {
-            "name": "glew",
-            "platform": "windows | osx"
         },
         {
             "name": "angle",
