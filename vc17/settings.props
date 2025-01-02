@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <PREPROCESSOR_DEFS>
+        WIN32;
+        _CRT_SECURE_NO_WARNINGS;
+        _WIN32_WINNT=0x0501;
+		    WINVER=0x0501;
+        OTCLIENT;
+        CRASH_HANDLER;
+        FW_GRAPHICS;
+        FW_NET;
+        FW_XML;
+        FW_SOUND;
+        FW_CAM;
+        AB;
+        NOMINMAX;
+    </PREPROCESSOR_DEFS>
+    
+    <OTCLIENT_LIBDEPS_SHARED>
+        dbghelp.lib;
+        winmm.lib;
+        advapi32.lib;
+    		ole32.lib;
+        psapi.lib;
+        mincore.lib;
+        kernel32.lib;
+        user32.lib;
+        shell32.lib;
+        gdi32.lib;
+    </OTCLIENT_LIBDEPS_SHARED>
+    
+    <OTCLIENT_LIBDEPS>
+        ucrt.lib;
+        vcruntime.lib;
+        msvcrt.lib;
+    </OTCLIENT_LIBDEPS>
+
+    <OTCLIENT_LIBDEPS_D>
+        ucrtd.lib;
+        vcruntimed.lib;
+        msvcrtd.lib;
+    </OTCLIENT_LIBDEPS_D>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(BUILD_REVISION)' != '' ">
+    <PREPROCESSOR_DEFS>
+      $(PREPROCESSOR_DEFS);
+      BUILD_REVISION=$(BUILD_REVISION)
+    </PREPROCESSOR_DEFS>
+  </PropertyGroup>  
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LargeAddressAware>true</LargeAddressAware>
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="PREPROCESSOR_DEFS">
+      <Value>$(PREPROCESSOR_DEFS)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="OTCLIENT_LIBDEPS">
+      <Value>$(OTCLIENT_LIBDEPS)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="OTCLIENT_LIBDEPS_D">
+      <Value>$(OTCLIENT_LIBDEPS_D)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

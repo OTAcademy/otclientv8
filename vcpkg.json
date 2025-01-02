@@ -1,0 +1,46 @@
+{
+    "name": "otclientv8",
+    "version-string": "1.0.0",
+    "dependencies": [
+        "boost-iostreams",
+        "boost-asio",
+        "boost-beast",
+        "boost-system",
+        "boost-variant",
+        "boost-lockfree",
+        "boost-process",
+        "boost-program-options",
+        "boost-filesystem",
+        "boost-uuid",
+        "physfs",
+        "libogg",
+        "libvorbis",
+        "zlib",
+        "libzip",
+        "openssl",
+        "openal-soft",
+        {
+            "name": "luajit",
+            "platform": "!android"
+        },
+        {
+            "name": "opengl",
+            "platform": "windows | linux"
+        },
+        {
+            "name": "glew",
+            "platform": "windows | osx"
+        },
+        {
+            "name": "angle",
+            "platform": "windows"
+        }
+    ],
+    "overrides": [
+        {
+            "name": "openal-soft",
+            "version": "1.23.1#2"
+        }
+    ],
+    "builtin-baseline": "389e18e8380daab3884e7dc0710ad7f4a264def6"
+}

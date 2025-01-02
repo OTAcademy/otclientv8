@@ -6,21 +6,9 @@ If you add custom feature, make sure it's optional and can be enabled via g_game
 
 ## Compilation
 
-### Automatic
-
-You can clone repoistory and use github action build-on-request workload.
-
 ### Windows
 
-You need visual studio 2022 and vcpkg with commit `389e18e8380daab3884e7dc0710ad7f4a264def6` ([download](https://github.com/microsoft/vcpkg/archive/389e18e8380daab3884e7dc0710ad7f4a264def6.zip)).
-
-Then you install vcpkg dependencies:
-
-```bash
-vcpkg install boost-iostreams:x86-windows-static boost-asio:x86-windows-static boost-beast:x86-windows-static boost-system:x86-windows-static boost-variant:x86-windows-static boost-lockfree:x86-windows-static boost-process:x86-windows-static boost-program-options:x86-windows-static luajit:x86-windows-static glew:x86-windows-static boost-filesystem:x86-windows-static boost-uuid:x86-windows-static physfs:x86-windows-static openal-soft:x86-windows-static libogg:x86-windows-static libvorbis:x86-windows-static zlib:x86-windows-static libzip:x86-windows-static openssl:x86-windows-static
-```
-
-and then you can compile static otcv8 version.
+Use Visual Studio 2022, select backend (OpenGL, DirectX), platform (x86, x64) and just build, all required libraries will be installed for you.
 
 ### Linux
 

@@ -1159,15 +1159,31 @@ std::string WIN32Window::getPlatformType()
 {
 #ifdef __GNUC__
 #ifndef OPENGL_ES
-    return "WIN32-WGL-GCC";
+#ifdef _WIN64
+    return "WIN64-WGL-GCC";
 #else
     return "WIN32-EGL-GCC";
 #endif
 #else
+#ifdef _WIN64
+    return "WIN64-EGL-GCC";
+#else
+    return "WIN32-EGL-GCC";
+#endif
+#endif
+#else
 #ifndef OPENGL_ES
+#ifdef _WIN64
+    return "WIN64-WGL";
+#else
     return "WIN32-WGL";
+#endif
+#else
+#ifdef _WIN64
+    return "WIN64-EGL";
 #else
     return "WIN32-EGL";
+#endif
 #endif
 #endif
 }

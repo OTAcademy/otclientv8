@@ -61,6 +61,7 @@ vc16/otclient/Debug_lib/
 /*.lib
 *.exp
 *.zip
+vcpkg_installed/
 
 #################
 ## Visual Studio
