@@ -8,6 +8,15 @@ If you add custom feature, make sure it's optional and can be enabled via g_game
 
 ### Windows
 
+Install vcpkg
+
+```
+git clone https://github.com/microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+.\vcpkg.exe integrate install
+```
+
 Use Visual Studio 2022, select backend (OpenGL, DirectX), platform (x86, x64) and just build, all required libraries will be installed for you.
 
 ### Linux
