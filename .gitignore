@@ -4,7 +4,6 @@ pdbs
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
-Makefile
 /otclient
 /*.h
 /*.cxx
