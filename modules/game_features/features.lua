@@ -16,7 +16,7 @@ function updateFeatures(version)
     g_game.enableFeature(GameBot)
     --g_game.enableFeature(GameExtendedOpcode)
     --g_game.enableFeature(GameMinimapLimitedToSingleFloor) -- it will generate minimap only for current floor
-    --g_game.enableFeature(GameSpritesAlphaChannel)
+    g_game.enableFeature(GameSpritesAlphaChannel)
     
     if(version >= 770) then
         g_game.enableFeature(GameLooktypeU16)
