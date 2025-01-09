@@ -1666,8 +1666,6 @@ int Game::getOs()
         return 20;
     if(g_app.getOs() == "mac")
         return 22;
-    if (g_app.getOs() == "android")
-        return 23;
     if (g_app.getOs() == "ios")
         return 24;
     if (g_app.getOs() == "web")

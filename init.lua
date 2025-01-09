@@ -45,9 +45,7 @@ g_configs.loadSettings("/config.otml")
 -- set layout
 local settings = g_configs.getSettings()
 local layout = DEFAULT_LAYOUT
-if g_app.isMobile() then
-  layout = "mobile"
-elseif settings:exists('layout') then
+if settings:exists('layout') then
   layout = settings:getValue('layout')
 end
 g_resources.setLayout(layout)

@@ -57,52 +57,6 @@ jobs:
           otclient_dx.exe
         if-no-files-found: error
 
-  Android:
-    name: Build android version
-    runs-on: windows-2019
-    timeout-minutes: 120
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-          submodules: recursive
-
-    - name: Setup MSBuild and add to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-      id: setup_msbuild
-
-    - name: Create data.zip for android
-      run: |
-        powershell -ExecutionPolicy Bypass -File .\create_android_assets.ps1
-
-    - name: Decompress android libs
-      run: |
-        7z x android_libs.7z -aoa -oC:\android
-
-    - name: Install android
-      run: |
-        $sdkRoot = "C:\Android\android-sdk"
-        $sdkManager = "$sdkRoot\cmdline-tools\latest\bin\sdkmanager.bat"
-        Install-AndroidSDKPackages -AndroidSDKManagerPath $sdkManager `
-                                  -AndroidSDKRootPath $sdkRoot `
-                                  -AndroidPackages "ndk;21.4.7075529"
-
-    - name: Build for android
-      timeout-minutes: 25
-      run: |
-        cd android
-        $env:VS_NdkRoot="C:\Android\android-sdk\ndk\21.4.7075529"
-        MSBuild.exe /p:Configuration=Release /p:Platform="ARM64" /p:BUILD_REVISION=${{github.run_number}}
-
-    - name: Upload binaries
-      uses: 'actions/upload-artifact@v2'
-      with:
-        name: Download-binaries
-        path: |
-          otclientv8.apk
-        if-no-files-found: error
-
   Mac:
     name: Build mac os version
     runs-on: 	macos-11

@@ -112,6 +112,7 @@ build/
 *.scc
 
 # Visual C++ cache files
+vcpkg/
 ipch/
 *.aps
 *.ncb
