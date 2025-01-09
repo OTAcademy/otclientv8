@@ -73,3 +73,13 @@ ContainerWindow < MiniWindow
       type: grid
       cell-size: 34 34
       flow: true
+
+ContainerItem < Item
+  UIWidget
+    id: lootCategoryId
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    image-source: /game_containers/images/loot_categories
+    size: 19 19
+    phantom: true
+    visible: false

@@ -352,6 +352,8 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "isTileThingLuaCallbackEnabled", &Game::isTileThingLuaCallbackEnabled, &g_game);
     g_lua.bindSingletonFunction("g_game", "getRecivedPacketsCount", &Game::getRecivedPacketsCount, &g_game);
     g_lua.bindSingletonFunction("g_game", "getRecivedPacketsSize", &Game::getRecivedPacketsSize, &g_game);
+    g_lua.bindSingletonFunction("g_game", "removeLootCategory", &Game::removeLootCategory, &g_game);
+    g_lua.bindSingletonFunction("g_game", "addLootCategory", &Game::addLootCategory, &g_game);
 
     g_lua.registerSingletonClass("g_healthBars");
     g_lua.bindSingletonFunction("g_healthBars", "addHealthBackground", &HealthBars::addHealthBackground, &g_healthBars);
@@ -694,6 +696,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Item>("getShader", &Item::getShader);
     g_lua.bindClassMemberFunction<Item>("setCustomAttribute", &Item::setCustomAttribute);
     g_lua.bindClassMemberFunction<Item>("getCustomAttribute", &Item::getCustomAttribute);
+    g_lua.bindClassMemberFunction<Item>("getLootCategory", &Item::getLootCategory);
 
     g_lua.registerClass<Effect, Thing>();
     g_lua.bindClassStaticFunction<Effect>("create", []{ return std::make_shared<Effect>(); });
@@ -780,6 +783,10 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<LocalPlayer>("dumpWalkMatrix", &LocalPlayer::dumpWalkMatrix);
     g_lua.bindClassMemberFunction<LocalPlayer>("startServerWalking", &LocalPlayer::startServerWalking);
     g_lua.bindClassMemberFunction<LocalPlayer>("finishServerWalking", &LocalPlayer::finishServerWalking);
+    g_lua.bindClassMemberFunction<LocalPlayer>("removeAutoLoot", &LocalPlayer::removeAutoLoot);
+    g_lua.bindClassMemberFunction<LocalPlayer>("addAutoLoot", &LocalPlayer::addAutoLoot);
+    g_lua.bindClassMemberFunction<LocalPlayer>("isInAutoLootList", &LocalPlayer::isInAutoLootList);
+    g_lua.bindClassMemberFunction<LocalPlayer>("getAutolootItems", &LocalPlayer::getAutolootItems);
 
     g_lua.registerClass<Tile>();
     g_lua.bindClassMemberFunction<Tile>("clean", &Tile::clean);

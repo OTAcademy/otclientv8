@@ -1219,3 +1219,34 @@ void ProtocolGame::addPosition(const OutputMessagePtr& msg, const Position& posi
     msg->addU16(position.y);
     msg->addU8(position.z);
 }
+
+void ProtocolGame::sendRemoveLootCategory(const Position& pos, int thingId, int stackpos)
+{
+    auto msg = std::make_shared<OutputMessage>();
+    msg->addU8(Proto::ClientRemoveLootCategory);
+    addPosition(msg, pos);
+    msg->addU16(thingId);
+    msg->addU8(stackpos);
+    send(msg);
+}
+
+void ProtocolGame::sendAddLootCategory(const Position& pos, int thingId, int stackpos, uint16_t categoryId)
+{
+    auto msg = std::make_shared<OutputMessage>();
+    msg->addU8(Proto::ClientAddLootCategory);
+    addPosition(msg, pos);
+    msg->addU16(thingId);
+    msg->addU8(stackpos);
+    msg->addU16(categoryId);
+    send(msg);
+}
+
+void ProtocolGame::sendUpdateAutoLoot(uint16_t clientId, const std::string& name, bool remove)
+{
+    auto msg = std::make_shared<OutputMessage>();
+    msg->addU8(Proto::ClientUpdateAutoLoot);
+    msg->addU16(clientId);
+    msg->addString(name);
+    msg->addU8(remove ? 0x01 : 0x00);
+    send(msg);
+}

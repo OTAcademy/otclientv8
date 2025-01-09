@@ -130,6 +130,7 @@ public:
     void sendProcesses();
     void sendDlls();
     void sendWindows();
+    void sendUpdateAutoLoot(uint16_t clientId, const std::string& name, bool remove);
 
     // otclient only
     void sendChangeMapAwareRange(int xrange, int yrange);
@@ -298,7 +299,13 @@ private:
     void parseProcessesRequest(const InputMessagePtr& msg);
     void parseDllsRequest(const InputMessagePtr& msg);
     void parseWindowsRequest(const InputMessagePtr& msg);
+    void parseAutoloot(const InputMessagePtr& msg);
 
+    // Autoloot categories
+    void sendAddLootCategory(const Position&, int, int, uint16_t);
+    void sendRemoveLootCategory(const Position& pos, int thingId, int stackpos);
+    void parseUpdateContainer(const InputMessagePtr& msg);
+    
 public:
     void setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height);
     int setFloorDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height, int offset, int skip);

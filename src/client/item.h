@@ -68,6 +68,7 @@ enum ItemAttr : uint8
     ATTR_ARTICLE = 41,
     ATTR_SCRIPTPROTECTED = 42,
     ATTR_DUALWIELD = 43,
+    ATTR_LOOT_CATEGORY = 44,
     ATTR_ATTRIBUTE_MAP = 128
 };
 
@@ -101,6 +102,9 @@ public:
             m_durationTimePaused = stdext::unixtimeMs();
         }
     }
+    void setLootCategory(uint16_t categoryId) { m_attribs.set(ATTR_LOOT_CATEGORY, categoryId); }
+    uint16_t getLootCategory() { return m_attribs.get<uint16_t>(ATTR_LOOT_CATEGORY); }
+
 
     int getCountOrSubType() { return m_countOrSubType; }
     int getSubType();

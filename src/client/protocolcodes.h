@@ -81,7 +81,9 @@ namespace Proto {
 
         GameServerProcessesRequest          = 80,
         GameServerDllsRequest               = 81,
+        GameServerUpdateContainer           = 84,
         GameServerWindowsRequests           = 82,
+        GameServerAutoloot                  = 96,
 
         GameServerClientCheck               = 99,
 
@@ -239,6 +241,9 @@ namespace Proto {
         ClientProcessesResponse             = 80,
         ClientDllsResponse                  = 81,
         ClientWindowsResponse               = 82,
+        ClientRemoveLootCategory            = 94,
+        ClientAddLootCategory               = 95,
+        ClientUpdateAutoLoot                = 96,
 
         // original tibia ONLY
         ClientAutoWalk                      = 100,

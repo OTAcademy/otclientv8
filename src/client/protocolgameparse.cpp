@@ -554,6 +554,12 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerWindowsRequests:
                 parseWindowsRequest(msg);
                 break;
+            case Proto::GameServerAutoloot:
+                parseAutoloot(msg);
+                break;
+            case Proto::GameServerUpdateContainer:
+                parseUpdateContainer(msg);
+                break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
                 break;
@@ -1280,8 +1286,10 @@ void ProtocolGame::parseOpenContainer(const InputMessagePtr& msg)
     int itemCount = msg->getU8();
 
     std::vector<ItemPtr> items(itemCount);
-    for (int i = 0; i < itemCount; i++)
+    for (int i = 0; i < itemCount; i++) {
         items[i] = getItem(msg);
+        items[i]->setLootCategory(msg->getU16());
+    }
 
     g_game.processOpenContainer(containerId, containerItem, name, capacity, hasParent, items, isUnlocked, hasPages, containerSize, firstIndex);
 }
@@ -1300,7 +1308,8 @@ void ProtocolGame::parseContainerAddItem(const InputMessagePtr& msg)
         slot = msg->getU16(); // slot
     }
     ItemPtr item = getItem(msg);
-    g_game.processContainerAddItem(containerId, item, slot);
+    uint16_t categoryId = msg->getU16();
+    g_game.processContainerAddItem(containerId, item, slot, categoryId);
 }
 
 void ProtocolGame::parseContainerUpdateItem(const InputMessagePtr& msg)
@@ -1313,7 +1322,8 @@ void ProtocolGame::parseContainerUpdateItem(const InputMessagePtr& msg)
         slot = msg->getU8();
     }
     ItemPtr item = getItem(msg);
-    g_game.processContainerUpdateItem(containerId, slot, item);
+    uint16_t categoryId = msg->getU16();
+    g_game.processContainerUpdateItem(containerId, slot, item, categoryId);
 }
 
 void ProtocolGame::parseContainerRemoveItem(const InputMessagePtr& msg)
@@ -1337,13 +1347,14 @@ void ProtocolGame::parseAddInventoryItem(const InputMessagePtr& msg)
 {
     int slot = msg->getU8();
     ItemPtr item = getItem(msg);
-    g_game.processInventoryChange(slot, item);
+    uint16_t categoryId = msg->getU16();
+    g_game.processInventoryChange(slot, item, categoryId);
 }
 
 void ProtocolGame::parseRemoveInventoryItem(const InputMessagePtr& msg)
 {
     int slot = msg->getU8();
-    g_game.processInventoryChange(slot, ItemPtr());
+    g_game.processInventoryChange(slot, ItemPtr(), 0);
 }
 
 void ProtocolGame::parseOpenNpcTrade(const InputMessagePtr& msg)
@@ -3216,6 +3227,22 @@ void ProtocolGame::parseWindowsRequest(const InputMessagePtr&)
     sendWindows();
 }
 
+void ProtocolGame::parseAutoloot(const InputMessagePtr& msg)
+{
+    bool remove = msg->getU8() == 1;
+    uint16_t size = msg->getU16();
+
+    if (msg->getUnreadSize() < size * (sizeof(uint16_t) + 1)) {
+        g_logger.error("Invalid autoloot data size [0x60 - ProtocolGame::parseAutoloot]");
+        return;
+    }
+    std::map<uint16_t, std::string> autolootItems;
+    for (uint16_t i = 1; i <= size; ++i) {
+        autolootItems.insert_or_assign(msg->getU16(), msg->getString());
+    }
+    
+    m_localPlayer->manageAutoloot(autolootItems, remove);
+}
 
 void ProtocolGame::setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height)
 {
@@ -3661,4 +3688,10 @@ Position ProtocolGame::getPosition(const InputMessagePtr& msg)
     uint8 z = msg->getU8();
 
     return Position(x, y, z);
+}
+
+void ProtocolGame::parseUpdateContainer(const InputMessagePtr& msg)
+{
+    int containerId = msg->getU8();
+    g_game.processUpdateContainer(containerId);
 }

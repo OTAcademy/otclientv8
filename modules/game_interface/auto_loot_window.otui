@@ -1,0 +1,149 @@
+AutolootItem < UIWidget
+  height: 38
+  background-color: alpha
+  $alternate:
+    background-color: #383838
+
+  Item
+    id: item
+    anchors.left: parent.left
+    anchors.verticalcenter: parent.verticalcenter
+    margin-left: 8
+    virtual: true
+
+  Label
+    id: name
+    anchors.fill: parent
+    anchors.left: prev.right
+    anchors.right: next.left
+    margin-left: 8
+    text-align: left
+    text-wrap: true
+
+  UIWidget
+    id: button
+    anchors.right: parent.right
+    anchors.verticalcenter: parent.verticalcenter
+    margin-right: 8
+    image-source: /images/ui/button_top_blink
+    image-clip: 40 0 20 20
+    size: 20 20
+    text: X
+    @onClick: modules.game_interface.removeFromAutolootList(self:getParent())
+    $hover:
+      image-clip: 20 0 20 20
+    $pressed:
+      image-clip: 0 0 20 20
+
+Window
+  anchors.centerIn: parent
+  size: 340 350
+  image-source: /images/ui/panel_map
+  @onEscape: modules.game_interface.closeAutolootWindow()
+  @onEnter: modules.game_interface.addToAutolootList()
+
+  UIWidget
+    anchors.fill: parent
+    image-clip: 365 119 153 176
+    image-border: 8
+    phantom: true
+    focusable: false
+
+  Button
+    id: button
+    width: 90
+    anchors.left: parent.horizontalcenter
+    anchors.bottom: parent.bottom
+    margin-left: 2
+    enabled: false
+    !text: tr('Add')
+    color: #ffae00
+    focusable: false
+    @onClick: modules.game_interface.addToAutolootList()
+
+  Panel
+    anchors.bottom: prev.bottom
+    anchors.right: parent.right
+    image-source: /images/ui/button
+    image-color: #ffffff
+    image-clip: 0 0 22 23
+    image-border: 3
+    margin-top: 3
+    margin-left: 5
+    size: 20 20
+    text: ?
+    !tooltip: 'Item name - In this field, enter the name of the \nitem to be added to the auto loot list.\n\nSearch item - In this field, you can search for items \nthat have been added to the auto loot list.'
+    phantom: false
+
+  Button
+    width: 90
+    anchors.right: parent.horizontalcenter
+    anchors.bottom: prev.bottom
+    margin-right: 2
+    !text: tr('Close')
+    focusable: false
+    @onClick: modules.game_interface.closeAutolootWindow()
+
+  TextEdit
+    id: textEdit
+    image-source: /images/ui/tooltip
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    placeholder: Item name
+    @onTextChange: modules.game_interface.updateTextEdit(self)
+
+  HorizontalSeparator
+    margin-top: 8
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  TextEdit
+    id: textSearch
+    image-source: /images/ui/tooltip
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    placeholder: Search item...
+    @onTextChange: modules.game_interface.updateSearchEdit(self)
+
+  UIWidget
+    id: clearSearch
+    image-source: /images/options/button-clear
+    anchors.top: prev.top
+    margin-top: 1
+    anchors.right: prev.right
+    size: 20 20
+    @onClick: modules.game_interface.clearSearchEdit()
+    focusable: false
+    image-clip: 0 0 20 20
+    $pressed:
+      image-clip: 0 20 20 20
+
+  ScrollableFlatPanel
+    id: itemsList
+    image-source: /images/ui/tooltip
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: button.top
+    vertical-scrollbar: autolootItemListScroll
+    margin-top: 8
+    margin-bottom: 8
+    margin-right: 12
+    padding: 2
+    focusable: false
+    layout:
+      type: verticalBox
+
+  VerticalScrollBar
+    id: autolootItemListScroll
+    anchors.top: prev.top
+    anchors.bottom: prev.bottom
+    anchors.left: prev.right
+    focusable: false
+    step: 38
+    pixels-scroll: true

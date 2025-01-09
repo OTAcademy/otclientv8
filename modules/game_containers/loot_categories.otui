@@ -1,0 +1,84 @@
+LootCategory < UIWidget
+  text-offset: 40 2
+  text-align: left
+  height: 25
+  $!checked:
+    background-color: alpha
+  $hover !checked:
+    background-color: #454545
+  $pressed !checked:
+    background-color: #1d1d1d
+  $checked:
+    background-color: #00376c
+  $hover checked:
+    background-color: #004b93
+  $pressed checked:
+    background-color: #002345
+
+  $alternate !checked:
+    background-color: #383838
+  $alternate hover !checked:
+    background-color: #4e4e4e
+  $alternate pressed !checked:
+    background-color: #272727
+  $alternate checked:
+    background-color: #004180
+  $alternate hover checked:
+    background-color: #0055a7
+  $alternate pressed checked:
+    background-color: #002d59
+
+  UIWidget
+    id: categoryIcon
+    image-source: /game_containers/images/loot_categories
+    size: 20 20
+    anchors.left: parent.left
+    anchors.verticalcenter: parent.verticalcenter
+    virtual: true
+    enabled: false
+    margin-left: 10
+    phantom: true
+
+Window
+  anchors.centerIn: parent
+  size: 235 305
+  image-source: /images/ui/panel_map
+  @onEscape: modules.game_containers.destroyLoot()
+  @onEnter: modules.game_containers.addLootCategory()
+
+  UIWidget
+    anchors.fill: parent
+    image-clip: 365 119 153 176
+    image-border: 8
+    phantom: true
+
+  Button
+    width: 96
+    anchors.left: parent.horizontalcenter
+    anchors.bottom: parent.bottom
+    margin-left: 4
+    !text: tr('Cancel')
+    @onClick: modules.game_containers.destroyLoot()
+
+  Button
+    id: button
+    width: 96
+    anchors.right: parent.horizontalcenter
+    anchors.bottom: prev.bottom
+    margin-right: 4
+    enabled: false
+    !text: tr('Accept')
+    @onClick: modules.game_containers.addLootCategory()
+
+  FlatPanel
+    id: categoriesList
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    height: 220
+    width: 200
+    image-source: /images/ui/panel_side
+    focusable: false
+    layout:
+      type: verticalBox
+    border-width: 1
+    border-color: #383838

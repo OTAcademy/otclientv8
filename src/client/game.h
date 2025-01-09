@@ -90,7 +90,7 @@ protected:
     void processDeath(int deathType, int penality);
 
     void processGMActions(const std::vector<uint8>& actions);
-    void processInventoryChange(int slot, const ItemPtr& item);
+    void processInventoryChange(int slot, const ItemPtr& item, uint16_t categoryId);
     void processAttackCancel(uint seq);
     void processWalkCancel(Otc::Direction direction);
 
@@ -108,8 +108,8 @@ protected:
     // container related
     void processOpenContainer(int containerId, const ItemPtr& containerItem, const std::string& name, int capacity, bool hasParent, const std::vector<ItemPtr>& items, bool isUnlocked, bool hasPages, int containerSize, int firstIndex);
     void processCloseContainer(int containerId);
-    void processContainerAddItem(int containerId, const ItemPtr& item, int slot);
-    void processContainerUpdateItem(int containerId, int slot, const ItemPtr& item);
+    void processContainerAddItem(int containerId, const ItemPtr& item, int slot, uint16_t categoryId);
+    void processContainerUpdateItem(int containerId, int slot, const ItemPtr& item, uint16_t categoryId);
     void processContainerRemoveItem(int containerId, int slot, const ItemPtr& lastItem);
 
     // channel related
@@ -180,6 +180,11 @@ public:
     void autoWalk(const std::vector<Otc::Direction>& dirs, Position startPos);
     void turn(Otc::Direction direction);
     void stop();
+
+     // Autoloot categories
+    void removeLootCategory(const ThingPtr& thing);
+    void addLootCategory(const ThingPtr& thing, uint16_t categoryId);
+    void processUpdateContainer(int);
 
     // item related
     void look(const ThingPtr& thing, bool isBattleList = false);
@@ -345,6 +350,8 @@ public:
 
     bool canPerformGameAction();
     bool checkBotProtection();
+    void addAutoLoot(uint16_t clientId, const std::string& name);
+    void removeAutoLoot(uint16_t clientId, const std::string& name);
 
     bool isOnline() { return m_online; }
     bool isLogging() { return !m_online && m_protocolGame; }

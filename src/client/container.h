@@ -54,10 +54,11 @@ public:
 protected:
     void onOpen(const ContainerPtr& previousContainer);
     void onClose();
-    void onAddItem(const ItemPtr& item, int slot);
+    void onAddItem(const ItemPtr& item, int slot, uint16_t categoryId);
     void onAddItems(const std::vector<ItemPtr>& items);
-    void onUpdateItem(int slot, const ItemPtr& item);
+    void onUpdateItem(int slot, const ItemPtr& item, uint16_t categoryId);
     void onRemoveItem(int slot, const ItemPtr& lastItem);
+    void onUpdate();
 
     friend class Game;
 
