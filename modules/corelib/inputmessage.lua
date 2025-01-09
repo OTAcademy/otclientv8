@@ -49,3 +49,45 @@ function InputMessage:getPosition()
   position.z = self:getU8()
   return position
 end
+
+function InputMessage:getOutfit()
+  local outfit = {}
+  local lookType
+
+  if g_game.getFeature(GameLooktypeU16) then
+    lookType = self:getU16()
+  else
+    lookType = self:getU8()
+  end
+
+  if (lookType ~= 0) then
+    local lookHead = self:getU8()
+    local lookBody = self:getU8()
+    local lookLegs = self:getU8()
+    local lookFeet = self:getU8()
+    local lookAddons = 0
+
+    if g_game.getFeature(GamePlayerAddons) then
+      lookAddons = self:getU8()
+    end
+
+    outfit.type = lookType
+    outfit.feet = lookFeet
+    outfit.addons = lookAddons
+    outfit.legs = lookLegs
+    outfit.head = lookHead
+    outfit.body = lookBody
+  else
+    outfit.auxType = self:getU16()
+  end
+
+  if g_game.getFeature(GamePlayerMounts) then
+    outfit.mount = self:getU16()
+  end
+
+  if g_game.getFeature(GameOutfitShaders) then
+    outfit.shader = self:getString()
+  end
+
+  return outfit
+end

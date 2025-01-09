@@ -7,3 +7,9 @@ compile:
 clean:
 	docker rm -f otclient_build
 	docker system prune -af --volumes
+
+git-clean:
+	git fetch --prune
+	@for branch in $(shell git branch -vv | grep ': gone]' | awk '{print $$1}'); do \
+		git branch -d $$branch || git branch -D $$branch; \
+	done

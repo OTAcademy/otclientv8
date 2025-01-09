@@ -1,12 +1,19 @@
+EnterGameWindow < StaticMainWindow
+  !text: tr('Enter Game')
+  size: 260 245
+  
 EnterGameWindow
   id: enterGame
   @onEnter: EnterGame.doLogin()
 
   MenuLabel
-    !text: tr('Account name')
-    anchors.left: parent.left
+    !text: tr('Account Name')
+    anchors.horizontalCenter: parent.horizontalCenter
     anchors.top: parent.top
     text-auto-resize: true
+    text-align: center
+    font: verdana-11px-rounded
+    color: #FFFFFF
 
   TextEdit
     id: accountNameTextEdit
@@ -14,13 +21,19 @@ EnterGameWindow
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 2
+    text-align: center
+    font: verdana-11px-rounded
+    color: #FFFFFF
 
   MenuLabel
     !text: tr('Password')
-    anchors.left: prev.left
+    anchors.horizontalCenter: prev.horizontalCenter
     anchors.top: prev.bottom
     margin-top: 8
     text-auto-resize: true
+    text-align: center
+    font: verdana-11px-rounded
+    color: #FFFFFF
 
   PasswordTextEdit
     id: accountPasswordTextEdit
@@ -28,6 +41,9 @@ EnterGameWindow
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 2
+    text-align: center
+    font: verdana-11px-rounded
+    color: #FFFFFF
     
   MenuLabel
     !text: tr('Token')
@@ -35,6 +51,8 @@ EnterGameWindow
     anchors.top: prev.bottom
     text-auto-resize: true
     margin-top: 8
+    visible: false
+    enable: false
 
   TextEdit
     id: accountTokenTextEdit
@@ -42,13 +60,15 @@ EnterGameWindow
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 2
+    visible: false
+    enable: false
 
   Panel
     id: serverSelectorPanel
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.top: prev.bottom
-    height: 52
+    anchors.top: accountPasswordTextEdit.bottom
+    height: 1
     on: true
     focusable: false
     
@@ -153,12 +173,14 @@ EnterGameWindow
 
   CheckBox
     id: rememberPasswordBox
-    !text: tr('Remember password')
+    !text: tr('Remember Password')
     !tooltip: tr('Remember account and password when starts client')
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 9
+    font: verdana-11px-rounded
+    color: #FFFFFF
 
   HorizontalSeparator
     anchors.left: parent.left

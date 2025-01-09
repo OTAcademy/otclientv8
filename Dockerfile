@@ -27,7 +27,7 @@ RUN /opt/vcpkg/vcpkg --feature-flags=binarycaching,manifests,versions install
 FROM dependencies AS builder
 COPY ./ /otclient/
 WORKDIR /otclient/build
-RUN cmake -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_VERBOSE_MAKEFILE=ON ..
+RUN cmake -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_FLAGS="-w" ..
 RUN make -j$(nproc)
 
 

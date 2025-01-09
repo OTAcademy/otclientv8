@@ -1,6 +1,6 @@
 -- CONFIG
 APP_NAME = "otclientv8"  -- important, change it, it's name for config dir and files in appdata
-APP_VERSION = 1341       -- client version for updater and login to identify outdated client
+APP_VERSION = 1098       -- client version for updater and login to identify outdated client
 DEFAULT_LAYOUT = "retro" -- on android it's forced to "mobile", check code bellow
 
 -- If you don't use updater or other service, set it to updater = ""
@@ -16,6 +16,7 @@ Services = {
 -- Servers accept http login url, websocket login url or ip:port:version
 Servers = {
   Mythbound = "game.mythbound.dev:7171:1098",
+  Local = "127.0.0.1:7171:1098"
 }
 
 --Server = "ws://otclient.ovh:3000/"
@@ -23,7 +24,7 @@ Servers = {
 --USE_NEW_ENERGAME = true -- uses entergamev2 based on websockets instead of entergame
 ALLOW_CUSTOM_SERVERS = true -- if true it shows option ANOTHER on server list
 
-g_app.setName("OTCv8")
+g_app.setName("Mythbound")
 -- CONFIG END
 
 -- print first terminal message

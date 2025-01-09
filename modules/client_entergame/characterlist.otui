@@ -1,6 +1,8 @@
-CharacterWidget < UIWidget
-  height: 14
-  background-color: alpha
+CharacterWidget < FlatPanel
+  padding: 7
+  padding-top: 3
+  border-width: 1
+  border-color: alpha
   &updateOnStates: |
     function(self)
       local children = self:getChildren()
@@ -12,84 +14,125 @@ CharacterWidget < UIWidget
   @onSetup: self:updateOnStates()
 
   $focus:
-    background-color: #ffffff22
+    border-width: 3
+    border-color: #FFFFFF
 
   Label
     id: name
-    color: #bbbbbb
     anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 3
+    height: 21
+    text-align: center
+    color: #FFFFFF
+
+  Panel
+    id: outfit
+    image-source: /images/ui/panel_side
+    image-border: 1
+    anchors.top: prev.bottom
+    anchors.bottom: next.top
     anchors.left: parent.left
-    font: verdana-11px-monochrome
-    text-auto-resize: true
-    background-color: alpha
-    text-offset: 2 0
-
-    $on:
-      color: #ffffff
-
-  Label
-    id: worldName
-    color: #bbbbbb
-    anchors.top: parent.top
     anchors.right: parent.right
-    margin-right: 5
-    font: verdana-11px-monochrome
-    text-auto-resize: true
-    background-color: alpha
-    &baseText: '(%s)'
+    margin-top: 1
+    margin-bottom: 1
 
-    $on:
-      color: #ffffff
+    UILabel
+      image-source: /images/ui/panel_side
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      anchors.right: parent.right
+      anchors.top: parent.top
+
+    UICreature
+      id: creature
+      anchors.centerIn: parent
+      size: 110 110
+      animate: true
+
+  FlatPanel
+    id: info
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 36
+
+    Label
+      id: vocation
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 4
+      color: #FFFFFF
+    image-source: /images/ui/panel_side
+    image-border: 1
+
+    Label
+      id: level
+      anchors.top: vocation.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 1
+      &baseText: 'Level: %s'
+      color: #FFFFFF
 
 StaticMainWindow
   id: charactersWindow
   !text: tr('Character List')
+  image-source: /images/ui/window
   visible: false
-  size: 350 400
+  size: 800 600
   $mobile:
-    size: 350 280
+    size: 600 400
   @onEnter: CharacterList.doLogin()
   @onEscape: CharacterList.hide(true)
   @onSetup: |
     g_keyboard.bindKeyPress('Up', function() self:getChildById('characters'):focusPreviousChild(KeyboardFocusReason) end, self)
-    g_keyboard.bindKeyPress('Down', function() self:getChildById('characters'):focusNextChild(KeyboardFocusReason) end, self)  
+    g_keyboard.bindKeyPress('Down', function() self:getChildById('characters'):focusNextChild(KeyboardFocusReason) end, self)
+    g_keyboard.bindKeyPress('Left', function() self:getChildById('characters'):focusPreviousChild(KeyboardFocusReason) end, self)
+    g_keyboard.bindKeyPress('Right', function() self:getChildById('characters'):focusNextChild(KeyboardFocusReason) end, self)  
 
-  TextList
+  ScrollablePanel
     id: characters
-    background-color: #565656
     anchors.top: parent.top
     anchors.left: parent.left
-    anchors.right: characterListScrollBar.left
-    anchors.bottom: accountStatusCaption.top
-    margin-bottom: 5
+    anchors.right: scrollBar.left
+    anchors.bottom: separator.top
+    margin-bottom: 1
+    border: 1 #0E0F11
     padding: 1
     focusable: false
-    vertical-scrollbar: characterListScrollBar
     auto-focus: first
+    layout:
+      type: grid
+      cell-size: 185 215
+      flow: true
+      cell-spacing: 2
+    vertical-scrollbar: scrollBar
 
   VerticalScrollBar
-    id: characterListScrollBar
+    id: scrollBar
     anchors.top: parent.top
-    anchors.bottom: accountStatusCaption.top
+    anchors.bottom: separator.top
     anchors.right: parent.right
     margin-bottom: 5
-    step: 14
+    step: 50
     pixels-scroll: true
 
   Label
     id: accountStatusCaption
     !text: tr('Account Status') .. ':'
-    anchors.left: parent.left
-    anchors.bottom: separator.top
-    margin-bottom: 5
+    anchors.left: autoReconnect.right
+    anchors.top: separator.bottom
+    anchors.horizontalCenter: separator.horizontalCenter
+    margin-top: 7
+    color: #FFFFFF
 
   Label
     id: accountStatusLabel
     !text: tr('Free Account')
-    anchors.right: parent.right
-    anchors.bottom: separator.top
-    margin-bottom: 5
+    anchors.top: accountStatusCaption.bottom
+    anchors.horizontalCenter: accountStatusCaption.horizontalCenter
     text-auto-resize: true
+    color: #009E12
 
     $on:
       color: #FF0000
@@ -99,13 +142,15 @@ StaticMainWindow
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.bottom: next.top
-    margin-bottom: 10
+    margin-bottom: 5
 
   Button
     id: autoReconnect
-    width: 140
+    width: 145
     anchors.left: parent.left
     anchors.bottom: parent.bottom
+    margin-bottom: 2
+    margin-left: 1
     
     $!on:
       image-color: red    
@@ -117,17 +162,19 @@ StaticMainWindow
 
   Button
     id: buttonOk
-    !text: tr('Ok')
-    width: 64
+    !text: tr('Enter Game')
+    width: 80
     anchors.right: next.left
     anchors.bottom: parent.bottom
     margin-right: 10
+    margin-bottom: 2
     @onClick: CharacterList.doLogin()
 
   Button
     id: buttonCancel
     !text: tr('Cancel')
-    width: 64
+    width: 70
     anchors.right: parent.right
     anchors.bottom: parent.bottom
+    margin-bottom: 2
     @onClick: CharacterList.hide(true)

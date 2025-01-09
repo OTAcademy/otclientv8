@@ -240,6 +240,9 @@ function ProtocolLogin:parseCharacterList(msg)
       local character = {}
       local worldId = msg:getU8()
       character.name = msg:getString()
+	    character.level = msg:getU32()
+      character.vocation = msg:getU16()
+      character.outfit = msg:getOutfit()
       character.worldName = worlds[worldId].worldName
       character.worldIp = worlds[worldId].worldIp
       character.worldPort = worlds[worldId].worldPort
@@ -252,6 +255,9 @@ function ProtocolLogin:parseCharacterList(msg)
     for i=1,charactersCount do
       local character = {}
       character.name = msg:getString()
+		  character.level = msg:getU32()
+      character.vocation = msg:getU16()
+      character.outfit = msg:getOutfit()
       character.worldName = msg:getString()
       character.worldIp = iptostring(msg:getU32())
       character.worldPort = msg:getU16()

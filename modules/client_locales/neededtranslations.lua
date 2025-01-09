@@ -229,7 +229,7 @@ neededTranslations = {
   "Port",
   "Position:",
   "Position: %i %i %i",
-  "Premium Account (%s) days left",
+  "Premium Account (%s) days left.",
   "Price:",
   "Primary",
   "Protocol",

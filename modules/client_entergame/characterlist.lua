@@ -12,6 +12,17 @@ local resendWaitEvent
 local loginEvent
 local autoReconnectEvent
 local lastLogout = 0
+local vocationNames = {
+  [0] = "None",
+  [1] = "Sorcerer",
+  [2] = "Druid",
+  [3] = "Paladin",
+  [4] = "Knight",
+  [5] = "Master Sorcerer",
+  [6] = "Elder Druid",
+  [7] = "Royal Paladin",
+  [8] = "Elite Knight"
+}
 
 -- private functions
 local function tryLogin(charInfo, tries)
@@ -258,10 +269,10 @@ function CharacterList.create(characters, account, otui)
   for i,characterInfo in ipairs(characters) do
     local widget = g_ui.createWidget('CharacterWidget', characterList)
     for key,value in pairs(characterInfo) do
-      local subWidget = widget:getChildById(key)
+      local subWidget = widget:recursiveGetChildById(key)
       if subWidget then
         if key == 'outfit' then -- it's an exception
-          subWidget:setOutfit(value)
+          subWidget:getChildById('creature'):setOutfit(value)
         else
           local text = value
           if subWidget.baseText and subWidget.baseTranslate then
@@ -269,7 +280,11 @@ function CharacterList.create(characters, account, otui)
           elseif subWidget.baseText then
             text = string.format(subWidget.baseText, text)
           end
-          subWidget:setText(text)
+          if key == "vocation" then
+            subWidget:setText(vocationNames[tonumber(text)])
+          else
+            subWidget:setText(text)
+          end
         end
       end
     end
@@ -311,7 +326,7 @@ function CharacterList.create(characters, account, otui)
     if account.premDays == 0 or account.premDays == 65535 then
       accountStatusLabel:setText(('%s%s'):format(tr('Gratis Premium Account'), status))
     else
-      accountStatusLabel:setText(('%s%s'):format(tr('Premium Account (%s) days left', account.premDays), status))
+      accountStatusLabel:setText(('%s%s'):format(tr('Premium Account (%s) days left.', account.premDays), status))
     end
   end
 
