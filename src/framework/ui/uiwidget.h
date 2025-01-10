@@ -549,7 +549,7 @@ protected:
     virtual void updateText();
     void processCodeTags();
     void cacheRectToWord();
-    void updateRectToWord(const std::vector<Rect>& glypsCoords);
+    void updateRectToWord(const std::vector<Rect>& glyphCoords);
     void drawText(const Rect& screenCoords);
     void buildTextUnderline(Rect& wordRect, CoordsBuffer& textUnderlineCoords);
 

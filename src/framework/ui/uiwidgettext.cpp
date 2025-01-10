@@ -252,7 +252,7 @@ void UIWidget::buildTextUnderline(Rect& wordRect, CoordsBuffer& textUnderlineCoo
     }
 }
 
-void UIWidget::updateRectToWord(const std::vector<Rect>& glypsCoords)
+void UIWidget::updateRectToWord(const std::vector<Rect>& glyphCoords)
 {
     m_rectToWord.clear();
     m_textUnderline.clear();
@@ -271,11 +271,11 @@ void UIWidget::updateRectToWord(const std::vector<Rect>& glypsCoords)
             }
 
             if (i == textEvent.startPos || inNewLine) {
-                wordRect = glypsCoords[i];
+                wordRect = glyphCoords[i];
                 inNewLine = false;
             }
             else
-                wordRect.expand(0, glypsCoords[i].width(), 0, 0);
+                wordRect.expand(0, glyphCoords[i].width(), 0, 0);
         }
 
         m_rectToWord.push_back({ wordRect, textEvent.word });
