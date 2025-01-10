@@ -300,7 +300,7 @@ function terminate()
 
   Keybind.delete("UI", "Toggle Fullscreen")
   Keybind.delete("UI", "Show/hide Creature Names and Bars")
-  Keybind.new("Dialogs", "Open Options - Custom Hotkeys")
+  Keybind.delete("Dialogs", "Open Options - Custom Hotkeys")
 
   if optionsWindow then
     optionsWindow:destroy()
