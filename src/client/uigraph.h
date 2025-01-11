@@ -4,7 +4,7 @@
 #include "declarations.h"
 #include <framework/ui/uiwidget.h>
 
-struct Graph {
+struct GraphData {
     std::vector<Point> points;
     std::deque<int> values;
     Point infoLine[2];
@@ -57,7 +57,7 @@ protected:
     void onVisibilityChange(bool visible);
 
     void cacheGraphs();
-    void updateGraph(Graph& graph, bool& updated);
+    void updateGraph(GraphData& graph, bool& updated);
     void updateInfoBoxes();
 
 private:
@@ -74,7 +74,7 @@ private:
     size_t m_capacity;
     size_t m_ignores;
 
-    std::vector<Graph> m_graphs;
+    std::vector<GraphData> m_graphs;
 };
 
 #endif

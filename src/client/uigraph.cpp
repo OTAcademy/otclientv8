@@ -108,7 +108,7 @@ void UIGraph::setLineWidth(size_t index, int width) {
 
 size_t UIGraph::createGraph()
 {
-	auto graph = Graph();
+	auto graph = GraphData();
 
 	graph.points = {};
 	graph.values = {};
@@ -264,7 +264,7 @@ void UIGraph::cacheGraphs()
 	}
 }
 
-void UIGraph::updateGraph(Graph& graph, bool& updated)
+void UIGraph::updateGraph(GraphData& graph, bool& updated)
 {
 	if (graph.values.empty())
 		return;
