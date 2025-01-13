@@ -150,7 +150,7 @@
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='DirectX|Win32'">
-    <VcpkgTriplet>Win32-windows-static</VcpkgTriplet>
+    <VcpkgTriplet>x86-windows-static</VcpkgTriplet>
     <VcpkgConfiguration>Release</VcpkgConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DirectX|x64'" Label="Vcpkg">
@@ -158,7 +158,7 @@
     <VcpkgConfiguration>Release</VcpkgConfiguration>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='OpenGL|Win32'">
-    <VcpkgTriplet>Win32-windows-static</VcpkgTriplet>
+    <VcpkgTriplet>x86-windows-static</VcpkgTriplet>
     <VcpkgConfiguration>Release</VcpkgConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL|x64'" Label="Vcpkg">
@@ -196,7 +196,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineWin32</TargetMachine>
+      <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -276,7 +276,7 @@
       <DisableSpecificWarnings>4326</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineWin32</TargetMachine>
+      <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -370,7 +370,7 @@
       <SmallerTypeCheck>false</SmallerTypeCheck>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineWin32</TargetMachine>
+      <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
