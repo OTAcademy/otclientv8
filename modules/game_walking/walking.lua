@@ -102,6 +102,10 @@ function init()
       [CHAT_MODE.ON] = "",
       [CHAT_MODE.OFF] = ""
     }, true)
+    
+    if g_game.isOnline() then
+      onGameStart()
+    end
 end
 
 function terminate()
