@@ -117,6 +117,10 @@ function terminate()
   unbindKeys()
   disableWSAD()
   
+  for dir = North, NorthWest do
+    Keybind.delete("Movement", "Go " .. DirectionString[dir])
+  end
+  
   loaded = false
 end
 
