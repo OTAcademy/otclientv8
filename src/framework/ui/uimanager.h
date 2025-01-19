@@ -116,7 +116,7 @@ private:
     UIWidgetPtr m_draggingWidget;
     UIWidgetPtr m_hoveredWidget;
     std::string m_hoveredText;
-    UIWidgetPtr m_pressedWidget[Fw::MouseButtonLast + 1] = { nullptr };
+    UIWidgetPtr m_pressedWidget[Fw::MouseButtonLast + 1];
     stdext::boolean<false> m_hoverUpdateScheduled;
     stdext::boolean<false> m_hoverTextUpdateScheduled;
     stdext::boolean<false> m_drawDebugBoxes;

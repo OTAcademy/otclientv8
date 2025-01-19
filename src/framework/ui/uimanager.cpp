@@ -349,7 +349,7 @@ void UIManager::onWidgetDestroy(const UIWidgetPtr& widget)
         updateHoveredText();
     }
 
-    for (int i = 0; i <= Fw::MouseButtonLast + 1; ++i) {
+    for (int i = 0; i <= Fw::MouseButtonLast; ++i) {
         if (m_pressedWidget[i] == widget) {
             updatePressedWidget((Fw::MouseButton)i, nullptr);
         }
