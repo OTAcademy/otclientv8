@@ -20,6 +20,9 @@
  * THE SOFTWARE.
  */
 
+#ifndef MOUSE_H
+#define MOUSE_H
+
 #include <framework/global.h>
 
 class Mouse
@@ -42,3 +45,5 @@ private:
 };
 
 extern Mouse g_mouse;
+
+#endif

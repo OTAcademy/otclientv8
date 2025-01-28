@@ -1,3 +1,6 @@
+#ifndef URI_H
+#define URI_H
+
 #include <string>
 
 struct ParsedURI {
@@ -8,3 +11,5 @@ struct ParsedURI {
 };
 
 ParsedURI parseURI(const std::string& url);
+
+#endif
