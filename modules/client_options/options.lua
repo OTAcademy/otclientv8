@@ -41,7 +41,7 @@ local defaultOptions = {
   displayText = true,
   dontStretchShrink = false,
   turnDelay = 30,
-  hotkeyDelay = 30,
+  hotkeyDelay = 200,
 
   chatMode = CHAT_MODE.ON,
   walkFirstStepDelay = 200,

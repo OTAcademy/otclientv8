@@ -931,7 +931,13 @@ function Keybind.bindHotkey(hotkeyId, chatMode)
   local gameRootPanel = modules.game_interface.getRootPanel()
   local action = hotkey.action
 
-  hotkey.callback = function() Keybind.hotkeyCallback(hotkeyId, chatMode) end
+  hotkey.lastExecution = 0
+  hotkey.callback = function()
+    if hotkey.lastExecution + g_settings.getNumber("hotkeyDelay") < g_clock.millis() then
+      hotkey.lastExecution = g_clock.millis()
+      Keybind.hotkeyCallback(hotkeyId, chatMode)
+    end
+  end
 
   if keys.primary then
     keys.primary = tostring(keys.primary)
