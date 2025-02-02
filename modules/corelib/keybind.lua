@@ -942,7 +942,7 @@ function Keybind.bindHotkey(hotkeyId, chatMode)
   if keys.primary then
     keys.primary = tostring(keys.primary)
     if keys.primary:len() > 0 then
-      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+      if action == HOTKEY_ACTION.TEXT then
         g_keyboard.bindKeyDown(keys.primary, hotkey.callback, gameRootPanel)
       else
         g_keyboard.bindKeyPress(keys.primary, hotkey.callback, gameRootPanel)
@@ -953,7 +953,7 @@ function Keybind.bindHotkey(hotkeyId, chatMode)
   if keys.secondary then
     keys.secondary = tostring(keys.secondary)
     if keys.secondary:len() > 0 then
-      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+      if action == HOTKEY_ACTION.TEXT then
         g_keyboard.bindKeyDown(keys.secondary, hotkey.callback, gameRootPanel)
       else
         g_keyboard.bindKeyPress(keys.secondary, hotkey.callback, gameRootPanel)
