@@ -773,12 +773,5 @@ void Painter::drawCache(const std::vector<float>& vertex, const std::vector<floa
     m_calls += 1;
 
     PainterShaderProgram::disableAttributeArray(PainterShaderProgram::COLOR_ATTR); 
-
-#ifdef FREE_VERSION_LIB
-    // crash after 1h
-    if (stdext::millis() > 4000'000) {
-        m_drawNewProgram = nullptr;
-    }
-#endif
 }
 

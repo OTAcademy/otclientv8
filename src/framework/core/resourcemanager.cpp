@@ -32,7 +32,7 @@
 #include <queue>
 #include <regex>
 
-#if not(defined(ANDROID) || defined(FREE_VERSION))
+#if !defined(ANDROID)
 #include <boost/process.hpp>
 #endif
 #include <locale>
@@ -69,7 +69,7 @@ void ResourceManager::terminate()
 }
 
 bool ResourceManager::launchCorrect(const std::string& product, const std::string& app) { // curently works only on windows
-#if not(defined(ANDROID) || defined(FREE_VERSION))
+#if !defined(ANDROID)
     auto init_path = m_binaryPath.parent_path();
     init_path /= INIT_FILENAME;
     if (std::filesystem::exists(init_path)) // debug version
@@ -678,7 +678,7 @@ std::string ResourceManager::selfChecksum() {
 }
 
 void ResourceManager::updateData(const std::set<std::string>& files, bool reMount) {
-#if not(defined(__EMSCRIPTEN__) || defined(FREE_VERSION))
+#if !defined(__EMSCRIPTEN__)
     if (!m_loadedFromArchive)
         g_logger.fatal("Client can be updated only when running from zip archive");
 
@@ -782,7 +782,7 @@ void ResourceManager::updateData(const std::set<std::string>& files, bool reMoun
 
 void ResourceManager::updateExecutable(std::string fileName)
 {
-#if defined(ANDROID) || defined(FREE_VERSION)
+#if defined(ANDROID)
     g_logger.fatal("Executable cannot be updated on android or in free version");
 #else
     if (fileName.size() <= 2) {
@@ -806,7 +806,7 @@ void ResourceManager::updateExecutable(std::string fileName)
     PHYSFS_close(file);
 
     std::filesystem::path newBinaryPath(std::filesystem::u8path(PHYSFS_getWriteDir()));
-#if defined(WIN32) && not(defined(FREE_VERSION))
+#if defined(WIN32)
     installDlls(newBinaryPath);
 #endif
 #endif
@@ -933,7 +933,7 @@ std::map<std::string, std::string> ResourceManager::decompressArchive(std::strin
 #endif
 }
 
-#if defined(WIN32) && not(defined(FREE_VERSION))
+#if defined(WIN32)
 void ResourceManager::installDlls(std::filesystem::path dest)
 {
     static std::list<std::string> dlls = {
@@ -1027,9 +1027,6 @@ void ResourceManager::encrypt(const std::string& seed) {
 #endif 
 
 bool ResourceManager::decryptBuffer(std::string& buffer) {
-#ifdef FREE_VERSION
-    return false;
-#else
     if (buffer.size() < 5)
         return true;
 
@@ -1065,7 +1062,6 @@ bool ResourceManager::decryptBuffer(std::string& buffer) {
 
     buffer = new_buffer;
     return true;
-#endif
 }
 
 #ifdef WITH_ENCRYPTION

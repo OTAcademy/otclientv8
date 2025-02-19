@@ -767,11 +767,6 @@ void LuaInterface::createLuaState()
     // replace loadfile
     pushCFunction(&LuaInterface::lua_loadfile);
     setGlobal("loadfile");
-
-#ifdef FREE_VERSION
-    pushCFunction(nullptr);
-    setGlobal("io");
-#endif
 }
 
 void LuaInterface::closeLuaState()
@@ -801,13 +796,6 @@ void LuaInterface::collectGarbage()
 
 void LuaInterface::loadBuffer(const std::string& buffer, const std::string& source)
 {
-#ifdef FREE_VERSION
-    for (auto& c : buffer) {
-        if ((uint8_t)c < 8) {
-            throw LuaException("Compiled lua files are not allowed in free version", 0);
-        }
-    }
-#endif
     // loads lua buffer
     int ret = luaL_loadbuffer(L, buffer.c_str(), buffer.length(), source.c_str());
     if(ret != 0)

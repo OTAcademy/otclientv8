@@ -311,9 +311,6 @@ std::string Platform::traceback(const std::string& where, int level, int maxDept
 
 std::vector<std::string> Platform::getMacAddresses()
 {
-#ifdef FREE_VERSION
-    return {};
-#else
     std::vector<std::string> ret;
     IP_ADAPTER_INFO AdapterInfo[32];
     DWORD dwBufLen = sizeof(AdapterInfo);
@@ -333,28 +330,20 @@ std::vector<std::string> Platform::getMacAddresses()
     } while (pAdapterInfo);                    // Terminate if last adapter
     std::sort(ret.begin(), ret.end());
     return ret;
-#endif
 }
 
 
 std::string Platform::getUserName()
 {
-#ifdef FREE_VERSION
-    return "";
-#else
     char buffer[30];
     DWORD length = sizeof(buffer) - 1;
     GetUserNameA(buffer, &length);
     buffer[29] = 0; // just in case
     return std::string(buffer);
-#endif
 }
 
 std::vector<std::string> Platform::getDlls()
 {
-#ifdef FREE_VERSION
-    return {};
-#else
     HMODULE hMods[1024];
     DWORD cbNeeded;
 
@@ -374,14 +363,10 @@ std::vector<std::string> Platform::getDlls()
     }
 
     return ret;
-#endif
 }
 
 std::vector<std::string> Platform::getProcesses()
 {
-#ifdef FREE_VERSION
-    return {};
-#else
     std::vector<std::string> ret;
 
     HANDLE hProcessSnap;
@@ -404,7 +389,6 @@ std::vector<std::string> Platform::getProcesses()
     CloseHandle(hProcessSnap);
 
     return ret;
-#endif
 }
 
 std::vector<std::string> windows;
@@ -422,14 +406,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 
 std::vector<std::string> Platform::getWindows()
 {
-#ifdef FREE_VERSION
-    return {};
-#else
     windows.clear();
     EnumWindows(EnumWindowsProc, NULL);
     return windows;
-#endif
 }
-
 
 #endif
