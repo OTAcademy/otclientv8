@@ -154,7 +154,7 @@ ticks_t Platform::getFileModificationTime(std::string file)
 bool Platform::openUrl(std::string url, bool now)
 {
     if (now) {
-        return (int)ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL) >= 32;
+        return (size_t)ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL) >= 32;
     } else {
         g_dispatcher.scheduleEvent([url] {
             ShellExecuteW(NULL, L"open", stdext::utf8_to_utf16(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
@@ -166,7 +166,7 @@ bool Platform::openUrl(std::string url, bool now)
 bool Platform::openDir(std::string path, bool now)
 {
     if (now) {
-        return (int)ShellExecuteW(NULL, L"open", L"explorer.exe", stdext::utf8_to_utf16(path).c_str(), NULL, SW_SHOWNORMAL) >= 32;
+        return (size_t)ShellExecuteW(NULL, L"open", L"explorer.exe", stdext::utf8_to_utf16(path).c_str(), NULL, SW_SHOWNORMAL) >= 32;
     } else {
         g_dispatcher.scheduleEvent([path] {
             ShellExecuteW(NULL, L"open", L"explorer.exe", stdext::utf8_to_utf16(path).c_str(), NULL, SW_SHOWNORMAL);
