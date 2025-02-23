@@ -78,7 +78,6 @@ function executeBot(config, storage, tabs, msgCallback, saveConfigCallback, relo
   
   -- basic functions & classes
   context.print = print
-  context.bit32 = bit32
   context.bit = bit
   context.pairs = pairs
   context.ipairs = ipairs
