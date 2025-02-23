@@ -292,11 +292,11 @@ end
 function onStatesChange(localPlayer, now, old)
     if now == old then return end
 
-    local bitsChanged = bit32.bxor(now, old)
+    local bitsChanged = bit.bxor(now, old)
     for i = 1, 32 do
         local pow = math.pow(2, i - 1)
         if pow > bitsChanged then break end
-        local bitChanged = bit32.band(bitsChanged, pow)
+        local bitChanged = bit.band(bitsChanged, pow)
         if bitChanged ~= 0 then toggleIcon(bitChanged) end
     end
 end

@@ -1,5 +1,5 @@
 /*
- * This is the bit32 library from lua 5.2.0, backported to
+ * This is the bit library from lua 5.2.0, backported to
  * lua 5.1.4.
  *
  * version 5.2.0-backport4
@@ -164,9 +164,9 @@ static lua_Unsigned luaL_checkunsigned (lua_State *L, int arg) {
 /* ----- Lua 5.2 luaL_newlib() compatibility: ----- */
 
 #define LUAMOD_API  LUALIB_API
-#define LUA_BIT32LIBNAME "bit32"
+#define LUA_BITLIBNAME "bit"
 #ifndef luaL_newlib
-#define luaL_newlib(x, y) luaL_register(x, LUA_BIT32LIBNAME, y)
+#define luaL_newlib(x, y) luaL_register(x, LUA_BITLIBNAME, y)
 #endif
 
 /* ----- avoid a 'symbol redefined' warning below ----- */
@@ -372,7 +372,7 @@ static const luaL_Reg bitlib[] = {
   {NULL, NULL}
 };
 
-int luaopen_bit32 (lua_State *L) {
+int luaopen_bit (lua_State *L) {
   luaL_newlib(L, bitlib);
   return 1;
 }
