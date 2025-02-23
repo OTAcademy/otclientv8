@@ -738,8 +738,8 @@ void LuaInterface::createLuaState()
     // load lua standard libraries
     luaL_openlibs(L);
 
-    // load bit32 lib for bitwise operations
-    luaopen_bit32(L);
+    // load bit lib for bitwise operations
+    luaopen_bit(L);
 
     // creates weak table
     newTable();

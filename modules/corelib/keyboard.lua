@@ -239,13 +239,13 @@ function g_keyboard.isInUse()
 end
 
 function g_keyboard.isCtrlPressed()
-  return bit32.band(g_window.getKeyboardModifiers(), KeyboardCtrlModifier) ~= 0
+  return bit.band(g_window.getKeyboardModifiers(), KeyboardCtrlModifier) ~= 0
 end
 
 function g_keyboard.isAltPressed()
-  return bit32.band(g_window.getKeyboardModifiers(), KeyboardAltModifier) ~= 0
+  return bit.band(g_window.getKeyboardModifiers(), KeyboardAltModifier) ~= 0
 end
 
 function g_keyboard.isShiftPressed()
-  return bit32.band(g_window.getKeyboardModifiers(), KeyboardShiftModifier) ~= 0
+  return bit.band(g_window.getKeyboardModifiers(), KeyboardShiftModifier) ~= 0
 end

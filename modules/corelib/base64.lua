@@ -3,7 +3,7 @@
  base64 -- v1.5.1 public domain Lua base64 encoder/decoder
  no warranty implied; use at your own risk
 
- Needs bit32.extract function. If not present it's implemented using BitOp
+ Needs bit.extract function. If not present it's implemented using BitOp
  or Lua 5.3 native bit operators. For Lua 5.1 fallbacks to pure Lua
  implementation inspired by Rici Lake's post:
    http://ricilake.blogspot.co.uk/2007/10/iterating-bits-in-lua.html
@@ -24,7 +24,7 @@
 
 base64 = {}
 
-local extract = _G.bit32 and _G.bit32.extract
+local extract = _G.bit and _G.bit.extract
 if not extract then
 	if _G.bit then
 		local shl, shr, band = _G.bit.lshift, _G.bit.rshift, _G.bit.band
