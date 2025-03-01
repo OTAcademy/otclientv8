@@ -81,7 +81,7 @@ end
 function bindKeys()
   gameRootPanel:setAutoRepeatDelay(10)
 
-  Keybind.new("Movement", "Stop All Actions", "Esc", "", true)
+  Keybind.new("Movement", "Stop All Actions", "Escape", "", true)
   Keybind.new("Misc", "Logout", "Ctrl+L", "Ctrl+Q")
   Keybind.new("UI", "Clear All Texts", "Ctrl+W", "")
 
