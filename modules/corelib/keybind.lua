@@ -984,7 +984,7 @@ function Keybind.unbindHotkey(hotkeyId, chatMode)
   if keys.primary then
     keys.primary = tostring(keys.primary)
     if keys.primary:len() > 0 then
-      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+      if action == HOTKEY_ACTION.TEXT then
         g_keyboard.unbindKeyDown(keys.primary, hotkey.callback, gameRootPanel)
       else
         g_keyboard.unbindKeyPress(keys.primary, hotkey.callback, gameRootPanel)
@@ -995,7 +995,7 @@ function Keybind.unbindHotkey(hotkeyId, chatMode)
   if keys.secondary then
     keys.secondary = tostring(keys.secondary)
     if keys.secondary:len() > 0 then
-      if action == HOTKEY_ACTION.EQUIP or action == HOTKEY_ACTION.USE or action == HOTKEY_ACTION.TEXT or action == HOTKEY_ACTION.TEXT_AUTO then
+      if action == HOTKEY_ACTION.TEXT then
         g_keyboard.unbindKeyDown(keys.secondary, hotkey.callback, gameRootPanel)
       else
         g_keyboard.unbindKeyPress(keys.secondary, hotkey.callback, gameRootPanel)
