@@ -42,6 +42,7 @@ local defaultOptions = {
   dontStretchShrink = false,
   turnDelay = 30,
   hotkeyDelay = 200,
+  actionbarWidgetDelay = 200,
 
   chatMode = CHAT_MODE.ON,
   walkFirstStepDelay = 200,
@@ -638,6 +639,8 @@ function updateValues(key, value)
     end
   elseif key == "hotkeyDelay" then
     controlsPanel:getChildById("hotkeyDelayLabel"):setText(tr("Hotkey delay: %s ms", value))
+  elseif key == "actionbarWidgetDelay" then
+    controlsPanel:getChildById("actionbarWidgetDelayLabel"):setText(tr("Actionbar widget delay: %s ms", value))
   elseif key == "walkFirstStepDelay" then
     controlsPanel:getChildById("walkFirstStepDelayLabel"):setText(tr("Walk delay after first step: %s ms", value))
   elseif key == "walkTurnDelay" then
