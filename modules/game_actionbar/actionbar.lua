@@ -372,6 +372,7 @@ function setupButton(widget)
   widget.text:setImageSource('')
   widget.hotkey = config and config.hotkey or ""
   widget.callback = nil
+  widget.lastExecution = 0
 
   -- add new settings
   if config and config.type then
@@ -967,12 +968,20 @@ function assignHotkey(widget)
   end
 end
 
+function checkLastExecution(widget)
+  widget.lastExecution = widget.lastExecution or 0
+  return widget.lastExecution + g_settings.getNumber("actionbarWidgetDelay") < g_clock.millis()
+end
+
 function setupAction(widget)
   if widget.type == TYPE.BLANK then 
     return
   end
   if widget.type == TYPE.TEXT then
     widget.callback = function()
+      if not checkLastExecution(widget) then return end
+      widget.lastExecution = g_clock.millis()
+
       if modules.game_interface.isChatVisible() then
         if widget.autoSay then
           modules.game_console.sendMessage(widget.sayText)
@@ -985,6 +994,9 @@ function setupAction(widget)
     end
   elseif widget.type == TYPE.SPELL then
     widget.callback = function()
+      if not checkLastExecution(widget) then return end
+      widget.lastExecution = g_clock.millis()
+
       if g_app.isMobile() then -- turn to direction of targer
         local target = g_game.getAttackingCreature()
         if target then
@@ -1015,6 +1027,9 @@ function setupAction(widget)
     end
   elseif widget.type == TYPE.ITEM then
     widget.callback = function()
+      if not checkLastExecution(widget) then return end
+      widget.lastExecution = g_clock.millis()
+
       if widget.action == ACTION.BLANK then
         return
       elseif widget.action == ACTION.EQUIP then

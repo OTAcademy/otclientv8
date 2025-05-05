@@ -33,6 +33,18 @@ OptionPanel
     maximum: 1000
 
   Label
+    id: actionbarWidgetDelayLabel
+    !tooltip: tr('Time between execution of the same actionbar widget')
+    @onSetup: |
+      local value = modules.client_options.getOption('actionbarWidgetDelay')
+      self:setText(tr('Actionbar widget delay: %s ms', value))
+
+  OptionScrollbar
+    id: actionbarWidgetDelay
+    minimum: 5
+    maximum: 1000
+
+  Label
     id: walkFirstStepDelayLabel
     @onSetup: |
       local value = modules.client_options.getOption('walkFirstStepDelay')
