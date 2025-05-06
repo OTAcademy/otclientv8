@@ -568,7 +568,7 @@ if true then
           guild = guild:sub(1,10) -- change to proper (last) values
           guild = guild.."..."
         end
-        local voc
+        local voc = ""
         if text:lower():find("sorcerer") then
             voc = "MS"
         elseif text:lower():find("druid") then
@@ -577,6 +577,8 @@ if true then
             voc = "EK"
         elseif text:lower():find("paladin") then
             voc = "RP"
+        elseif text:lower():find("monk") then
+            voc = "EM"
         end
         local creature = getCreatureByName(name)
         if creature then
