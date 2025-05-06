@@ -973,12 +973,17 @@ function checkLastExecution(widget)
   return widget.lastExecution + g_settings.getNumber("actionbarWidgetDelay") < g_clock.millis()
 end
 
+function shouldBlockHotkeys()
+  return modules.client_options.getOption('actionbarLock') and modules.game_console.isChatEnabled()
+end
+
 function setupAction(widget)
   if widget.type == TYPE.BLANK then 
     return
   end
   if widget.type == TYPE.TEXT then
     widget.callback = function()
+      if shouldBlockHotkeys() then return end
       if not checkLastExecution(widget) then return end
       widget.lastExecution = g_clock.millis()
 
@@ -994,6 +999,7 @@ function setupAction(widget)
     end
   elseif widget.type == TYPE.SPELL then
     widget.callback = function()
+      if shouldBlockHotkeys() then return end
       if not checkLastExecution(widget) then return end
       widget.lastExecution = g_clock.millis()
 
@@ -1027,6 +1033,7 @@ function setupAction(widget)
     end
   elseif widget.type == TYPE.ITEM then
     widget.callback = function()
+      if shouldBlockHotkeys() then return end
       if not checkLastExecution(widget) then return end
       widget.lastExecution = g_clock.millis()
 
