@@ -527,9 +527,8 @@ void Game::processModalDialog(uint32 id, std::string title, std::string message,
 
 void Game::processAttackCancel(uint seq)
 {
-    if(seq == 0 || m_seq == seq) {
+    if(isAttacking() && (seq == 0 || m_seq == seq)) {
         cancelAttack();
-        cancelFollow();
     }
 }
 
@@ -955,7 +954,7 @@ void Game::refreshContainer(const ContainerPtr& container)
     m_protocolGame->sendRefreshContainer(container->getId());
 }
 
-void Game::attack(CreaturePtr creature, bool cancel)
+void Game::attack(CreaturePtr creature)
 {
     if(!canPerformGameAction() || creature == m_localPlayer)
         return;
@@ -976,8 +975,7 @@ void Game::attack(CreaturePtr creature, bool cancel)
     } else
         m_seq++;
 
-    if(!cancel)
-        m_protocolGame->sendAttack(creature ? creature->getId() : 0, m_seq);
+    m_protocolGame->sendAttack(creature ? creature->getId() : 0, m_seq);
 }
 
 void Game::follow(CreaturePtr creature)
