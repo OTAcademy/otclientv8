@@ -527,11 +527,8 @@ void Game::processModalDialog(uint32 id, std::string title, std::string message,
 
 void Game::processAttackCancel(uint seq)
 {
-    if(seq == 0 || m_seq == seq) {
-        if (isAttacking()) {
-            cancelAttack();
-        }
-        cancelFollow();
+    if(isAttacking() && (seq == 0 || m_seq == seq)) {
+        cancelAttack();
     }
 }
 
