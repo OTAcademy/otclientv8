@@ -81,7 +81,7 @@ void Animator::copy(const AnimatorPtr& other)
     m_loopCount = other->m_loopCount;
     m_startPhase = other->m_startPhase;
     m_phaseDurations = other->m_phaseDurations;
-    m_phase = getStartPhase();
+    setPhase(0);
 }
 
 void Animator::setPhase(int phase)
