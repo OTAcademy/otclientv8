@@ -381,13 +381,8 @@ void Minimap::saveOtmm(const std::string& fileName)
     try {
         stdext::timer saveTimer;
 
-#ifndef ANDROID
-        std::string tmpFileName = fileName;
-        tmpFileName += ".tmp";
+        std::string tmpFileName = fileName + ".tmp";
         FileStreamPtr fin = g_resources.createFile(tmpFileName);
-#else
-        FileStreamPtr fin = g_resources.createFile(fileName);
-#endif
 
         //TODO: compression flag with zlib
         uint32 flags = 0;
@@ -437,17 +432,51 @@ void Minimap::saveOtmm(const std::string& fileName)
         fin->addU16(invalidPos.y);
         fin->addU8(invalidPos.z);
 
+        fin->addU32(OTMM_VALID); // Flags the file completed. 
+
         fin->flush();
 
         fin->close();
-#ifndef ANDROID
-        std::filesystem::path filePath(g_resources.getWriteDir()), tmpFilePath(g_resources.getWriteDir());
-        filePath += fileName;
-        tmpFilePath += tmpFileName;
-        if(std::filesystem::file_size(tmpFilePath) > 1024) {
-            std::filesystem::rename(tmpFilePath, filePath);
+
+
+        std::string writeDir = g_resources.getWriteDir();
+        std::string finalPath = writeDir + fileName;
+        std::string tempPath = writeDir + tmpFileName;
+
+        bool isTempValid = false;
+
+        FileStreamPtr checkFile = g_resources.openFile(tmpFileName);
+        if (checkFile && checkFile->size() >= 4) {
+            checkFile->seek(checkFile->size() - 4);
+            uint32 marker = checkFile->getU32();
+            if (marker == OTMM_VALID) {
+                isTempValid = true;
+            }
+            else {
+                throw stdext::exception("Failed to validate OTMM temp file.");
+            }
         }
-#endif
+
+        //  If temp file is valid.
+        if (isTempValid) {
+            if (std::filesystem::exists(finalPath)) {
+                auto existingSize = std::filesystem::file_size(finalPath);
+                auto newSize = std::filesystem::file_size(tempPath);
+                if (newSize > existingSize) { // MC-handling, check if the size of the otmm map is bigg
+                    std::filesystem::rename(tempPath, finalPath);
+                }
+                else {
+                    std::filesystem::remove(tempPath);
+                }
+            }
+            else {
+                std::filesystem::rename(tempPath, finalPath);
+            }
+        }
+
+
+
+
     } catch (stdext::exception& e) {
         g_logger.error(stdext::format("failed to save OTMM minimap: %s", e.what()));
     } catch (std::exception& e) {
