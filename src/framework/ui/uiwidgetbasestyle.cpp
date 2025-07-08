@@ -370,6 +370,9 @@ void UIWidget::parseBaseStyle(const OTMLNodePtr& styleNode)
                 }
             }
         }
+        else if (node->tag() == "load-otui") {
+            g_ui.loadUI(stdext::resolve_path(node->value(), node->source()), static_self_cast<UIWidget>());
+        }
     }
 }
 

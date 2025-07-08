@@ -1563,6 +1563,10 @@ void UIWidget::onStyleApply(const std::string& styleName, const OTMLNodePtr& sty
     parseBaseStyle(styleNode);
     parseImageStyle(styleNode);
     parseTextStyle(styleNode);
+
+    // lastly merge with another otui
+    if (const OTMLNodePtr& node = styleNode->get("merge-otui"))
+        g_ui.mergeStyle(stdext::resolve_path(node->value(), node->source()), static_self_cast<UIWidget>());
 }
 
 void UIWidget::onGeometryChange(const Rect& oldRect, const Rect& newRect)
