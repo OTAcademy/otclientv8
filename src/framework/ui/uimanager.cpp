@@ -602,3 +602,53 @@ UIWidgetPtr UIManager::createWidgetFromOTML(const OTMLNodePtr& widgetNode, const
 
     return widget;
 }
+
+void UIManager::mergeStyle(std::string file, const UIWidgetPtr& widget)
+{
+    try {
+        file = g_resources.guessFilePath(file, "otui");
+
+        OTMLDocumentPtr doc = OTMLDocument::parse(file);
+        bool mainStyleApplied = false;
+        for (const OTMLNodePtr& node : doc->children()) {
+            std::string tag = node->tag();
+            // parse otui variable
+            if (stdext::starts_with(tag, "$var-")) {
+                std::string var = tag.substr(6);
+                addOTUIVar(var, node->rawValue());
+                continue;
+            }
+
+            // import styles in these files too
+            if (tag.find("<") != std::string::npos)
+                importStyleFromOTML(node);
+            else {
+				if (mainStyleApplied)
+					stdext::throw_exception("cannot have multiple main widgets in otui files");
+
+                OTMLNodePtr originalStyleNode = getStyle(node->tag());
+                if (!originalStyleNode)
+                    stdext::throw_exception(stdext::format("'%s' is not a defined style", node->tag()));
+
+                OTMLNodePtr styleNode = originalStyleNode->clone();
+                styleNode->merge(node);
+
+                widget->setStyleFromNode(styleNode);
+
+                for (const OTMLNodePtr& childNode : styleNode->children()) {
+                    if (!childNode->isUnique()) {
+                        createWidgetFromOTML(childNode, widget);
+                        styleNode->removeChild(childNode);
+                    }
+                }
+
+                widget->callLuaField("onSetup");
+
+                mainStyleApplied = true;
+            }
+        }
+    }
+    catch (stdext::exception& e) {
+        g_logger.error(stdext::format("failed to merge style from '%s': %s", file, e.what()));
+    }
+}
