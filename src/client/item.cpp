@@ -139,11 +139,18 @@ void Item::setId(uint32 id)
     if (g_game.getFeature(Otc::GameEnhancedAnimations)) {
         if (auto thingType = rawGetThingType()) {
             if (auto animator = thingType->getAnimator()) {
+                if (!m_animator)
+                    m_animator = std::make_shared<Animator>();
+
                 m_animator->copy(animator);
             }
 
-            if (auto animator = thingType->getIdleAnimator())
+            if (auto animator = thingType->getIdleAnimator()) {
+                if (!m_idleAnimator)
+                    m_idleAnimator = std::make_shared<Animator>();
+
                 m_idleAnimator->copy(animator);
+            }
         }
     }
 }
