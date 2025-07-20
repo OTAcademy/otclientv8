@@ -423,7 +423,7 @@ void UIManager::importStyleFromOTML(const OTMLNodePtr& styleNode)
 
     // parse otui variable
     if (stdext::starts_with(tag, "$var-")) {
-        std::string var = tag.substr(6);
+        std::string var = tag.substr(5);
         addOTUIVar(var, styleNode->rawValue());
         return;
     }
@@ -535,7 +535,7 @@ UIWidgetPtr UIManager::loadUI(std::string file, const UIWidgetPtr& parent)
             std::string tag = node->tag();
             // parse otui variable
             if (stdext::starts_with(tag, "$var-")) {
-                std::string var = tag.substr(6);
+                std::string var = tag.substr(5);
                 addOTUIVar(var, node->rawValue());
                 continue;
             }
@@ -614,7 +614,7 @@ void UIManager::mergeStyle(std::string file, const UIWidgetPtr& widget)
             std::string tag = node->tag();
             // parse otui variable
             if (stdext::starts_with(tag, "$var-")) {
-                std::string var = tag.substr(6);
+                std::string var = tag.substr(5);
                 addOTUIVar(var, node->rawValue());
                 continue;
             }

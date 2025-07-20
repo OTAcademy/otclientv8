@@ -80,13 +80,13 @@ public:
     }
     bool hasOTUIVar(const std::string& key) {
         if (stdext::starts_with(key, "$var-")) {
-            return m_vars.find(key.substr(6)) != m_vars.end();
+            return m_vars.find(key.substr(5)) != m_vars.end();
         }
         return m_vars.find(key) != m_vars.end();
     }
     std::string getOTUIVar(const std::string& key) {
         if (stdext::starts_with(key, "$var-")) {
-            return m_vars[key.substr(6)];
+            return m_vars[key.substr(5)];
         }
         return m_vars[key];
     }
@@ -95,7 +95,7 @@ public:
             return key;
         }
         if (stdext::starts_with(key, "$var-")) {
-            return m_vars[key.substr(6)];
+            return m_vars[key.substr(5)];
         }
         return m_vars[key];
     }

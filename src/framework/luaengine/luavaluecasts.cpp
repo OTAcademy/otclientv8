@@ -82,7 +82,7 @@ int push_luavalue(const std::string& str)
 
 bool luavalue_cast(int index, std::string& str)
 {
-    str = g_ui.getOTUIVarSafe(g_lua.toString(index));
+    str = g_lua.toString(index);
     return true;
 }
 

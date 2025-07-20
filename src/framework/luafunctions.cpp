@@ -97,6 +97,7 @@ void Application::registerLuaFunctions()
         }
         return ret;
     });
+    g_lua.bindGlobalFunction("tovar", [](const std::string& key) { return g_ui.getOTUIVarSafe(key); });
 
     // Platform
     g_lua.registerSingletonClass("g_platform");
