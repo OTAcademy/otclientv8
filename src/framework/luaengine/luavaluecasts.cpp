@@ -333,3 +333,38 @@ bool luavalue_cast(int index, LuaObjectPtr& obj) {
     }
     return false;
 }
+
+// http result
+int push_luavalue(const HttpResult_ptr& result)
+{
+    g_lua.newTable();
+
+    g_lua.pushInteger(result->status);
+    g_lua.setField("status");
+
+    // headers table
+    g_lua.newTable();
+    for (const auto& kv : result->headers) {
+        g_lua.pushString(kv.second);
+        g_lua.setField(kv.first);
+    }
+    g_lua.setField("headers");
+
+    std::string body(result->body.begin(), result->body.end());
+    g_lua.pushString(body);
+    g_lua.setField("body");
+
+    g_lua.pushString(result->url);
+    g_lua.setField("url");
+
+    g_lua.pushInteger(result->redirects);
+    g_lua.setField("redirects");
+
+    g_lua.pushString(result->error);
+    g_lua.setField("error");
+
+    g_lua.pushInteger(result->operationId);
+    g_lua.setField("operationId");
+
+    return 1;
+}

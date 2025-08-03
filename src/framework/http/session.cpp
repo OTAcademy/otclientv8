@@ -41,12 +41,15 @@ void HttpSession::start() {
     m_request.target(parsedUrl.query);
     m_request.set(boost::beast::http::field::host, parsedUrl.domain);
     m_request.set(boost::beast::http::field::user_agent, m_agent);
-    if (!m_result->postData.empty()) {
+
+    for (auto& header : m_requestData->headers) {
+        m_request.insert(header.first, header.second);
+    }
+
+    if (!m_requestData->body.empty()) {
         m_request.method(boost::beast::http::verb::post);
-        m_request.body().assign(m_result->postData);
-        m_request.content_length(m_result->postData.size());
-        if (m_isJson)
-            m_request.set(boost::beast::http::field::content_type, "application/json");
+        m_request.body().assign(m_requestData->body);
+        m_request.content_length(m_requestData->body.size());
     }
 
     m_result->session = weak_from_this();
@@ -125,14 +128,12 @@ void HttpSession::on_read_header(const boost::system::error_code& ec, size_t byt
     m_result->size = atoi(std::string(msg["Content-Length"]).c_str());
     auto location = msg["Location"];
 
-    if (!location.empty()) {        
-        auto session = std::make_shared<HttpSession>(m_service, std::string(location), m_agent, m_timeout, m_isJson, m_result, m_callback);
+    if ((m_result->status >= 300 && m_result->status < 400) && !location.empty()) {
+        m_result->redirects++;
+        auto session = std::make_shared<HttpSession>(m_service, std::string(location), m_agent, m_requestData, m_result, m_callback);
         session->start();
         return close();
     }
-
-    if (msg.result_int() < 200 || msg.result_int() >= 300)
-        return onError("Invalid http status code", std::to_string(msg.result_int()));
 
     if (m_response.is_done()) { // there's nothing more to read
         return on_read(ec, 0);
@@ -158,12 +159,23 @@ void HttpSession::on_read(const boost::system::error_code& ec, size_t bytes_tran
         if (!m_result->finished) {
             m_result->finished = true;
             m_result->progress = 100;
+
+            for (const auto& header : m_response.get().base()) {
+                m_result->headers[std::string(header.name_string())] = std::string(header.value());
+            }
+
             auto buffer = m_response.get().body();
-            m_result->response.reserve(buffer.size());
+            m_result->body.reserve(buffer.size());
             auto buffers = buffer.data();
             for (auto b : buffers) {
-                m_result->response.insert(m_result->response.end(), static_cast<const uint8_t*>(b.data()), static_cast<const uint8_t*>(b.data()) + b.size());
+                m_result->body.insert(m_result->body.end(), static_cast<const uint8_t*>(b.data()), static_cast<const uint8_t*>(b.data()) + b.size());
             }
+
+            if (m_result->status < 200 || m_result->status >= 300) {
+                std::string reason = m_response.get().reason().to_string();
+                m_result->error = "HTTP error " + std::to_string(m_result->status) + " " + reason;
+            }
+
             m_callback(m_result);
         }
         return close();

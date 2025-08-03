@@ -381,7 +381,7 @@ std::string ResourceManager::readFileContents(const std::string& fileName, bool 
     if (fullPath.find("/downloads") != std::string::npos) {
         auto dfile = g_http.getFile(fullPath.substr(10));
         if (dfile)
-            return std::string(dfile->response.begin(), dfile->response.end());
+            return std::string(dfile->body.begin(), dfile->body.end());
     }
 
     PHYSFS_File* file = PHYSFS_openRead(fullPath.c_str());
@@ -426,9 +426,9 @@ bool ResourceManager::isFileEncryptedOrCompressed(const std::string& fileName)
     if (fullPath.find("/downloads") != std::string::npos) {
         auto dfile = g_http.getFile(fullPath.substr(10));
         if (dfile) {
-            if (dfile->response.size() < 10)
+            if (dfile->body.size() < 10)
                 return false;
-            fileContent = std::string(dfile->response.begin(), dfile->response.begin() + 10);
+            fileContent = std::string(dfile->body.begin(), dfile->body.begin() + 10);
         }
     }
 
@@ -706,7 +706,7 @@ void ResourceManager::updateData(const std::set<std::string>& files, bool reMoun
         zip_source_t* s;
         auto dFile = g_http.getFile(fileName);
         if (dFile) {
-            if ((s = zip_source_buffer(za, dFile->response.data(), dFile->response.size(), 0)) == NULL)
+            if ((s = zip_source_buffer(za, dFile->body.data(), dFile->body.size(), 0)) == NULL)
                 return g_logger.fatal(stdext::format("can't create source buffer: %s", zip_strerror(za)));
         } else {
             PHYSFS_File* file = PHYSFS_openRead((std::string("/") + fileName).c_str());
@@ -802,7 +802,7 @@ void ResourceManager::updateExecutable(std::string fileName)
     PHYSFS_file* file = PHYSFS_openWrite(newBinary.c_str());
     if (!file)
         return g_logger.fatal(stdext::format("can't open %s for writing: %s", newBinary, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())));
-    PHYSFS_writeBytes(file, dFile->response.data(), dFile->response.size());
+    PHYSFS_writeBytes(file, dFile->body.data(), dFile->body.size());
     PHYSFS_close(file);
 
     std::filesystem::path newBinaryPath(std::filesystem::u8path(PHYSFS_getWriteDir()));

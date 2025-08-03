@@ -53,4 +53,7 @@ extern void fatalError(const char* error, const char* file, int line);
 // logger
 #include "core/logger.h"
 
+// http
+#include "http/result.h"
+
 #endif

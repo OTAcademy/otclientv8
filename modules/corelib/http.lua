@@ -7,58 +7,66 @@ HTTP = {
   operations={},
 }
 
-function HTTP.get(url, callback)
+function HTTP.get(url, callback, headers)
   if not g_http or not g_http.get then
     return error("HTTP.get is not supported")
   end
-  local operation = g_http.get(url, HTTP.timeout)
+  headers = headers or {}
+  local operation = g_http.get(url, HTTP.timeout, headers)
   HTTP.operations[operation] = {type="get", url=url, callback=callback}  
   return operation
 end
 
-function HTTP.getJSON(url, callback)
+function HTTP.getJSON(url, callback, headers)
   if not g_http or not g_http.get then
     return error("HTTP.getJSON is not supported")
   end
-  local operation = g_http.get(url, HTTP.timeout)
+  headers = headers or {}
+  headers["Accept"] = "application/json"
+  local operation = g_http.get(url, HTTP.timeout, headers)
   HTTP.operations[operation] = {type="get", json=true, url=url, callback=callback}  
   return operation
 end
 
-function HTTP.post(url, data, callback)
+function HTTP.post(url, data, callback, headers)
   if not g_http or not g_http.post then
     return error("HTTP.post is not supported")
   end
   if type(data) == "table" then
     data = json.encode(data)
   end
-  local operation = g_http.post(url, data, HTTP.timeout)
+  headers = headers or {}
+  local operation = g_http.post(url, data, HTTP.timeout, headers)
   HTTP.operations[operation] = {type="post", url=url, callback=callback}
   return operation
 end
 
-function HTTP.postJSON(url, data, callback)
+function HTTP.postJSON(url, data, callback, headers)
   if not g_http or not g_http.post then
     return error("HTTP.postJSON is not supported")
   end
   if type(data) == "table" then
     data = json.encode(data)
   end
-  local operation = g_http.post(url, data, HTTP.timeout, true)
+  headers = headers or {}
+  headers["Accept"] = "application/json"
+  headers["Content-Type"] = "application/json"
+  local operation = g_http.post(url, data, HTTP.timeout, headers)
   HTTP.operations[operation] = {type="post", json=true, url=url, callback=callback}
   return operation
 end
 
-function HTTP.download(url, file, callback, progressCallback)
+function HTTP.download(url, file, callback, progressCallback, headers)
   if not g_http or not g_http.download then
     return error("HTTP.download is not supported")
   end
-  local operation = g_http.download(url, file, HTTP.timeout)
+  headers = headers or {}
+  local operation = g_http.download(url, file, HTTP.timeout, headers)
   HTTP.operations[operation] = {type="download", url=url, file=file, callback=callback, progressCallback=progressCallback}  
   return operation
 end
 
-function HTTP.downloadImage(url, callback)
+function HTTP.downloadImage(url, callback, headers)
   if not g_http or not g_http.download then
     return error("HTTP.downloadImage is not supported")
   end
@@ -70,7 +78,8 @@ function HTTP.downloadImage(url, callback)
   end
   local file = "autoimage_" .. HTTP.imageId .. ".png"
   HTTP.imageId = HTTP.imageId + 1
-  local operation = g_http.download(url, file, HTTP.timeout)
+  headers = headers or {}
+  local operation = g_http.download(url, file, HTTP.timeout, headers)
   HTTP.operations[operation] = {type="image", url=url, file=file, callback=callback}  
   return operation
 end
@@ -113,29 +122,31 @@ function HTTP.cancel(operationId)
   return g_http.cancel(operationId)
 end
 
-function HTTP.onGet(operationId, url, err, data)
+function HTTP.onGet(operationId, url, err, result)
   local operation = HTTP.operations[operationId]
-  if operation == nil then
-    return
-  end
-  if err and err:len() == 0 then
-    err = nil
-  end
-  if not err and operation.json then
-    if data:len() == 0 then
-      data = "null"
-    end
-    local status, result = pcall(function() return json.decode(data) end)
-    if not status then
-      err = "JSON ERROR: " .. result
-      if data and data:len() > 0 then
+  if not operation then return end
+
+  if err == "" then err = nil end
+  if result and result.error == "" then result.error = nil end
+
+  local data = (result and result.body) or ""
+  err = (result and result.error) or err
+
+  if operation.json then
+    local toDecode = #data > 0 and data or "null"
+    local success, parsed = pcall(json.decode, toDecode)
+    if success then
+      data = parsed
+    else
+      err = "JSON ERROR: " .. parsed
+      if #data > 0 then
         err = err .. " (" .. data:sub(1, 100) .. ")"
       end
-    end  
-    data = result
+    end
   end
+
   if operation.callback then
-    operation.callback(data, err)
+    operation.callback(data, err, result)
   end
 end
 
@@ -147,29 +158,31 @@ function HTTP.onGetProgress(operationId, url, progress)
   
 end
 
-function HTTP.onPost(operationId, url, err, data)
+function HTTP.onPost(operationId, url, err, result)
   local operation = HTTP.operations[operationId]
-  if operation == nil then
-    return
-  end
-  if err and err:len() == 0 then
-    err = nil
-  end
-  if not err and operation.json then
-    if data:len() == 0 then
-      data = "null"
-    end
-    local status, result = pcall(function() return json.decode(data) end)
-    if not status then
-      err = "JSON ERROR: " .. result
-      if data and data:len() > 0 then
+  if not operation then return end
+
+  if err == "" then err = nil end
+  if result and result.error == "" then result.error = nil end
+
+  local data = (result and result.body) or ""
+  err = (result and result.error) or err
+
+  if operation.json then
+    local toDecode = #data > 0 and data or "null"
+    local success, parsed = pcall(json.decode, toDecode)
+    if success then
+      data = parsed
+    else
+      err = "JSON ERROR: " .. parsed
+      if #data > 0 then
         err = err .. " (" .. data:sub(1, 100) .. ")"
       end
-    end  
-    data = result
+    end
   end
+
   if operation.callback then
-    operation.callback(data, err)
+    operation.callback(data, err, result)
   end
 end
 
