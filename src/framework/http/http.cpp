@@ -39,25 +39,24 @@ void Http::terminate() {
     m_thread.join();
 }
 
-int Http::get(const std::string& url, int timeout) {
+int Http::get(const std::string& url, int timeout, const std::map<std::string, std::string>& headers) {
     if (!timeout) // lua is not working with default values
-        timeout = 5;
+        timeout = DefaultTimeout;
     int operationId = m_operationId++;
 
-    boost::asio::post(m_ios, [&, url, timeout, operationId] {
-        auto result = std::make_shared<HttpResult>();
-        result->url = url;
-        result->operationId = operationId;
+    boost::asio::post(m_ios, [&, url, timeout, operationId, headers] {
+        auto request = std::make_shared<HttpRequest>(url, headers, timeout);
+        auto result = std::make_shared<HttpResult>(url, operationId);
         m_operations[operationId] = result;
 #ifndef __EMSCRIPTEN__
-        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, false, result, [&](HttpResult_ptr result) {
+        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, request, result, [&](HttpResult_ptr result) {
             bool finished = result->finished;
             g_dispatcher.addEventEx("Http::onGet", [result, finished]() {
                 if (!finished) {
                     g_lua.callGlobalField("g_http", "onGetProgress", result->operationId, result->url, result->progress);
                     return;
                 }
-                g_lua.callGlobalField("g_http", "onGet", result->operationId, result->url, result->error, std::string(result->response.begin(), result->response.end()));
+                g_lua.callGlobalField("g_http", "onGet", result->operationId, result->url, result->error, result);
             });
             if (finished) {
                 m_operations.erase(operationId);
@@ -70,30 +69,28 @@ int Http::get(const std::string& url, int timeout) {
     return operationId;
 }
 
-int Http::post(const std::string& url, const std::string& data, int timeout, bool isJson) {
+int Http::post(const std::string& url, const std::string& data, int timeout, const std::map<std::string, std::string>& headers) {
     if (!timeout) // lua is not working with default values
-        timeout = 5;
+        timeout = DefaultTimeout;
     if (data.empty()) {
         g_logger.error(stdext::format("Invalid post request for %s, empty data, use get instead", url));
         return -1;
     }
 
     int operationId = m_operationId++;
-    boost::asio::post(m_ios, [&, url, data, timeout, isJson, operationId] {
-        auto result = std::make_shared<HttpResult>();
-        result->url = url;
-        result->operationId = operationId;
-        result->postData = data;
+    boost::asio::post(m_ios, [&, url, data, timeout, operationId, headers] {
+        auto request = std::make_shared<HttpRequest>(url, headers, data, timeout);
+        auto result = std::make_shared<HttpResult>(url, operationId);
         m_operations[operationId] = result;
 #ifndef __EMSCRIPTEN__
-        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, isJson, result, [&](HttpResult_ptr result) {
+        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, request, result, [&](HttpResult_ptr result) {
             bool finished = result->finished;
             g_dispatcher.addEventEx("Http::onPost", [result, finished]() {
                 if (!finished) {
                     g_lua.callGlobalField("g_http", "onPostProgress", result->operationId, result->url, result->progress);
                     return;
                 }
-                g_lua.callGlobalField("g_http", "onPost", result->operationId, result->url, result->error, std::string(result->response.begin(), result->response.end()));
+                g_lua.callGlobalField("g_http", "onPost", result->operationId, result->url, result->error, result);
             });
             if (finished) {
                 m_operations.erase(operationId);
@@ -105,18 +102,17 @@ int Http::post(const std::string& url, const std::string& data, int timeout, boo
     return operationId;
 }
 
-int Http::download(const std::string& url, std::string path, int timeout) {
+int Http::download(const std::string& url, std::string path, int timeout, const std::map<std::string, std::string>& headers) {
     if (!timeout) // lua is not working with default values
-        timeout = 5;
+        timeout = DefaultTimeout;
 
     int operationId = m_operationId++;
-    boost::asio::post(m_ios, [&, url, path, timeout, operationId] {
-        auto result = std::make_shared<HttpResult>();
-        result->url = url;
-        result->operationId = operationId;
+    boost::asio::post(m_ios, [&, url, path, timeout, operationId, headers] {
+        auto request = std::make_shared<HttpRequest>(url, headers, timeout);
+        auto result = std::make_shared<HttpResult>(url, operationId);
         m_operations[operationId] = result;
 #ifndef __EMSCRIPTEN__
-        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, timeout, false, result, [&, path](HttpResult_ptr result) {
+        auto session = std::make_shared<HttpSession>(m_ios, url, m_userAgent, request, result, [&, path](HttpResult_ptr result) {
             m_speed = ((result->size) * 10) / (1 + stdext::micros() - m_lastSpeedUpdate);
             m_lastSpeedUpdate = stdext::micros();
 
@@ -127,7 +123,7 @@ int Http::download(const std::string& url, std::string path, int timeout) {
                 });
                 return;
             }
-            std::string checksum = g_crypt.crc32(std::string(result->response.begin(), result->response.end()), false);
+            std::string checksum = g_crypt.crc32(std::string(result->body.begin(), result->body.end()), false);
             g_dispatcher.addEventEx("Http::onDownload", [&, result, path, checksum]() {
                 if (result->error.empty()) {
                     if (!path.empty() && path[0] == '/')
@@ -135,7 +131,7 @@ int Http::download(const std::string& url, std::string path, int timeout) {
                     else
                         m_downloads[path] = result;
                 }
-                g_lua.callGlobalField("g_http", "onDownload", result->operationId, result->url, result->error, path, checksum);
+                g_lua.callGlobalField("g_http", "onDownload", result->operationId, result->url, result->error, path, checksum, result);
             });
             m_operations.erase(operationId);
         });
@@ -148,7 +144,7 @@ int Http::download(const std::string& url, std::string path, int timeout) {
 int Http::ws(const std::string& url, int timeout)
 {
     if (!timeout) // lua is not working with default values
-        timeout = 5;
+        timeout = DefaultTimeout;
     int operationId = m_operationId++;
 
     boost::asio::post(m_ios, [&, url, timeout, operationId] {

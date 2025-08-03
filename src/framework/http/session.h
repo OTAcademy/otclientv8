@@ -14,13 +14,14 @@ class HttpSession : public std::enable_shared_from_this<HttpSession>
 {
 public:
 
-    HttpSession(boost::asio::io_service& service, const std::string& url, const std::string& agent, 
-                int timeout, bool isJson, HttpResult_ptr result, HttpResult_cb callback) :
-        m_service(service), m_url(url), m_agent(agent), m_socket(service), m_resolver(service), 
-        m_callback(callback), m_result(result), m_timer(service), m_timeout(timeout), m_isJson(isJson)
+    HttpSession(boost::asio::io_service& service, const std::string& url, const std::string& agent,
+        HttpRequest_ptr request, HttpResult_ptr result, HttpResult_cb callback) :
+        m_service(service), m_url(url), m_agent(agent), m_socket(service), m_resolver(service),
+        m_callback(callback), m_result(result), m_timer(service), m_requestData(request), m_timeout(request->timeout)
     {
         VALIDATE(m_callback);
         VALIDATE(m_result);
+        VALIDATE(m_requestData);
     };
 
     void start();
@@ -35,9 +36,9 @@ private:
     boost::asio::ip::tcp::resolver m_resolver;
     HttpResult_cb m_callback;
     HttpResult_ptr m_result;
+    HttpRequest_ptr m_requestData;
     boost::asio::steady_timer m_timer;
     int m_timeout;
-    bool m_isJson = false;
 
     std::string m_domain;
     std::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> m_ssl;

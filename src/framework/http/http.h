@@ -13,9 +13,11 @@ public:
     void init();
     void terminate();
 
-    int get(const std::string& url, int timeout = 5);
-    int post(const std::string& url, const std::string& data, int timeout = 5, bool isJson = false);
-    int download(const std::string& url, std::string path, int timeout = 5);
+    static constexpr int DefaultTimeout = 5;
+
+    int get(const std::string& url, int timeout = DefaultTimeout, const std::map<std::string, std::string>& headers = {});
+    int post(const std::string& url, const std::string& data, int timeout = DefaultTimeout, const std::map<std::string, std::string>& headers = {});
+    int download(const std::string& url, std::string path, int timeout = DefaultTimeout, const std::map<std::string, std::string>& headers = {});
     int ws(const std::string& url, int timeout = 5);
     bool wsSend(int operationId, std::string message);
     bool wsClose(int operationId);

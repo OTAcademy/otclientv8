@@ -97,6 +97,8 @@ bool luavalue_cast(int index, Size& size);
 int push_luavalue(const OTMLNodePtr& node);
 bool luavalue_cast(int index, OTMLNodePtr& node);
 
+int push_luavalue(const HttpResult_ptr& result);
+
 // enum
 template<class T>
 typename std::enable_if<std::is_enum<T>::value, int>::type
