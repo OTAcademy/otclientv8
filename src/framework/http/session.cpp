@@ -172,7 +172,7 @@ void HttpSession::on_read(const boost::system::error_code& ec, size_t bytes_tran
             }
 
             if (m_result->status < 200 || m_result->status >= 300) {
-                std::string reason = m_response.get().reason().to_string();
+                std::string reason(m_response.get().reason());
                 m_result->error = "HTTP error " + std::to_string(m_result->status) + " " + reason;
             }
 
