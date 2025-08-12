@@ -173,6 +173,7 @@ public:
     Rect getMarginRect();
     Rect getChildrenRect();
     UIAnchorLayoutPtr getAnchoredLayout();
+    std::vector<AnchorGroup> getAnchorsGroup();
     UIWidgetPtr getRootParent();
     UIWidgetPtr getChildAfter(const UIWidgetPtr& relativeChild);
     UIWidgetPtr getChildBefore(const UIWidgetPtr& relativeChild);

@@ -368,3 +368,16 @@ int push_luavalue(const HttpResult_ptr& result)
 
     return 1;
 }
+
+// anchors
+int push_luavalue(const AnchorGroup& anchors)
+{
+    g_lua.createTable(0, 3);
+    g_lua.pushInteger(anchors.anchored);
+    g_lua.setField("anchored");
+    g_lua.pushString(anchors.widget);
+    g_lua.setField("widget");
+    g_lua.pushInteger(anchors.hooked);
+    g_lua.setField("hooked");
+    return 1;
+}
