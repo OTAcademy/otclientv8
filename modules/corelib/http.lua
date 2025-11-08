@@ -278,6 +278,8 @@ function HTTP.onWsClose(operationId, message)
   if operation.callbacks.onClose then
     operation.callbacks.onClose(message, operationId)
   end
+
+  HTTP.operations[operationId] = nil
 end
 
 function HTTP.onWsError(operationId, message)
