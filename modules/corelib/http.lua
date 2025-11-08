@@ -148,6 +148,8 @@ function HTTP.onGet(operationId, url, err, result)
   if operation.callback then
     operation.callback(data, err, result)
   end
+
+  HTTP.operations[operationId] = nil
 end
 
 function HTTP.onGetProgress(operationId, url, progress)
@@ -184,6 +186,8 @@ function HTTP.onPost(operationId, url, err, result)
   if operation.callback then
     operation.callback(data, err, result)
   end
+
+  HTTP.operations[operationId] = nil
 end
 
 function HTTP.onPostProgress(operationId, url, progress)
@@ -211,6 +215,8 @@ function HTTP.onDownload(operationId, url, err, path, checksum)
       operation.callback(path, checksum, err)
     end
   end
+
+  HTTP.operations[operationId] = nil
 end
 
 function HTTP.onDownloadProgress(operationId, url, progress, speed)
