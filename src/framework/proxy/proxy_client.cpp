@@ -45,7 +45,7 @@ std::string Proxy::getDebugInfo()
 {
     std::stringstream ss;
     ss << "P: " << getPing() << " RP: " << getRealPing() << " In: " << m_packetsRecived << " (" << m_bytesRecived
-        << ")  Out: " << m_packetsSent << " (" << m_bytesSent << ") Conns: " << m_connections << " Sess: " << m_sessions << " R: " << m_resolvedIp;
+        << ")  Out: " << m_packetsSent << " (" << m_bytesSent << ") Conns: " << m_connections << " Sess: " << m_sessions << " R: " << m_resolvedIp << " DPort: " << m_destinationPort;
     return ss.str();
 }
 
@@ -358,6 +358,10 @@ void Session::selectProxies()
     ProxyPtr best_ping = nullptr;
     ProxyPtr candidate_proxy = nullptr;
     for (auto& proxy : g_proxies) {
+        if (proxy->hasDestinationPort() && proxy->getDestinationPort() != m_port) {
+            continue;
+        }
+
         if (!proxy->isConnected()) {
             m_proxies.erase(proxy);
             continue;

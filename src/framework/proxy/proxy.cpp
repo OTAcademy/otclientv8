@@ -64,6 +64,21 @@ void ProxyManager::addProxy(const std::string& host, uint16_t port, int priority
     m_proxies.push_back(proxy);
 }
 
+void ProxyManager::addExtendedProxy(const std::string& host, uint16_t port, uint16_t destinationPort, int priority)
+{
+    for (auto& proxy_weak : m_proxies) {
+        if (auto proxy = proxy_weak.lock()) {
+            if (proxy->getHost() == host && proxy->getPort() == port && proxy->getDestinationPort() == destinationPort) {
+                return; // already exist
+            }
+        }
+    }
+
+    auto proxy = std::make_shared<Proxy>(m_io, host, port, destinationPort, priority);
+    proxy->start();
+    m_proxies.push_back(proxy);
+}
+
 void ProxyManager::removeProxy(const std::string& host, uint16_t port)
 {
     for (auto it = m_proxies.begin(); it != m_proxies.end(); ) {
@@ -87,6 +102,23 @@ uint32_t ProxyManager::addSession(uint16_t port, std::function<void(ProxyPacketP
     session->start(m_maxActiveProxies);
     m_sessions.push_back(session);
     return session->getId();
+}
+
+void ProxyManager::removeExtendedProxy(const std::string& host, uint16_t port, uint16_t destinationPort)
+{
+    for (auto it = m_proxies.begin(); it != m_proxies.end(); ) {
+        if (auto proxy = it->lock()) {
+            if (proxy->getHost() == host && proxy->getPort() == port && proxy->getDestinationPort() == destinationPort) {
+                proxy->terminate();
+                it = m_proxies.erase(it);
+            }
+            else {
+                ++it;
+            }
+            continue;
+        }
+        it = m_proxies.erase(it);
+    }
 }
 
 void ProxyManager::removeSession(uint32_t sessionId)

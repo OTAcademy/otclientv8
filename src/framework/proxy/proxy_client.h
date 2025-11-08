@@ -40,6 +40,16 @@ public:
         m_host = host;
         m_port = port;
         m_priority = priority;
+        m_destinationPort = 0;
+    }
+
+    Proxy(boost::asio::io_context& io, const std::string& host, uint16_t port, uint16_t destinationPort, int priority)
+        : m_io(io), m_timer(io), m_socket(io), m_resolver(io), m_state(STATE_NOT_CONNECTED)
+    {
+        m_host = host;
+        m_port = port;
+        m_priority = priority;
+        m_destinationPort = destinationPort;
     }
 
     // thread-safe
@@ -52,6 +62,8 @@ public:
     bool isConnected() { return m_state == STATE_CONNECTED; }
     std::string getHost() { return m_host; }
     uint16_t getPort() { return m_port; }
+    uint16_t getDestinationPort() { return m_destinationPort; }
+    bool hasDestinationPort() { return m_destinationPort != 0; }
     std::string getDebugInfo();
     bool isActive() { return m_sessions > 0; }
 
@@ -83,6 +95,7 @@ private:
 
     std::string m_host;
     uint16_t m_port;
+    uint16_t m_destinationPort;
 
     bool m_terminated = false;
 
