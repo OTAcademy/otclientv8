@@ -175,6 +175,9 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_map", "isWalkable", &Map::isWalkable, &g_map);
     g_lua.bindSingletonFunction("g_map", "checkSightLine", &Map::checkSightLine, &g_map);
     g_lua.bindSingletonFunction("g_map", "isSightClear", &Map::isSightClear, &g_map);
+    g_lua.bindSingletonFunction("g_map", "saveImage", &Map::saveImage, &g_map);
+    g_lua.bindSingletonFunction("g_map", "getLowerFloorsShadowPercent", &Map::getLowerFloorsShadowPercent, &g_map);
+    g_lua.bindSingletonFunction("g_map", "setLowerFloorsShadowPercent", &Map::setLowerFloorsShadowPercent, &g_map);
 
     g_lua.registerSingletonClass("g_minimap");
     g_lua.bindSingletonFunction("g_minimap", "clean", &Minimap::clean, &g_minimap);

@@ -27,6 +27,7 @@
 #include <framework/core/filestream.h>
 #include <framework/graphics/apngloader.h>
 #include <framework/util/qrcodegen.h>
+#include <client/spritemanager.h>
 
 Image::Image(const Size& size, int bpp, uint8 *pixels)
 {
@@ -213,6 +214,63 @@ bool Image::nextMipmap()
     m_pixels = pixels;
     m_size = Size(ow, oh);
     return true;
+}
+
+void Image::cutBottomRight(int widthCut, int heightCut)
+{
+    int width = m_size.width() - widthCut;
+    int height = m_size.height() - heightCut;
+    if (height <= 0 || width <= 0)
+        return;
+
+    int spriteSize = g_sprites.spriteSize();
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int targetPos = (y * width + x) * m_bpp;
+            int sourcePos = ((y + spriteSize) * m_size.width() + x + spriteSize) * m_bpp;
+            m_pixels[targetPos] = m_pixels[sourcePos];
+            m_pixels[targetPos + 1] = m_pixels[sourcePos + 1];
+            m_pixels[targetPos + 2] = m_pixels[sourcePos + 2];
+            m_pixels[targetPos + 3] = m_pixels[sourcePos + 3];
+        }
+    }
+    m_size.setWidth(width);
+    m_size.setHeight(height);
+    m_pixels.resize(width * height * m_bpp, 0);
+}
+
+void Image::addShadowToSquare(const Point& dest, int squareSize, uint8 orginalPercent)
+{
+    assert(m_bpp == 4);
+
+    for(int p = 0; p < squareSize * squareSize; ++p) {
+        int x = p % squareSize;
+        int y = p / squareSize;
+        int pos = ((dest.y + y) * m_size.width() + (dest.x + x)) * 4;
+
+        if (m_pixels[pos+3] != 0) {
+            m_pixels[pos+0] = uint8((m_pixels[pos+0] * orginalPercent) / 100);
+            m_pixels[pos+1] = uint8((m_pixels[pos+1] * orginalPercent) / 100);
+            m_pixels[pos+2] = uint8((m_pixels[pos+2] * orginalPercent) / 100);
+        }
+    }
+}
+
+void Image::addShadow(uint8 orginalPercent)
+{
+    assert(m_bpp == 4);
+
+    for (int p = 0; p < getPixelCount(); ++p) {
+        int p4 = p * 4;
+
+        if (m_pixels[p4 + 3] != 0) {
+            m_pixels[p4 + 0] = uint8((m_pixels[p4 + 0] * orginalPercent) / 100);
+            m_pixels[p4 + 1] = uint8((m_pixels[p4 + 1] * orginalPercent) / 100);
+            m_pixels[p4 + 2] = uint8((m_pixels[p4 + 2] * orginalPercent) / 100);
+        }
+    }
 }
 
 /*

@@ -173,6 +173,10 @@ public:
     void loadOtbm(const std::string& fileName);
     void saveOtbm(const std::string& fileName);
 
+    void saveImage(const std::string& fileName, int minX, int minY, int maxX, int maxY, short z, bool drawLowerFloors);
+    uint8 getLowerFloorsShadowPercent() { return lowerFloorsShadowPercent; }
+    void setLowerFloorsShadowPercent(uint8 newLowerFloorsShadowPercent) { lowerFloorsShadowPercent = newLowerFloorsShadowPercent; }
+
     // otbm attributes (description, size, etc.)
     void setHouseFile(const std::string& file) { m_attribs.set(OTBM_ATTR_HOUSE_FILE, file); }
     void setSpawnFile(const std::string& file) { m_attribs.set(OTBM_ATTR_SPAWN_FILE, file); }
@@ -300,6 +304,9 @@ private:
     stdext::packed_storage<uint8> m_attribs;
     AwareRange m_awareRange;
     static TilePtr m_nulltile;
+
+    // only for map PNG image generator
+    uint8 lowerFloorsShadowPercent = 0;
 };
 
 extern Map g_map;

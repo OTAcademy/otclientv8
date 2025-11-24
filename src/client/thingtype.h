@@ -185,6 +185,7 @@ public:
     Rect getDrawSize(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase);
     void drawWithShader(const Point& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, const std::string& shader, Color color = Color::white, LightView* lightView = nullptr);
     void drawWithShader(const Rect& dest, int layer, int xPattern, int yPattern, int zPattern, int animationPhase, const std::string& shader, Color color = Color::white);
+    bool drawToImage(const Point& dest, int xPattern, int yPattern, int zPattern, ImagePtr image);
 
     uint16 getId() { return m_id; }
     ThingCategory getCategory() { return m_category; }

@@ -42,6 +42,9 @@ public:
     ImagePtr upscale();
     void resize(const Size& size) { m_size = size; m_pixels.resize(size.area() * m_bpp, 0); }
     bool nextMipmap();
+    void cutBottomRight(int widthCut, int heightCut);
+    void addShadowToSquare(const Point& dest, int squareSize, uint8 orginalPercent);
+    void addShadow(uint8 orginalPercent);
 
     void setPixel(int x, int y, uint8 *pixel) { memcpy(&m_pixels[(y * m_size.width() + x) * m_bpp], pixel, m_bpp);}
     void setPixel(int x, int y, uint32_t argb) { setPixel(x, y, (uint8*)&argb); }

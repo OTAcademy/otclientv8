@@ -129,6 +129,17 @@ void Item::draw(const Rect& dest, bool animate)
     }
 }
 
+bool Item::drawToImage(const Point& dest, ImagePtr image)
+{
+    if (m_clientId == 0)
+        return false;
+
+    int xPattern = 0, yPattern = 0, zPattern = 0;
+    calculatePatterns(xPattern, yPattern, zPattern);
+
+    return rawGetThingType()->drawToImage(dest, xPattern, yPattern, zPattern, image);
+}
+
 void Item::setId(uint32 id)
 {
     if(!g_things.isValidDatId(id, ThingCategoryItem))

@@ -713,6 +713,35 @@ void ThingType::drawWithShader(const Rect& dest, int layer, int xPattern, int yP
     //return g_drawQueue->addTexturedRect(Rect(dest.topLeft() + (textureOffset * scale), textureRect.size() * scale), texture, textureRect, color);
 }
 
+bool ThingType::drawToImage(const Point& dest, int xPattern, int yPattern, int zPattern, ImagePtr image)
+{
+    if (m_null)
+        return false;
+
+    bool anythingDrawn = false;
+    int spriteSize = g_sprites.spriteSize();
+
+    for (int l = 0; l < m_layers; ++l) {
+        for (int w = 0; w < m_size.width(); ++w)
+        {
+            int x = dest.x;
+            for (int h = 0; h < m_size.height(); ++h)
+            {
+                int y = dest.y;
+                int dx = x + spriteSize * (m_size.width() - w - 1) - spriteSize * (m_size.width() - 1);
+                int dy = y + spriteSize * (m_size.height() - h - 1) - spriteSize * (m_size.height() - 1);
+                if (dx >= 0 && dy >= 0)
+                {
+                    anythingDrawn = true;
+                    image->blit(Point(dx, dy), g_sprites.getSpriteImage(m_spritesIndex[getSpriteIndex(w, h, l, xPattern, yPattern, zPattern, 0)]));
+                }
+            }
+        }
+    }
+
+    return anythingDrawn;
+}
+
 const TexturePtr& ThingType::getTexture(int animationPhase)
 {
     m_lastUsage = g_clock.seconds();
