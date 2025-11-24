@@ -30,7 +30,8 @@
 enum {
     MMBLOCK_SIZE = 64,
     OTMM_SIGNATURE = 0x4D4d544F,
-    OTMM_VERSION = 1
+    OTMM_VERSION = 1,
+    OTMM_VALID = 0x444F4E45
 };
 
 enum MinimapTileFlags {
