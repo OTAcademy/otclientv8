@@ -938,7 +938,9 @@ void Application::registerLuaFunctions()
 
     g_lua.registerSingletonClass("g_proxy");
     g_lua.bindSingletonFunction("g_proxy", "addProxy", &ProxyManager::addProxy, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "addExtendedProxy", &ProxyManager::addExtendedProxy, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "removeProxy", &ProxyManager::removeProxy, &g_proxy);
+    g_lua.bindSingletonFunction("g_proxy", "removeExtendedProxy", &ProxyManager::removeExtendedProxy, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "clear", &ProxyManager::clear, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "setMaxActiveProxies", &ProxyManager::setMaxActiveProxies, &g_proxy);
     g_lua.bindSingletonFunction("g_proxy", "getProxies", &ProxyManager::getProxies, &g_proxy);

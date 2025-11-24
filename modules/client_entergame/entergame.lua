@@ -66,8 +66,16 @@ local function onUpdateNeeded(protocol, signature)
 end
 
 local function onProxyList(protocol, proxies)
+  if proxies == nil then
+    return
+  end
+
   for _, proxy in ipairs(proxies) do
-    g_proxy.addProxy(proxy["host"], proxy["port"], proxy["priority"])
+    if proxy["destinationPort"] ~= nil then
+      g_proxy.addExtendedProxy(proxy["host"], tonumber(proxy["port"]), tonumber(proxy["destinationPort"]), tonumber(proxy["priority"]))
+    else
+      g_proxy.addProxy(proxy["host"], tonumber(proxy["port"]), tonumber(proxy["priority"]))
+    end
   end
 end
 
@@ -184,11 +192,7 @@ local function onTibia12HTTPResult(session, playdata)
   -- proxies
   if g_proxy then
     g_proxy.clear()
-    if playdata["proxies"] then
-      for i, proxy in ipairs(playdata["proxies"]) do
-        g_proxy.addProxy(proxy["host"], tonumber(proxy["port"]), tonumber(proxy["priority"]))
-      end
-    end
+    onProxyList(nil, playdata["proxies"])
   end
   
   g_game.setCustomProtocolVersion(0)
@@ -283,11 +287,7 @@ local function onHTTPResult(data, err)
   -- proxies
   if g_proxy then
     g_proxy.clear()
-    if proxies then
-      for i, proxy in ipairs(proxies) do
-        g_proxy.addProxy(proxy["host"], tonumber(proxy["port"]), tonumber(proxy["priority"]))
-      end
-    end
+    onProxyList(nil, proxies)
   end
   
   onCharacterList(nil, characters, account, nil)  

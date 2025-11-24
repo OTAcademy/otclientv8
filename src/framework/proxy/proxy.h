@@ -19,7 +19,9 @@ public:
     }
     bool isActive();
     void addProxy(const std::string& host, uint16_t port, int priority);
+    void addExtendedProxy(const std::string& host, uint16_t port, uint16_t destinationPort, int priority);
     void removeProxy(const std::string& host, uint16_t port);
+    void removeExtendedProxy(const std::string& host, uint16_t port, uint16_t destinationPort);
     uint32_t addSession(uint16_t port, std::function<void(ProxyPacketPtr)> recvCallback, std::function<void(boost::system::error_code)> disconnectCallback);
     void removeSession(uint32_t sessionId);
     void send(uint32_t sessionId, ProxyPacketPtr packet);
