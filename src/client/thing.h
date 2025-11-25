@@ -38,6 +38,7 @@ public:
     virtual ~Thing();
 
     virtual void draw(const Point& dest, bool animate = true, LightView* lightView = nullptr) { }
+    virtual bool drawToImage(const Point& dest, ImagePtr image) { return false; }
 
     virtual void setId(uint32 id) { }
     void setPosition(const Position& position);

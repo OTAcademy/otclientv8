@@ -71,6 +71,7 @@ public:
     void drawTop(const Point& dest, LightView* lightView = nullptr);
     void drawTexts(Point dest);
     void drawWidget(Point dest);
+    bool drawToImage(const Point& dest, ImagePtr image);
 
 public:
     void clean();

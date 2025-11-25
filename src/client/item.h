@@ -84,6 +84,7 @@ public:
 
     void draw(const Point& dest, bool animate = true, LightView* lightView = nullptr);
     void draw(const Rect& dest, bool animate = true);
+    bool drawToImage(const Point& dest, ImagePtr image);
 
     void setId(uint32 id);
     void setOtbId(uint16 id);

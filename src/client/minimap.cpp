@@ -310,9 +310,24 @@ bool Minimap::loadImage(const std::string& fileName, const Position& topLeft, fl
     }
 }
 
-void Minimap::saveImage(const std::string& fileName, const Rect& mapRect)
+void Minimap::saveImage(const std::string& fileName, int minX, int minY, int maxX, int maxY, short z)
 {
-    //TODO
+   ImagePtr image(new Image(Size(maxX - minX, maxY - minY)));
+
+   for (int x = minX; x < maxX; x++) {
+           for (int y = minY; y < maxY; y++) {
+                   uint8 c = getTile(Position(x, y, z)).color;
+                   Color col = Color::alpha;
+                   if(c != 255) {
+                           col = Color::from8bit(c);
+                   }
+                   col.setAlpha(255);
+                   image->setPixel(x - minX, y - minY, col);
+
+           }
+   }
+
+   image->savePNG(fileName);
 }
 
 bool Minimap::loadOtmm(const std::string& fileName)
@@ -447,6 +462,19 @@ void Minimap::saveOtmm(const std::string& fileName)
         if(std::filesystem::file_size(tmpFilePath) > 1024) {
             std::filesystem::rename(tmpFilePath, filePath);
         }
+/*
+        std::stringstream path;
+        path << "exported_minimaps/"<< fileName;
+        std::ofstream outfile(path.str(), std::ofstream::binary);
+        if (!outfile.is_open() || !outfile.good()) {
+            g_logger.error(stdext::format("Unable to save minimap to '%s'", path.str()));
+            return;
+        }
+
+        std::string data = g_resources.readFileContents(fileName);
+        outfile.write(data.c_str(), data.length());
+        outfile.close();
+*/
 #endif
     } catch (stdext::exception& e) {
         g_logger.error(stdext::format("failed to save OTMM minimap: %s", e.what()));

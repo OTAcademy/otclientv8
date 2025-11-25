@@ -259,6 +259,58 @@ void Tile::drawWidget(Point dest)
     m_widget->draw(dest_rect, Fw::ForegroundPane);
 }
 
+bool Tile::drawToImage(const Point& dest, ImagePtr image)
+{
+    bool anythingDrawn = false;
+    int x = dest.x;
+    int y = dest.y;
+
+    // drawGround
+    m_drawElevation = 0;
+    for (const ThingPtr& thing : m_things) {
+        if (!thing->isGround() && !thing->isGroundBorder() && !thing->isOnBottom())
+            break;
+        if (thing->isHidden())
+            continue;
+/*
+// OLD 'hack' to fix tables
+        if (thing->isGround() || thing->isGroundBorder() || thing->isOnBottom()) {
+            if (thing->getId() == 2322 || thing->getId() == 2323)
+                m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+
+            anythingDrawn |= thing->drawToImage(Point(x - m_drawElevation, y - m_drawElevation), image);
+        }
+
+        if (thing->getId() != 2322 && thing->getId() != 2323)
+            m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+*/
+        anythingDrawn |= thing->drawToImage(Point(x - m_drawElevation, y - m_drawElevation), image);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+    }
+
+    // drawBottom
+    for (auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
+        const ThingPtr& thing = *it;
+        if (thing->isOnTop() || thing->isOnBottom() || thing->isGroundBorder() || thing->isGround() || thing->isCreature())
+            break;
+        if (thing->isHidden())
+            continue;
+
+        anythingDrawn |= thing->drawToImage(Point(x - m_drawElevation, y - m_drawElevation), image);
+        m_drawElevation = std::min<uint8_t>(m_drawElevation + thing->getElevation(), Otc::MAX_ELEVATION);
+    }
+
+    // drawTop
+    for (const ThingPtr& thing : m_things) {
+        if (!thing->isOnTop() || !thing->isHidden())
+            continue;
+
+        anythingDrawn |= thing->drawToImage(Point(x - m_drawElevation, y - m_drawElevation), image);
+    }
+
+    return anythingDrawn;
+}
+
 void Tile::clean()
 {
     while(!m_things.empty())

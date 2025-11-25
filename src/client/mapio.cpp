@@ -29,8 +29,10 @@
 #include <framework/core/resourcemanager.h>
 #include <framework/core/filestream.h>
 #include <framework/core/binarytree.h>
+#include <framework/graphics/image.h>
 #include <framework/xml/tinyxml.h>
 #include <framework/ui/uiwidget.h>
+#include <client/spritemanager.h>
 
 void Map::loadOtbm(const std::string& fileName)
 {
@@ -532,6 +534,75 @@ void Map::saveOtcm(const std::string& fileName)
         fin->close();
     } catch(stdext::exception& e) {
         g_logger.error(stdext::format("failed to save OTCM map: %s", e.what()));
+    }
+}
+
+void Map::saveImage(const std::string& fileName, int minX, int minY, int maxX, int maxY, short z, bool drawLowerFloors/* = false*/)
+{
+    Position position;
+    int sizeX = maxX - minX;
+    int sizeY = maxY - minY;
+    if (sizeX <= 0 || sizeY <= 0) {
+        std::cout << "Max position is lower than min position! Cannot generate image!" << std::endl;
+        return;
+    }
+
+    bool anythingDrawn = false;
+    int spriteSize = g_sprites.spriteSize();
+    // for generation time image is 2 tiles bigger, because of 64x64 items
+    int extraBottomRightTiles = 2;
+    ImagePtr image(new Image(Size(spriteSize * (sizeX + extraBottomRightTiles), spriteSize * (sizeY + extraBottomRightTiles))));
+
+    int offset = 0;
+    if (drawLowerFloors) {
+        short lowestFloor = 15;
+        if (z <= 7)
+            lowestFloor = 7;
+
+        for (short floor = lowestFloor; floor > z; floor--) {
+            position.z = floor;
+            offset = floor - z;
+            for (int x = -offset; x <= sizeX; x++) {
+                for (int y = -offset; y <= sizeY; y++) {
+                    position.x = minX + x;
+                    position.y = minY + y;
+                    if (const TilePtr &tile = getTile(position)) {
+                        int offX = x + 1 + offset;
+                        int offY = y + 1 + offset;
+                        if (offX < sizeX + extraBottomRightTiles && offY < sizeY + extraBottomRightTiles) {
+                            Point imageOffset(offX * spriteSize, offY * spriteSize);
+                            anythingDrawn |= tile->drawToImage(imageOffset, image);
+                        }
+                    }
+                }
+            }
+        }
+
+        image->addShadow(uint8(100 - lowerFloorsShadowPercent));
+    }
+
+    position.z = z;
+    offset = 0;
+    for (int x = -offset; x <= sizeX; x++) {
+        for (int y = -offset; y <= sizeY; y++) {
+            position.x = minX + x;
+            position.y = minY + y;
+            if (const TilePtr &tile = getTile(position)) {
+                int offX = x + 1 + offset;
+                int offY = y + 1 + offset;
+                if (offX < sizeX + extraBottomRightTiles && offY < sizeY + extraBottomRightTiles) {
+                    Point imageOffset(offX * spriteSize, offY * spriteSize);
+                    anythingDrawn |= tile->drawToImage(imageOffset, image);
+                }
+            }
+        }
+    }
+
+    if (anythingDrawn) {
+        // reduce image size to size from argument
+        image->cutBottomRight(spriteSize * extraBottomRightTiles, spriteSize * extraBottomRightTiles);
+        // save to file, save function is modified and will ignore empty images!
+        image->savePNG(fileName);
     }
 }
 
