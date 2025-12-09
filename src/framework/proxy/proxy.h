@@ -18,6 +18,7 @@ public:
             m_maxActiveProxies = 1;
     }
     bool isActive();
+    bool isWorking() { return m_working; }
     void addProxy(const std::string& host, uint16_t port, int priority);
     void addExtendedProxy(const std::string& host, uint16_t port, uint16_t destinationPort, int priority);
     void removeProxy(const std::string& host, uint16_t port);

@@ -84,7 +84,10 @@ void Protocol::disconnect()
         return;
     }
     if (m_proxy) {
-        g_proxy.removeSession(m_proxy);
+        if (g_proxy.isWorking()) {
+            g_proxy.removeSession(m_proxy);
+        }
+        m_proxy = 0;
         return;
     }
     if (m_connection) {

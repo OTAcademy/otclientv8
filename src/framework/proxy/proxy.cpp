@@ -123,6 +123,8 @@ void ProxyManager::removeExtendedProxy(const std::string& host, uint16_t port, u
 
 void ProxyManager::removeSession(uint32_t sessionId)
 {
+    if (!m_working)
+        return;
     for (auto it = m_sessions.begin(); it != m_sessions.end(); ) {
         if (auto session = it->lock()) {
             if (session->getId() == sessionId) {

@@ -116,6 +116,13 @@ void Application::deinit()
     g_modules.unloadModules();
     g_modules.clear();
 
+    // terminate proxy before garbage collection to ensure
+    // Protocol objects are properly released
+    g_proxy.terminate();
+
+    // poll remaining events after proxy termination
+    poll();
+
     // release remaining lua object references
     g_lua.collectGarbage();
 
@@ -139,9 +146,6 @@ void Application::terminate()
 
     // terminate script environment
     g_lua.terminate();
-
-    // terminate proxy
-    g_proxy.terminate();
 
     m_terminated = true;
 
