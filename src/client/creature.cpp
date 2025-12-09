@@ -486,14 +486,26 @@ void Creature::updateWalkAnimation(uint8 totalPixelsWalked)
 
     int footAnimPhases = getWalkAnimationPhases() - 1;
     // TODO, should be /2 for <= 810
-    uint16 footDelay = getStepDuration(true);
+    uint16 stepDuration = getStepDuration(true);
+    uint16 footDelay = stepDuration;
     if (footAnimPhases > 0) {
-        footDelay = ((getStepDuration(true) + 20) / (g_game.getFeature(Otc::GameFasterAnimations) ? footAnimPhases * 2 : footAnimPhases));
+        footDelay = ((stepDuration + 20) / (g_game.getFeature(Otc::GameFasterAnimations) ? footAnimPhases * 2 : footAnimPhases));
     }
     if (!g_game.getFeature(Otc::GameFasterAnimations))
         footDelay += 10;
-    if (footDelay < 20)
-        footDelay = 20;
+    
+    // For very low step durations, scale the minimum footDelay proportionally
+    // This prevents animation from lagging behind movement
+    // Minimum should be at least 1/4 of step duration, but not less than 5ms for very fast movement
+    if (stepDuration < 40) {
+        // For very fast movement, use a smaller minimum relative to step duration
+        uint16 minFootDelay = std::max<uint16>(5, stepDuration / 4);
+        footDelay = std::max<uint16>(footDelay, minFootDelay);
+    } else {
+        // For normal movement, keep the 20ms minimum
+        if (footDelay < 20)
+            footDelay = 20;
+    }
 
     // Since mount is a different outfit we need to get the mount animation phases
     if (m_outfit.getMount() != 0) {
@@ -526,15 +538,32 @@ void Creature::updateWalkOffset(uint8 totalPixelsWalked, bool inNextFrame)
 {
     Point& walkOffset = inNextFrame ? m_walkOffsetInNextFrame : m_walkOffset;
     walkOffset = Point(0, 0);
+    
+    bool isDiagonal = (m_walkDirection == Otc::NorthWest || m_walkDirection == Otc::NorthEast ||
+                      m_walkDirection == Otc::SouthWest || m_walkDirection == Otc::SouthEast);
+    
+    // For diagonal movement, recalculate with floating point precision to avoid visual artifacts
+    // This prevents both X and Y offsets from jumping simultaneously at integer boundaries
+    float pixelsWalked = static_cast<float>(totalPixelsWalked);
+    if (isDiagonal && !inNextFrame) {
+        // Recalculate with full precision for smoother diagonal rendering
+        float stepDuration = getStepDuration(true);
+        float stepDurationWithBuffer = std::max<float>(stepDuration + (g_game.getFeature(Otc::GameNewUpdateWalk) ? 0 : 10), 1.0f);
+        float walkTicksPerPixel = stepDurationWithBuffer / (float)g_sprites.spriteSize();
+        pixelsWalked = std::min<float>(m_walkTimer.ticksElapsed() / walkTicksPerPixel, (float)g_sprites.spriteSize());
+    }
+    
+    // Use floating point calculation and round at the end for smoother diagonal movement
+    // This reduces visual artifacts from simultaneous integer jumps in both axes
     if (m_walkDirection == Otc::North || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::NorthWest)
-        walkOffset.y = g_sprites.spriteSize() - totalPixelsWalked;
+        walkOffset.y = static_cast<int>(g_sprites.spriteSize() - pixelsWalked + (isDiagonal ? 0.0f : 0.5f));
     else if (m_walkDirection == Otc::South || m_walkDirection == Otc::SouthEast || m_walkDirection == Otc::SouthWest)
-        walkOffset.y = totalPixelsWalked - g_sprites.spriteSize();
+        walkOffset.y = static_cast<int>(pixelsWalked - g_sprites.spriteSize() + (isDiagonal ? 0.0f : 0.5f));
 
     if (m_walkDirection == Otc::East || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::SouthEast)
-        walkOffset.x = totalPixelsWalked - g_sprites.spriteSize();
+        walkOffset.x = static_cast<int>(pixelsWalked - g_sprites.spriteSize() + (isDiagonal ? 0.0f : 0.5f));
     else if (m_walkDirection == Otc::West || m_walkDirection == Otc::NorthWest || m_walkDirection == Otc::SouthWest)
-        walkOffset.x = g_sprites.spriteSize() - totalPixelsWalked;
+        walkOffset.x = static_cast<int>(g_sprites.spriteSize() - pixelsWalked + (isDiagonal ? 0.0f : 0.5f));
 }
 
 void Creature::updateWalkingTile()
@@ -584,19 +613,82 @@ void Creature::nextWalkUpdate()
     }
 	
 	auto self = static_self_cast<Creature>();
+    // Use base step duration (without diagonal) for update interval calculation
+    // The update frequency should be based on base speed, not affected by diagonal multiplier
+    uint16 baseStepDuration = getStepDuration(true);
+    uint32 updateInterval;
+    
+    if (g_game.getFeature(Otc::GameNewUpdateWalk)) {
+        // Cap update interval to prevent excessive scheduling with very low step durations
+        // Use a minimum of 8ms (125 updates/sec max) to avoid FPS drops
+        // For very fast movement, update at most every frame
+        float fps = std::max(static_cast<float>(g_app.getFps()), 1.0f);
+        float frameTime = 1000.0f / fps;
+        // Calculate ideal update interval based on base step duration and FPS
+        float idealInterval = static_cast<float>(baseStepDuration) / fps;
+        // Clamp to frame time (don't update more than once per frame) and minimum 8ms
+        updateInterval = std::max<uint32_t>(8U, static_cast<uint32_t>(std::min(idealInterval, frameTime)));
+    } else {
+        // Use base step duration for update interval
+        updateInterval = std::max<uint32>(1, static_cast<uint32_t>((float)baseStepDuration / g_sprites.spriteSize()));
+    }
+    
     m_walkUpdateEvent = g_dispatcher.scheduleEvent([self]{
         self->m_walkUpdateEvent = nullptr;
         self->nextWalkUpdate();
-    }, g_game.getFeature(Otc::GameNewUpdateWalk) ? 
-        std::max(getStepDuration(true) / std::max(g_app.getFps(), 1), 1) : (float)getStepDuration() / g_sprites.spriteSize()
-    );
+    }, updateInterval);
 }
 
 void Creature::updateWalk()
 {
-    float walkTicksPerPixel = ((float)(getStepDuration(true) + (g_game.getFeature(Otc::GameNewUpdateWalk) ? 0 : 10))) / (float)g_sprites.spriteSize();
-    uint8 totalPixelsWalked = std::min<uint8>(m_walkTimer.ticksElapsed() / walkTicksPerPixel, g_sprites.spriteSize());
-    uint8 totalPixelsWalkedInNextFrame = std::min<uint8>((m_walkTimer.ticksElapsed() + (g_game.getFeature(Otc::GameNewUpdateWalk) ? std::max(1000.f / g_app.getFps(), 1.0f) : 15)) / walkTicksPerPixel, g_sprites.spriteSize());
+    uint16 stepDuration = getStepDuration(true);
+    float spriteSize = (float)g_sprites.spriteSize();
+    
+    // Prevent division by zero and handle very low step durations
+    // Add a small buffer to prevent precision issues with very fast movement
+    float stepDurationWithBuffer = std::max<float>(stepDuration + (g_game.getFeature(Otc::GameNewUpdateWalk) ? 0 : 10), 1.0f);
+    float walkTicksPerPixel = stepDurationWithBuffer / spriteSize;
+    
+    // For very low step durations, use more precise calculation
+    // Don't clamp too aggressively as it can cause visual glitches
+    // Only clamp if it would cause division issues (extremely small values)
+    if (walkTicksPerPixel < 0.01f && stepDuration > 0) {
+        // For extremely fast movement, ensure reasonable precision
+        walkTicksPerPixel = std::max<float>(walkTicksPerPixel, 0.01f);
+    }
+    
+    // Use floating point calculation for better precision
+    float pixelsWalkedFloat = m_walkTimer.ticksElapsed() / walkTicksPerPixel;
+    // Clamp to prevent overshooting
+    pixelsWalkedFloat = std::min<float>(pixelsWalkedFloat, spriteSize);
+    
+    // For diagonal movement, use sub-pixel precision to avoid visual artifacts
+    // For cardinal directions, round to integer for crisp pixel movement
+    bool isDiagonal = (m_walkDirection == Otc::NorthWest || m_walkDirection == Otc::NorthEast ||
+                      m_walkDirection == Otc::SouthWest || m_walkDirection == Otc::SouthEast);
+    
+    // For diagonal movement, truncate (don't round) to preserve sub-pixel precision
+    // This prevents both X and Y from jumping simultaneously, reducing visual artifacts
+    // For cardinal directions, round normally for crisp movement
+    uint8 totalPixelsWalked = isDiagonal ? 
+        static_cast<uint8>(pixelsWalkedFloat) : 
+        static_cast<uint8>(pixelsWalkedFloat + 0.5f);
+    
+    // Calculate frame time more accurately, clamping to reasonable values
+    float frameTime;
+    if (g_game.getFeature(Otc::GameNewUpdateWalk)) {
+        float fps = std::max(static_cast<float>(g_app.getFps()), 1.0f);
+        frameTime = std::max(1000.0f / fps, 1.0f);
+        // Cap frame time prediction to step duration to avoid overshooting
+        frameTime = std::min(frameTime, static_cast<float>(stepDuration));
+    } else {
+        frameTime = 15.0f;
+    }
+    
+    // Calculate next frame pixels with better precision
+    float pixelsWalkedInNextFrameFloat = (m_walkTimer.ticksElapsed() + frameTime) / walkTicksPerPixel;
+    pixelsWalkedInNextFrameFloat = std::min<float>(pixelsWalkedInNextFrameFloat, spriteSize);
+    uint8 totalPixelsWalkedInNextFrame = static_cast<uint8>(pixelsWalkedInNextFrameFloat + 0.5f);
 
     // needed for paralyze effect
     m_walkedPixels = std::max<uint8>(m_walkedPixels, totalPixelsWalked);
