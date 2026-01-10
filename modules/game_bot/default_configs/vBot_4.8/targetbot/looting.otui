@@ -7,6 +7,7 @@ TargetBotLootingPanel < Panel
     margin-top: 5
 
   Label
+    id: labelToLoot
     margin-top: 5
     text: Items to loot
     text-align: center    
@@ -17,8 +18,9 @@ TargetBotLootingPanel < Panel
   
   BotSwitch
     id: everyItem
-    !text: tr("Loot every item")
+    !text: tr("Loot every item, except these")
     margin-top: 2
+    font: small-9px
 
   Label
     margin-top: 5
