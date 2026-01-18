@@ -146,6 +146,10 @@ end
 context.userune = context.useRune
 
 context.findItem = function(itemId, subType)
+  local ammo = context.player:getInventoryItem(InventorySlotAmmo)
+  if ammo and ammo:getId() == itemId and (subType == -1 or ammo:getSubType() == subType) then
+    return ammor
+  end
   if subType == nil then
     subType = -1
   end
