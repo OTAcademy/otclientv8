@@ -54,7 +54,7 @@ namespace {
         FlockGuard(const std::string& filename, const bool exclusive) {
 #ifdef WIN32
             this->fileHandle = CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
-                FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
             if (this->fileHandle == INVALID_HANDLE_VALUE) {
                 g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
                 return;
@@ -399,9 +399,10 @@ void Minimap::saveImage(const std::string& fileName, int minX, int minY, int max
 
 bool Minimap::loadOtmm(const std::string& fileName)
 {
-    auto flockGuard = FlockGuard(fileName, false);
+	const std::string filePath = g_resources.resolvePath(fileName);
+	auto flockGuard = FlockGuard(filePath, false);
     try {
-        FileStreamPtr fin = g_resources.openFile(fileName, g_game.getFeature(Otc::GameDontCacheFiles));
+        FileStreamPtr fin = g_resources.openFile(filePath, g_game.getFeature(Otc::GameDontCacheFiles));
         if(!fin)
             stdext::throw_exception("unable to open file");
 
@@ -461,16 +462,17 @@ bool Minimap::loadOtmm(const std::string& fileName)
 
 void Minimap::saveOtmm(const std::string& fileName)
 {
-	auto flockGuard = FlockGuard(fileName, true);
+	const std::string filePath = g_resources.resolvePath(fileName);
+	auto flockGuard = FlockGuard(filePath, true);
     try {
         stdext::timer saveTimer;
 
 #ifndef ANDROID
-        std::string tmpFileName = fileName;
-        tmpFileName += ".tmp";
-        FileStreamPtr fin = g_resources.createFile(tmpFileName);
+        std::string tmpFilePath = filePath;
+        tmpFilePath += ".tmp";
+        FileStreamPtr fin = g_resources.createFile(tmpFilePath);
 #else
-        FileStreamPtr fin = g_resources.createFile(fileName);
+        FileStreamPtr fin = g_resources.createFile(filePath);
 #endif
 
         //TODO: compression flag with zlib
@@ -525,9 +527,6 @@ void Minimap::saveOtmm(const std::string& fileName)
 
         fin->close();
 #ifndef ANDROID
-        std::filesystem::path filePath(g_resources.getWriteDir()), tmpFilePath(g_resources.getWriteDir());
-        filePath += fileName;
-        tmpFilePath += tmpFileName;
         if(std::filesystem::file_size(tmpFilePath) > 1024) {
             std::filesystem::rename(tmpFilePath, filePath);
         }
