@@ -39,6 +39,71 @@
 
 Minimap g_minimap;
 
+namespace {
+    class FlockGuard {
+    private:
+        FlockGuard(const FlockGuard&) = delete;
+        FlockGuard& operator=(const FlockGuard&) = delete;
+        bool successfullyLocked = false;
+#ifdef WIN32
+        HANDLE fp = nullptr;
+#else
+        int fp = -1;
+#endif
+    public:
+        FlockGuard(const std::string& filename, const bool exclusive) {
+#ifdef WIN32
+            HANDLE fp = CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (fp == INVALID_HANDLE_VALUE) {
+                g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
+                return;
+            }
+            OVERLAPPED ov = { 0 };
+            DWORD flags = exclusive ? LOCKFILE_EXCLUSIVE_LOCK : 0;
+            if (!LockFileEx(fp, flags, 0, MAXDWORD, MAXDWORD, &ov)) {
+                g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
+                CloseHandle(fp);
+                return;
+            }
+            this->fp = fp;
+            successfullyLocked = true;
+#else
+            int fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0666);
+            if (fd < 0) {
+                g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
+                return;
+            }
+            int lockSuccess = flock(fd, exclusive ? LOCK_EX : LOCK_SH);
+            if (lockSuccess != 0) {
+                g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
+                close(fd);
+                return;
+            }
+            this->fp = fd;
+            this->successfullyLocked = true;
+#endif
+        }
+        ~FlockGuard() {
+#ifdef WIN32
+            if (this->successfullyLocked) {
+                OVERLAPPED ov = { 0 };
+                UnlockFileEx(this->fp, 0, MAXDWORD, MAXDWORD, &ov);
+            }
+            if (this->fp) {
+                CloseHandle(this->fp);
+            }
+#else
+            if (this->successfullyLocked) {
+                flock(this->fp, LOCK_UN);
+            }
+            if (this->fp >= 0) {
+                close(this->fp);
+            }
+#endif
+        }
+    };
+}
 void MinimapBlock::clean()
 {
     m_tiles.fill(MinimapTile());
@@ -332,6 +397,7 @@ void Minimap::saveImage(const std::string& fileName, int minX, int minY, int max
 
 bool Minimap::loadOtmm(const std::string& fileName)
 {
+	auto flockGuard = FlockGuard(fileName, false);
     try {
         FileStreamPtr fin = g_resources.openFile(fileName, g_game.getFeature(Otc::GameDontCacheFiles));
         if(!fin)
@@ -393,6 +459,7 @@ bool Minimap::loadOtmm(const std::string& fileName)
 
 void Minimap::saveOtmm(const std::string& fileName)
 {
+	auto flockGuard = FlockGuard(fileName, true);
     try {
         stdext::timer saveTimer;
 
