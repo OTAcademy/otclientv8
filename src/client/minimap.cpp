@@ -67,7 +67,7 @@ namespace {
             if (!LockFileEx(this->fileHandle, flags, 0, MAXDWORD, MAXDWORD, &ov)) {
                 g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
                 CloseHandle(this->fileHandle);
-				this->fileHandle = INVALID_HANDLE_VALUE;
+                this->fileHandle = INVALID_HANDLE_VALUE;
                 return;
             }
             this->successfullyLocked = true;
@@ -81,7 +81,7 @@ namespace {
             if (lockSuccess != 0) {
                 g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
                 close(this->fileHandle);
-				this->fileHandle = -1;
+                this->fileHandle = -1;
                 return;
             }
             this->successfullyLocked = true;
@@ -95,7 +95,7 @@ namespace {
             }
             if (this->fileHandle != INVALID_HANDLE_VALUE) {
                 CloseHandle(this->fileHandle);
-				this->fileHandle = INVALID_HANDLE_VALUE;
+                this->fileHandle = INVALID_HANDLE_VALUE;
             }
 #else
             if (this->successfullyLocked) {
@@ -103,7 +103,7 @@ namespace {
             }
             if (this->fileHandle >= 0) {
                 close(this->fileHandle);
-				this->fileHandle = -1;
+                this->fileHandle = -1;
             }
 #endif
         }
@@ -402,8 +402,8 @@ void Minimap::saveImage(const std::string& fileName, int minX, int minY, int max
 
 bool Minimap::loadOtmm(const std::string& fileName)
 {
-	const std::string filePath = g_resources.resolvePath(fileName);
-	auto flockGuard = FlockGuard(filePath, false);
+    const std::string filePath = g_resources.resolvePath(fileName);
+    [[maybe_unused]] auto flockGuard = FlockGuard(filePath, false);
     try {
         FileStreamPtr fin = g_resources.openFile(filePath, g_game.getFeature(Otc::GameDontCacheFiles));
         if(!fin)
@@ -465,8 +465,8 @@ bool Minimap::loadOtmm(const std::string& fileName)
 
 void Minimap::saveOtmm(const std::string& fileName)
 {
-	const std::string filePath = g_resources.resolvePath(fileName);
-	auto flockGuard = FlockGuard(filePath, true);
+    const std::string filePath = g_resources.resolvePath(fileName);
+    [[maybe_unused]] auto flockGuard = FlockGuard(filePath, true);
     try {
         stdext::timer saveTimer;
 
