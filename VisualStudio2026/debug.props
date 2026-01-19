@@ -13,7 +13,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ObjectFileName>$(IntDir)\obj_r\%(RelativeDir)</ObjectFileName>
-	  <AdditionalOptions>/bigobj%(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/bigobj%(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(OTCLIENT_LIBDEPS_D);$(OTCLIENT_LIBDEPS_SHARED)</AdditionalDependencies>
