@@ -88,7 +88,7 @@ namespace {
                 OVERLAPPED ov = { 0 };
                 UnlockFileEx(this->fileHandle, 0, MAXDWORD, MAXDWORD, &ov);
             }
-            if (this->fileHandle) {
+            if (this->fileHandle != INVALID_HANDLE_VALUE) {
                 CloseHandle(this->fileHandle);
             }
 #else
