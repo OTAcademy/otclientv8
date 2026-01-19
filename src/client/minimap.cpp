@@ -20,9 +20,12 @@
  * THE SOFTWARE.
  */
 
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <fcntl.h>
 #include <sys/file.h>
+#include <unistd.h>
 #endif
 #include "minimap.h"
 #include "tile.h"
