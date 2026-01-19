@@ -46,41 +46,39 @@ namespace {
         FlockGuard& operator=(const FlockGuard&) = delete;
         bool successfullyLocked = false;
 #ifdef WIN32
-        HANDLE fp = nullptr;
+        HANDLE fileHandle = INVALID_HANDLE_VALUE;
 #else
-        int fp = -1;
+        int fileHandle = -1;
 #endif
     public:
         FlockGuard(const std::string& filename, const bool exclusive) {
 #ifdef WIN32
-            HANDLE fp = CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
+            this->fileHandle = CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (fp == INVALID_HANDLE_VALUE) {
+            if (this->fileHandle == INVALID_HANDLE_VALUE) {
                 g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
                 return;
             }
             OVERLAPPED ov = { 0 };
             DWORD flags = exclusive ? LOCKFILE_EXCLUSIVE_LOCK : 0;
-            if (!LockFileEx(fp, flags, 0, MAXDWORD, MAXDWORD, &ov)) {
+            if (!LockFileEx(this->fileHandle, flags, 0, MAXDWORD, MAXDWORD, &ov)) {
                 g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
-                CloseHandle(fp);
+                CloseHandle(this->fileHandle);
                 return;
             }
-            this->fp = fp;
-            successfullyLocked = true;
+            this->successfullyLocked = true;
 #else
-            int fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0666);
-            if (fd < 0) {
+            this->fileHandle = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0666);
+            if (this->fileHandle < 0) {
                 g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
                 return;
             }
-            int lockSuccess = flock(fd, exclusive ? LOCK_EX : LOCK_SH);
+            int lockSuccess = flock(this->fileHandle, exclusive ? LOCK_EX : LOCK_SH);
             if (lockSuccess != 0) {
                 g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
-                close(fd);
+                close(this->fileHandle);
                 return;
             }
-            this->fp = fd;
             this->successfullyLocked = true;
 #endif
         }
@@ -88,17 +86,17 @@ namespace {
 #ifdef WIN32
             if (this->successfullyLocked) {
                 OVERLAPPED ov = { 0 };
-                UnlockFileEx(this->fp, 0, MAXDWORD, MAXDWORD, &ov);
+                UnlockFileEx(this->fileHandle, 0, MAXDWORD, MAXDWORD, &ov);
             }
-            if (this->fp) {
-                CloseHandle(this->fp);
+            if (this->fileHandle) {
+                CloseHandle(this->fileHandle);
             }
 #else
             if (this->successfullyLocked) {
-                flock(this->fp, LOCK_UN);
+                flock(this->fileHandle, LOCK_UN);
             }
-            if (this->fp >= 0) {
-                close(this->fp);
+            if (this->fileHandle >= 0) {
+                close(this->fileHandle);
             }
 #endif
         }
