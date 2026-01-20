@@ -14,6 +14,13 @@ TargetBot.Looting.setup = function()
   UI.Container(TargetBot.Looting.onContainersUpdate, true, nil, ui.containers) 
   ui.everyItem.onClick = function()
     ui.everyItem:setOn(not ui.everyItem:isOn())
+    if ui.labelToLoot then
+      if ui.everyItem:isOn() then
+        ui.labelToLoot:setText("Items to ignore")
+      else
+        ui.labelToLoot:setText("Items to loot")
+      end
+    end
     TargetBot.save()
   end
   ui.maxDangerPanel.value.onTextChange = function()
@@ -52,6 +59,13 @@ TargetBot.Looting.update = function(data)
   ui.items:setItems(data['items'] or {})
   ui.containers:setItems(data['containers'] or {})
   ui.everyItem:setOn(data['everyItem'])
+  if ui.labelToLoot then
+    if ui.everyItem:isOn() then
+      ui.labelToLoot:setText("Items to ignore")
+    else
+      ui.labelToLoot:setText("Items to loot")
+    end
+  end
   ui.maxDangerPanel.value:setText(data['maxDanger'] or 10)
   ui.minCapacityPanel.value:setText(data['minCapacity'] or 100)
   TargetBot.Looting.updateItemsAndContainers()
@@ -224,7 +238,7 @@ TargetBot.Looting.lootContainer = function(lootContainers, container)
   for i, item in ipairs(container:getItems()) do
     if item:isContainer() and not itemsById[item:getId()] then
       nextContainer = item
-    elseif itemsById[item:getId()] or (ui.everyItem:isOn() and not item:isContainer()) then
+    elseif (not ui.everyItem:isOn() and itemsById[item:getId()]) or (ui.everyItem:isOn() and (not item:isContainer() and not itemsById[item:getId()])) then
       item.lootTries = (item.lootTries or 0) + 1
       if item.lootTries < 5 then -- if can't be looted within 0.5s then skip it
         return TargetBot.Looting.lootItem(lootContainers, item)
