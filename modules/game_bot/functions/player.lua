@@ -149,7 +149,7 @@ context.findItem = function(itemId, subType)
   if subType == nil then
     subType = -1
   end
-  return g_game.findItemInContainers(itemId, subType)
+  return g_game.findPlayerItem(itemId, subType)
 end
 
 context.attack = g_game.attack
