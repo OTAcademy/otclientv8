@@ -44,6 +44,7 @@ extern void fatalError(const char* error, const char* file, int line);
 #include "stdext/stdext.h"
 
 // additional utilities
+#include "util/anchor.h"
 #include "util/point.h"
 #include "util/color.h"
 #include "util/rect.h"

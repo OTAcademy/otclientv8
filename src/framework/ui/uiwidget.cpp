@@ -1186,6 +1186,29 @@ UIAnchorLayoutPtr UIWidget::getAnchoredLayout()
     return nullptr;
 }
 
+std::vector<AnchorGroup> UIWidget::getAnchorsGroup() {
+    std::vector<AnchorGroup> groupList;
+
+    UIAnchorLayoutPtr anchorLayout = getAnchoredLayout();
+    if(!anchorLayout)
+        return groupList;
+
+    UIWidgetPtr self = static_self_cast<UIWidget>();
+    if(anchorLayout->hasAnchors(self)) {
+        UIAnchorList anchors = anchorLayout->getAnchorsGroup()[self]->getAnchors();
+        groupList.reserve(anchors.size());
+        for(const UIAnchorPtr& anchorGroup : anchors) {
+            AnchorGroup group;
+            group.anchored = anchorGroup->getAnchoredEdge();
+            group.widget = anchorGroup->getHookedWidget(self, getParent())->getId();
+            group.hooked = anchorGroup->getHookedEdge();
+            groupList.emplace_back(group);
+        }
+    }
+
+    return groupList;
+}
+
 UIWidgetPtr UIWidget::getRootParent()
 {
     if(UIWidgetPtr parent = getParent())

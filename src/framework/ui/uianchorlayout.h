@@ -68,6 +68,8 @@ public:
                    const std::string& hookedWidgetId, Fw::AnchorEdge hookedEdge);
     void removeAnchors(const UIWidgetPtr& anchoredWidget);
     bool hasAnchors(const UIWidgetPtr& anchoredWidget);
+    UIAnchorGroupList getAnchorsGroup() { return m_anchorsGroups; }
+
     void centerIn(const UIWidgetPtr& anchoredWidget, const std::string& hookedWidgetId);
     void fill(const UIWidgetPtr& anchoredWidget, const std::string& hookedWidgetId);
 
@@ -79,7 +81,7 @@ public:
 protected:
     virtual bool internalUpdate();
     virtual bool updateWidget(const UIWidgetPtr& widget, const UIAnchorGroupPtr& anchorGroup, UIWidgetPtr first = nullptr);
-    std::unordered_map<UIWidgetPtr, UIAnchorGroupPtr> m_anchorsGroups;
+    UIAnchorGroupList m_anchorsGroups;
 };
 
 #endif
