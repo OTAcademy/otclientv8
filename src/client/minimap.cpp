@@ -20,7 +20,13 @@
  * THE SOFTWARE.
  */
 
-
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
+#endif
 #include "minimap.h"
 #include "tile.h"
 #include "game.h"
@@ -39,6 +45,73 @@
 
 Minimap g_minimap;
 
+namespace {
+    class FlockGuard {
+    private:
+        FlockGuard(const FlockGuard&) = delete;
+        FlockGuard& operator=(const FlockGuard&) = delete;
+        bool successfullyLocked = false;
+#ifdef WIN32
+        HANDLE fileHandle = INVALID_HANDLE_VALUE;
+#else
+        int fileHandle = -1;
+#endif
+    public:
+        FlockGuard(const std::string& filename, const bool exclusive) {
+#ifdef WIN32
+            this->fileHandle = CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (this->fileHandle == INVALID_HANDLE_VALUE) {
+                g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
+                return;
+            }
+            OVERLAPPED ov = { 0 };
+            DWORD flags = exclusive ? LOCKFILE_EXCLUSIVE_LOCK : 0;
+            if (!LockFileEx(this->fileHandle, flags, 0, MAXDWORD, MAXDWORD, &ov)) {
+                g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
+                CloseHandle(this->fileHandle);
+                this->fileHandle = INVALID_HANDLE_VALUE;
+                return;
+            }
+            this->successfullyLocked = true;
+#else
+            this->fileHandle = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0666);
+            if (this->fileHandle < 0) {
+                g_logger.error(stdext::format("Failed to open file for locking: %s", filename.data()));
+                return;
+            }
+            int lockSuccess = flock(this->fileHandle, exclusive ? LOCK_EX : LOCK_SH);
+            if (lockSuccess != 0) {
+                g_logger.error(stdext::format("Failed to lock file: %s", filename.data()));
+                close(this->fileHandle);
+                this->fileHandle = -1;
+                return;
+            }
+            this->successfullyLocked = true;
+#endif
+        }
+        ~FlockGuard() {
+#ifdef WIN32
+            if (this->successfullyLocked) {
+                OVERLAPPED ov = { 0 };
+                UnlockFileEx(this->fileHandle, 0, MAXDWORD, MAXDWORD, &ov);
+            }
+            if (this->fileHandle != INVALID_HANDLE_VALUE) {
+                CloseHandle(this->fileHandle);
+                this->fileHandle = INVALID_HANDLE_VALUE;
+            }
+#else
+            if (this->successfullyLocked) {
+                flock(this->fileHandle, LOCK_UN);
+            }
+            if (this->fileHandle >= 0) {
+                close(this->fileHandle);
+                this->fileHandle = -1;
+            }
+#endif
+        }
+    };
+}
 void MinimapBlock::clean()
 {
     m_tiles.fill(MinimapTile());
@@ -332,8 +405,10 @@ void Minimap::saveImage(const std::string& fileName, int minX, int minY, int max
 
 bool Minimap::loadOtmm(const std::string& fileName)
 {
+    const std::string filePath = g_resources.resolvePath(fileName);
+    [[maybe_unused]] auto flockGuard = FlockGuard(filePath, false);
     try {
-        FileStreamPtr fin = g_resources.openFile(fileName, g_game.getFeature(Otc::GameDontCacheFiles));
+        FileStreamPtr fin = g_resources.openFile(filePath, g_game.getFeature(Otc::GameDontCacheFiles));
         if(!fin)
             stdext::throw_exception("unable to open file");
 
@@ -393,15 +468,17 @@ bool Minimap::loadOtmm(const std::string& fileName)
 
 void Minimap::saveOtmm(const std::string& fileName)
 {
+    const std::string filePath = g_resources.resolvePath(fileName);
+    [[maybe_unused]] auto flockGuard = FlockGuard(filePath, true);
     try {
         stdext::timer saveTimer;
 
 #ifndef ANDROID
-        std::string tmpFileName = fileName;
-        tmpFileName += ".tmp";
-        FileStreamPtr fin = g_resources.createFile(tmpFileName);
+        std::string tmpFilePath = filePath;
+        tmpFilePath += ".tmp";
+        FileStreamPtr fin = g_resources.createFile(tmpFilePath);
 #else
-        FileStreamPtr fin = g_resources.createFile(fileName);
+        FileStreamPtr fin = g_resources.createFile(filePath);
 #endif
 
         //TODO: compression flag with zlib
@@ -456,9 +533,6 @@ void Minimap::saveOtmm(const std::string& fileName)
 
         fin->close();
 #ifndef ANDROID
-        std::filesystem::path filePath(g_resources.getWriteDir()), tmpFilePath(g_resources.getWriteDir());
-        filePath += fileName;
-        tmpFilePath += tmpFileName;
         if(std::filesystem::file_size(tmpFilePath) > 1024) {
             std::filesystem::rename(tmpFilePath, filePath);
         }
