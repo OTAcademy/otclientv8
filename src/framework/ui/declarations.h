@@ -50,5 +50,6 @@ using UIAnchorLayoutPtr = std::shared_ptr<UIAnchorLayout>;
 
 using UIWidgetList = std::deque<UIWidgetPtr>;
 using UIAnchorList = std::vector<UIAnchorPtr>;
+using UIAnchorGroupList = std::unordered_map<UIWidgetPtr, UIAnchorGroupPtr>;
 
 #endif
