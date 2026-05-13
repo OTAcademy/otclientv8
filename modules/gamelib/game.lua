@@ -18,7 +18,11 @@ end
 
 function g_game.chooseRsa(host)
   if G.currentRsa ~= CIPSOFT_RSA and G.currentRsa ~= OTSERV_RSA then return end
-  if host:ends('.tibia.com') or host:ends('.cipsoft.com') then
+  if host == '127.0.0.1' or host == 'localhost' or host == '192.168.68.109'
+      or host:starts('127.0.0.1:') or host:starts('localhost:') or host:starts('192.168.68.109:') then
+    g_game.setRsa(REALOTS_RSA)
+    g_game.setCustomOs(-1)
+  elseif host:ends('.tibia.com') or host:ends('.cipsoft.com') then
     g_game.setRsa(CIPSOFT_RSA)
 
     if g_app.getOs() == 'windows' then
