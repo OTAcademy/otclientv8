@@ -197,7 +197,37 @@ function loadMap()
   if not loaded then
     print("Minimap couldn't be loaded, file missing?")
   end
+  loadMapView()
   minimapWidget:load()
+end
+
+function loadMapView()
+  g_mapview.unload()
+  local files = { '/data/mapview.otcm2', '/mapview.otcm2' }
+  for _, file in ipairs(files) do
+    if g_resources.fileExists(file) then
+      if g_mapview.load(file) then
+        print(string.format("Map view loaded: %s (%d sectors)", file, g_mapview.getSectorCount()))
+        return
+      end
+    end
+  end
+end
+
+-- From which UIMinimap zoom sprites overlay OTMM pixels (same as g_mapview.setVisualMinZoom).
+function setVisualMinZoom(zoom)
+  g_mapview.setVisualMinZoom(zoom)
+end
+
+-- Offline generator. DAT/SPR must already be loaded (login or modules.game_things.load).
+-- After rebuild, regenerate only OTCM2 (empty OTMM path keeps the explored minimap):
+-- g_mapview.generateMapView('/things/1098/items.otb', '/things/1098/forgotten.otbm', '/mapview.otcm2', '')
+function generateMapView(otbPath, otbmPath, otcm2Path, otmmPath)
+  if not otcm2Path or otcm2Path == '' then
+    otcm2Path = '/mapview.otcm2'
+  end
+  otmmPath = otmmPath or ''
+  return g_mapview.generateMapView(otbPath or '', otbmPath, otcm2Path, otmmPath)
 end
 
 function saveMap()

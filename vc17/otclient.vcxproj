@@ -473,6 +473,7 @@
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='OpenGL|x64'">4834</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="..\src\client\minimap.cpp" />
+    <ClCompile Include="..\src\client\mapviewstore.cpp" />
     <ClCompile Include="..\src\client\missile.cpp" />
     <ClCompile Include="..\src\client\outfit.cpp" />
     <ClCompile Include="..\src\client\player.cpp" />
@@ -634,6 +635,7 @@
     <ClInclude Include="..\src\client\map.h" />
     <ClInclude Include="..\src\client\mapview.h" />
     <ClInclude Include="..\src\client\minimap.h" />
+    <ClInclude Include="..\src\client\mapviewstore.h" />
     <ClInclude Include="..\src\client\missile.h" />
     <ClInclude Include="..\src\client\outfit.h" />
     <ClInclude Include="..\src\client\player.h" />

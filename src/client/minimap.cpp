@@ -25,6 +25,7 @@
 #include "tile.h"
 #include "game.h"
 #include "spritemanager.h"
+#include "mapviewstore.h"
 
 #include <framework/graphics/image.h>
 #include <framework/graphics/texture.h>
@@ -140,6 +141,28 @@ void Minimap::draw(const Rect& screenRect, const Position& mapCenter, float scal
         }
     }
 
+    if(g_mapview.isLoaded() && scale >= g_mapview.getVisualMinScale()) {
+        g_mapview.beginFrame();
+        const int sectorSize = MAPVIEW_SECTOR_SIZE;
+        Point sectorOff(mapRect.topLeft().x - (mapRect.topLeft().x % sectorSize),
+                        mapRect.topLeft().y - (mapRect.topLeft().y % sectorSize));
+        Point visualStart = screenRect.topLeft() - (mapRect.topLeft() - sectorOff) * scale - off;
+        for(int y = sectorOff.y, ys = visualStart.y; ys < screenRect.bottom(); y += sectorSize, ys += sectorSize * scale) {
+            if(y < 0 || y >= 65536)
+                continue;
+            for(int x = sectorOff.x, xs = visualStart.x; xs < screenRect.right(); x += sectorSize, xs += sectorSize * scale) {
+                if(x < 0 || x >= 65536)
+                    continue;
+                const TexturePtr& tex = g_mapview.getSectorTexture(Position(x, y, mapCenter.z));
+                if(!tex)
+                    continue;
+                Rect src(0, 0, sectorSize * MAPVIEW_TILE_PX, sectorSize * MAPVIEW_TILE_PX);
+                Rect dest(xs, ys, sectorSize * scale, sectorSize * scale);
+                g_drawQueue->addTexturedRect(dest, tex, src);
+            }
+        }
+    }
+
     g_drawQueue->setClip(drawQueueStart, screenRect);
 }
 
@@ -201,10 +224,15 @@ void Minimap::updateTile(const Position& pos, const TilePtr& tile)
         minimapTile.speed = 1;
     }
 
-    if(minimapTile != MinimapTile()) {
+    setTile(pos, minimapTile);
+}
+
+void Minimap::setTile(const Position& pos, const MinimapTile& tile)
+{
+    if(tile != MinimapTile()) {
         MinimapBlock& block = getBlock(pos);
         Point offsetPos = getBlockOffset(Point(pos.x, pos.y));
-        block.updateTile(pos.x - offsetPos.x, pos.y - offsetPos.y, minimapTile);
+        block.updateTile(pos.x - offsetPos.x, pos.y - offsetPos.y, tile);
         block.justSaw();
     }
 }

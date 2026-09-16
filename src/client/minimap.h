@@ -93,6 +93,7 @@ public:
     Rect getTileRect(const Position& pos, const Rect& screenRect, const Position& mapCenter, float scale);
 
     void updateTile(const Position& pos, const TilePtr& tile);
+    void setTile(const Position& pos, const MinimapTile& tile);
     const MinimapTile& getTile(const Position& pos);
     std::pair<MinimapBlock_ptr, MinimapTile> threadGetTile(const Position& pos);
 
