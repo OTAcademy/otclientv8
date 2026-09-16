@@ -29,6 +29,7 @@
 #include "statictext.h"
 #include "mapview.h"
 #include "minimap.h"
+#include "mapviewstore.h"
 
 #include <framework/core/asyncdispatcher.h>
 #include <framework/core/eventdispatcher.h>
@@ -76,6 +77,7 @@ void Map::notificateTileUpdate(const Position& pos, bool updateMinimap)
     if (!g_game.getFeature(Otc::GameMinimapLimitedToSingleFloor) || (m_centralPosition.z == pos.z)) {
         g_minimap.updateTile(pos, getTile(pos));
     }
+    g_mapview.notifySeenTile(pos);
 }
 
 void Map::requestVisibleTilesCacheUpdate() {

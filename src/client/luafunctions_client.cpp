@@ -37,6 +37,7 @@
 #include "localplayer.h"
 #include "map.h"
 #include "minimap.h"
+#include "mapviewstore.h"
 #include "thingtypemanager.h"
 #include "spritemanager.h"
 #include "protocolgame.h"
@@ -185,6 +186,26 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_minimap", "saveImage", &Minimap::saveImage, &g_minimap);
     g_lua.bindSingletonFunction("g_minimap", "loadOtmm", &Minimap::loadOtmm, &g_minimap);
     g_lua.bindSingletonFunction("g_minimap", "saveOtmm", &Minimap::saveOtmm, &g_minimap);
+
+    g_lua.registerSingletonClass("g_mapview");
+    g_lua.bindSingletonFunction("g_mapview", "load", &MapViewStore::load, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "unload", &MapViewStore::unload, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "save", &MapViewStore::save, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "isLoaded", &MapViewStore::isLoaded, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "getSectorCount", &MapViewStore::getSectorCount, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "generateMapView", &MapViewStore::generateMapView, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "generateFromOtbm", &MapViewStore::generateFromOtbm, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "generateFromCurrentMap", &MapViewStore::generateFromCurrentMap, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "setVisualMinScale", &MapViewStore::setVisualMinScale, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "getVisualMinScale", &MapViewStore::getVisualMinScale, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "setVisualMinZoom", &MapViewStore::setVisualMinZoom, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "getVisualMinZoom", &MapViewStore::getVisualMinZoom, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "setBakesPerFrame", &MapViewStore::setBakesPerFrame, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "getBakesPerFrame", &MapViewStore::getBakesPerFrame, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "setMaxCachedSectors", &MapViewStore::setMaxCachedSectors, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "getMaxCachedSectors", &MapViewStore::getMaxCachedSectors, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "setLiveUpdate", &MapViewStore::setLiveUpdate, &g_mapview);
+    g_lua.bindSingletonFunction("g_mapview", "isLiveUpdate", &MapViewStore::isLiveUpdate, &g_mapview);
 
     g_lua.registerSingletonClass("g_creatures");
     g_lua.bindSingletonFunction("g_creatures", "getCreatures", &CreatureManager::getCreatures, &g_creatures);

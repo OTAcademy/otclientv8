@@ -30,6 +30,16 @@ Servers = {
 ALLOW_CUSTOM_SERVERS = true -- if true it shows option ANOTHER on server list
 
 g_app.setName("OTCv8")
+
+-- Graphical minimap (OTCM2): sprites instead of OTMM color pixels when widget
+-- scale >= this zoom. UIMinimap zoom: -5=1/32, -2=1/4, -1=1/2, 0=1, 1=2, 2=4, 3=8 (default), 4=16, 5=32
+-- Lower zoom = graphics farther zoomed out. -5 = sprites at every widget zoom.
+-- When lowering this, raise bakes/cache so far-zoom does not stay on colored pixels while baking.
+g_mapview.setVisualMinZoom(-3)
+g_mapview.setBakesPerFrame(25)
+g_mapview.setMaxCachedSectors(512)
+-- Live graphical minimap from tiles the player sees (RAM only, not written to mapview.otcm2)
+g_mapview.setLiveUpdate(true)
 -- CONFIG END
 
 -- print first terminal message

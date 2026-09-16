@@ -402,7 +402,7 @@ std::string ResourceManager::readFileContents(const std::string& fileName, bool 
         return buffer;
     }
 
-    static std::string unencryptedExtensions[] = { ".otml", ".otmm", ".dmp", ".log", ".txt", ".dll", ".exe", ".zip" };
+    static std::string unencryptedExtensions[] = { ".otml", ".otmm", ".otcm2", ".dmp", ".log", ".txt", ".dll", ".exe", ".zip" };
 
     if (!decryptBuffer(buffer)) {
         bool ignore = (m_customEncryption == 0);

@@ -29,6 +29,7 @@
 #include "map.h"
 #include "spritemanager.h"
 #include "minimap.h"
+#include "mapviewstore.h"
 #include "healthbars.h"
 #include <framework/core/configmanager.h>
 
@@ -41,6 +42,7 @@ void Client::init(std::vector<std::string>& args)
 
     g_map.init();
     g_minimap.init();
+    g_mapview.init();
     g_game.init();
     g_shaders.init();
     g_things.init();
@@ -53,6 +55,7 @@ void Client::terminate()
     g_game.terminate();
     g_map.terminate();
     g_minimap.terminate();
+    g_mapview.terminate();
     g_things.terminate();
     g_sprites.terminate();
     g_shaders.terminate();
